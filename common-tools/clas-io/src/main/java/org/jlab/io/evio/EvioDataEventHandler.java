@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.jlab.io.evio;
 
 import java.nio.ByteBuffer;
@@ -40,13 +35,11 @@ public class EvioDataEventHandler {
         //} else {
             try {
                 structure = new EvioCompactStructureHandler(evioBuffer,DataType.BANK);
-                //eventNodes = structure.getChildNodes();
                 eventNodes = structure.getNodes();
             } catch (EvioException ex) {
                 Logger.getLogger(EvioDataEvent.class.getName()).log(Level.SEVERE, null, ex);
             }
         //}
-         //this.list();
     }
     
     public EvioDataEventHandler(ByteBuffer buff){
@@ -54,15 +47,13 @@ public class EvioDataEventHandler {
         try {
             structure = new EvioCompactStructureHandler(evioBuffer,DataType.BANK);
             eventNodes = structure.getChildNodes();
-        } catch (EvioException ex) {
+        } catch (EvioException | IndexOutOfBoundsException | NullPointerException ex) {
             Logger.getLogger(EvioDataEvent.class.getName()).log(Level.SEVERE, null, ex);
         }
-        //this.list();
     }
     
     public EvioNode getRootNode(int tag, int num, DataType type){
         for(EvioNode node : eventNodes){
-            //System.out.println(" LOOKING for tag = " + tag + " num =  "   + num +  " type = " + type);
             if(node.getTag()==tag&&node.getNum()==num&&node.getDataTypeObj()==type){
                 return node;
             }
@@ -166,7 +157,6 @@ public class EvioDataEventHandler {
         try {
             childnodes = this.structure.getNodes();
             for(EvioNode node : childnodes){
-                //for(EvioNode node : this.eventNodes){
                 System.out.println(String.format(" tag = %8d  num = %8d  type = %s", 
                         node.getTag(),node.getNum(),node.getDataTypeObj()));
             }

@@ -3,8 +3,8 @@ package org.jlab.rec.atof.hit;
 import org.jlab.geom.base.*;
 import org.jlab.geom.prim.Point3D;
 import org.jlab.rec.atof.constants.Parameters;
-import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.jlab.utils.groups.IndexedTable;
 
 /**
  *
@@ -18,14 +18,18 @@ import java.util.logging.Logger;
 public class ATOFHit {
 
     static final Logger LOGGER = Logger.getLogger(ATOFHit.class.getName());
-
+    
     private int sector, layer, component, order;
     private int tdc, tot;
+    private Float startTime;
     private double time, energy, x, y, z;
     private String type;
     private boolean isInACluster;
     private int associatedClusterIndex;
     int idTDC;
+    private IndexedTable atofTimeOffsetsTable;
+    private int Run;
+    
 
     public int getSector() {
         return sector;
@@ -77,6 +81,10 @@ public class ATOFHit {
 
     public double getTime() {
         return time;
+    }
+    
+    public Float getStartTime() {
+        return this.startTime;
     }
 
     public void setTime(double time) {
@@ -184,29 +192,47 @@ public class ATOFHit {
      * unsupported.
      */
     public final int convertTdcToTime() {
-        double tdc2time, veff, distance_to_sipm;
+        //Converting tdc to ns, event start time correction
+        this.time = Parameters.TDC2TIME*this.tdc;
+        //If the startTime has been defined, remove it
+        if(this.startTime!= null) this.time -= this.startTime;
+
+        //Time offsets
+        if (atofTimeOffsetsTable == null) return 0;
+        int order0 = 0;
+        //global t0
+        double t0  = atofTimeOffsetsTable.getDoubleValue("t0",                  this.sector, this.layer, this.component, order0);
+        //time difference between bars up and down channels
+        double tud = atofTimeOffsetsTable.getDoubleValue("upstream_downstream", this.sector, this.layer, this.component, order0);
+        //run-dependent correction for the radiation damage
+        double slope     = atofTimeOffsetsTable.getDoubleValue("extra1", this.sector, this.layer, this.component, order0);
+        double intersect = atofTimeOffsetsTable.getDoubleValue("extra2", this.sector, this.layer, this.component, order0);
+        
+        double veff, distance_to_sipm, timeOffset;
         if (null == this.type) {
             LOGGER.finest("Null hit type, cannot convert tdc to time.");
             return 1;
         } else {
             switch (this.type) {
                 case "wedge" -> {
-                    tdc2time = Parameters.TDC2TIME;
                     veff = Parameters.VEFF;
                     //Wedge hits are placed at the center of wedges and sipm at their top
                     distance_to_sipm = Parameters.WEDGE_THICKNESS / 2.;
+                    //Run-dependent slope correction
+                    timeOffset = - t0;
                 }
                 case "bar up" -> {
-                    tdc2time = Parameters.TDC2TIME;
                     veff = Parameters.VEFF;
                     //The distance will be computed at barhit level when z information is available
                     distance_to_sipm = 0;
+                    //t0 for bars is the sum of up+down channels->need 1/2
+                    timeOffset = - tud/2. - t0/2;
                 }
                 case "bar down" -> {
-                    tdc2time = Parameters.TDC2TIME;
                     veff = Parameters.VEFF;
                     //The distance will be computed at barhit level when z information is available
                     distance_to_sipm = 0;
+                    timeOffset = + tud/2. - t0/2;
                 }
                 case "bar" -> {
                     LOGGER.finest("Bar hit type, cannot convert tdc to time.");
@@ -218,8 +244,10 @@ public class ATOFHit {
                 }
             }
         }
-        //Hit time. Will need implementation of offsets.
-        this.time = tdc2time * this.tdc - distance_to_sipm / veff;
+        //Run-dependent slope correction
+        double dt = (this.Run - intersect) * slope;
+        //Hit time.
+        this.time = this.time - distance_to_sipm / veff + timeOffset - dt;
         return 0;
     }
 
@@ -360,17 +388,25 @@ public class ATOFHit {
      * @param order Order of the hit.
      * @param tdc TDC value.
      * @param tot ToT value.
+     * @param startTime event start time
      * @param atof Detector object representing the atof, used to calculate
      * spatial coordinates.
+     * @param atofTimeOffsetsTable time offset constants
+     * @param Run for run-dependent slope correction
      */
-    public ATOFHit(int sector, int layer, int component, int order, int tdc, int tot, Detector atof) {
+    public ATOFHit(int sector, int layer, int component, int order, int tdc, int tot, Float startTime, Detector atof,
+                   IndexedTable atofTimeOffsetsTable, int Run) {
         this.sector = sector;
         this.layer = layer;
         this.component = component;
         this.order = order;
         this.tdc = tdc;
         this.tot = tot;
+        this.startTime = startTime;
+        this.atofTimeOffsetsTable = atofTimeOffsetsTable;
         this.isInACluster = false;
+        
+        this.Run = Run;
 
         this.makeType();
         this.convertTdcToTime();

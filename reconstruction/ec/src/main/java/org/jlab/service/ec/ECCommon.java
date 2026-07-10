@@ -42,7 +42,6 @@ public class ECCommon {
     public static int       stripSortMethod = 0;
     public static int[]         splitThresh = new int[3];
     
-    public static Boolean              isMC = false;
     public static Boolean             debug = false;
     public static Boolean        debugSplit = false;
     public static Boolean  isSingleThreaded = false;
@@ -149,11 +148,7 @@ public class ECCommon {
     public static List<ECStrip>  initEC(DataEvent event,  ConstantsManager manager){
     	
         int run = getRunNumber(event);
-        
-        isMC = run<=100;
-        
-        if(isMC) {usePass2Timing = false; useDTCorrections = false; useFTpcal = false;}
-        
+
         manager.setVariation(variation);
 
         IndexedTable   atten1 = manager.getConstants(run, "/calibration/ec/attenuation");
@@ -332,7 +327,7 @@ public class ECCommon {
         if(CYCLES>0&&event.hasBank("RUN::config")==true){
             DataBank bank = event.getBank("RUN::config");
             long timestamp = bank.getLong("timestamp", 0);
-            triggerPhase = (int) (PERIOD*((timestamp+PHASE)%CYCLES));
+            triggerPhase = timestamp>=0 ? (int) (PERIOD*((timestamp+PHASE)%CYCLES)) : 0;
         }
 
         if(event.hasBank("ECAL::tdc")==true){
@@ -345,10 +340,12 @@ public class ECCommon {
                 int  ip = bank.getShort("component",i);    
                 int tdc = bank.getInt("TDC",i);
                 
-                if(status.getIntValue("status",is,il,ip)==2) continue; //for MC use only
+                int istatus = status.getIntValue("status",is,il,ip);
+                
+                if(istatus==2 || istatus==3) continue; 
                 
                 if(tdc>0) {                       
-                    if(!tdcs.hasItem(is,il,ip)) tdcs.add(new ArrayList<Integer>(),is,il,ip);
+                    if(!tdcs.hasItem(is,il,ip)) tdcs.add(new ArrayList<>(),is,il,ip);
                         tdcs.getItem(is,il,ip).add(tdc);       
                 }
             }
@@ -366,11 +363,13 @@ public class ECCommon {
                 float t = bank.getFloat("time", i) + (float) tmf.getDoubleValue("offset",is,il,ip) // TDC-FADC offset (sector, layer, PMT)
                                                    + (float)  fo.getDoubleValue("offset",is,il,0); // TDC-FADC offset (sector, layer) 
                 
-                if (status.getIntValue("status",is,il,ip)==3) continue; //for MC use only
+                int istatus = status.getIntValue("status",is,il,ip);
+
+                if(istatus==1 || istatus==3) continue; 
                 
                 ECStrip  strip = new ECStrip(is, il, ip); 
                 
-                strip.setStatus(status.getIntValue("status",is,il,ip));                
+                strip.setStatus(istatus);                
                 strip.setADC(adc);
                 strip.setTriggerPhase(triggerPhase);
                 strip.setID(bank.trueIndex(i)+1);

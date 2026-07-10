@@ -14,18 +14,25 @@ import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 import org.jlab.io.hipo.HipoDataSource;
 import org.jlab.io.hipo.HipoDataSync;
-import org.jlab.logging.DefaultLogger;
+import org.jlab.jnp.hipo4.data.SchemaFactory;
 import org.jlab.utils.benchmark.ProgressPrintout;
 import org.jlab.utils.options.OptionParser;
+import org.jlab.utils.system.ClasUtilsFile;
 
 /**
  * Tool for merging of signal and background events
  *      
- * Usage : bgMerger -b [background file] -i [input data file] -o [merged file] 
- * Options :
- *      -d : list of detectors, for example "DC,FTOF,HTCC" (default = DC,FTOF)
- *      -n : maximum number of events to process (default = -1)
- * 
+ *     Usage : bg-merger -i [signal event file] -o [merged file]  [input1] [input2] ....
+ *
+ *  Options :
+ *       -d : list of detectors, for example "DC,FTOF,HTCC" or "ALL" for all available detectors. Use DC1, DC2 or DC3 to select the DC region (default = ALL)
+ *       -l : preserve initial hit order (for compatibility with truth matching, 0-false, 1-true (default = 1)
+ *       -n : maximum number of events to process (default = -1)
+ *       -r : reuse background events: 0-false, 1-true (default = 1)
+ *       -s : suppress double TDC hits on the same component, 0-no suppression, 1-suppression (default = 1)
+ *       -t : list of hit OrderTypes to be saved (default = NOMINAL,BGADDED_NOMINAL,BGREMOVED,BGREMOVED_BG,DECREMOVED,DECREMOVED_BG)
+ *       -x : background scale factor (default = 1)
+ *
  * @author ziegler
  * @author devita
  * 
@@ -40,6 +47,10 @@ public class EventMerger {
     
     private Map<DetectorType,List<Integer>> detectors;
     private OrderType[] orders;
+    
+    private SchemaFactory schemaFactory = new SchemaFactory();
+    private final Map<DetectorType,List<String>> ADCs = new HashMap<>();                                         
+    private final Map<DetectorType,List<String>> TDCs = new HashMap<>();
     
     private List<String> bgFileNames;
     private boolean reuseBgEvents = false;
@@ -61,13 +72,49 @@ public class EventMerger {
         printConfiguration();
     }
     
+    public EventMerger(String[] dets, SchemaFactory schema, String[] types, boolean dhits, boolean ohits) {
+        suppressDoubleHits = dhits;
+        preserveHitOrder = ohits;
+        detectors = this.getDetectors(schema, dets);
+        orders = this.getOrders(types);
+        printConfiguration();
+    }
+    
+    
     private Map<DetectorType,List<Integer>> getDetectors(String... dets) {
+        SchemaFactory schema = new SchemaFactory();
+        schema.initFromDirectory(ClasUtilsFile.getResourceDir("CLAS12DIR", "etc/bankdefs/hipo4"));
+        return this.getDetectors(schema, dets);
+    }
+
+    private Map<DetectorType,List<Integer>> getDetectors(SchemaFactory schema, String... dets) {
+        schemaFactory = schema;
+        for(String det : EventMergerConstants.ADCDETECTORS) {
+            for(String type : EventMergerConstants.ADCBANKTYPES) {
+                String bank = DetectorType.getType(det) + "::" + type;
+                if(schemaFactory.hasSchema(bank)) {
+                    if(!ADCs.containsKey(DetectorType.getType(det)))
+                        ADCs.put(DetectorType.getType(det), new ArrayList<>());
+                    ADCs.get(DetectorType.getType(det)).add(bank);
+                }
+            }
+        }
+        for(String det : EventMergerConstants.TDCDETECTORS) {
+            for(String type : EventMergerConstants.TDCBANKTYPES) {
+                String bank = DetectorType.getType(det) + "::" + type;
+                if(schemaFactory.hasSchema(bank)) {
+                    if(!TDCs.containsKey(DetectorType.getType(det)))
+                        TDCs.put(DetectorType.getType(det), new ArrayList<>());
+                    TDCs.get(DetectorType.getType(det)).add(bank);
+                }
+            }
+        }
         Map<DetectorType,List<Integer>> all = new HashMap<>();
         if(dets.length==1 && dets[0].equals("ALL")) {
-            for(DetectorType t : EventMergerConstants.ADCs) {
+            for(DetectorType t : ADCs.keySet()) {
                 all.put(t, null);
             }
-            for(DetectorType d : EventMergerConstants.TDCs) {
+            for(DetectorType d : TDCs.keySet()) {
                 if(!all.containsKey(d)) all.put(d, null);
             }
         }
@@ -159,6 +206,7 @@ public class EventMerger {
     }
     
     private void printConfiguration() {
+        System.out.println();
         System.out.println("Double hits suppression flag set to " + suppressDoubleHits);
         System.out.println("Preserve hit list order flag set to " + preserveHitOrder);
         this.printDetectors();
@@ -182,7 +230,43 @@ public class EventMerger {
             else
                 System.out.print(" ");
         }
-        System.out.println("\n");
+        System.out.print("\n\treading banks: ");
+        List<String> banks = new ArrayList<>();
+        for(DetectorType det : detectors.keySet()) {
+            if(ADCs.get(det)!=null)
+                banks.addAll(ADCs.get(det));
+            if(TDCs.get(det)!=null)
+                banks.addAll(TDCs.get(det));
+        }
+        if(!banks.isEmpty()) {
+            for(int ib=0; ib<banks.size(); ib++) {
+                String bank = banks.get(ib);
+                System.out.print(bank);
+                if(ib<banks.size()-1)
+                    System.out.print(", ");
+            }
+        }
+        else
+            System.out.print("none");
+        System.out.print("\n\twriting banks: ");
+        banks.clear();
+        for(DetectorType det : detectors.keySet()) {
+            if(ADCs.get(det)!=null)
+                banks.add(ADCs.get(det).get(0));
+            if(TDCs.get(det)!=null)
+                banks.add(TDCs.get(det).get(0));
+        }
+        if(!banks.isEmpty()) {
+            for(int ib=0; ib<banks.size(); ib++) {
+                String bank = banks.get(ib);
+                System.out.print(bank);
+                if(ib<banks.size()-1)
+                    System.out.print(", ");
+            }
+        }
+        else
+            System.out.print("none");
+        System.out.println();
     }
     
     private void printOrders() {
@@ -218,13 +302,15 @@ public class EventMerger {
             
             List<Integer> layers = detectors.get(det);
             
-            if(EventMergerConstants.ADCs.contains(det)) {
-                names.add(det.getName()+"::adc");
-                banks.add(merger.mergeADCs(det, layers)); 
+            if(ADCs.containsKey(det)) {
+                for(String name : ADCs.get(det))
+                    names.add(name);
+                banks.add(merger.mergeADCs(det, layers, ADCs.get(det))); 
             }
-            if(EventMergerConstants.TDCs.contains(det)) {
-                names.add(det.getName()+"::tdc");
-                banks.add(merger.mergeTDCs(det, layers));
+            if(TDCs.containsKey(det)) {
+                for(String name : TDCs.get(det))
+                    names.add(name);
+                banks.add(merger.mergeTDCs(det, layers, TDCs.get(det)));
             }
             if(banks.isEmpty())
                 System.out.println("Unknown detector:" + det);
@@ -259,8 +345,6 @@ public class EventMerger {
 
     public static void main(String[] args)  {
 
-        DefaultLogger.debug();
-
         OptionParser parser = new OptionParser("bg-merger");
         parser.addRequired("-o"    ,"merged file");
         parser.addRequired("-i"    ,"signal event file");
@@ -270,7 +354,7 @@ public class EventMerger {
         parser.addOption("-r"    ,"1", "reuse background events: 0-false, 1-true");
         parser.addOption("-s"    ,"1", "suppress double TDC hits on the same component, 0-no suppression, 1-suppression");
         parser.addOption("-l"    ,"1", "preserve initial hit order (for compatibility with truth matching, 0-false, 1-true");
-        parser.addOption("-t"    ,"NOMINAL,BGADDED_NOMINAL,BGREMOVED,BGREMOVED_BG", "list of hit OrderTypes to be saved");
+        parser.addOption("-t"    ,"NOMINAL,BGADDED_NOMINAL,BGREMOVED,BGREMOVED_BG,DECREMOVED,DECREMOVED_BG", "list of hit OrderTypes to be saved");
         parser.addOption("-x"    ,"1", "background scale factor");
         parser.parse(args);
         
@@ -289,21 +373,24 @@ public class EventMerger {
             boolean hitOrder    = (parser.getOption("-l").intValue()==1);
             
             
-            EventMerger merger = new EventMerger(detectors.split(","),ordertypes.split(","),doubleHits,hitOrder);
-            if(!merger.setBgFiles(bgFiles, bgScale, reuseBG))
-                System.exit(1);
-                
-            int counter = 0;
-
             // Reader for signal events
             HipoDataSource readerData = new HipoDataSource();
             readerData.open(dataFile);
             
             //Writer
-            HipoDataSync writer = new HipoDataSync();
+            HipoDataSync writer = readerData.createWriter();
             writer.setCompressionType(2);
             writer.open(outputFile);
             
+            EventMerger merger = new EventMerger(detectors.split(","),
+                                                 readerData.getReader().getSchemaFactory(),
+                                                 ordertypes.split(","),
+                                                 doubleHits,hitOrder);
+            if(!merger.setBgFiles(bgFiles, bgScale, reuseBG))
+                System.exit(1);
+                
+            int counter = 0;
+
             ProgressPrintout  progress = new ProgressPrintout();
             while (readerData.hasEvent()) {
 

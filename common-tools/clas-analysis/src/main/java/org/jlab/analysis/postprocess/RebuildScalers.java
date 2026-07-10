@@ -8,11 +8,11 @@ import org.jlab.detector.calib.utils.ConstantsManager;
 import org.jlab.detector.calib.utils.RCDBConstants;
 import org.jlab.detector.scalers.DaqScalers;
 import org.jlab.detector.helicity.HelicitySequenceManager;
+import org.jlab.detector.scalers.DaqScalersSequence;
 import org.jlab.jnp.hipo4.data.Bank;
 import org.jlab.jnp.hipo4.data.Event;
 import org.jlab.jnp.hipo4.io.HipoReader;
 import org.jlab.jnp.hipo4.io.HipoWriterSorted;
-import org.jlab.logging.DefaultLogger;
 import org.jlab.utils.groups.IndexedTable;
 import org.jlab.utils.options.OptionParser;
 import org.jlab.utils.system.ClasUtilsFile;
@@ -31,10 +31,9 @@ public class RebuildScalers {
     
     public static void main(String[] args) {
 
-        DefaultLogger.debug();
-
         OptionParser parser = new OptionParser("rebuildscaler");
         parser.addRequired("-o","output.hipo");
+        parser.addOption("-c", "0", "Fix DSC/RUN::scaler clock rollover");
         parser.parse(args);
         List<String> inputList = parser.getInputList();
         if(inputList.isEmpty()==true){
@@ -46,7 +45,7 @@ public class RebuildScalers {
         HelicitySequenceManager helSeq = new HelicitySequenceManager(8,inputList);
         
         HipoWriterSorted writer = new HipoWriterSorted();
-        writer.getSchemaFactory().initFromDirectory(ClasUtilsFile.getResourceDir("COATJAVA", "etc/bankdefs/hipo4"));
+        writer.getSchemaFactory().initFromDirectory(ClasUtilsFile.getResourceDir("CLAS12DIR", "etc/bankdefs/hipo4"));
         writer.setCompressionType(2);
         writer.open(parser.getOption("-o").stringValue());
 			
@@ -59,6 +58,13 @@ public class RebuildScalers {
         ConstantsManager conman = new ConstantsManager();
         conman.init(Arrays.asList(new String[]{CCDB_FCUP_TABLE,CCDB_SLM_TABLE,CCDB_HEL_TABLE,CCDB_DSC_TABLE}));
         
+        DaqScalersSequence seq = null;
+        if (!parser.getOption("-c").stringValue().equals("0")) {
+            System.out.println("Correcting clock rollover!");
+            seq = DaqScalersSequence.rebuildSequence(1, conman, inputList);
+            seq.fixClockRollover();
+        }
+
         for (String filename : inputList) {
 
             HipoReader reader = new HipoReader();
@@ -99,6 +105,12 @@ public class RebuildScalers {
                     if (ccdb_dsc.getIntValue("frequency", 0,0,0) < 2e5) {
                         ds = DaqScalers.create(rawScalerBank, ccdb_fcup, ccdb_slm, ccdb_hel, ccdb_dsc);
                     }
+                    else if (seq != null) {
+                        // Use rollover-corrected clock if available and clock's freq > 200 kHz
+                        long ut = seq.get(event).dsc2.getClock();
+                        long gt = seq.get(event).dsc2.getGatedClock();
+                        ds = DaqScalers.create(rawScalerBank, ccdb_fcup, ccdb_slm, ccdb_hel, ccdb_dsc, ut, gt);
+                    }
                     else {
                         // Inputs for calculation run duration in seconds, since for
                         // some run periods the DSC2 clock rolls over during a run.
@@ -106,7 +118,7 @@ public class RebuildScalers {
                         Date uet = new Date(runConfigBank.getInt("unixtime",0)*1000L);
                         ds = DaqScalers.create(rawScalerBank, ccdb_fcup, ccdb_slm, ccdb_hel, rst, uet);
                     }
-
+                    
                     runScalerBank = ds.createRunBank(writer.getSchemaFactory());
                     helScalerBank = ds.createHelicityBank(writer.getSchemaFactory());
                    

@@ -194,8 +194,7 @@ public class FittedHit extends Hit implements Comparable<Hit> {
             }
 
             double x = this.get_Doca() / this.get_CellSize();
-            if(event.hasBank("MC::Particle") ||
-                    event.getBank("RUN::config").getInt("run", 0) < 100 ) { // for MC use functional form put in simulation
+            if(event.hasBank("MC::Particle")) { // for MC use functional form put in simulation
                 
                 double p1 = constants0.getDoubleValue("parameter1", this.get_Sector(),this.get_Superlayer(),0);
                 double p2 = constants0.getDoubleValue("parameter2", this.get_Sector(),this.get_Superlayer(),0);
@@ -1032,7 +1031,7 @@ public class FittedHit extends Hit implements Comparable<Hit> {
 
     /**
      * 
-     * @return a value <=1 resetting beta to 1 for overflows
+     * @return a value {@code <=1} resetting beta to 1 for overflows
      */
     public double get_Beta0to1() {
         double beta = this.get_Beta();

@@ -9,6 +9,7 @@ import org.jlab.jnp.hipo4.data.Bank;
 import org.jlab.jnp.hipo4.data.Event;
 import org.jlab.jnp.hipo4.data.SchemaFactory;
 import org.jlab.utils.groups.IndexedTable;
+import java.util.logging.Logger;
 
 /**
  *
@@ -48,14 +49,25 @@ public class DaqScalers {
 
     public Dsc2Scaler dsc2=null;
     public StruckScalers struck=null;
-
     private long timestamp=0;
+    private int evnum=0;
+
+    private static final Logger logger = Logger.getLogger(DaqScalers.class.getName());
+
     public DaqScalers setTimestamp(long timestamp) {
         this.timestamp=timestamp;
         return this;
     }
+    
     public long getTimestamp(){ return this.timestamp; }
+    public void setEventNum(int evnum) { this.evnum=evnum; }
+    public int getEventNum() { return this.evnum; }
 
+    @Override
+    public String toString() {
+        return String.format("%d %s",timestamp,dsc2);
+    }
+    
     /**
      * Get seconds between two dates assuming the differ by not more than 24 hours.
      *
@@ -86,11 +98,13 @@ public class DaqScalers {
     public static DaqScalers create(Bank runScalerBank) {
         DaqScalers ds=new DaqScalers();
         ds.dsc2=new Dsc2Scaler();
-        for (int ii=0; ii<runScalerBank.getRows(); ii++) {
-            ds.dsc2.setLivetime(runScalerBank.getFloat("livetime", ii));
-            ds.dsc2.setBeamCharge(runScalerBank.getFloat("fcup",ii));
-            ds.dsc2.setBeamChargeGated(runScalerBank.getFloat("fcupgated",ii));
-            break; 
+        if (runScalerBank.getRows() > 0) {
+            ds.dsc2.setLivetime(runScalerBank.getFloat("livetime", 0));
+            ds.dsc2.setBeamCharge(runScalerBank.getFloat("fcup",0));
+            ds.dsc2.setBeamChargeGated(runScalerBank.getFloat("fcupgated",0));
+        }
+        if (runScalerBank.getRows() > 1) {
+            logger.warning("found event where RUN::scaler bank has more than 1 row");
         }
         return ds;
     }
@@ -136,8 +150,33 @@ public class DaqScalers {
      * @return  
      */
     public static DaqScalers create(Bank rawScalerBank,IndexedTable fcupTable,IndexedTable slmTable,IndexedTable helTable,IndexedTable dscTable) {
+        StruckScalers struck = StruckScalers.read(rawScalerBank,fcupTable,slmTable,helTable);
         Dsc2Scaler dsc2 = new Dsc2Scaler(rawScalerBank,fcupTable,slmTable,dscTable);
-        return DaqScalers.create(rawScalerBank,fcupTable,slmTable,helTable,dsc2.getGatedClockSeconds());
+        DaqScalers ds = new DaqScalers();
+        ds.dsc2 = dsc2;
+        ds.struck = struck;
+        return ds;
+    }
+
+    /**
+     * Same as create(Bank,IndexedTable,IndexedTable,IndexedTable), except 
+     * relies on clock, gatedClock values. Used with clock rollover correction
+     *
+     * @param rawScalerBank HIPO RAW::scaler bank
+     * @param fcupTable /runcontrol/fcup from CCDB
+     * @param slmTable /runcontrol/slm from CCDB
+     * @param helTable /runcontrol/helicity from CCDB
+     * @param dscTable /daq/config/scalers/dsc1 from CCDB
+     * @param clock (rollover-corrected) DSC2 clock's count
+     * @param gatedClock (rollover-corrected) DSC2 gated clock's count
+     * @return  
+     */
+    public static DaqScalers create(Bank rawScalerBank,IndexedTable fcupTable,IndexedTable slmTable,IndexedTable helTable,IndexedTable dscTable,long clock,long gatedClock) {
+        DaqScalers ds = DaqScalers.create(rawScalerBank,fcupTable,slmTable,helTable,dscTable);
+        ds.dsc2.setClock(clock);
+        ds.dsc2.setGatedClock(gatedClock);
+        ds.dsc2.calibrate(fcupTable, slmTable);
+        return ds;
     }
 
     /**

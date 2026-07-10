@@ -2,6 +2,7 @@ package org.jlab.clas.reco;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -60,14 +61,22 @@ public abstract class ReconstructionEngine implements Engine {
     volatile boolean dropOutputBanks = false;
     private final Set<String> outputBanks = new HashSet<>();
 
+    private volatile List<Integer> runNumbers = new ArrayList<>();
+
     private boolean ignoreInvalidRunNumbers = true;
+
+    private int runNumberOverride = -1;
 
     volatile long triggerMask = 0xFFFFFFFFFFFFFFFFL;
 
-    String             engineName        = "UnknownEngine";
-    String             engineAuthor      = "N.T.";
-    String             engineVersion     = "0.0";
-    String             engineDescription = "CLARA Engine";
+    String engineName        = "UnknownEngine";
+    String engineAuthor      = "N.T.";
+    String engineVersion     = "0.0";
+    String engineDescription = "CLARA Engine";
+
+    abstract public boolean processDataEventUser(DataEvent event);
+    abstract public boolean init();
+    abstract public void detectorChanged(int runNumber);
 
     public ReconstructionEngine(String name, String author, String version){
         engineName    = name;
@@ -108,16 +117,13 @@ public abstract class ReconstructionEngine implements Engine {
         return new RawDataBank(bankName, order);
     }
 
-    abstract public boolean processDataEvent(DataEvent event);
-    abstract public boolean init();
-   
     /**
      * Use a map just to avoid name clash in ConstantsManager.
      * @param tables map of table names to #indices
      */
     public void requireConstants(Map<String,Integer> tables){
         if(constManagerMap.containsKey(this.getClass().getName())==false){
-            LOGGER.log(Level.INFO,"[ConstantsManager] ---> create a new one for module : " + this.getClass().getName());
+            LOGGER.log(Level.FINE, "[ConstantsManager] ---> create a new one for module : {0}", this.getClass().getName());
             ConstantsManager manager = new ConstantsManager();
             manager.init(tables);
             constManagerMap.put(this.getClass().getName(), manager);
@@ -126,7 +132,7 @@ public abstract class ReconstructionEngine implements Engine {
 
     public void requireConstants(List<String> tables){
         if(constManagerMap.containsKey(this.getClass().getName())==false){
-            LOGGER.log(Level.INFO,"[ConstantsManager] ---> create a new one for module : " + this.getClass().getName());
+            LOGGER.log(Level.FINE, "[ConstantsManager] ---> create a new one for module : {0}", this.getClass().getName());
             ConstantsManager manager = new ConstantsManager();
             manager.init(tables);
             constManagerMap.put(this.getClass().getName(), manager);
@@ -163,10 +169,10 @@ public abstract class ReconstructionEngine implements Engine {
         
         if (ed.getMimeType().equals(EngineDataType.JSON.toString())) {
             this.engineConfiguration = (String) ed.getData();
-            LOGGER.log(Level.INFO,"[CONFIGURE][" + this.getName() + "] ---> JSON Data : " + this.engineConfiguration);
+            LOGGER.log(Level.FINE,"[CONFIGURE][" + this.getName() + "] ---> JSON Data : " + this.engineConfiguration);
         } else {
             this.engineConfiguration = "";
-            LOGGER.log(Level.INFO,"[CONFIGURE][" + this.getName() + "] *** WARNING *** ---> NO JSON Data provided");
+            LOGGER.log(Level.FINE,"[CONFIGURE][" + this.getName() + "] *** WARNING *** ---> NO JSON Data provided");
         }
        
         // store yaml contents for easy access by engines:
@@ -185,8 +191,11 @@ public abstract class ReconstructionEngine implements Engine {
           constManagerMap = new ConcurrentHashMap<>();
       if(engineDictionary == null)
           engineDictionary = new SchemaFactory();
-      LOGGER.log(Level.INFO,"--- engine configuration is called " + this.getDescription());
+      LOGGER.log(Level.FINEST,"--- engine configuration is called " + this.getDescription());
       try {
+          if (this.getEngineConfigString("runNumberOverride")!=null) {
+              this.runNumberOverride = Integer.valueOf(this.getEngineConfigString("runNumberOverride"));
+          }
           if (this.getEngineConfigString("rawBankGroup")!=null) {
               this.rawBankOrders = RawBank.getFilterGroup(this.getEngineConfigString("rawBankGroup"));
           }
@@ -211,13 +220,13 @@ public abstract class ReconstructionEngine implements Engine {
             if(engineConfiguration.length()>2){
 //                String variation = this.getStringConfigParameter(engineConfiguration, "services", "variation");
                 String variation = this.getStringConfigParameter(engineConfiguration, "variation");
-                LOGGER.log(Level.INFO,"[CONFIGURE]["+ this.getName() +"] ---->  Setting variation : " + variation);
+                LOGGER.log(Level.FINE,"[CONFIGURE]["+ this.getName() +"] ---->  Setting variation : " + variation);
                 if(variation.length()>2) this.setVariation(variation);
                 String timestamp = this.getStringConfigParameter(engineConfiguration, "timestamp");
-                LOGGER.log(Level.INFO,"[CONFIGURE]["+ this.getName() +"] ---->  Setting timestamp : " + timestamp);
+                LOGGER.log(Level.FINE,"[CONFIGURE]["+ this.getName() +"] ---->  Setting timestamp : " + timestamp);
                 if(timestamp.length()>2) this.setTimeStamp(timestamp);
             } else {
-                LOGGER.log(Level.WARNING,"[CONFIGURE][" + this.getName() +"] *** WARNING *** ---> configuration string is too short ("
+                LOGGER.log(Level.FINE,"[CONFIGURE][" + this.getName() +"] *** WARNING *** ---> configuration string is too short ("
                  + this.engineConfiguration + ")");
             }
         } catch (Exception e){
@@ -227,8 +236,7 @@ public abstract class ReconstructionEngine implements Engine {
     }
     
     protected String getStringConfigParameter(String jsonString,                                             
-            String key)  throws Exception {
-        Object js;
+                                              String key)  throws Exception {
         String variation = "";
         try {
             JSONObject base = new JSONObject(jsonString);
@@ -236,15 +244,8 @@ public abstract class ReconstructionEngine implements Engine {
             if(base.has(key)==true){
                 variation = base.getString(key);
             } else {
-                LOGGER.log(Level.WARNING,"[JSON]" + this.getName() + " **** warning **** does not contain key = " + key);
+                LOGGER.log(Level.FINE,"[JSON]" + this.getName() + " **** warning **** does not contain key = " + key);
             }
-            /*
-            js = base.get(key);
-            if (js instanceof String) {
-                return (String) js;
-            } else {
-                throw new Exception("JSONObject[" +  "] not a string.");
-            }*/
         } catch (JSONException e) {
             throw new Exception(e.getMessage());
         }
@@ -258,7 +259,6 @@ public abstract class ReconstructionEngine implements Engine {
      * @param group      config parameter group.
      * @param key        the key of the config parameter.
      * @return parameter: String value
-     * @throws ClasEngineException org.jlab.clara.clas engine exception
      */
     protected String getStringConfigParameter(String jsonString,
                                               String group,
@@ -279,7 +279,7 @@ public abstract class ReconstructionEngine implements Engine {
     
     public void setVariation(String variation){
        for(Map.Entry<String,ConstantsManager> entry : constManagerMap.entrySet()){
-           LOGGER.log(Level.INFO,"[MAP MANAGER][" + this.getName() + "] ---> Setting " + entry.getKey() + " : variation = "
+           LOGGER.log(Level.FINE,"[MAP MANAGER][" + this.getName() + "] ---> Setting " + entry.getKey() + " : variation = "
                    + variation );
            entry.getValue().setVariation(variation);
        }
@@ -287,7 +287,7 @@ public abstract class ReconstructionEngine implements Engine {
     
     public void setTimeStamp(String timestamp){
         for(Map.Entry<String,ConstantsManager> entry : constManagerMap.entrySet()){
-            LOGGER.log(Level.INFO,"[MAP MANAGER][" + this.getName() + "] ---> Setting " + entry.getKey() + " : timestamp = "
+            LOGGER.log(Level.FINE,"[MAP MANAGER][" + this.getName() + "] ---> Setting " + entry.getKey() + " : timestamp = "
                    + timestamp );
            entry.getValue().setTimeStamp(timestamp);
        }
@@ -305,7 +305,7 @@ public abstract class ReconstructionEngine implements Engine {
             mask = mask.substring(2);
         }
         triggerMask = Long.parseLong(mask,16);
-        LOGGER.log(Level.INFO, String.format("[CONFIGURE][%s] Trigger mask set to : 0x%016x", this.getName(), triggerMask));
+        LOGGER.log(Level.FINE, String.format("[CONFIGURE][%s] Trigger mask set to : 0x%016x", this.getName(), triggerMask));
     }
 
     public final boolean applyTriggerMask(DataEvent event) {
@@ -345,17 +345,22 @@ public abstract class ReconstructionEngine implements Engine {
             }
         }
     }
-
-    public boolean checkRunNumber(DataEvent event) {
-        if (!this.ignoreInvalidRunNumbers) return true;
-        int run = 0;
-        if (event.hasBank("RUN::config")) {
-            run = event.getBank("RUN::config").getInt("run",0);
+    
+    public synchronized boolean checkRunNumber(DataEvent event) {
+        int r = runNumberOverride;
+        if (r <= 0 && event.hasBank("RUN::config")) {
+            r = event.getBank("RUN::config").getInt("run",0);
         }
-        return run>0;
+        if (r > 0) {
+            if (this.runNumbers.isEmpty() || r != this.runNumbers.get(this.runNumbers.size()-1)) {
+                this.runNumbers.add(r);
+                this.detectorChanged(r);
+            }
+        }
+        return !this.ignoreInvalidRunNumbers || r>0;
     }
     
-    public void filterEvent(DataEvent dataEvent) {
+    public void processDataEvent(DataEvent dataEvent) {
         if (!this.wroteConfig) {
             this.wroteConfig = true;
             JsonUtils.extend(dataEvent, CONFIG_BANK_NAME, "json", this.generateConfig());
@@ -365,7 +370,7 @@ public abstract class ReconstructionEngine implements Engine {
         }
         if(this.applyTriggerMask(dataEvent)) {
             if (this.checkRunNumber(dataEvent)) {
-                this.processDataEvent(dataEvent);
+                this.processDataEventUser(dataEvent);
             }
         }        
     }
@@ -404,7 +409,7 @@ public abstract class ReconstructionEngine implements Engine {
             }
                     
             try {
-                this.filterEvent(dataEventHipo);
+                this.processDataEvent(dataEventHipo);
                 output.setData(mt, dataEventHipo.getHipoEvent());
             } catch (Exception e) {
                 String msg = String.format("Error processing input event%n%n%s", ClaraUtil.reportException(e));
@@ -434,7 +439,6 @@ public abstract class ReconstructionEngine implements Engine {
             try {
                 this.processDataEvent(dataevent);
                 ByteBuffer  bbo = dataevent.getEventBuffer();
-                //byte[] buffero = bbo.array();
                 output.setData(mt, bbo);
             } catch (Exception e) {
                 String msg = String.format("Error processing input event%n%n%s", ClaraUtil.reportException(e));
@@ -446,42 +450,6 @@ public abstract class ReconstructionEngine implements Engine {
         }
 
         return input;
-        /*
-        if (!mt.equalsIgnoreCase()) {
-            String msg = String.format("Wrong input type: %s", mt);
-            output.setStatus(EngineStatus.ERROR);
-            output.setDescription(msg);
-            return output;
-        }*/
-        /*
-        EvioDataEvent dataevent = null;
-
-        try {
-            ByteBuffer bb = (ByteBuffer) input.getData();
-            byte[] buffer = bb.array();
-            ByteOrder endianness = bb.order();
-            dataevent = new EvioDataEvent(buffer, endianness, EvioFactory.getDictionary());
-        } catch (Exception e) {
-            String msg = String.format("Error reading input event%n%n%s", ClaraUtil.reportException(e));
-            output.setStatus(EngineStatus.ERROR);
-            output.setDescription(msg);
-            return output;
-        }
-
-        try {
-            this.processDataEvent(dataevent);
-            ByteBuffer  bbo = dataevent.getEventBuffer();
-            //byte[] buffero = bbo.array();
-            output.setData(mt, bbo);
-        } catch (Exception e) {
-            String msg = String.format("Error processing input event%n%n%s", ClaraUtil.reportException(e));
-            output.setStatus(EngineStatus.ERROR);
-            output.setDescription(msg);
-            return output;
-        }
-
-        return output;
-        */
     }
 
     @Override
@@ -556,16 +524,21 @@ public abstract class ReconstructionEngine implements Engine {
             super("a","b","c");
         }
         @Override
-        public boolean processDataEvent(DataEvent event) {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        public boolean processDataEventUser(DataEvent event) {
+            throw new UnsupportedOperationException("Not supported yet.");
         }
 
         @Override
         public boolean init() {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            throw new UnsupportedOperationException("Not supported yet.");
         }
-    
-}
+
+        @Override
+        public void detectorChanged(int runNumber) {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+    }
+
     public static void main(String[] args){
         System.setProperty("CLAS12DIR", "/Users/gavalian/Work/Software/project-3a.0.0/Distribution/clas12-offline-software/coatjava");
         try {
@@ -586,7 +559,6 @@ public abstract class ReconstructionEngine implements Engine {
                     "\"timestamp\":333\n" +
                     "}";
             System.out.println(json);
-            //json = "{ \"ccdb\":{\"run\":10,\"variation\":\"default\"}, \"variation\":\"cosmic\"}";
             Reco reco = new Reco();
             String variation =  reco.getStringConfigParameter(json, "variation");
             System.out.println(" Variation : " + variation);

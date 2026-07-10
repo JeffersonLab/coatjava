@@ -43,6 +43,7 @@ import org.jlab.clas.tracking.kalmanfilter.zReference.KFitterStraight;
 import org.jlab.clas.tracking.kalmanfilter.zReference.StateVecs;
 import org.jlab.clas.tracking.utilities.MatrixOps.Libr;
 import org.jlab.clas.tracking.utilities.RungeKuttaDoca;
+import org.jlab.detector.base.DetectorType;
 
 public class DCTBEngine extends DCEngine {
     
@@ -70,7 +71,8 @@ public class DCTBEngine extends DCEngine {
     }
     
     @Override
-    public boolean processDataEvent(DataEvent event) {
+    public boolean processDataEventUser(DataEvent event) {
+
         int run = this.getRun(event);
         if(run==0) return true;
         
@@ -106,7 +108,7 @@ public class DCTBEngine extends DCEngine {
         List<Cross> crosses = new ArrayList<>();
         List<Track> trkcands = new ArrayList<>();
         
-        LOGGER.log(Level.FINE, "TB AI "+ this.getName());
+        LOGGER.log(Level.FINEST, "TB AI "+ this.getName());
         //instantiate bank writer
         RecoBankWriter rbc = new RecoBankWriter(this.getBanks());
 
@@ -200,6 +202,24 @@ public class DCTBEngine extends DCEngine {
         if(TrackArray==null) {
             return true; // HB tracks not saved correctly
         }
+        if(Math.abs(Swimmer.getTorScale()) < 0.001 && 
+            event.hasBank(this.getBanks().getRecPartBank()) && 
+            event.hasBank(this.getBanks().getRecTrackBank())){
+            DataBank trackBank = event.getBank(this.getBanks().getRecTrackBank());
+            DataBank partBank  = event.getBank(this.getBanks().getRecPartBank());
+            for (int i = 0; i < trackBank.rows(); i++) {
+                if (trackBank.getByte("detector", i) == DetectorType.DC.getDetectorId()) {
+                    int pindex = trackBank.getShort("pindex", i);
+                    if(partBank.getInt("pid", i) == 11) {
+                        Track HBtrk = TrackArray[trackBank.getShort("index", i)];
+                        HBtrk.set_pAtOrig(new Vector3D(partBank.getFloat("px", pindex),
+                                                       partBank.getFloat("py", pindex),
+                                                       partBank.getFloat("pz", pindex)));
+                        HBtrk.set_P(HBtrk.get_pAtOrig().mag());
+                    }
+                }
+            }
+        }
         for(Segment seg : segments) {
             if(seg.get(0).get_AssociatedHBTrackID()>0) {
                     TrackArray[seg.get(0).get_AssociatedHBTrackID()-1].get_ListOfHBSegments().add(seg); 
@@ -263,8 +283,9 @@ public class DCTBEngine extends DCEngine {
                     }
                                         
                     // get CovMat at vertex
-                    Point3D VTCS = crosses.get(0).getCoordsInTiltedSector(TrackArray1.get_Vtx0().x(), TrackArray1.get_Vtx0().y(), TrackArray1.get_Vtx0().z());
-                    TrackArray1.set_CovMat(kFZRef.propagateToVtx(crosses.get(0).get_Sector(), VTCS.z()));
+                    Point3D VTCS = TrackArray1.get(TrackArray1.size()-1).getCoordsInTiltedSector(TrackArray1.get_Vtx0().x(), TrackArray1.get_Vtx0().y(), TrackArray1.get_Vtx0().z());
+                    TrackArray1.set_CovMat(kFZRef.propagateToVtx(TrackArray1.get(TrackArray1.size()-1).get_Sector(), VTCS.z()));                    
+                    TrackArray1.transCMToGlobal();
                     
                     double deltaPathToVtx =  kFZRef.getDeltaPathToVtx(TrackArray1.get(TrackArray1.size()-1).get_Sector(), VTCS.z());                                
                     List<org.jlab.rec.dc.trajectory.StateVec> kfStateVecsAlongTrajectory = setKFStateVecsAlongTrajectory(kFZRef, deltaPathToVtx);
@@ -306,9 +327,10 @@ public class DCTBEngine extends DCEngine {
                         continue;
                     }
 
-                    // get CovMat at vertex
-                    Point3D VTCS = crosses.get(0).getCoordsInTiltedSector(TrackArray1.get_Vtx0().x(), TrackArray1.get_Vtx0().y(), TrackArray1.get_Vtx0().z());
-                    TrackArray1.set_CovMat(kFZRef.propagateToVtx(crosses.get(0).get_Sector(), VTCS.z()));
+                    // get CovMat at vertex                    
+                    Point3D VTCS = TrackArray1.get(TrackArray1.size()-1).getCoordsInTiltedSector(TrackArray1.get_Vtx0().x(), TrackArray1.get_Vtx0().y(), TrackArray1.get_Vtx0().z());
+                    TrackArray1.set_CovMat(kFZRef.propagateToVtx(TrackArray1.get(TrackArray1.size()-1).get_Sector(), VTCS.z()));                    
+                    TrackArray1.transCMToGlobal();
                     
                     double deltaPathToVtx =  kFZRef.getDeltaPathToVtx(TrackArray1.get(TrackArray1.size()-1).get_Sector(), VTCS.z());                                
                     List<org.jlab.rec.dc.trajectory.StateVec> kfStateVecsAlongTrajectory = setKFStateVecsAlongTrajectory(kFZRef, deltaPathToVtx);
@@ -331,7 +353,7 @@ public class DCTBEngine extends DCEngine {
                 //trk.set_Id(trkId);
                 trkcandFinder.matchHits(trk.getStateVecs(), trk, Constants.getInstance().dcDetector, dcSwim);
                 trk.calcTrajectory(trkId, dcSwim, trk.get_Vtx0(), trk.get_pAtOrig(), trk.get_Q());
-                LOGGER.log(Level.FINE, trk.toString());               
+                LOGGER.log(Level.FINEST, trk.toString());               
 
                 for(Cross c : trk) { 
                     c.set_CrossDirIntersSegWires();
@@ -574,7 +596,7 @@ public class DCTBEngine extends DCEngine {
                 double LR = Math.signum(trk.get_ListOfHBSegments().get(s).get(h).get_XWire()-trk.get_ListOfHBSegments().get(s).get(h).get_X());
                 hot._doca[0]*=-LR;
                 hot._hitError = trk.get_ListOfHBSegments().get(s).get(h).get_DocaErr()*trk.get_ListOfHBSegments().get(s).get(h).get_DocaErr();
-                //LOGGER.log(Level.FINE, " Z "+Z+" ferr "+(float)(hot._Unc /(hot._hitError/4.)));
+                //LOGGER.log(Level.FINEST, " Z "+Z+" ferr "+(float)(hot._Unc /(hot._hitError/4.)));
                 hot._Unc[0] = hot._hitError;
                 hot.region = trk.get_ListOfHBSegments().get(s).get(h).get_Region();
 				hot.sector = trk.get_ListOfHBSegments().get(s).get(h).get_Sector();
@@ -671,11 +693,11 @@ public class DCTBEngine extends DCEngine {
                 miss=l+1;
                 if(miss%2==0 && SegMap.containsKey(l)) {       //missing sl in 2,4,6
                     track.setSingleSuperlayer(SegMap.get(l));  //isolated sl in 1,3,5
-                    LOGGER.log(Level.FINE, "Missing superlayer "+miss+" seg "+SegMap.get(l).printInfo());
+                    LOGGER.log(Level.FINEST, "Missing superlayer "+miss+" seg "+SegMap.get(l).printInfo());
                 } 
                 else if(miss%2==1 && SegMap.containsKey(l+2)) { //missing sl in 1,3,5
                     track.setSingleSuperlayer(SegMap.get(l+2)); //isolated sl in 2,4,6
-                    LOGGER.log(Level.FINE, "Missing superlayer "+miss+" seg "+track.getSingleSuperlayer().printInfo());
+                    LOGGER.log(Level.FINEST, "Missing superlayer "+miss+" seg "+track.getSingleSuperlayer().printInfo());
                 }
             }
         } 

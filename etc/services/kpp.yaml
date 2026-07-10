@@ -1,11 +1,13 @@
 io-services:
   reader:
-    class: org.jlab.io.clara.HipoToHipoReader
-    name: HipoToHipoReader
+    class: org.jlab.io.clara.Clas12Reader
+    name: Clas12Reader
   writer:
-    class: org.jlab.io.clara.HipoToHipoWriter
-    name: HipoToHipoWriter
+    class: org.jlab.io.clara.Clas12Writer
+    name: Clas12Writer
 services:
+  - class: org.jlab.clas.reco.DecoderEngine
+    name: DECO
   - class: org.jlab.clas.swimtools.MagFieldsEngine
     name: MAGFIELDS
   - class: org.jlab.rec.ft.cal.FTCALEngine
@@ -70,6 +72,8 @@ services:
     name: RICH
   - class: org.jlab.service.rtpc.RTPCEngine
     name: RTPC
+  - class: org.jlab.calibration.service.CalibBanksEngine
+    name: CALIB
 configuration:
   services:
     MAGFIELDS:

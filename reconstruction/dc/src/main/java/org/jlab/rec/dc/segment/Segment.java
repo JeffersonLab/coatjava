@@ -212,7 +212,7 @@ public class Segment extends ArrayList<FittedHit> implements Comparable<Segment>
         /// <center><b>|Xwires<sub>2</sub>-Xwires<sub>1</sub>| = a*Xwires<sub>1</sub> + b</b></center>\n
         /// where a and b are DC parameters set by DC_RSEG_a and DC_RSEG_B .\n\n
         boolean value = false;
-        //LOGGER.log(Level.FINE, "in Segment DeltaW "+Math.abs(this.getAvgwire()-otherseg.getAvgwire() )+
+        //LOGGER.log(Level.FINEST, "in Segment DeltaW "+Math.abs(this.getAvgwire()-otherseg.getAvgwire() )+
         //	" < ? "+(Constants.DC_RSEG_A * this.getAvgwire() + Constants.DC_RSEG_B));
         if (Math.abs(this.getAvgwire() - otherseg.getAvgwire()) < Constants.DC_RSEG_A * this.getAvgwire() + Constants.DC_RSEG_B) {
             value = true;
@@ -229,7 +229,7 @@ public class Segment extends ArrayList<FittedHit> implements Comparable<Segment>
         /// <center><b>|Xwires<sub>2</sub>-Xwires<sub>1</sub>| = a*Xwires<sub>1</sub> + b</b></center>\n
         /// where a and b are DC parameters set by DC_RSEG_a and DC_RSEG_B .\n\n
         boolean value = true;
-        //LOGGER.log(Level.FINE, "in Segment DeltaW "+Math.abs(this.getAvgwire()-otherseg.getAvgwire() )+
+        //LOGGER.log(Level.FINEST, "in Segment DeltaW "+Math.abs(this.getAvgwire()-otherseg.getAvgwire() )+
         //	" < ? "+(Constants.DC_RSEG_A * this.getAvgwire() + Constants.DC_RSEG_B));
         for(Segment otherseg : othersegs) {
             if (Math.abs(this.getAvgwire() - otherseg.getAvgwire()) < Constants.DC_RSEG_A * this.getAvgwire() + Constants.DC_RSEG_B) {

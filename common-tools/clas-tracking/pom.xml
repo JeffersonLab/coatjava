@@ -1,29 +1,55 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
+
   <groupId>org.jlab.clas</groupId>
   <artifactId>clas-tracking</artifactId>
-  <version>12.0.6t-SNAPSHOT</version>
+  <version>14.1.2-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <parent>
     <groupId>org.jlab.clas</groupId>
-    <artifactId>clas12rec</artifactId>
-    <relativePath>../../parent/pom.xml</relativePath>
-    <version>12.0.6t-SNAPSHOT</version>
+    <artifactId>common-tools</artifactId>
+    <version>14.1.2-SNAPSHOT</version>
   </parent>
 
   <dependencies>
     <dependency>
-        <groupId>org.ejml</groupId>
-        <artifactId>ejml-simple</artifactId>
-        <version>0.40</version>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-math3</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jlab.jnp</groupId>
+      <artifactId>jnp-hipo</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.ejml</groupId>
+      <artifactId>ejml-simple</artifactId> <!-- WARNING: don't override the version number from the top-level dependencyManagement; see `docs/dependency_conflicts.md` -->
+    </dependency>
+    <dependency>
+      <groupId>gov.nist.math</groupId>
+      <artifactId>jama</artifactId>
     </dependency>
     <dependency>
       <groupId>org.jlab.clas</groupId>
       <artifactId>swim-tools</artifactId>
-      <version>12.0.6t-SNAPSHOT</version>
+      <version>14.1.2-SNAPSHOT</version>
       <type>jar</type>
+    </dependency>
+    <dependency>
+      <groupId>org.jlab.clas</groupId>
+      <artifactId>clas-io</artifactId>
+      <version>14.1.2-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>org.jlab.clas</groupId>
+      <artifactId>clas-physics</artifactId>
+      <version>14.1.2-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>org.jlab.clas</groupId>
+      <artifactId>clas-geometry</artifactId>
+      <version>14.1.2-SNAPSHOT</version>
     </dependency>
   </dependencies>
 

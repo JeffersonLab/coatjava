@@ -30,7 +30,7 @@ public class LundComboBox extends JComboBox {
 	 * Constructor for a particle combobox
 	 * 
 	 * @param chargedOnly
-	 *            if <> only add charged particles
+	 *            if {@code <>} only add charged particles
 	 * @param maxMass
 	 *            the max mass added to the combobox, in MeV
 	 * @param defaultId

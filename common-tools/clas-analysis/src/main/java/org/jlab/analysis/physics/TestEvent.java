@@ -21,13 +21,20 @@ public class TestEvent {
     }
 
     public static HipoDataEvent get(DetectorType t) {
+        SchemaFactory sf = new SchemaFactory();
+        sf.initFromDirectory(CLASResources.getResourcePath("etc/bankdefs/hipo4"));
+
         HipoReader reader = new HipoReader();
         String dir = CLASResources.getResourcePath("etc/data/test");
         String stub = t.getName().toLowerCase();
         reader.open(String.format("%s/%s.hipo",dir,stub));
+
         Event e = new Event();
         reader.getEvent(e, 0);
-        return new HipoDataEvent(e,reader.getSchemaFactory());
+        if(t==DetectorType.DC)
+            return getDCSector1ElectronEvent(e);
+        else 
+            return new HipoDataEvent(e,sf);
     }
 
     private static void write() {
@@ -47,15 +54,21 @@ public class TestEvent {
         }
     } 
 
-    public static HipoDataEvent getDCSector1ElectronEvent(int event) {
-        HipoReader reader = new HipoReader();
-        reader.open(CLASResources.getResourcePath("etc/data/test/dc.hipo"));
-        Event e = new Event();
-        reader.getEvent(e, event);
-        return new HipoDataEvent(e,reader.getSchemaFactory());
+    public static HipoDataEvent getDCSector1ElectronEvent(Event e) {
+        SchemaFactory sf = new SchemaFactory();
+        sf.initFromDirectory(CLASResources.getResourcePath("etc/bankdefs/hipo4"));
+        
+        Bank mcPart = new Bank(sf.getSchema("MC::Particle"));
+        e.read(mcPart);
+        Bank recEvent = new Bank(sf.getSchema("RECHB::Event"), 1);
+        recEvent.putFloat("startTime", 0, mcPart.getByte("vt", 0));
+        e.write(recEvent);
+        
+        return new HipoDataEvent(e,sf);
     }
-
-	public static HipoDataEvent getDCSector1ElectronEvent(SchemaFactory schemaFactory) {
+    
+    @Deprecated
+    public static HipoDataEvent getDCSector1ElectronEvent(SchemaFactory schemaFactory) {
         Event testEvent = new Event();
 
 		// this event is based on a gemc event with

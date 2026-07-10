@@ -49,18 +49,19 @@
     "item" : 11,
     "info": "ADC bank for the ALERT Wire Chamber",
     "entries":[
-      { "name":"sector"    , "type":"B", "info":"sector 1"},
-      { "name":"layer"     , "type":"B", "info":"layer 1-5"},
-      { "name":"component" , "type":"S", "info":"wire number"},
-      { "name":"order"     , "type":"B", "info":"Stereo angle 0 - in, 1 - out"},
-      { "name":"ADC"       , "type":"I", "info":"ADC maximum"},
-      { "name":"time"      , "type":"F", "info":"time from pulse fit"},
-      { "name":"ped"       , "type":"S", "info":"pedestal from pulse analysis"},
-      { "name":"windex"    , "type":"S", "info":"row index in waveform bank"},
-      { "name":"integral"       , "type":"I", "info":"sum of ADC"},
-      { "name":"leadingEdgeTime"      , "type":"F", "info":"time at constant fraction amplitude"},
-      { "name":"timeOverThreshold"      , "type":"F", "info":"time over threshold at constant fraction amplitude"},
-      { "name":"constantFractionTime"      , "type":"F", "info":"time from constant fraction discriminator"}
+      { "name":"sector"              , "type":"B", "info":"sector"},
+      { "name":"layer"               , "type":"B", "info":"2 digits: first digit is superlayer, second digit is layer"},
+      { "name":"component"           , "type":"S", "info":"wire number"},
+      { "name":"order"               , "type":"B", "info":"Stereo angle 0 - in, 1 - out"},
+      { "name":"ADC"                 , "type":"I", "info":"average of 3 points around the max of ADC"},
+      { "name":"time"                , "type":"F", "info":"time corresponding to the max of ADC (ns)"},
+      { "name":"ped"                 , "type":"F", "info":"average ADC of the first 4 samples"},
+      { "name":"windex"              , "type":"S", "info":"row index in waveform bank"},
+      { "name":"integral"            , "type":"I", "info":"sum of ADC"},
+      { "name":"leadingEdgeTime"     , "type":"F", "info":"time at half amplitude (ns)"},
+      { "name":"timeOverThreshold"   , "type":"F", "info":"time over threshold at half amplitude (ns)"},
+      { "name":"constantFractionTime", "type":"F", "info":"time from constant fraction discriminator (ns)"},
+      { "name":"wfType"              , "type":"S", "info":"waveform type classification, good <= 2, bad=others"}
     ]
   },
   {
@@ -178,8 +179,7 @@
       { "name":"layer"     , "type":"B", "info":"layer (1..36)"},
       { "name":"component" , "type":"S", "info":"wire number (1..112)"},
       { "name":"order"     , "type":"B", "info":"order: 2 - TDCL , 3 - TDCR"},
-      { "name":"TDC"       , "type":"I", "info":"TDC value"},
-      { "name":"ToT"       , "type":"S", "info":"Time Over Threshold"}
+      { "name":"TDC"       , "type":"I", "info":"TDC value"}
     ]
   },
   {
@@ -204,6 +204,20 @@
       { "name":"sdoca"     , "type":"F", "info":"smeared doca"},
       { "name":"time"      , "type":"F", "info":"time for the hit"},
       { "name":"stime"     , "type":"F", "info":"smeared time"}
+    ]
+  },
+  {
+    "name" : "DC::tot",
+    "group": 20600,
+    "item" : 15,
+    "info": "TDC bank for the Drift Chambers (DCRB Firmware v2)",
+    "entries":[
+      { "name":"sector"    , "type":"B", "info":"sector (1..6)"},
+      { "name":"layer"     , "type":"B", "info":"layer (1..36)"},
+      { "name":"component" , "type":"S", "info":"wire number (1..112)"},
+      { "name":"order"     , "type":"B", "info":"order: 2 - TDCL , 3 - TDCR"},
+      { "name":"TDC"       , "type":"I", "info":"TDC value"},
+      { "name":"ToT"       , "type":"S", "info":"Time Over Threshold"}
     ]
   },
   {
@@ -380,6 +394,66 @@
       { "name":"component" , "type":"S", "info":"pmt (1-18)"},
       { "name":"order"     , "type":"B", "info":"order: 2 - TDCL , 3 - TDCR"},
       { "name":"TDC"       , "type":"I", "info":"TDC value"}
+    ]
+  },
+  {
+    "name" : "MUCAL::adc",
+    "group": 22800,
+    "item" : 11,
+    "info": "ADC bank for the muCLAS12 Electromagnetic Calorimeter",
+    "entries":[
+      { "name":"sector"    , "type":"B", "info":"sector (=1)"},
+      { "name":"layer"     , "type":"B", "info":"layer (1-6)"},
+      { "name":"component" , "type":"S", "info":"strip"},
+      { "name":"order"     , "type":"B", "info":"order: 0 - ADCL , 1 - ADCR"},
+      { "name":"ADC"       , "type":"I", "info":"ADC maximum"},
+      { "name":"time"      , "type":"F", "info":"time from pulse fit"},
+      { "name":"ped"       , "type":"S", "info":"pedestal from pulse analysis"}
+    ]
+  },
+  {
+    "name" : "MUVT::adc",
+    "group": 22900,
+    "item" : 11,
+    "info": "ADC bank for the muCLAS12 Vertex Tracker",
+    "entries":[
+      {"name":"sector"     , "type":"B", "info":"sector (=1)"},
+      {"name":"layer"      , "type":"B", "info":"layer (=1)"},
+      {"name":"component"  , "type":"S", "info":"crystal id"},
+      { "name":"order"     , "type":"B", "info":"order: 0 - ADCL , 1 - ADCR"},
+      { "name":"ADC"       , "type":"I", "info":"ADC integral from pulse fit"},
+      { "name":"time"      , "type":"F", "info":"time from pulse fit"},
+      { "name":"ped"       , "type":"S", "info":"pedestal from pulse analysis"}
+    ]
+  },
+  {
+    "name" : "MURT::adc",
+    "group": 23000,
+    "item" : 11,
+    "info": "ADC bank for the muCLAS12 Recoil Tracker",
+    "entries":[
+      {"name":"sector"     , "type":"B", "info":"sector (=1)"},
+      {"name":"layer"      , "type":"B", "info":"layer (=1)"},
+      {"name":"component"  , "type":"S", "info":"crystal id"},
+      { "name":"order"     , "type":"B", "info":"order: 0 - ADCL , 1 - ADCR"},
+      { "name":"ADC"       , "type":"I", "info":"ADC integral from pulse fit"},
+      { "name":"time"      , "type":"F", "info":"time from pulse fit"},
+      { "name":"ped"       , "type":"S", "info":"pedestal from pulse analysis"}
+    ]
+  },
+  {
+    "name" : "MURH::adc",
+    "group": 23100,
+    "item" : 11,
+    "info": "ADC bank for the muCLAS12 Recoil Hodoscope",
+    "entries":[
+      {"name":"sector"     , "type":"B", "info":"sector (1-8)"},
+      {"name":"layer"      , "type":"B", "info":"layer (1-2)"},
+      {"name":"component"  , "type":"S", "info":"tile id"},
+      { "name":"order"     , "type":"B", "info":"order: 0 - ADCL , 1 - ADCR"},
+      { "name":"ADC"       , "type":"I", "info":"ADC integral from pulse fit"},
+      { "name":"time"      , "type":"F", "info":"time from pulse fit"},
+      { "name":"ped"       , "type":"S", "info":"pedestal from pulse analysis"}
     ]
   },
   {
@@ -569,10 +643,10 @@
     ]
   },
 {
-    "name" : "URWELL::adc",
+    "name" : "URWT::adc",
     "group": 22300,
     "item" : 11,
-    "info": "ADC bank for the URWELL",
+    "info": "ADC bank for the URWT",
     "entries":[
       { "name":"sector"    , "type":"B", "info":"sector (11-63)"},
       { "name":"layer"     , "type":"B", "info":"layer (1-2)"},

@@ -22,6 +22,7 @@ import org.jlab.geom.base.ConstantProvider;
 import org.jlab.utils.groups.IndexedTable;
 import org.jlab.utils.groups.IndexedTableViewer;
 import org.jlab.utils.system.FileSystemExecScan;
+import org.jlab.logging.SplitLogManager;
 
 /**
  *
@@ -30,6 +31,9 @@ import org.jlab.utils.system.FileSystemExecScan;
 public class DatabaseConstantProvider implements ConstantProvider {
 
     static final Logger LOGGER = Logger.getLogger(DatabaseConstantProvider.class.getName());
+    static {
+        SplitLogManager.configureHandlers(LOGGER, false);
+    }
     
     private final HashMap<String,String[]> constantContainer = new HashMap<>();
     private final boolean PRINT_ALL = true;
@@ -142,15 +146,12 @@ public class DatabaseConstantProvider implements ConstantProvider {
 
         provider = CCDB.createProvider(address);
 
-        LOGGER.log(Level.INFO, "[DB] --->  open connection with : {0}", address);
-        LOGGER.log(Level.INFO, "[DB] --->  database variation   : {0}", this.variation);
-        LOGGER.log(Level.INFO, "[DB] --->  database run number  : {0}", this.runNumber);
-        LOGGER.log(Level.INFO, "[DB] --->  database time stamp  : {0}", databaseDate);
+        LOGGER.log(Level.INFO, String.format("[DB] ---> open %s | %s | %s | %s", runNumber, variation, databaseDate, address));
         
         provider.connect();
         
         if(provider.isConnected()){
-            LOGGER.log(Level.INFO,"[DB] --->  database connection  : success");
+            LOGGER.log(Level.FINE,"[DB] --->  database connection  : success");
         } else {
             LOGGER.log(Level.SEVERE,"[DB] --->  database connection  : failed");
         }
@@ -277,8 +278,8 @@ public class DatabaseConstantProvider implements ConstantProvider {
             
             int ncolumns = asgmt.getColumnCount();
             Vector<TypeTableColumn> typecolumn = asgmt.getTypeTable().getColumns();
-            LOGGER.log(Level.INFO, "[DB LOAD] ---> loading data table : {0}", table_name);
-            LOGGER.log(Level.INFO, "[DB LOAD] ---> number of columns  : {0}", typecolumn.size());
+            LOGGER.log(Level.INFO, "[DB LOAD] ---> loading : {0}", table_name);
+            LOGGER.log(Level.FINE, "[DB LOAD] ---> columns : {0}", typecolumn.size());
             for(int loop = 0; loop < ncolumns; loop++){
                 String name = typecolumn.get(loop).getName();
                 Vector<String> row = asgmt.getColumnValuesString(name);
@@ -345,7 +346,7 @@ public class DatabaseConstantProvider implements ConstantProvider {
     }
     
     public void disconnect(){
-        LOGGER.log(Level.INFO,"[DB] --->  database disconnect  : success");
+        LOGGER.log(Level.FINE,"[DB] --->  database disconnect  : success");
         this.provider.close();
     }
 

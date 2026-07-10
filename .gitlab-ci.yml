@@ -1,98 +1,228 @@
+image: codecr.jlab.org/hallb/clas12/iguana/ci_no_root:latest
+
 workflow:
   rules:
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-    - if: '$CI_PIPELINE_SOURCE == "web"'
-    - if: '$CI_PIPELINE_SOURCE == "webide"'
-    - if: '$CI_COMMIT_BRANCH == "master"'
-    - if: '$CI_COMMIT_BRANCH == "development"'
-    - if: '$CI_COMMIT_TAG'
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      auto_cancel:
+        on_new_commit: interruptible
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      auto_cancel:
+        on_new_commit: conservative
+    - if: $CI_COMMIT_TAG
+      auto_cancel:
+        on_new_commit: conservative
 
 variables:
-  KUBERNETES_MEMORY_LIMIT: "8Gi"
-  REF_NAME: ${CI_COMMIT_REF_NAME}
+  EVIOFILE: clas_018779.evio.00001
 
 default:
-  image: ubuntu:noble
-  retry: 2
+  interruptible: true
+  before_script:
+    - export CLARA_HOME=$CI_PROJECT_DIR/clara
+    - export COATJAVA=$CI_PROJECT_DIR/coatjava
+    - export PATH=$CLARA_HOME/plugins/clas12/bin:$PATH
+    - export PATH=$CLARA_HOME/bin:$PATH
+    - export PATH=$COATJAVA/bin:$PATH
 
-coatjava_build:
-  image: gcr.io/kaniko-project/executor:debug
-  script:
-    - echo "${CI_COMMIT_REF_NAME}"
-    - >-
-      /kaniko/executor
-      --context     $CI_PROJECT_DIR/docker
-      --dockerfile  $CI_PROJECT_DIR/.containers/coatjava.Dockerfile
-      --destination $CI_REGISTRY_IMAGE/coatjava:${CI_COMMIT_REF_NAME}
-      --build-arg REF_NAME=${CI_COMMIT_REF_NAME}
-
-coatjava_dind_build:
-  image: eicweb.phy.anl.gov:4567/containers/image_recipes/ubuntu_dind:latest
-  tags: 
-    - "silicon"
-  when: manual
-  allow_failure: true
-  script:
-    - echo "${CI_COMMIT_REF_NAME}"
-    - >
-      docker build --build-arg REF_NAME=${CI_COMMIT_REF_NAME}  \
-                   -f .containers/coatjava.Dockerfile \
-                   -t $CI_REGISTRY_IMAGE/coatjava_dind:${CI_COMMIT_REF_NAME}  .
-    - docker login -u ${CI_REGISTRY_USER} -p ${CI_REGISTRY_PASSWORD} ${CI_REGISTRY}
-    - docker push $CI_REGISTRY_IMAGE/coatjava_dind:${CI_COMMIT_REF_NAME}
-
-
-print_help:
-  image: $CI_REGISTRY_IMAGE/coatjava:${CI_COMMIT_REF_NAME}
-  needs: ["coatjava_build"]
-  script:
-    - export PATH=/opt/coatjava/coatjava/bin:$PATH
-    - source /opt/coatjava/coatjava/libexec/env.sh
-    - ls -lrth
-    - printenv
-    - decoder -help || true
-    - recon-util -help || true
-
-    
-alert_testing:
-  needs: ["coatjava_build"]
-  variables:
-    REF_NAME: "$CI_COMMIT_REF_NAME"
-  trigger:
-    project: hallb/alert/c12
-    strategy: depend
-
-shared_for_alert_tests:
-  needs: ["coatjava_build"]
-  variables:
-    REF_NAME: "$CI_COMMIT_REF_NAME"
-  trigger:
-    project: hallb/alert/atof/shared_for_alert
-    strategy: depend
-
-coatjava:singularity:
-  image: eicweb.phy.anl.gov:4567/containers/image_recipes/ubuntu_dind:latest
-  needs: ["coatjava_build"]
+.clon:
   tags:
-     - silicon
+    - clonfarm3-shell
+  stage: test
+  needs: [build,download]
+  dependencies: [build,download]
+  interruptible: true
+  before_script:
+    - export JAVA_HOME=/usr/clas12/offline/jdk/21.0.2
+    - export PATH=$JAVA_HOME:$PATH
+    - export PATH=/usr/clas12/offline/maven/3.9.6/bin:$PATH
+    - export PATH=/usr/clas12/offline/asprof/4.4/bin:$PATH
+    - export CLARA_HOME=$CI_PROJECT_DIR/clara
+    - export COATJAVA=$CI_PROJECT_DIR/coatjava
+    - export PATH=$CLARA_HOME/plugins/clas12/bin:$PATH
+    - export PATH=$CLARA_HOME/bin:$PATH
+    - export PATH=$COATJAVA/bin:$PATH
+    - tar -xzf clara.tar.gz
+
+stages:
+  - mirror
+  - build
+  - test
+  - deploy
+
+mirror:
+  stage: mirror
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+  script:
+    - git config --global --add safe.directory $CI_PROJECT_DIR
+    - git config --global user.email "ci-bot@code.jlab.org"
+    - git config --global user.name "GitLab CI"
+    - git checkout development
+    - git config pull.rebase true
+    - git remote set-url origin https://github.com/jeffersonlab/coatjava
+    - git pull origin development
+    - git remote set-url origin https://gitlab-ci-token:${CI_JOB_TOKEN}@code.jlab.org/hallb/clas12/coatjava/coatjava.git
+    - git push
+
+build:
+  stage: build
+  needs:
+    - job: mirror
+      optional: true
+  script:
+    - git config --global --add safe.directory $CI_PROJECT_DIR
+    - ./build-coatjava.sh --lfs --clara -T48 --quiet --no-progress
+    - tar -czf coatjava.tar.gz coatjava
+    - tar -czf clara.tar.gz clara
+  artifacts:
+    when: always
+    expire_in: 1 day
+    paths:
+      - coatjava.tar.gz
+      - clara.tar.gz
+
+download:
+  stage: build
+  script:
+    - GIT_LFS_SKIP_SMUDGE=1 git clone https://code.jlab.org/hallb/clas12/validation-data
+    - cd validation-data
+    - git lfs install --skip-smudge
+    - git config lfs.fetchinclude raw/rg-d/$EVIOFILE
+    - git lfs pull
+    - cd -
+    - ln validation-data/raw/rg-d/$EVIOFILE
+  artifacts:
+    when: always
+    paths:
+      - $EVIOFILE
+
+spotbugs:
+  stage: test
+  needs: [build]
+  dependencies: [build]
+  script:
+    - tar -xzf coatjava.tar.gz
+    - ./build-coatjava.sh -T48 --spotbugs --quiet --no-progress
+
+unit-tests:
+  stage: test
+  needs: [build]
+  dependencies: [build]
+  script:
+    - tar -xzf coatjava.tar.gz
+    - ./build-coatjava.sh -T48 --lfs --unittests --quiet --no-progress
+    - ./validation/jacoco-aggregate.sh
+  artifacts:
+    when: always
+    expire_in: 1 day
+    paths:
+      - publish
+
+docs:
+  stage: test
+  needs: [build,unit-tests]
+  dependencies: [build,unit-tests]
+  script:
+    - tar -xzf coatjava.tar.gz
+    - python3 -m venv venv
+    - source venv/bin/activate
+    - python3 -m pip install -r docs/mkdocs/requirements.txt
+    - ./docs/mkdocs/generate.sh pages
+    - libexec/build-javadocs.sh
+    - ls -l && ls -l pages && ls -l publish
+    - mv target/reports/apidocs pages/javadoc
+    - cp -r publish pages/jacoco
+  artifacts:
+    when: always
+    expire_in: 1 week
+    paths:
+      - pages
+
+eb:
+  stage: test
+  needs: [build]
+  dependencies: [build]
+  script:
+    - tar -xzf coatjava.tar.gz
+    - git config --global --add safe.directory $CI_PROJECT_DIR
+    - git lfs install
+    - git submodule update --init validation/advanced-tests/data
+    - cd validation/advanced-tests
+    - ./run-eb-tests.sh -100 ${ARG}
+  parallel:
+    matrix:
+      - ARG: electronproton 
+      - ARG: electronprotonC 
+      - ARG: electrongamma 
+      - ARG: electronneutronC
+      - ARG: electronFTpion
+
+decoder:
+  stage: test
+  needs: [build,download]
+  dependencies: [build,download]
+  script:
+    - tar -xzf clara.tar.gz
+    - decoder -l FINE -n 1000 -o decoded.hipo $EVIOFILE
+
+clara:
+  stage: test
+  needs: [build,download]
+  dependencies: [build,download]
+  script:
+    - tar -xzf clara.tar.gz
+    - run-clara -v -c $CLARA_HOME -t 4 -y ./etc/services/rgd-clarode.yml -n 30 -o out $EVIOFILE
+    - mv out/rec_$EVIOFILE.hipo claroded.hipo
+
+profile:
+  extends: .clon
   allow_failure: true
   script:
-    - apptainer build  --build-arg REF_NAME=${REF_NAME} coatjava.sif .containers/coatjava.def
-    - ls -lrth
+    - ./clara/plugins/clas12/libexec/profile -e cpu   run-clara -c ./clara -y ./etc/services/rgd-clarode.yml -o tmp1 -t 16 -l $EVIOFILE
+    - ./clara/plugins/clas12/libexec/profile -e alloc run-clara -c ./clara -y ./etc/services/rgd-clarode.yml -o tmp2 -t 16 -l $EVIOFILE
+    - ./clara/plugins/clas12/libexec/profile -e lock  run-clara -c ./clara -y ./etc/services/rgd-clarode.yml -o tmp3 -t 16 -l $EVIOFILE
   artifacts:
-      paths:
-        - coatjava.sif
+    when: always
+    expire_in: 1 week
+    paths:
+      - "asprof*.html"
 
-create-pages:
-  image: codecr.jlab.org/hallb/alert/coatjava/coatjava:development
+scaling:
+  extends: .clon
+  allow_failure: true
   script:
-    - echo "${CI_COMMIT_REF_NAME}"
-    - ls -lrth
-    - mvn --version
-    - java --version 
-    - ls -lrth
-    - pwd
-    - ./build-coatjava.sh --docs
-    - mv coatjava/share/doc/coatjava/html public
-  pages: true  # specifies that this is a Pages job and publishes the default public directory
+    - ./clara/plugins/clas12/libexec/scaling -c ./clara -y ./etc/services/rgd-clarode.yml -t 8,12,18,24 $EVIOFILE
+  artifacts:
+    when: always
+    expire_in: 1 week
+    paths:
+      - scaling.svg
+
+pages:
+  stage: deploy
+  needs: [profile,scaling,docs]
+  dependencies: [profile,scaling,docs]
+  script:
+    - cp -r pages public
+    - mkdir public/perf
+    - cp asprof*.html public/perf
+    - cp scaling.svg public/perf
+  pages: true
+  artifacts:
+    expire_in: 1 week
+    paths:
+      - public
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+.deploy:
+  stage: deploy
+  script:
+    - echo DEPLOY!
+
+.release:
+  stage: deploy
+  script:
+    - echo RELEASE!
 

@@ -1,84 +1,44 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
+
   <groupId>org.jlab.clas</groupId>
   <artifactId>clas-io</artifactId>
-  <version>12.0.6t-SNAPSHOT</version>
+  <version>14.1.2-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <parent>
     <groupId>org.jlab.clas</groupId>
-    <artifactId>clas12rec</artifactId>
-    <relativePath>../../parent/pom.xml</relativePath>
-    <version>12.0.6t-SNAPSHOT</version>
+    <artifactId>common-tools</artifactId>
+    <version>14.1.2-SNAPSHOT</version>
   </parent>
 
   <dependencies>
 
     <dependency>
       <groupId>org.jlab.coda</groupId>
-      <artifactId>jclara</artifactId>
-      <version>4.3-SNAPSHOT</version>
-    </dependency>
-
-    <!-- API, java.xml.bind module -->
-    <dependency>
-      <groupId>jakarta.xml.bind</groupId>
-      <artifactId>jakarta.xml.bind-api</artifactId>
-      <version>4.0.2</version>
-    </dependency>
-    
-    <!-- Runtime, com.sun.xml.bind module -->
-    <dependency>
-      <groupId>org.glassfish.jaxb</groupId>
-      <artifactId>jaxb-runtime</artifactId>
-      <version>4.0.5</version>
-      <scope>runtime</scope>
-    </dependency>
-
-    <!-- Unnecessary prior to Java 11 -->
-    <dependency>
-      <groupId>com.sun.xml.bind</groupId>
-      <artifactId>jaxb-impl</artifactId>
-      <version>4.0.5</version>
-      <scope>runtime</scope>
+      <artifactId>xmsg</artifactId>
+      <version>2.3</version>
     </dependency>
 
     <dependency>
-      <groupId>org.jlab.coda</groupId>
-      <artifactId>jevio</artifactId>
-      <version>6.2-SNAPSHOT</version>
-      <classifier>jar-with-dependencies</classifier>
-      <exclusions>
-        <exclusion>
-          <groupId>net.jpountz.lz4</groupId>
-          <artifactId>lz4-java</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>com.aha.compression</groupId>
-          <artifactId> AHACompressionAPI </artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>com.lmax</groupId>
-          <artifactId>disruptor</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>proguard</groupId>
-          <artifactId>proguard</artifactId>
-        </exclusion>
-      </exclusions>
+      <groupId>org.json</groupId>
+      <artifactId>json</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.yaml</groupId>
+      <artifactId>snakeyaml</artifactId>
     </dependency>
 
     <dependency>
       <groupId>org.jlab.jnp</groupId>
       <artifactId>jnp-hipo</artifactId>
-      <version>2.0-SNAPSHOT</version>
     </dependency>
 
     <dependency>
       <groupId>org.jlab.jnp</groupId>
       <artifactId>jnp-hipo4</artifactId>
-      <version>4.3-SNAPSHOT</version>
     </dependency>
 
     <dependency>
@@ -90,16 +50,50 @@
     <dependency>
       <groupId>org.jlab.clas</groupId>
       <artifactId>clas-utils</artifactId>
-      <version>12.0.6t-SNAPSHOT</version>
-    </dependency>
-
-    <dependency>
-        <groupId>org.jlab.clas</groupId>
-        <artifactId>clas-logging</artifactId>
-        <version>12.0.6t-SNAPSHOT</version>
-        <scope>compile</scope>
+      <version>14.1.2-SNAPSHOT</version>
     </dependency>
 
   </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <version>3.2.0</version>
+        <executions>
+          <execution>
+            <id>bank-schema-enums</id>
+            <phase>validate</phase>
+            <goals>
+              <goal>run</goal>
+            </goals>
+            <inherited>false</inherited>
+            <configuration>
+              <target>
+                <exec executable="python3">
+                    <arg value="./bank-schema-enums"/>
+                </exec>
+              </target>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <artifactId>maven-clean-plugin</artifactId>
+        <version>3.5.0</version>
+        <configuration>
+          <filesets>
+            <fileset>
+              <directory>src/main/java/org/jlab/io/banks</directory>
+              <includes>
+                <include>**/*.java</include>
+              </includes>
+            </fileset>
+          </filesets>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 
 </project>

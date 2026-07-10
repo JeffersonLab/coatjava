@@ -1,42 +1,68 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
+
   <groupId>org.jlab.clas</groupId>
   <artifactId>clas-detector</artifactId>
-  <version>12.0.6t-SNAPSHOT</version>
+  <version>14.1.2-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <parent>
     <groupId>org.jlab.clas</groupId>
-    <artifactId>clas12rec</artifactId>
-    <relativePath>../../parent/pom.xml</relativePath>
-    <version>12.0.6t-SNAPSHOT</version>
+    <artifactId>common-tools</artifactId>
+    <version>14.1.2-SNAPSHOT</version>
   </parent>
 
   <dependencies>
     <dependency>
       <groupId>org.jlab.clas</groupId>
       <artifactId>clas-utils</artifactId>
-      <version>12.0.6t-SNAPSHOT</version>
+      <version>14.1.2-SNAPSHOT</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.jlab</groupId>
+      <artifactId>groot</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.jlab.jnp</groupId>
+      <artifactId>jnp-hipo</artifactId>
     </dependency>
 
     <dependency>
       <groupId>org.jlab.jnp</groupId>
       <artifactId>jnp-hipo4</artifactId>
-      <version>4.3-SNAPSHOT</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.jlab.ccdbrcdb</groupId>
+      <artifactId>ccdbrcdb</artifactId>
     </dependency>
 
     <dependency>
       <groupId>org.jlab.clas</groupId>
       <artifactId>clas-io</artifactId>
-      <version>12.0.6t-SNAPSHOT</version>
-    </dependency> 
+      <version>14.1.2-SNAPSHOT</version>
+    </dependency>
 
     <dependency>
       <groupId>org.jlab.clas</groupId>
       <artifactId>clas-geometry</artifactId>
-      <version>12.0.6t-SNAPSHOT</version>
+      <version>14.1.2-SNAPSHOT</version>
     </dependency>
+
+    <dependency>
+      <groupId>org.jlab.clas</groupId>
+      <artifactId>clas-logging</artifactId>
+      <version>14.1.2-SNAPSHOT</version>
+    </dependency>
+
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+    </dependency>
+
   </dependencies>
 
 </project>

@@ -1,41 +1,59 @@
 package org.jlab.rec.ahdc.Hit;
 
+import org.apache.commons.math3.linear.Array2DRowRealMatrix;
+import org.apache.commons.math3.linear.ArrayRealVector;
+import org.apache.commons.math3.linear.MatrixUtils;
+import org.apache.commons.math3.linear.RealMatrix;
+import org.apache.commons.math3.linear.RealVector;
+import org.jlab.detector.calib.utils.DatabaseConstantProvider;
 import org.jlab.geom.detector.alert.AHDC.AlertDCDetector;
 import org.jlab.geom.prim.Line3D;
 import org.jlab.geom.prim.Point3D;
+import org.jlab.geom.detector.alert.AHDC.AlertDCFactory;
+import org.jlab.rec.ahdc.KalmanFilter.KFHit;
 
-public class Hit implements Comparable<Hit> {
+public class Hit implements Comparable<Hit>, KFHit {
 
-	private final double thster = Math.toRadians(20.0);
 	private final int    id;
 	private final int    superLayerId;
 	private final int    layerId;
 	private final int    wireId;
 	private final double doca;
-	private final double adc;
+	private final double raw_adc;
 	private final double time;
+	private double tot;
+	private double adc;
 
-        private Line3D wireLine;
+    private Line3D wireLine;
 	private double  phi;
 	private double  radius;
 	private int     nbOfWires;
 	private boolean use = false;
 	private double  x;
 	private double  y;
-	private double  residual_prefit;
 	private double  residual;
+	private double  residual_LR;
 	private int	trackId;
 
-        //updated constructor with ADC
+    //updated constructor with ADC
+	/**
+	 * 
+	 * @param _Id is AHDC::adc row id + 1
+	 * @param _Super_layer super layer id
+	 * @param _Layer layer id
+	 * @param _Wire wire id 
+	 * @param _Doca distance from the timing information using the time2distance, matches {@link Hit#time}
+	 * @param _ADC raw ADC
+	 * @param _Time calibrated time
+	 */
 	public Hit(int _Id, int _Super_layer, int _Layer, int _Wire, double _Doca, double _ADC, double _Time) {
 		this.id           = _Id;
 		this.superLayerId = _Super_layer;
 		this.layerId      = _Layer;
 		this.wireId       = _Wire;
 		this.doca         = _Doca;
-		this.adc          = _ADC;
+		this.raw_adc          = _ADC;
 		this.time 	  = _Time;
-		this.residual_prefit = 0.0;
 		this.residual        = 0.0;
 		this.trackId	     = -1; // not defined yet
 	}
@@ -45,7 +63,7 @@ public class Hit implements Comparable<Hit> {
 		//System.out.println(" superlayer " + this.superLayerId + " layer " + this.layerId + " wire " + this.wireId + " R_layer " + R_layer + " wx " + wx + " wy " + wy);
 		wireLine = factory.getSector(1).getSuperlayer(superLayerId).getLayer(layerId).getComponent(wireId).getLine();
 		Point3D end = wireLine.end();
-                this.nbOfWires = factory.getSector(1).getSuperlayer(superLayerId).getLayer(layerId).getNumComponents();
+        this.nbOfWires = factory.getSector(1).getSuperlayer(superLayerId).getLayer(layerId).getNumComponents();
 		this.phi       = end.vectorFrom(0, 0, 0).phi();
 		this.radius    = end.distance(0, 0, end.z());
 		this.x         = end.x();
@@ -57,12 +75,27 @@ public class Hit implements Comparable<Hit> {
 		return "Hit{" + "_Super_layer=" + superLayerId + ", _Layer=" + layerId + ", _Wire=" + wireId + ", _Doca=" + doca + ", _Phi=" + phi + '}';
 	}
 
+	// Should return
+	//  0 if equality
+	// +1 if this is bigger than arg0
+	// -1 if this is lower than arg0 
 	@Override
 	public int compareTo(Hit arg0) {
-		if (this.superLayerId == arg0.superLayerId && this.layerId == arg0.layerId && this.wireId == arg0.wireId) {
-			return 0;
-		} else {
-			return 1;
+		if (this.superLayerId == arg0.superLayerId && this.layerId == arg0.layerId) { // same layer, so they have the same nbOfWires
+			if (this.wireId == 1 && arg0.wireId == this.nbOfWires) {
+				return 1;
+			} 
+			else if (this.wireId == this.nbOfWires && arg0.wireId == 1) {
+				return -1;
+			}
+			else {
+				return Integer.compare(this.wireId, arg0.wireId);
+			}
+		}
+		else {
+			int this_value = 10*this.superLayerId + this.layerId;
+			int value = 10*arg0.superLayerId + arg0.layerId;
+			return Integer.compare(this_value, value);
 		}
 	}
 
@@ -86,13 +119,14 @@ public class Hit implements Comparable<Hit> {
 		return doca;
 	}
 
-        public Line3D getLine() {
-            return wireLine;
-        }
-        
-        public double getRadius() {
-		return radius;
-	}
+    public Line3D getLine() {
+        return wireLine;
+    }
+
+	@Override
+    public double getRadius() {
+        return radius;
+    }
 
 	public int getNbOfWires() {
 		return nbOfWires;
@@ -116,24 +150,45 @@ public class Hit implements Comparable<Hit> {
 
 	public double getPhi() {return phi;}
 
+	/** Get calibrated ADC */
 	public double getADC() {return adc;}
 
 	public double getResidual() {
 		return residual;
 	}
 
-	public double getResidualPrefit() {
-		return residual_prefit;
-	}
-
 	public void setResidual(double resid) {
 		this.residual = resid;
 	}
 
-	public void setResidualPrefit(double resid) {
-		this.residual_prefit = resid;
+	public double getResidual_LR() {
+		return residual_LR;
 	}
-	
+
+	public void setResidual_LR(double resid) {
+		this.residual_LR = resid;
+	}
+
+	/** Set calibrated ToT */
+	public void setToT(double _tot) {
+		this.tot = _tot;
+	}
+
+	/** Get calibrated ToT */
+	public double getToT() {
+		return tot;
+	}
+
+	/** Set calibrated ADC */
+	public void setADC(double _adc) {
+		this.adc = _adc;
+	}
+
+	/** Get raw ADC */
+	public double getRawADC() {
+		return raw_adc;
+	}
+
 	public double getTime() {
 		return time;
 	}
@@ -145,5 +200,106 @@ public class Hit implements Comparable<Hit> {
 	public void setTrackId(int _trackId) {
 		this.trackId = _trackId;
 	}
+
+	@Override
+	public RealVector getMeasurementVector() {
+		return new ArrayRealVector(new double[]{this.doca});
+	}
+
+	@Override
+    public RealMatrix getMeasurementNoiseMatrix() {
+		double mean_error = 0.471; // mm (no difference between adc and time)
+		double error_on_adc = (1.15146*raw_adc + 437.63)/(3.21187*raw_adc + 878.855); // mm
+		double error_on_time = (0.4423*time + 13.7215)/(0.846038*time + 31.9867); // mm
+		double error = error_on_adc*error_on_time/mean_error; // mm
+		
+		return new Array2DRowRealMatrix(new double[][]{{Math.pow(error, 2)}}); // mm^2
+		//return new Array2DRowRealMatrix(new double[][]{{0.09}});
+	}
+
+	// Projection function
+	@Override
+	public RealVector getProjectionVector(RealVector x) {
+		double d = this.distance(new Point3D(x.getEntry(0), x.getEntry(1), x.getEntry(2)));
+		return MatrixUtils.createRealVector(new double[]{d});
+	}
+
+	@Override
+	public RealVector getInnovationVector(RealVector x) {
+		RealVector measured = getMeasurementVector();
+		RealVector predicted = getProjectionVector(x);
+		return measured.subtract(predicted);
+	}
+
+	// Jacobian matrix of the measurement with respect to (x, y, z, px, py, pz)
+	@Override
+	public RealMatrix getProjectionMatrix(RealVector x) {
+
+		double ddocadx  = partialProjectionMatrix(x, 0);
+		double ddocady  = partialProjectionMatrix(x, 1);
+		double ddocadz  = partialProjectionMatrix(x, 2);
+		double ddocadpx = partialProjectionMatrix(x, 3);
+		double ddocadpy = partialProjectionMatrix(x, 4);
+		double ddocadpz = partialProjectionMatrix(x, 5);
+		
+		return MatrixUtils.createRealMatrix(new double[][]{
+			{ddocadx, ddocady, ddocadz, ddocadpx, ddocadpy, ddocadpz}});
+	}
+
+	private double partialProjectionMatrix(RealVector x, int i) {
+		double     h       = 1e-8;// in mm
+		RealVector x_plus  = x.copy();
+		RealVector x_minus = x.copy();
+
+		x_plus.setEntry(i, x_plus.getEntry(i) + h);
+		x_minus.setEntry(i, x_minus.getEntry(i) - h);
+
+		double doca_plus  = this.getProjectionVector(x_plus).getEntry(0);
+		double doca_minus = this.getProjectionVector(x_minus).getEntry(0);
+
+		return (doca_plus - doca_minus) / (2 * h);
+	}
+
+	@Override
+	public double distance(Point3D point3D) {
+		return this.wireLine.distance(point3D).length();
+	}
+
+	public static void main(String[] args) {
+		int run = 22712;
+		String variation = "default";
+		DatabaseConstantProvider cp = new DatabaseConstantProvider(run, variation);
+		cp.loadTable("/geometry/alert/ahdc/layer_alignment");
+		cp.loadTable("/geometry/alert/ahdc/wire_alignment");
+		String upstream_rotZ = "/geometry/alert/ahdc/layer_alignment/upstream_rotZ";
+
+		System.out.println(cp.getDouble(upstream_rotZ, 0));
+		System.out.println(cp.getDouble(upstream_rotZ, 1));
+		System.out.println(cp.getDouble(upstream_rotZ, 2));
+		System.out.println(cp.getDouble(upstream_rotZ, 3));
+		System.out.println(cp.getDouble(upstream_rotZ, 4));
+		System.out.println(cp.getDouble(upstream_rotZ, 5));
+		System.out.println(cp.getDouble(upstream_rotZ, 6));
+		System.out.println(cp.getDouble(upstream_rotZ, 7));
+
+
+		AlertDCDetector AHDCdet = (new AlertDCFactory()).createDetectorCLAS(cp);
+		//AHDCdet.print();
+
+		System.out.println("Run test: comparison between two hits.");
+		Hit h1 = new Hit(1,1,1,1,0,0,0);
+		Hit h2 = new Hit(1,1,1,47,0,0,0);
+		Hit h3 = new Hit(1,2,1,47,0,0,0);
+		h1.setWirePosition(AHDCdet);
+		h2.setWirePosition(AHDCdet);
+		System.out.println("h1 : " + h1);
+		System.out.println("h2 : " + h2);
+		System.out.println("h3 : " + h3);
+		System.out.println("numWires : " + h1.getNbOfWires());
+		System.out.println("h1 compare to h2 : " + h1.compareTo(h2));
+		System.out.println("h2 compare to h1 : " + h2.compareTo(h1));
+		System.out.println("h1 compare to h3 : " + h1.compareTo(h3));
+
+    }
 
 }

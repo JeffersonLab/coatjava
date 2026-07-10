@@ -1,13 +1,14 @@
 package org.jlab.service.atof;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.logging.Logger;
 
 import org.jlab.clas.reco.ReconstructionEngine;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 
-import java.util.concurrent.atomic.AtomicInteger;
-import org.jlab.clas.swimtools.Swim;
 import org.jlab.detector.calib.utils.DatabaseConstantProvider;
 import org.jlab.geom.base.Detector;
 import org.jlab.geom.detector.alert.ATOF.AlertTOFFactory;
@@ -18,7 +19,7 @@ import org.jlab.rec.atof.cluster.ClusterFinder;
 import org.jlab.rec.atof.hit.ATOFHit;
 import org.jlab.rec.atof.hit.BarHit;
 import org.jlab.rec.atof.hit.HitFinder;
-//import org.jlab.rec.alert.projections.TrackProjector;
+import org.jlab.utils.groups.IndexedTable;
 
 /**
  * Service to return reconstructed ATOF hits and clusters
@@ -34,9 +35,10 @@ public class ATOFEngine extends ReconstructionEngine {
 
     RecoBankWriter rbc;
 
-    private final AtomicInteger run = new AtomicInteger(0);
     private Detector ATOF;
     private double b; //Magnetic field
+    private boolean useStartTime = true;
+    static final Logger LOGGER = Logger.getLogger(ATOFEngine.class.getName());
     
     public void setB(double B) {
         this.b = B;
@@ -51,47 +53,54 @@ public class ATOFEngine extends ReconstructionEngine {
         return ATOF;
     }
 
+    int Run = -1;
+
+    // ATOF calibration tables (instance-level, refreshed on run change)
+    private IndexedTable atofEffectiveVelocityTable;
+    private IndexedTable atofTimeWalkTable;
+    private IndexedTable atofAttenuationLengthTable;
+    private IndexedTable atofTimeOffsetsTable;
+
     @Override
-    public boolean processDataEvent(DataEvent event) {
+    public boolean processDataEventUser(DataEvent event) {
 
         if (!event.hasBank("RUN::config")) {
             return true;
         }
+        Float startTime = null;
+        if(useStartTime)
+        {
+            //This assumes the FD reconstruction produced an event with good startTime
+            //All start time handling could be moved as an EB-type step later
+            if (!event.hasBank("REC::Event")) {
+                LOGGER.finer("REC::Event bank could not be read in ATOF engine while requesting starttime");
+                return true;
+            }
+            //Deal with FT TODO : if(event.getBank("REC::Event").getFloat("startTime", 0)==-1000)
+            else startTime = event.getBank("REC::Event").getFloat("startTime", 0);
+        }
 
         DataBank bank = event.getBank("RUN::config");
 
-        int newRun = bank.getInt("run", 0);
-        if (newRun == 0) {
-            return true;
+        int runNo = bank.getInt("run", 0);
+        if (runNo <= 0) {
+            System.err.println("ATOFEngine:  got run <= 0 in RUN::config, skipping event.");
+            return false;
+        }
+        int newRun = runNo;
+        if(Run!=newRun) {
+            atofEffectiveVelocityTable = this.getConstantsManager().getConstants(newRun, "/calibration/alert/atof/effective_velocity");
+            atofTimeWalkTable          = this.getConstantsManager().getConstants(newRun, "/calibration/alert/atof/time_walk");
+            atofAttenuationLengthTable = this.getConstantsManager().getConstants(newRun, "/calibration/alert/atof/attenuation");
+            atofTimeOffsetsTable       = this.getConstantsManager().getConstants(newRun, "/calibration/alert/atof/time_offsets");
+            Run = newRun;
         }
 
-        if (run.get() == 0 || (run.get() != 0 && run.get() != newRun)) {
-            run.set(newRun);
-        }
-        
-        ////Do we need to read the event vx,vy,vz?
-        ////If not, this part can be moved in the initialization of the engine.
-        //double eventVx=0,eventVy=0,eventVz=0; //They should be in CM
-        ////Track Projector Initialisation with b field
-        //Swim swim = new Swim();
-        //float magField[] = new float[3];
-        //swim.BfieldLab(eventVx, eventVy, eventVz, magField); 
-        //this.b = Math.sqrt(Math.pow(magField[0],2) + Math.pow(magField[1],2) + Math.pow(magField[2],2));
-
-        ///// \todo move this to ALERTEngine
-        //TrackProjector projector = new TrackProjector();
-        //projector.setB(this.b);
-        //projector.projectTracks(event);
-        //rbc.appendMatchBanks(event, projector.getProjections());
-
-        // Why do we have to "find" hits? 
         //Hit finder init
         HitFinder hitfinder = new HitFinder();
-        hitfinder.findHits(event, ATOF);
-
+        hitfinder.findHits(event, ATOF, startTime, atofTimeOffsetsTable, atofEffectiveVelocityTable, Run);
         ArrayList<ATOFHit> WedgeHits = hitfinder.getWedgeHits();
         ArrayList<BarHit> BarHits = hitfinder.getBarHits();
-        
         //Exit if hit lists are empty
         if (WedgeHits.isEmpty() && BarHits.isEmpty()) {
             //			System.out.println("No hits : ");
@@ -110,17 +119,38 @@ public class ATOFEngine extends ReconstructionEngine {
     }
 
     @Override
+    public void detectorChanged(int run) {
+        AlertTOFFactory factory = new AlertTOFFactory();
+        DatabaseConstantProvider cp = new DatabaseConstantProvider(run, "default");
+        this.ATOF = factory.createDetectorCLAS(cp);
+    }
+
+    @Override
     public boolean init() {
         rbc = new RecoBankWriter();
 
-        AlertTOFFactory factory = new AlertTOFFactory();
-        DatabaseConstantProvider cp = new DatabaseConstantProvider(11, "default");
-        this.ATOF = factory.createDetectorCLAS(cp);
+        Map<String, Integer> tableMap = new HashMap<>();
+        tableMap.put("/calibration/alert/atof/effective_velocity", 3);
+        tableMap.put("/calibration/alert/atof/time_walk", 4);
+        tableMap.put("/calibration/alert/atof/attenuation", 3);
+        tableMap.put("/calibration/alert/atof/time_offsets", 4);
+        requireConstants(tableMap);
+        this.getConstantsManager().setVariation("default");
         this.registerOutputBank("ATOF::hits", "ATOF::clusters");
-
+        String useStartTimeString = "UseStartTime";
+        if(this.getEngineConfigString(useStartTimeString)!=null) {
+            if ("true".equals(this.getEngineConfigString(useStartTimeString)))
+                this.useStartTime = true;
+            else if ("false".equals(this.getEngineConfigString(useStartTimeString)))
+                this.useStartTime = false;
+            else {LOGGER.severe("Invalid option parsed for ATOF UseStartTime"); return false;}
+        }
         return true;
     }
 
     public static void main(String arg[]) {
+
     }
 }
+    
+

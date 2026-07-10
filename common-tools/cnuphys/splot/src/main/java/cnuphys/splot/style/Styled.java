@@ -71,7 +71,7 @@ public class Styled implements IStyled {
 	 * @param fitLineStyle the fit line style
 	 * @param auxLineStyle the auxiliary line style
 	 * @param fitLineWidth the line width for fits
-	 * @param fitLineWidth the line width for auxiliary lines
+	 * @param auxLineWidth the line width for auxiliary lines
 	 * @param symbolType   the symbol type
 	 * @param symbolSize   the symbol size
 	 */
@@ -190,7 +190,7 @@ public class Styled implements IStyled {
 	/**
 	 * Set the symbol type
 	 * 
-	 * @param lineWidth the new symbol type
+	 * @param symbolType the new symbol type
 	 */
 	@Override
 	public void setSymbolType(SymbolType symbolType) {

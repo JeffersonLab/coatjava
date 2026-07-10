@@ -1,0 +1,12 @@
+[submodule "etc/data/magfield"]
+	path = etc/data/magfield
+	url = https://code.jlab.org/hallb/clas12/magfield.git
+[submodule "validation/advanced-tests/data"]
+	path = validation/advanced-tests/data
+	url = https://code.jlab.org/hallb/clas12/coatjava/advanced-tests.git
+[submodule "etc/nnet"]
+	path = etc/data/nnet
+	url = https://code.jlab.org/hallb/clas12/coatjava/networks.git
+[submodule "etc/data/sqlite"]
+	path = etc/data/sqlite
+	url = https://code.jlab.org/hallb/clas12/ccdbrcdb-sqlite

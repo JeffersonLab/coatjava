@@ -6,12 +6,12 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.logging.Logger;
-import org.jlab.detector.calib.utils.ConstantsManager;
 
 import org.jlab.jnp.hipo4.io.HipoReader;
 import org.jlab.jnp.hipo4.data.Event;
 import org.jlab.jnp.hipo4.data.Bank;
 import org.jlab.jnp.hipo4.data.SchemaFactory;
+import org.jlab.detector.calib.utils.ConstantsManager;
 
 /**
  * For easy access to most recent scaler readout for any given event.
@@ -27,10 +27,13 @@ public class DaqScalersSequence implements Comparator<DaqScalers> {
     
     protected final List<DaqScalers> scalers=new ArrayList<>();
     
-    private Bank rcfgBank=null;
+    private Bank runConfigBank=null;
+    private Bank runScalerBank=null;
   
-    static final Logger logger = Logger.getLogger(DaqScalersSequence.class.getName());
+    protected static final Logger logger = Logger.getLogger(DaqScalersSequence.class.getName());
     
+    protected DaqScalersSequence(){};
+
     public static class Interval {
         private DaqScalers previous = null;
         private DaqScalers next = null;
@@ -79,6 +82,11 @@ public class DaqScalersSequence implements Comparator<DaqScalers> {
         if (o1.getTimestamp() > o2.getTimestamp()) return +1;
         return 0;
     }
+
+    /** @return the number of scalers in this sequence */
+    public int size() {
+      return scalers.size();
+    }
   
     protected int findIndex(long timestamp) {
         if (this.scalers.isEmpty()) return -1;
@@ -90,9 +98,35 @@ public class DaqScalersSequence implements Comparator<DaqScalers> {
         ds.setTimestamp(timestamp);
         final int index=Collections.binarySearch(this.scalers,ds,new DaqScalersSequence());
         final int n = index<0 ? -index-2 : index;
+        logger.finest(" -> DaqScalersSequence.findIndex(" + timestamp + ") -> index = " + index + " -> return " + n);
         return n;
     }
-   
+
+    public DaqScalersSequence(SchemaFactory schema) {
+        runConfigBank = new Bank(schema.getSchema("RUN::config"));
+        runScalerBank = new Bank(schema.getSchema("RUN::scaler"));
+    }
+
+    public DaqScalersSequence(List<DaqScalers> inputScalers) {
+        for (DaqScalers inputScaler : inputScalers)
+            this.add(inputScaler);
+    }
+
+    /**
+     * remove all readouts from the sequence
+     */
+    public void clear() {
+        scalers.clear();
+    }
+
+    /**
+     * remove all but the latest readouts from the sequence
+     * @param keep the number of readouts to keep 
+     */
+    public void clear(int keep) {
+        while (scalers.size() > keep) scalers.remove(0);
+    }
+
     protected boolean add(DaqScalers ds) {
         if (this.scalers.isEmpty()) {
             this.scalers.add(ds);
@@ -116,7 +150,25 @@ public class DaqScalersSequence implements Comparator<DaqScalers> {
             }
         }
     }
-    
+
+    public boolean add(Event event){
+        event.read(runScalerBank);
+        event.read(runConfigBank);
+        if (runScalerBank.getRows() > 0) {
+            long timestamp=0;
+            int evnum=0;
+            if (runConfigBank.getRows()>0) {
+                timestamp=runConfigBank.getLong("timestamp",0);
+                evnum=runConfigBank.getInt("event",0);
+            }
+            DaqScalers ds=DaqScalers.create(runScalerBank);
+            ds.setTimestamp(timestamp);
+            ds.setEventNum(evnum);
+            return add(ds);
+        }
+        return false;
+    }
+
     /**
      * @param timestamp TI timestamp (i.e. RUN::config.timestamp)
      * @return the most recent DaqScalers for the given timestamp
@@ -132,8 +184,8 @@ public class DaqScalersSequence implements Comparator<DaqScalers> {
      * @return the most recent DaqScalers for the given event
      */
     public DaqScalers get(Event event) {
-        event.read(this.rcfgBank);
-        return this.get(this.rcfgBank.getLong("timestamp", 0));
+        event.read(this.runConfigBank);
+        return this.get(this.runConfigBank.getLong("timestamp", 0));
     }
 
     /**
@@ -156,8 +208,8 @@ public class DaqScalersSequence implements Comparator<DaqScalers> {
      * @return smallest interval of scaler readings around that event
      */
     public Interval getInterval(Event event) {
-        event.read(this.rcfgBank);
-        return this.getInterval(this.rcfgBank.getLong("timestamp", 0));
+        event.read(this.runConfigBank);
+        return this.getInterval(this.runConfigBank.getLong("timestamp", 0));
     }
 
     /**
@@ -175,10 +227,10 @@ public class DaqScalersSequence implements Comparator<DaqScalers> {
      * @return smallest interval of scaler readings around those events
      */
     public Interval getInterval(Event event1, Event event2) {
-        event1.read(this.rcfgBank);
-        final long t1 = this.rcfgBank.getLong("timestamp",0);
-        event2.read(this.rcfgBank);
-        final long t2 = this.rcfgBank.getLong("timestamp",0);
+        event1.read(this.runConfigBank);
+        final long t1 = this.runConfigBank.getLong("timestamp",0);
+        event2.read(this.runConfigBank);
+        final long t2 = this.runConfigBank.getLong("timestamp",0);
         return this.getInterval(t1,t2);
     }
 
@@ -191,18 +243,25 @@ public class DaqScalersSequence implements Comparator<DaqScalers> {
      * @return  sequence
      */
     public static DaqScalersSequence readSequence(List<String> filenames) {
+        DaqScalersSequence seq=new DaqScalersSequence();
+        seq.readFiles(filenames);
+        return seq;
+    }
+
+    /**
+     * @param filenames list of names of HIPO files to read
+     */
+    protected void readFiles(List<String> filenames) {
         logger.info("DaqScalersSequence::  Reading scaler sequence from "+String.join(",", filenames));
        
-        DaqScalersSequence seq=new DaqScalersSequence();
-
         for (String filename : filenames) {
 
             HipoReader reader = new HipoReader();
             reader.setTags(1);
             reader.open(filename);
 
-            if (seq.rcfgBank==null) {
-                seq.rcfgBank = new Bank(reader.getSchemaFactory().getSchema("RUN::config"));
+            if (this.runConfigBank==null) {
+                this.runConfigBank = new Bank(reader.getSchemaFactory().getSchema("RUN::config"));
             }
         
             SchemaFactory schema = reader.getSchemaFactory();
@@ -217,25 +276,26 @@ public class DaqScalersSequence implements Comparator<DaqScalers> {
                 event.read(configBank);
          
                 long timestamp=0;
+                int evnum=0;
                 
                 if (scalerBank.getRows()<1) continue;
                 if (configBank.getRows()>0) {
                     timestamp=configBank.getLong("timestamp",0);
+                    evnum=configBank.getInt("event",0);
                 }
         
                 DaqScalers ds=DaqScalers.create(scalerBank);
                 ds.setTimestamp(timestamp);
-                seq.add(ds);
+                ds.setEventNum(evnum);
+                this.add(ds);
             }
 
             reader.close();
         }
-        
-        return seq;
     }
    
     /**
-     * 
+     * Reads the RAW::scaler bank and rebuilds the RUN::scaler and HEL::scaler banks
      * @param tags
      * @param conman
      * @param filenames
@@ -249,8 +309,8 @@ public class DaqScalersSequence implements Comparator<DaqScalers> {
             reader.setTags(tags);
             reader.open(filename);
             SchemaFactory schema = reader.getSchemaFactory();
-            if (seq.rcfgBank==null)
-                seq.rcfgBank = new Bank(schema.getSchema("RUN::config"));
+            if (seq.runConfigBank==null)
+                seq.runConfigBank = new Bank(schema.getSchema("RUN::config"));
             while (reader.hasNext()) {
                 Event event=new Event();
                 Bank scaler=new Bank(schema.getSchema("RAW::scaler"));
@@ -265,20 +325,88 @@ public class DaqScalersSequence implements Comparator<DaqScalers> {
         }
         return seq;
     }
+
+    /**
+     * Checks if the scalers list is sorted such that the scalers' timestamp and event number orderings are consistent and monotonically increasing.
+     * @return {@code true} if timestamp and event number orderings are consistent
+     */
+    public boolean validateOrdering() {
+        if (scalers.size() <= 1) return true; // trivial case
+        boolean result = true;
+        for (int i = 0; i < scalers.size() - 1; i++) {
+            var prev = scalers.get(i);
+            var next = scalers.get(i + 1);
+            var timestampComparison = Long.compare(prev.getTimestamp(), next.getTimestamp());
+            var evnumComparison     = Integer.compare(prev.getEventNum(), next.getEventNum());
+            if (timestampComparison == 0 || evnumComparison == 0) {
+                logger.warning("WARNING: found possible duplicate scaler readout: evnum=" + prev.getEventNum() + " timestamp=" + prev.getTimestamp() + " i=" + i);
+                logger.warning("                                next readout has: evnum=" + next.getEventNum() + " timestamp=" + next.getTimestamp());
+                result = false;
+            }
+            // if neither is equal, they must have the same sign: negative, i.e., increasing monotonically
+            else {
+                if (Integer.signum(timestampComparison) != -1 || Integer.signum(evnumComparison) != -1) {
+                    logger.warning("WARNING: found non-monotonic scaler ordering: evnum=" + prev.getEventNum() + " timestamp=" + prev.getTimestamp() + " i=" + i);
+                    logger.warning("                            next readout has: evnum=" + next.getEventNum() + " timestamp=" + next.getTimestamp());
+                    result = false;
+                }
+            }
+        }
+        return result;
+    }
+
+    /**
+     * Try to fix clock rollover on the run-integrating DSC2 scaler.
+     * 1.  Assume the first clock readout has no rollover.
+     * 2.  Assume any subsequent clock decrease is a rollover. 
+     */
+    public void fixClockRollover() {
+        boolean modified = true;
+        while (modified) {
+            modified = false;
+            for (int i=this.scalers.size()-1; i>0; --i) {
+                Dsc2Scaler previous = this.scalers.get(i-1).dsc2;
+                Dsc2Scaler next = this.scalers.get(i).dsc2;
+                if (previous.clock > next.clock) {
+                    for (int j=i; j<this.scalers.size(); ++j) {
+                        if (j==i) System.out.print( String.format("FIXING CLOCK ROLLOVER:  %d %d -> ",this.scalers.get(j).dsc2.clock,this.scalers.get(j).dsc2.gatedClock));
+                        this.scalers.get(j).dsc2.clock += 2*(long)Integer.MAX_VALUE;
+                        // The gated clock also rolls over (but it's triggered by the ungated clock, not itself!?):
+                        this.scalers.get(j).dsc2.gatedClock += 2*(long)Integer.MAX_VALUE;
+                        if (j==i) System.out.println(String.format("%d %d",this.scalers.get(j).dsc2.clock,this.scalers.get(j).dsc2.gatedClock));
+                    }
+                    modified = true;
+                    break;
+                }
+            }
+        }
+    }
     
     public static void main(String[] args) {
         
-        final String dir="/Users/baltzell/data/CLAS12/rg-a/decoded/6b.2.0/";
-        final String file="clas_005038.evio.00000-00004.hipo";
-        //final String dir="/Users/baltzell/data/CLAS12/rg-b/decoded/";
-        //final String file="clas_006432.evio.00041-00042.hipo";
+        final String dir = System.getenv("HOME")+"/data/";
+        //final String file = "rollover-4013.hipo";
+        final String file = "DVCSWagon_004013.hipo";
+        //final String file = "clas_004003.evio.00040-00049.hipo";
 
         List<String> filenames=new ArrayList<>();
         if (args.length>0) filenames.addAll(Arrays.asList(args));
         else               filenames.add(dir+file);
 
+        ConstantsManager consts = new ConstantsManager();
+        consts.init("/runcontrol/fcup","/runcontrol/slm","/runcontrol/helicity","/daq/config/scalers/dsc1","/runcontrol/hwp");
+
         // 1!!!1 initialize a sequence from tag=1 events: 
-        DaqScalersSequence seq = DaqScalersSequence.readSequence(filenames);
+        DaqScalersSequence seq = DaqScalersSequence.rebuildSequence(1, consts, filenames);
+        //DaqScalersSequence seq = DaqScalersSequence.readSequence(filenames);
+        
+        //for (DaqScalers ds : seq.scalers) System.out.println(String.format("PRE:  %s",ds));
+                
+        seq.fixClockRollover();
+        
+        //for (DaqScalers ds : seq.scalers) System.out.println(String.format("POST:  %s",ds));
+        
+        System.exit(1);
 
         long good=0;
         long bad=0;
@@ -313,7 +441,11 @@ public class DaqScalersSequence implements Comparator<DaqScalers> {
                 else {
                     good++;
                     // do something useful with beam charge here:
-                    System.out.println(timestamp+" "+ds.dsc2.getBeamCharge()+" "+ds.dsc2.getBeamChargeGated());
+                    System.out.println(String.format("%d %s %f %f",
+                        timestamp,
+                        ds.dsc2,
+                        ds.dsc2.getBeamCharge(),
+                        ds.dsc2.getBeamChargeGated()));
                 }
             }
 

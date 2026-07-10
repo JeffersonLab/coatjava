@@ -1,0 +1,35 @@
+[
+  {
+    "name": "RTOF::hits",
+    "group": 22700,
+    "item": 21,
+    "info": "Reconstructed RTOF hits",
+    "entries": [		
+      {"name": "id",        "type": "S",  "info": "hit id"}, 
+      {"name": "sector",    "type": "B",  "info": "recoil tof sector"}, 
+      {"name": "layer",     "type": "B",  "info": "recoil tof layer"},
+      {"name": "component", "type": "B",  "info": "recoil tof component"},
+      {"name": "time",      "type": "F",  "info": "time in ns"},
+      {"name": "x",         "type": "F",  "info": "x position in cm"}, 
+      {"name": "y",         "type": "F",  "info": "y position in cm"}, 
+      {"name": "z",         "type": "F",  "info": "z position in cm"},
+      {"name": "energy",    "type": "F",  "info": "deposited energy in MeV"},
+      {"name": "clusterid", "type": "S",  "info": "id of cluster to which the hit was associated"}
+    ]
+  },{
+    "name": "RTOF::clusters",
+    "group": 22700,
+    "item": 22,
+    "info": "Clusters in RTOF",
+    "entries": [		
+      {"name": "id",        "type": "S",  "info": "hit id"}, 
+      {"name": "size",      "type": "S",  "info": "number of hits from the bars"},
+      {"name": "sector",    "type": "B",  "info": "sector number"},
+      {"name": "time",      "type": "F",  "info": "time in ns"},
+      {"name": "x",         "type": "F",  "info": "x position in cm"}, 
+      {"name": "y",         "type": "F",  "info": "y position in cm"}, 
+      {"name": "z",         "type": "F",  "info": "z position in cm"},
+      {"name": "energy",    "type": "F",  "info": "energy in MeV"}
+    ]
+  }
+]

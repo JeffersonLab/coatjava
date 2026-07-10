@@ -196,7 +196,7 @@ public class Converter {
 				zIndex++;
 			}
 
-			if ((gdata[PHI].max > 31) && (gdata[PHI].max > 31)) {
+			if (gdata[PHI].max > 31) {
 				System.err.println("Correcting PhiMax to 360 from " + gdata[PHI].max);
 			}
 

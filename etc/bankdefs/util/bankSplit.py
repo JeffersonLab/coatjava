@@ -52,11 +52,11 @@ print("Single json files saved in " + workdirectory + singledirectory)
 
 # these should *always* be kept:
 mc = ["MC::Event", "MC::GenMatch", "MC::Header", "MC::Lund", "MC::Particle", "MC::RecMatch", "MC::True"]
-tag1 = ["RUN::config", "RAW::epics", "RAW::scaler", "RUN::scaler", "COAT::config", "HEL::flip", "HEL::online", "HEL::decoder"]
+tag1 = ["RUN::config", "RAW::epics", "RAW::scaler", "RUN::scaler", "HEL::scaler", "COAT::config", "HEL::flip", "HEL::online", "HEL::decoder"]
 
 # these are the output of the event builder:
-rectb   = ["REC::Event","REC::Particle","REC::Calorimeter","REC::CaloExtras","REC::Cherenkov","REC::CovMat","REC::ForwardTagger","REC::Scintillator","REC::ScintExtras","REC::Track","REC::UTrack","REC::Traj","RECFT::Event","RECFT::Particle"]
-rechb   = ["RECHB::Event","RECHB::Particle","RECHB::Calorimeter","RECHB::CaloExtras","RECHB::Cherenkov","RECHB::ForwardTagger","RECHB::Scintillator","RECHB::ScintExtras","RECHB::Track"]
+rectb   = ["REC::Event","REC::Particle","REC::Calorimeter","REC::CaloExtras","REC::Cherenkov","REC::CovMat","REC::ForwardTagger","REC::Scintillator","REC::ScintExtras","REC::Track","REC::UTrack","REC::FTrack","REC::Traj","REC::VertDoca","RECFT::Event","RECFT::Particle"]
+rechb   = ["RECHB::Event","RECHB::Particle","RECHB::Calorimeter","RECHB::CaloExtras","RECHB::Cherenkov","RECHB::ForwardTagger","RECHB::Scintillator","RECHB::ScintExtras","RECHB::Track","RECHB::FTrack"]
 rectbai = ["RECAI::Event","RECAI::Particle","RECAI::Calorimeter","RECAI::CaloExtras","RECAI::Cherenkov","RECAI::CovMat","RECAI::ForwardTagger","RECAI::Scintillator","RECAI::ScintExtras","RECAI::Track","RECAI::Traj","RECAIFT::Event","RECAIFT::Particle"]
 rechbai = ["RECHBAI::Event","RECHBAI::Particle","RECHBAI::Calorimeter","RECHBAI::CaloExtras","RECHBAI::Cherenkov","RECHBAI::ForwardTagger","RECHBAI::Scintillator","RECHBAI::ScintExtras","RECHBAI::Track"]
 
@@ -66,13 +66,14 @@ raster = ["RASTER::position"]
 rich   = ["RICH::tdc","RICH::Ring","RICH::Particle"]
 rtpc   = ["RTPC::hits","RTPC::tracks","RTPC::KFtracks"]
 alert  = ["AHDC::track", "AHDC::mc", "AHDC::hits", "AHDC::preclusters", "AHDC::clusters", "AHDC::kftrack", "AHDC::ai:prediction"]
-dets   = band + raster + rich + rtpc + alert
+muclas = ["MUCAL::clusters", "MUVT::tracks"]
+dets   = band + raster + rich + rtpc + alert + muclas
 
 # additions for the calibration schema:
-calib = ["BAND::adc","BAND::laser","BAND::tdc","BAND::hits","BAND::rawhits","CND::adc","CND::hits","CND::tdc","CTOF::adc","CTOF::hits","CTOF::tdc","CVTRec::Tracks","CVTRec::UTracks","ECAL::adc","ECAL::calib","ECAL::clusters","ECAL::peaks","ECAL::tdc","FMT::Hits","FMT::Clusters","FMT::Tracks","FMT::Trajectory","FT::particles","FTCAL::adc","FTCAL::clusters","FTCAL::hits","FTHODO::adc","FTHODO::clusters","FTHODO::hits","FTTRK::clusters","FTTRK::hits","FTTRK::crosses","FTOF::adc","FTOF::hits","FTOF::tdc","HTCC::adc","HTCC::rec","LTCC::adc","LTCC::clusters","RASTER::adc","RF::adc","RF::tdc","RICH::tdc","RICH::Hit","RICH::Particle","RICH::Hadron","RICH::Photon","RICH::Ring","RTPC::adc","RTPC::hits","RTPC::tracks","RUN::rf","RUN::trigger","TimeBasedTrkg::TBHits","TimeBasedTrkg::TBTracks"]
+calib = ["BAND::adc","BAND::laser","BAND::tdc","BAND::hits","BAND::rawhits","CND::adc","CND::hits","CND::tdc","CTOF::calib","CVTRec::Tracks","CVTRec::UTracks","DC::calib","ECAL::adc","ECAL::calib","ECAL::clusters","ECAL::peaks","ECAL::tdc","FMT::Hits","FMT::Clusters","FMT::Tracks","FMT::Trajectory","FT::particles","FTCAL::adc","FTCAL::clusters","FTCAL::hits","FTHODO::adc","FTHODO::clusters","FTHODO::hits","FTTRK::clusters","FTTRK::hits","FTTRK::crosses","FTOF::adc","FTOF::calib","HTCC::adc","HTCC::rec","LTCC::adc","LTCC::clusters","RASTER::adc","RF::adc","RF::tdc","RICH::calib","RTPC::adc","RTPC::hits","RTPC::tracks","RUN::rf","RUN::trigger","TimeBasedTrkg::TBTracks"]
 
 # additions for the monitoring schema:
-mon = ["BMT::adc","BMTRec::Clusters","BMTRec::Crosses","BMTRec::Hits","BMTRec::LayerEffs","BST::adc","BSTRec::Clusters","BSTRec::Crosses","BSTRec::Hits","BSTRec::LayerEffs","CND::clusters","CVTRec::Trajectory","ECAL::hits","FMT::adc","FTTRK::adc","HEL::adc","HitBasedTrkg::HBTracks","RAW::vtp","TimeBasedTrkg::TBCrosses","TimeBasedTrkg::TBSegments","TimeBasedTrkg::TBSegmentTrajectory","TimeBasedTrkg::Trajectory"]
+mon = ["BMT::adc","BMTRec::Clusters","BMTRec::Crosses","BMTRec::Hits","BMTRec::LayerEffs","BST::adc","BSTRec::Clusters","BSTRec::Crosses","BSTRec::Hits","BSTRec::LayerEffs","CND::clusters","CTOF::adc","CTOF::hits","CTOF::tdc","CVTRec::Trajectory","ECAL::hits","FMT::adc","FTTRK::adc","FTOF::adc","FTOF::hits","FTOF::tdc","HEL::adc","HitBasedTrkg::HBTracks","RAW::vtp","RICH::Particle","RICH::Ring","TimeBasedTrkg::TBCrosses","TimeBasedTrkg::TBHits","TimeBasedTrkg::TBSegments","TimeBasedTrkg::TBSegmentTrajectory","TimeBasedTrkg::Trajectory"]
 
 # trigger validation needs these:
 trig = ["RAW::vtp","HTCC::rec","ECAL::adc","ECAL::calib","ECAL::clusters","ECAL::hits","ECAL::moments","ECAL::peaks","ECAL::tdc","ECAL::trigger"]
@@ -97,25 +98,27 @@ ecrerun.extend(["ECAL::tdc","ECAL::adc"])
 
 # DC alignment and AI-tracking validation schema:
 dcalign = list(dst)
-dcalign.extend(["ai::tracks", "aidn::tracks", "TimeBasedTrkg::AIClusters", "TimeBasedTrkg::AIHits", "TimeBasedTrkg::AISegments", "TimeBasedTrkg::AITracks", "TimeBasedTrkg::TBClusters", "TimeBasedTrkg::TBHits", "TimeBasedTrkg::TBSegments", "TimeBasedTrkg::TBSegmentTrajectory", "TimeBasedTrkg::TBTracks"])
+dcalign.extend(["ai::tracks", "aidn::tracks", "DC::tdc", "DC::tot", "TimeBasedTrkg::AIClusters", "TimeBasedTrkg::AIHits", "TimeBasedTrkg::AISegments", "TimeBasedTrkg::AITracks", "TimeBasedTrkg::TBClusters", "TimeBasedTrkg::TBHits", "TimeBasedTrkg::TBSegments", "TimeBasedTrkg::TBSegmentTrajectory", "TimeBasedTrkg::TBTracks"])
 
 # DC HV studies schema:
 dchv = list(dsthb)
-dchv.extend(["DC::tdc","DC::jitter", "HitBasedTrkg::HBClusters", "HitBasedTrkg::HBHitTrkId", "HitBasedTrkg::HBHits", "HitBasedTrkg::HBSegmentTrajectory", "HitBasedTrkg::HBSegments", "HitBasedTrkg::HBTracks", "HitBasedTrkg::Hits", "HitBasedTrkg::Trajectory", "TimeBasedTrkg::TBClusters", "TimeBasedTrkg::TBHits", "TimeBasedTrkg::TBSegments", "TimeBasedTrkg::TBSegmentTrajectory", "TimeBasedTrkg::TBTracks"])
+dchv.extend(["DC::tdc","DC::tot","DC::jitter", "HitBasedTrkg::Clusters", "HitBasedTrkg::HBClusters", "HitBasedTrkg::HBHitTrkId", "HitBasedTrkg::HBHits", "HitBasedTrkg::HBSegmentTrajectory", "HitBasedTrkg::HBSegments", "HitBasedTrkg::HBTracks", "HitBasedTrkg::Hits", "HitBasedTrkg::Trajectory", "TimeBasedTrkg::TBClusters", "TimeBasedTrkg::TBHits", "TimeBasedTrkg::TBSegments", "TimeBasedTrkg::TBSegmentTrajectory", "TimeBasedTrkg::TBTracks"])
 
 # Level3 validation schema:
 level3 = list(dst)
-level3.extend(["DC::tdc", "ECAL::adc", "ECAL::clusters", "FTOF::tdc", "FTOF::adc", "HitBasedTrkg::HBClusters", "HitBasedTrkg::HBTracks", "HTCC::adc", "RF::adc", "RF::tdc", "RUN::rf", "TimeBasedTrkg::TBClusters", "TimeBasedTrkg::TBTracks"])
+level3.extend(["DC::tdc", "DC::tot", "ECAL::adc", "ECAL::clusters", "FTOF::tdc", "FTOF::adc", "HitBasedTrkg::HBClusters", "HitBasedTrkg::HBTracks", "HTCC::adc", "RF::adc", "RF::tdc", "RUN::rf", "TimeBasedTrkg::TBClusters", "TimeBasedTrkg::TBTracks"])
 
 import glob
 rgl = glob.glob('./singles/full/ALERT*.json')
 rgl.extend(glob.glob('./singles/full/AHDC*.json'))
 rgl.extend(glob.glob('./singles/full/ATOF*.json'))
 rgl = [os.path.basename(x)[:-5] for x in rgl]
+rgl.remove('AHDC::wf')
 calib.extend(rgl)
 mon.extend(rgl)
 dst.extend(rgl)
 
+create("tag1/", set(tag1))
 create("dst/", set(dst))
 create("dsthb/", set(dsthb))
 create("calib/", set(calib))

@@ -699,7 +699,7 @@ public class ExtendedWord {
 	 * Encode a long into a base 62 String. Based on the toString implementation in
 	 * the Java Long class.
 	 * 
-	 * @param number the number to encode
+	 * @param num the number to encode
 	 * @return a base 62 number
 	 */
 	public static String encode62(long num) {

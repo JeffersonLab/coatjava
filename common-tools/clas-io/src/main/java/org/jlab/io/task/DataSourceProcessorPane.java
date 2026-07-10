@@ -20,7 +20,6 @@ import org.jlab.io.base.DataEventType;
 import org.jlab.io.base.DataSource;
 import org.jlab.io.evio.EvioETSource;
 import org.jlab.io.evio.EvioSource;
-import org.jlab.io.hipo3.Hipo3DataSource;
 import org.jlab.io.hipo.HipoDataSource;
 import org.jlab.io.hipo.HipoRingSource;
 import org.jlab.io.ui.ConnectionDialog;
@@ -37,7 +36,6 @@ public class DataSourceProcessorPane extends JPanel implements ActionListener {
 
     private DataSourceProcessor  dataProcessor = new DataSourceProcessor();
     private String               dataFile      = null;
-    private int                  dataPaneStyle = DataSourceProcessorPane.TOOLBAR;
     private JLabel               statusLabel   = null;    
     private java.util.Timer      processTimer  = null;
     private JButton              mediaPause    = null;
@@ -47,7 +45,6 @@ public class DataSourceProcessorPane extends JPanel implements ActionListener {
     private JButton              mediaEject    = null;
     private JButton              sourceFile    = null;
     private int                  eventDelay    = 0;
-    public boolean               isHipo3Event  = false;          
     private String               defaultHost   = null;
     private String               defaultIp     = null;    
 
@@ -213,13 +210,18 @@ public class DataSourceProcessorPane extends JPanel implements ActionListener {
         DataSource source = filename.endsWith(".hipo") ?
             new HipoDataSource() : new EvioSource();
         source.open(filename);
-        this.dataProcessor.setSource(source);
+        dataProcessor.setSource(source);
         statusLabel.setText(dataProcessor.getStatusString());
         mediaPlay.setEnabled(false);
-        mediaPause.setEnabled(true);
-        mediaNext.setEnabled(true);
-        mediaPrev.setEnabled(true);
-        this.startProcessorTimer();
+        mediaPause.setEnabled(false);
+        mediaNext.setEnabled(false);
+        mediaPrev.setEnabled(false);
+        while (dataProcessor.dataSource.hasEvent()) {
+            DataEvent e = dataProcessor.dataSource.getNextEvent();
+            for(IDataEventListener processor : dataProcessor.eventListeners){
+                processor.dataEventAction(e);
+            }
+        }
     }
 
     @Override
@@ -302,32 +304,9 @@ public class DataSourceProcessorPane extends JPanel implements ActionListener {
             mediaPlay.setEnabled(true);
             this.setDataFile(null);
         }
-        
-        if(e.getActionCommand().compareTo("OpenFileHipo3")==0){
-            this.stopProcessorTimer();
-            isHipo3Event = true;
-            JFileChooser fc = new JFileChooser();
-            fc.setCurrentDirectory(null);
-            int returnVal = fc.showOpenDialog(this);
-            if (returnVal == JFileChooser.APPROVE_OPTION) {
-                String fileName = fc.getSelectedFile().getAbsolutePath();
-                System.out.println("file -> " + fileName);
-                Hipo3DataSource source = new Hipo3DataSource();
-                source.open(fileName);
 
-                //This is where a real application would open the file.
-                this.dataProcessor.setSource(source);
-                statusLabel.setText(dataProcessor.getStatusString());
-                mediaNext.setEnabled(true);
-                mediaPrev.setEnabled(true);
-                mediaPlay.setEnabled(true);
-                this.setDataFile(fileName);
-            }
-        }
-        
         if(e.getActionCommand().compareTo("OpenFileHipo4")==0){
             this.stopProcessorTimer();
-            isHipo3Event = false;
             JFileChooser fc = new JFileChooser();
             fc.setCurrentDirectory(null);
             int returnVal = fc.showOpenDialog(this);
@@ -389,6 +368,7 @@ public class DataSourceProcessorPane extends JPanel implements ActionListener {
         
         pane.addEventListener(new IDataEventListener(){
             int ncount = 0;
+            @Override
             public void dataEventAction(DataEvent event) {
                 ncount++;
                 if(event.getType() == DataEventType.EVENT_START){
@@ -400,10 +380,12 @@ public class DataSourceProcessorPane extends JPanel implements ActionListener {
                 }
             }
 
+            @Override
             public void timerUpdate() {
                 System.out.println("update is called");
             }
 
+            @Override
             public void resetEventListener() {
                 System.out.println("reset is called");
                 ncount = 0;

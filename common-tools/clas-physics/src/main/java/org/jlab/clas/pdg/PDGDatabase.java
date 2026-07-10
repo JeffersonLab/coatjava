@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.jlab.clas.pdg;
 
 import java.util.HashMap;
@@ -14,59 +10,59 @@ import java.util.Map;
  */
 public class PDGDatabase {
 
-	static final HashMap<Integer, PDGParticle> particleDatabase = initDatabase();
+    static final HashMap<Integer, PDGParticle> particleDatabase = initDatabase();
 
-	public PDGDatabase() {
-	}
+    public PDGDatabase() {
+    }
 
-	public static boolean isValidId(int pid) {
-		return particleDatabase.containsKey(pid);
-		// ArrayList<String> ff = null;
-	}
+    public static boolean isValidId(int pid) {
+        return particleDatabase.containsKey(pid);
+        // ArrayList<String> ff = null;
+    }
 
-	public static boolean isValidPid(int pid) {
-		return particleDatabase.containsKey(pid);
-	}
+    public static boolean isValidPid(int pid) {
+        return particleDatabase.containsKey(pid);
+    }
 
-	static public PDGParticle getParticleById(int pid) {
-		if (particleDatabase.containsKey(pid) == true) {
-			return particleDatabase.get(pid);
-		}
-		System.err.println("PDGDatabase::Error -> there is no particle with pid " + pid);
-		return null;
-	}
+    static public PDGParticle getParticleById(int pid) {
+        if (particleDatabase.containsKey(pid) == true) {
+            return particleDatabase.get(pid);
+        }
+        System.err.println("PDGDatabase::Error -> there is no particle with pid " + pid);
+        return null;
+    }
 
-	public static void addParticle(PDGParticle part) {
-		if (particleDatabase.containsKey(part.pid()) == true) {
-			System.out.println("PDGDatabase::Error -> Particle with PID " + part.pid() + " already exists in the database.");
-			return;
-		}
+    public static void addParticle(PDGParticle part) {
+        if (particleDatabase.containsKey(part.pid()) == true) {
+            System.out.println("PDGDatabase::Error -> Particle with PID " + part.pid() + " already exists in the database.");
+            return;
+        }
 
-		particleDatabase.put(part.pid(), part);
-	}
+        particleDatabase.put(part.pid(), part);
+    }
 
-	public static void addParticle(String name, int pid, double mass, int charge) {
-		if (particleDatabase.containsKey(pid) == true) {
-			System.out.println("PDGDatabase::Error -> Particle with PID " + pid + " already exists in the database.");
-			return;
-		}
-		particleDatabase.put(pid, new PDGParticle(name, pid, mass, charge));
-	}
+    public static void addParticle(String name, int pid, double mass, int charge) {
+        if (particleDatabase.containsKey(pid) == true) {
+            System.out.println("PDGDatabase::Error -> Particle with PID " + pid + " already exists in the database.");
+            return;
+        }
+        particleDatabase.put(pid, new PDGParticle(name, pid, mass, charge));
+    }
 
-	private static HashMap<Integer, PDGParticle> initDatabase() {
-		HashMap<Integer, PDGParticle> particleMap = new HashMap<Integer, PDGParticle>();
-		particleMap.put(11, new PDGParticle("e-", 11, 3, 0.0005, -1));
-		particleMap.put(-11, new PDGParticle("e+", -11, 2, 0.0005, 1));
-		particleMap.put(12, new PDGParticle("nue-", 12, 4, 0.320e-6, 0));
-		particleMap.put(-12, new PDGParticle("nue+", -12, 4, 0.320e-6, 0));
-		particleMap.put(13, new PDGParticle("mu-", 13, 6, 0.1056583715, -1));
-		particleMap.put(-13, new PDGParticle("mu+", -13, 5, 0.1056583715, 1));
+    private static HashMap<Integer, PDGParticle> initDatabase() {
+        HashMap<Integer, PDGParticle> particleMap = new HashMap<Integer, PDGParticle>();
+        particleMap.put(11, new PDGParticle("e-", 11, 3, 0.0005, -1));
+        particleMap.put(-11, new PDGParticle("e+", -11, 2, 0.0005, 1));
+        particleMap.put(12, new PDGParticle("nue-", 12, 4, 0.320e-6, 0));
+        particleMap.put(-12, new PDGParticle("nue+", -12, 4, 0.320e-6, 0));
+        particleMap.put(13, new PDGParticle("mu-", 13, 6, 0.1056583715, -1));
+        particleMap.put(-13, new PDGParticle("mu+", -13, 5, 0.1056583715, 1));
                 particleMap.put(12, new PDGParticle("nue-", 14, 4, 0.320e-6, 0));
-		particleMap.put(-12, new PDGParticle("nue+", -14, 4, 0.320e-6, 0));
-		particleMap.put(22, new PDGParticle("gamma", 22, 1, 0.000, 0));
-		particleMap.put(45, new PDGParticle("d", 45, 45,1.87705, 1));
+        particleMap.put(-12, new PDGParticle("nue+", -14, 4, 0.320e-6, 0));
+        particleMap.put(22, new PDGParticle("gamma", 22, 1, 0.000, 0));
+        particleMap.put(45, new PDGParticle("d", 45, 45,1.87705, 1)); // This is not a PDG code.
                 
-		//Light mesons
+        //Light mesons
                 particleMap.put(211, new PDGParticle("pi+", 211, 8, 0.13957018, 1));
                 particleMap.put(-211, new PDGParticle("pi-", -211, 9, 0.13957018, -1));
                 particleMap.put(111, new PDGParticle("pi0", 111, 7, 0.134977, 0));
@@ -145,8 +141,8 @@ public class PDGDatabase {
 
                 // Light baryons
                 
-		particleMap.put(2212, new PDGParticle("p", 2212, 14, 0.938272046, 1));
-		particleMap.put(-2212, new PDGParticle("pbar", -2212, 15, 0.938272046, -1));
+        particleMap.put(2212, new PDGParticle("p", 2212, 14, 0.938272046, 1));
+        particleMap.put(-2212, new PDGParticle("pbar", -2212, 15, 0.938272046, -1));
                 particleMap.put(2112, new PDGParticle("n", 2112, 13, 0.939565379, 0));
                 particleMap.put(-2112, new PDGParticle("nbar", -2112, 25, 0.939565379, 0));
                 particleMap.put(2224, new PDGParticle("Delta++", 2224, 1.232, 2));
@@ -182,36 +178,46 @@ public class PDGDatabase {
                 particleMap.put(3334, new PDGParticle("Omega-", 3334, 24, 1.67245, -1));
                 particleMap.put(-3334, new PDGParticle("AntiOmega+", -3334, 32, 1.67245, 1));
 
-                
-		return particleMap;
-	}
+                particleMap.put(1000010020, new PDGParticle("deuteron", 1000010020, 45, 1.87612, 1));
+                particleMap.put(1000010030, new PDGParticle("triton",   1000010030, 46, 2.80943, 1));
+                particleMap.put(1000020030, new PDGParticle("He3",      1000020030, 49, 2.80941, 2));
+                particleMap.put(1000020040, new PDGParticle("alpha",    1000020040, 47, 3.7284,  2));
 
-	static public PDGParticle getParticleByName(String name) {
-		for (Map.Entry<Integer, PDGParticle> entry : particleDatabase.entrySet()) {
-			Integer key = entry.getKey();
-			PDGParticle value = (PDGParticle) entry.getValue();
-			if (value.name().compareTo(name) == 0)
-				return value;
-			// ...
-		}
-		return null;
-		// particleDatabase
-	}
+                //522 deuteron     1000010020    1 100 Baryon      3 1.87612 0.00000e+00 -100 -1 -100 -1   -1   0
+                //523 triton       1000010030    1 100 Baryon      3 2.80943 0.00000e+00 -100 -1 -100 -1   -1   0
+                //524 He3          1000020030    1 100 Baryon      6 2.80941 0.00000e+00 -100 -1 -100 -1   -1   0
+                //525 alpha        1000020040    1 100 Baryon      6 3.7284 0.00000e+00 -100 -1 -100 -1   -1   0
+                //526 He6          1000020060    1 100 Baryon      6 5.60656 0.00000e+00 -100 -1 -100 -1   -1   0
+                //527 Li6          1000030060    1 100 Baryon      9 5.60305 0.00000e+00 -100 -1 -100 -1   -1   0
+                //528 Li7          1000030070    1 100 Baryon      9 6.53537 0.00000e+00 -100 -1 -100 -1   -1   0
 
-	public static void show() {
-		for (Map.Entry<Integer, PDGParticle> items : particleDatabase.entrySet()) {
-			System.out.println(items.getValue().toString());
-		}
-	}
+        return particleMap;
+    }
 
-	public static double getParticleMass(int pid)  {
-                double mass =0.0;
-		if (particleDatabase.containsKey(pid) == true) {
-			mass = particleDatabase.get(pid).mass();
-		}
-                else {
-                    System.out.println("PDGDatabase::Error -> there is no particle with pid " + pid);
-                }
-		return mass;
-	}
+    static public PDGParticle getParticleByName(String name) {
+        for (Map.Entry<Integer, PDGParticle> entry : particleDatabase.entrySet()) {
+            Integer key = entry.getKey();
+            PDGParticle value = (PDGParticle) entry.getValue();
+            if (value.name().compareTo(name) == 0)
+                return value;
+        }
+        return null;
+    }
+
+    public static void show() {
+        for (Map.Entry<Integer, PDGParticle> items : particleDatabase.entrySet()) {
+            System.out.println(items.getValue().toString());
+        }
+    }
+
+    public static double getParticleMass(int pid)  {
+        double mass =0.0;
+        if (particleDatabase.containsKey(pid) == true) {
+            mass = particleDatabase.get(pid).mass();
+        }
+        else {
+            System.out.println("PDGDatabase::Error -> there is no particle with pid " + pid);
+        }
+        return mass;
+    }
 }

@@ -5,6 +5,7 @@ import java.util.Collections;
 import org.jlab.geom.base.Detector;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
+import org.jlab.utils.groups.IndexedTable;
 
 /**
  * The {@code HitFinder} class finds hits in the atof.
@@ -62,13 +63,24 @@ public class HitFinder {
      * @param event the {@link DataEvent} containing hits.
      * @param atof the {@link Detector} representing the atof geometry to match
      * the sector/layer/component to x/y/z.
+     * @param startTime the event start time
+     * @param atofTimeOffsetsTable the constant table with time offsets
+     * @param atofEffectiveVelocityTable the constant table with effective velocity
+     * @param Run the run number corresponding to the event for run-dependent slope correction
      */
-    public void findHits(DataEvent event, Detector atof) {
+    public void findHits(DataEvent event, Detector atof, Float startTime,
+                         IndexedTable atofTimeOffsetsTable,
+                         IndexedTable atofEffectiveVelocityTable,
+                         int Run) {
         //For each event a list of bar hits and a list of wedge hits are filled
         this.barHits.clear();
         this.wedgeHits.clear();
         //They are read from the ATOF TDC bank
         DataBank bank = event.getBank("ATOF::tdc");
+        //Check that the event start time is defined are done in the engine
+        //if (event.hasBank("REC::Event") && 
+        //        event.getBank("REC::Event").getFloat("startTime", 0)!=-1000)
+        
         int nt = bank.rows(); // number of hits
         //Hits in the bar downstream and upstream will be matched
         ArrayList<ATOFHit> hit_up = new ArrayList<>();
@@ -85,7 +97,7 @@ public class HitFinder {
             int tot = bank.getInt("ToT", i);
 
             //Building a Hit
-            ATOFHit hit = new ATOFHit(sector, layer, component, order, tdc, tot, atof);
+            ATOFHit hit = new ATOFHit(sector, layer, component, order, tdc, tot, startTime, atof, atofTimeOffsetsTable, Run);
             if (hit.getEnergy() < 0.01) {
                 continue; //energy threshold
             }
@@ -120,12 +132,9 @@ public class HitFinder {
                 //Matching the hits: if same module and different order, they make up a bar hit
                 if (this_hit_up.matchBar(this_hit_down)) {
                     //Bar hits are matched to ahdc tracks and listed
-                    if (countMatches > 0) {
-                        //If the up hit was already involved in a match, do not make an additionnal match
-                        //Chosing to ignore double matches for now because it happened for <1% of events in cosmic runs
-                        continue;
-                    }
-                    BarHit this_bar_hit = new BarHit(this_hit_down, this_hit_up);
+                    BarHit this_bar_hit = new BarHit(this_hit_down, this_hit_up, atofEffectiveVelocityTable);
+                    //Only add bar hits for which the time sum is in time
+                    if(!this_bar_hit.isInTime()) continue;
                     this.barHits.add(this_bar_hit);
                     countMatches++;
                 }

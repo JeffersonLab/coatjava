@@ -85,15 +85,16 @@ public class AlertDCFactory implements Factory<AlertDCDetector, AlertDCSector, A
 		double numWires;
 		double R_layer  = 32.0d;
 		double DR_layer = 4.0d;
+		double thster; // stereo angle in deg, will be convert to radian later
 
-		double   zoff1 = -150.0d;
-		double   zoff2 =  150.0d;
-		Point3D  p1    = new Point3D(R_layer, 0, zoff1);
+		double z_origin = -188.0d;
+		double z_end = +162.5d; 
+		Point3D  p1    = new Point3D(R_layer, 0, z_origin);
 		Vector3D n1    = new Vector3D(0, 0, 1);
 
 		Plane3D lPlane = new Plane3D(p1, n1);
 
-		Point3D  p2     = new Point3D(R_layer, 0, zoff2);
+		Point3D  p2     = new Point3D(R_layer, 0, z_end);
 		Vector3D n2     = new Vector3D(0, 0, 1);
 		Plane3D  rPlane = new Plane3D(p2, n2);
 
@@ -105,18 +106,23 @@ public class AlertDCFactory implements Factory<AlertDCDetector, AlertDCSector, A
 		if (superlayerId == 0) {
 			numWires = 47.0d; //47
 			R_layer  = 32.0d;
+			thster = -19.1489d;
 		} else if (superlayerId == 1) {
 			numWires = 56.0d; //56
 			R_layer  = 38.0d;
+			thster = -19.2857d;
 		} else if (superlayerId == 2) {
 			numWires = 72.0d; //72
 			R_layer  = 48.0d;
+			thster = -20.0d;
 		} else if (superlayerId == 3) {
 			numWires = 87.0d;
 			R_layer  = 58.0d;
+			thster = -20.6897d;
 		} else {
 			numWires = 99.0d;
 			R_layer  = 68.0d;
+			thster = -20.0d;
 		}
 
 		// Calculate the radius for the layers of sense wires
@@ -124,19 +130,20 @@ public class AlertDCFactory implements Factory<AlertDCDetector, AlertDCSector, A
 
 		double alphaW_layer = Math.toRadians(round / (numWires));
 
-		// shift the wire end point +-20deg in XY plan
-		double thster = Math.toRadians(-20.0d);
-		double zl     = 300.0d;
+		// shift the wire end point by almost +-20deg in XY plan
+		// convert stereo angle from degrees to radians
+		thster = Math.toRadians(thster);
+		
 
 		// Create AHDC sense wires
 		for (int wireId = 0; wireId < numWires; wireId++) {
 
-                        // start at phi=0
-                        // in each layer the first wire is the first at phi>=0, i.e.
-                        // 0.5 0 0.5 0 0.5 0.5 0 0.5 for layer 1 to 8
-                        double wirePhiIndex = wireId + 0.5*(numWires%2) + 0.5*layerId*(1-2*(numWires%2)); 
+			// start at phi=0
+			// in each layer the first wire is the first at phi>=0, i.e.
+			// 0.5 0 0.5 0 0.5 0.5 0 0.5 for layer 1 to 8
+			double wirePhiIndex = wireId + 0.5*(numWires%2) + 0.5*layerId*(1-2*(numWires%2)); 
 
-                        // The point given by (wx, wy, wz) is the origin of the current wire.
+			// The point given by (wx, wy, wz) is the origin of the current wire.
 			double wx = R_layer * Math.cos(alphaW_layer * wirePhiIndex);
 			double wy = R_layer * Math.sin(alphaW_layer * wirePhiIndex);
 
@@ -144,7 +151,7 @@ public class AlertDCFactory implements Factory<AlertDCDetector, AlertDCSector, A
 			// planes by construciting a long line that passes through the midpoint
 			double wx_end = R_layer * Math.cos(alphaW_layer * wirePhiIndex + thster * (Math.pow(-1, superlayerId)));
 			double wy_end = R_layer * Math.sin(alphaW_layer * wirePhiIndex + thster * (Math.pow(-1, superlayerId)));
-			Line3D line   = new Line3D(wx, wy, -zl/2, wx_end, wy_end, zl/2);
+			Line3D line   = new Line3D(wx, wy, z_origin, wx_end, wy_end, z_end);
 
 			Point3D lPoint = new Point3D();
 			Point3D rPoint = new Point3D();
@@ -185,19 +192,48 @@ public class AlertDCFactory implements Factory<AlertDCDetector, AlertDCSector, A
 			List<Point3D> firstF  = new ArrayList<>();
 			List<Point3D> secondF = new ArrayList<>();
 			// first Face
-			Point3D p_0 = new Point3D(px_0, py_0, -zl/2);
-			Point3D p_1 = new Point3D(px_1, py_1, -zl/2);
-			Point3D p_2 = new Point3D(px_2, py_2, -zl/2);
-			Point3D p_3 = new Point3D(px_3, py_3, -zl/2);
-			Point3D p_4 = new Point3D(px_4, py_4, -zl/2);
-			Point3D p_5 = new Point3D(px_5, py_5, -zl/2);
+			Point3D p_0 = new Point3D(px_0, py_0, z_origin);
+			Point3D p_1 = new Point3D(px_1, py_1, z_origin);
+			Point3D p_2 = new Point3D(px_2, py_2, z_origin);
+			Point3D p_3 = new Point3D(px_3, py_3, z_origin);
+			Point3D p_4 = new Point3D(px_4, py_4, z_origin);
+			Point3D p_5 = new Point3D(px_5, py_5, z_origin);
 			// second Face
-			Point3D p_6  = new Point3D(px_6, py_6, zl/2);
-			Point3D p_7  = new Point3D(px_7, py_7, zl/2);
-			Point3D p_8  = new Point3D(px_8, py_8, zl/2);
-			Point3D p_9  = new Point3D(px_9, py_9, zl/2);
-			Point3D p_10 = new Point3D(px_10, py_10, zl/2);
-			Point3D p_11 = new Point3D(px_11, py_11, zl/2);
+			Point3D p_6  = new Point3D(px_6, py_6, z_end);
+			Point3D p_7  = new Point3D(px_7, py_7, z_end);
+			Point3D p_8  = new Point3D(px_8, py_8, z_end);
+			Point3D p_9  = new Point3D(px_9, py_9, z_end);
+			Point3D p_10 = new Point3D(px_10, py_10, z_end);
+			Point3D p_11 = new Point3D(px_11, py_11, z_end);
+
+			// !!! 	Alignment correction
+			int layer_row = AlertDCWireIdentifier.layer2number((superlayerId+1)*10 + (layerId+1));
+			double upstream_rotZ = Math.toRadians(cp.getDouble("/geometry/alert/ahdc/layer_alignment/upstream_rotZ", layer_row));
+			double downstream_rotZ = Math.toRadians(cp.getDouble("/geometry/alert/ahdc/layer_alignment/downstream_rotZ", layer_row));
+			int wire_row = AlertDCWireIdentifier.slc2wire(sectorId+1, (superlayerId+1)*10 + (layerId+1), wireId+1);
+			double wire_rotZ = Math.toRadians(cp.getDouble("/geometry/alert/ahdc/wire_alignment/rotZ", wire_row));
+
+			//System.out.printf("%d %d %d, %f , %f, %f\n",sectorId+1, (superlayerId+1)*10 + (layerId+1), wireId+1, Math.toDegrees(upstream_rotZ), Math.toDegrees(downstream_rotZ), Math.toDegrees(wire_rotZ));
+
+			p_0.rotateZ(wire_rotZ + upstream_rotZ);
+			p_1.rotateZ(wire_rotZ + upstream_rotZ);
+			p_2.rotateZ(wire_rotZ + upstream_rotZ);
+			p_3.rotateZ(wire_rotZ + upstream_rotZ);
+			p_4.rotateZ(wire_rotZ + upstream_rotZ);
+			p_5.rotateZ(wire_rotZ + upstream_rotZ);
+
+			p_6.rotateZ(wire_rotZ + downstream_rotZ);
+			p_7.rotateZ(wire_rotZ + downstream_rotZ);
+			p_8.rotateZ(wire_rotZ + downstream_rotZ);
+			p_9.rotateZ(wire_rotZ + downstream_rotZ);
+			p_10.rotateZ(wire_rotZ + downstream_rotZ);
+			p_11.rotateZ(wire_rotZ + downstream_rotZ);
+
+			lPoint.rotateZ(wire_rotZ + upstream_rotZ);
+			rPoint.rotateZ(wire_rotZ + downstream_rotZ);
+			wireLine = new Line3D(lPoint, rPoint);
+
+
 			// defining a cell around a wireLine, must be counter-clockwise!
 			firstF.add(p_0);
 			firstF.add(p_5);

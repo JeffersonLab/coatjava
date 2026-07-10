@@ -347,16 +347,12 @@ public abstract class Geant4Basic {
         //return new Line3d(new Vector3d(0, 0, 0), new Vector3d(0, 0, 0));
     }
 
-    /**
-     * @author pdavies
-     */
+    // written by pdavies
     public void setPosition(double x, double y, double z) {
         setPosition(new Vector3d(x, y, z));
     }
 
-    /**
-     * @author pdavies
-     */
+    // written by pdavies
     public void setPosition(Vector3d position) {
         this.translate(position.minus(this.getLocalPosition()));
     }

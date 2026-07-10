@@ -10,6 +10,7 @@ import org.jlab.geom.prim.Vector3D;
 import org.jlab.io.base.DataEvent;
 import org.jlab.rec.dc.Constants;
 import org.jlab.rec.dc.cluster.ClusterFitter;
+import org.jlab.rec.dc.cluster.ClusterFitter.CoordSys;
 import org.jlab.rec.dc.hit.FittedHit;
 import org.jlab.rec.dc.segment.Segment;
 import org.jlab.rec.dc.timetodistance.TimeToDistanceEstimator;
@@ -216,18 +217,18 @@ public class CrossListFinder  {
             fhit.updateHitPositionWithTime(event, trkAngle, fhit.getB(), tab, DcDetector, tde);
         }
 
-         cf.SetFitArray(_Segment1.get_fittedCluster(), "TSC");
+         cf.SetFitArray(_Segment1.get_fittedCluster(), CoordSys.TSC);
          cf.Fit(_Segment1.get_fittedCluster(), true);
          trkAngle = _Segment1.get_fittedCluster().get_clusterLineFitSlope();
 
          for (FittedHit fhit : _Segment1.get_fittedCluster()) {
             fhit.updateHitPositionWithTime(event, trkAngle, fhit.getB(), tab, DcDetector, tde);
         }
-        cf.SetFitArray(_Segment1.get_fittedCluster(), "TSC");
+        cf.SetFitArray(_Segment1.get_fittedCluster(), CoordSys.TSC);
         cf.Fit(_Segment1.get_fittedCluster(), true);
         cf.SetResidualDerivedParams(_Segment1.get_fittedCluster(), true, false, DcDetector); //calcTimeResidual=false, resetLRAmbig=false 
 
-        cf.SetFitArray(_Segment1.get_fittedCluster(), "TSC");
+        cf.SetFitArray(_Segment1.get_fittedCluster(), CoordSys.TSC);
         cf.Fit(_Segment1.get_fittedCluster(), false);
 
         cf.SetSegmentLineParameters(_Segment1.get_fittedCluster().get(0).get_Z(), _Segment1.get_fittedCluster());

@@ -82,7 +82,7 @@ public class DoubleFormat {
 	 * 
 	 * @param value       the value to format.
 	 * @param numdec      the number of digits right of the decimal. If the
-	 *                    exponenent is >= n or <= -n it will use sci notation.
+	 *                    exponenent is {@code >= n} or {@code <= -n} it will use sci notation.
 	 * @param minExponent the minimum (absolute value) index for scientific
 	 *                    notation.
 	 */

@@ -24,7 +24,7 @@ public class EnumComboBox extends JComboBox {
 	/**
 	 * Create a combobox from an enum map.
 	 * 
-	 * @param enumMap    an EnumMap<enum, String>. The enum is the key, and the
+	 * @param enumMap    an {@code EnumMap<enum, String>}. The enum is the key, and the
 	 *                   string, which will become the label, is the value.
 	 * @param defaultKey the enum that should default to "on".
 	 */
@@ -35,7 +35,7 @@ public class EnumComboBox extends JComboBox {
 	/**
 	 * Create a combobox from an enum map.
 	 * 
-	 * @param enumMap     an EnumMap<enum, String>. The enum is the key, and the
+	 * @param enumMap     an {@code EnumMap<enum, String>}. The enum is the key, and the
 	 *                    string, which will become the label, is the value.
 	 * @param defaultKey  the enum that should default to "on".
 	 * @param extraChoice an optional extra choice, like "None" or "Any"

@@ -2,7 +2,7 @@ package org.jlab.service.ltcc.viewer;
 
 import org.jlab.io.base.DataEvent;
 import org.jlab.io.base.DataSource;
-import org.jlab.io.hipo3.Hipo3DataSource;
+import org.jlab.io.hipo.HipoDataSource;
 
 import javax.swing.JFrame;
 import java.awt.Dimension;
@@ -129,7 +129,7 @@ public class LTCCViewer {
     public static void main(String[] args) {
         String inputfile = "/Users/sjoosten/Data/CLAS12/006715/monitorclas_006715.evio.00041.hipo";
 
-        DataSource reader = new Hipo3DataSource();
+        DataSource reader = new HipoDataSource();
         reader.open(inputfile);
         
         LTCCViewer viewer = new LTCCViewer();

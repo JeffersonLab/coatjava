@@ -23,7 +23,6 @@ public class GaussianFit extends Fitmrq implements IValueGetter {
 	 * Create a Gaussian Fit
 	 * 
 	 * @param fit       the fit data
-	 * @param tolerance the tolerance
 	 */
 	public GaussianFit(Fit fit) throws IllegalArgumentException {
 		super(fit.getX(), fit.getY(), fit.getSigmaY(), initialGuess(fit), _funcs, fit.getTolerance());
@@ -45,9 +44,7 @@ public class GaussianFit extends Fitmrq implements IValueGetter {
 	/**
 	 * A method to generate an initial guess
 	 * 
-	 * @param xx       the x data
-	 * @param yy       the y data
-	 * @param numGauss the number of gaussians
+	 * @param fit
 	 * @return
 	 */
 	public static double[] initialGuess(Fit fit) {
@@ -140,9 +137,7 @@ public class GaussianFit extends Fitmrq implements IValueGetter {
 	/**
 	 * A method to generate an initial guess
 	 * 
-	 * @param xx       the x data
-	 * @param yy       the y data
-	 * @param numGauss the number of gaussians
+	 * @param fit
 	 * @return
 	 */
 	public static double[] secondaryInitialGuess(Fit fit) {

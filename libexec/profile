@@ -1,0 +1,69 @@
+#!/bin/bash
+
+event=cpu
+profile_seconds=30
+warmup_seconds=60
+usage1="Usage:  profile [-h] [-s seconds] [-w seconds] [-e event] [--] executable args"
+usage2="Usage:  profile [options] executable args\nOptions:\n\t[-h] [-s seconds] [-w seconds]\n\t[-e cpu|alloc|nativemem|lock|cache-misses]"
+
+let tail_seconds=warmup_seconds-5
+let sleep_seconds=5
+
+while getopts s:e:o:w:h opt
+do
+    case $opt in
+        s) profile_seconds=$OPTARG ;;
+        w) warmup_seconds=$OPTARG ;;
+        e) event=$OPTARG ;;
+        o) stub=$OPTARG ;;
+        h) echo -e $usage2 && exit 0 ;;
+        --) break ;;
+        \?) echo $usage1 && exit 1 ;;
+    esac
+done
+
+shift $((OPTIND-1))
+executable=$1
+arguments=${@:2}
+logfile=asprof$stub.log
+
+which asprof >& /dev/null
+[ "$?" -ne 0 ] && echo 'ERROR:  asprof is not in $PATH.' && echo -e $usage2 && exit 3
+
+which $executable >& /dev/null
+[ "$?" -ne 0 ] && echo "ERROR:  $executable is not in \$PATH." && echo -e $usage2 && exit 4
+
+echo "Running asprof on '$executable $arguments' ..."
+sleep 1
+
+rm -f $logfile && touch $logfile
+
+set -e
+$executable $arguments >> $logfile 2>&1 &
+set +e
+
+pid_bash=$!
+echo info:  pid bash=$pid_bash, getting java ...
+sleep 1
+pid_java=$(pgrep -P $pid_bash)
+sleep 1
+# go 2 deep for run-clara:
+pid_java=$(pgrep -P $pid_java | head -n 1)
+echo info:  pid java=$pid_java
+tail -f $logfile &
+pid_tail=$!
+sleep $tail_seconds
+kill -9 $pid_tail
+
+set -e
+asprof -e $event -d $profile_seconds -f asprof_${event}$stub.html $pid_java >> $logfile 2>&1 &
+pid_asprof=$!
+set +e
+
+tail -f $logfile &
+pid_tail=$!
+
+wait $pid_asprof
+kill -9 $pid_bash
+kill -9 $pid_tail
+kill -9 $pid_java

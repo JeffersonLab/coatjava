@@ -97,7 +97,7 @@ public class StateVecs extends AStateVecs {
             Matrix5x5.copy(fVec.CM, cMat);
             s = Math.signum(Zf - zInit) * stepSize;
 
-            // LOGGER.log(Level.FINE, " from "+(float)Z[i]+" to "+(float)Z[f]+" at "+(float)z+" By is "+bf[1]+" B is "+Math.sqrt(bf[0]*bf[0]+bf[1]*bf[1]+bf[2]*bf[2])/Bmax+" stepSize is "+s);
+            // LOGGER.log(Level.FINEST, " from "+(float)Z[i]+" to "+(float)Z[f]+" at "+(float)z+" By is "+bf[1]+" B is "+Math.sqrt(bf[0]*bf[0]+bf[1]*bf[1]+bf[2]*bf[2])/Bmax+" stepSize is "+s);
             if (Math.signum(Zf - zInit) * (z + s) > Math.signum(Zf - zInit) * Zf) {
                 s = Math.signum(Zf - zInit) * Math.abs(Zf - z);
             }
@@ -195,7 +195,7 @@ public class StateVecs extends AStateVecs {
             Matrix5x5.copy(fVec.CM, cMat);
             s = Math.signum(Zf - zInit) * stepSize;
 
-            // LOGGER.log(Level.FINE, " from "+(float)Z[i]+" to "+(float)Z[f]+" at "+(float)z+" By is "+bf[1]+" B is "+Math.sqrt(bf[0]*bf[0]+bf[1]*bf[1]+bf[2]*bf[2])/Bmax+" stepSize is "+s);
+            // LOGGER.log(Level.FINEST, " from "+(float)Z[i]+" to "+(float)Z[f]+" at "+(float)z+" By is "+bf[1]+" B is "+Math.sqrt(bf[0]*bf[0]+bf[1]*bf[1]+bf[2]*bf[2])/Bmax+" stepSize is "+s);
             if (Math.signum(Zf - zInit) * (z + s) > Math.signum(Zf - zInit) * Zf) {
                 s = Math.signum(Zf - zInit) * Math.abs(Zf - z);
             }
@@ -296,7 +296,7 @@ public class StateVecs extends AStateVecs {
             Matrix5x5.copy(fVec.CM, cMat);
             s = Math.signum(zFinal - zInit) * stepSize;
 
-            // LOGGER.log(Level.FINE, " from "+(float)Z[i]+" to "+(float)Z[f]+" at "+(float)z+" By is "+bf[1]+" B is "+Math.sqrt(bf[0]*bf[0]+bf[1]*bf[1]+bf[2]*bf[2])/Bmax+" stepSize is "+s);
+            // LOGGER.log(Level.FINEST, " from "+(float)Z[i]+" to "+(float)Z[f]+" at "+(float)z+" By is "+bf[1]+" B is "+Math.sqrt(bf[0]*bf[0]+bf[1]*bf[1]+bf[2]*bf[2])/Bmax+" stepSize is "+s);
             if (Math.signum(zFinal - zInit) * (z + s) > Math.signum(zFinal - zInit) * zFinal) {
                 s = Math.signum(zFinal - zInit) * Math.abs(zFinal - z);
             }

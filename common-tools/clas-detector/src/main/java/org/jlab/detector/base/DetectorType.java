@@ -1,5 +1,7 @@
 package org.jlab.detector.base;
 
+import java.util.HashMap;
+
 /**
  *
  * @author gavalian
@@ -28,21 +30,30 @@ public enum DetectorType {
     HEL       (20, "HEL"),
     BAND      (21, "BAND"),
     RASTER    (22, "RASTER"),
-    URWELL    (23, "URWELL"),
+    URWT      (23, "URWT"),
     AHDC      (24, "AHDC"),
     ATOF      (25, "ATOF"),
-    RECOIL    (26, "RECOIL"),
+    RTRK      (26, "RTRK"),
+    RTOF      (27, "RTOF"),
+    MUCAL     (28, "MUCAL"),
+    MUVT      (29, "MUVT"),
+    MURT      (30, "MURT"),
+    MURH      (31, "MURH"),
     TARGET    (100, "TARGET"),
-    MAGNETS   (101, "MAGNETS"),
-    ECIN      (110, "ECIN"),
-    ECOUT     (111, "ECOUT"),
-    ECTOT     (112, "ECTOT"),
-    LAC       (113, "LAC"),
-    SC        (114, "SC"),
-    CC        (115, "CC");
+    MAGNETS   (101, "MAGNETS");
     
     private final int detectorId;
     private final String detectorName;
+  
+    private static final HashMap<String,DetectorType> stringLookup = new HashMap<>();
+    private static final HashMap<Integer,DetectorType> intLookup = new HashMap<>();
+
+    static {
+        for (DetectorType t : values()) {
+            stringLookup.put(t.getName(), t);
+            intLookup.put(t.getDetectorId(), t);
+        }
+    }
     
     DetectorType(){
         detectorId = 0;
@@ -62,7 +73,7 @@ public enum DetectorType {
         return detectorName;
     }
     
-     /**
+    /**
      * Returns the id number of the detector.
      * @return the id number of the detector
      */
@@ -70,18 +81,21 @@ public enum DetectorType {
         return detectorId;
     }
     
+    /**
+     * Get type from string name
+     * @param name
+     * @return 
+     */
     public static DetectorType getType(String name) {
-        name = name.trim();
-        for(DetectorType id: DetectorType.values())
-            if (id.getName().equalsIgnoreCase(name)) 
-                return id;
-        return UNDEFINED;
+        return stringLookup.getOrDefault(name.trim(), UNDEFINED);
     }
-    public static DetectorType getType(Integer detId) {
 
-        for(DetectorType id: DetectorType.values())
-            if (id.getDetectorId() == detId) 
-                return id;
-        return UNDEFINED;
+    /**
+     * Get type from integer id 
+     * @param detId
+     * @return 
+     */
+    public static DetectorType getType(Integer detId) {
+        return intLookup.getOrDefault(detId, UNDEFINED);
     }
 }

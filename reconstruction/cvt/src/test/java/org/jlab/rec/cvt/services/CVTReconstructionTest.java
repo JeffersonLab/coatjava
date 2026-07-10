@@ -9,24 +9,25 @@ import org.jlab.service.eb.EBHBEngine;
 import org.jlab.service.eb.EBTBEngine;
 
 import org.jlab.analysis.physics.TestEvent;
-import org.jlab.analysis.math.ClasMath;
 import org.jlab.clas.swimtools.MagFieldsEngine;
 import org.jlab.detector.base.DetectorType;
-import org.jlab.jnp.hipo4.data.SchemaFactory;
-import org.jlab.logging.DefaultLogger;
 import org.jlab.utils.CLASResources;
-import org.jlab.utils.system.ClasUtilsFile;
 
 /**
  *
  * @author naharrison
  */
 public class CVTReconstructionTest {
-	
+		
+    public static boolean isWithinXPercent(double X, double val, double standard) {
+        if(standard >= 0 && val > (1.0 - (X/100.0))*standard && val < (1.0 + (X/100.0))*standard) return true;
+        else if(standard < 0 && val < (1.0 - (X/100.0))*standard && val > (1.0 + (X/100.0))*standard) return true;
+        return false;
+    }
+
     @Test
     public void testCVTReconstruction() {
         
-        DefaultLogger.debug();
 
         System.setProperty("CLAS12DIR", "../../");
        
@@ -39,10 +40,6 @@ public class CVTReconstructionTest {
             e.printStackTrace();
         }
         
-        String dir = ClasUtilsFile.getResourceDir("CLAS12DIR", "etc/bankdefs/hipo4");
-        SchemaFactory schemaFactory = new SchemaFactory();
-        schemaFactory.initFromDirectory(dir);
-    
         DataEvent testEvent = TestEvent.get(DetectorType.CVT);
 
         MagFieldsEngine enf = new MagFieldsEngine();
@@ -70,10 +67,10 @@ public class CVTReconstructionTest {
         assertEquals(testEvent.hasBank("REC::Particle"), true);
         assertEquals(testEvent.getBank("REC::Particle").rows(), 1);
         assertEquals(testEvent.getBank("REC::Particle").getByte("charge", 0), 1);
-        assertEquals(ClasMath.isWithinXPercent(10.0, testEvent.getBank("REC::Particle").getFloat("px", 0), 1.9504), true);
-        assertEquals(ClasMath.isWithinXPercent(10.0, testEvent.getBank("REC::Particle").getFloat("py", 0), 0.2741), true);
-        assertEquals(ClasMath.isWithinXPercent(10.0, testEvent.getBank("REC::Particle").getFloat("pz", 0), 0.3473), true);
-        assertEquals(ClasMath.isWithinXPercent(30.0, testEvent.getBank("REC::Particle").getFloat("vz", 0), -1.95444), true); 
+        assertEquals(isWithinXPercent(10.0, testEvent.getBank("REC::Particle").getFloat("px", 0), 1.9504), true);
+        assertEquals(isWithinXPercent(10.0, testEvent.getBank("REC::Particle").getFloat("py", 0), 0.2741), true);
+        assertEquals(isWithinXPercent(10.0, testEvent.getBank("REC::Particle").getFloat("pz", 0), 0.3473), true);
+        assertEquals(isWithinXPercent(30.0, testEvent.getBank("REC::Particle").getFloat("vz", 0), -1.95444), true); 
 
     }
     

@@ -1,11 +1,18 @@
 # installed:
 /coatjava
-/myLocalMvnRepo
+/clara
 target
 /publish
 /docs/javadoc/*
 /clara-home
 tmp
+/common-tools/clas-io/src/main/java/org/jlab/io/banks
+
+# deployment
+/myLocalMvnRepo
+/coatjava-*.tar.gz
+dependency-reduced-pom.xml
+.flattened-pom.xml
 
 *.class
 *lundfiles*.dat

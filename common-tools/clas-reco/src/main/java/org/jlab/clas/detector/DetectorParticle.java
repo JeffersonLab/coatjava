@@ -239,6 +239,7 @@ public class DetectorParticle implements Comparable {
      * @deprecated
      * Just for backward compatibility for any external usage
      */
+    @Deprecated
     public int getSector(){
         return this.getSector(DetectorType.ECAL,1);
     }
@@ -313,6 +314,7 @@ public class DetectorParticle implements Comparable {
      * @deprecated
      * Just for backward compatibility for any external usage
      */
+    @Deprecated
     public DetectorResponse  getResponse(DetectorType type, int layer){
         return this.getHit(type,layer);
     }

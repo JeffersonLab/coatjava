@@ -86,7 +86,7 @@ public class HelicitySequence {
         
         if (!state.isValid()) return false;
         
-        LOGGER.log(Level.FINE, "HelicitySequence:  adding state:  {0}", state);
+        LOGGER.log(Level.FINEST, "HelicitySequence:  adding state:  {0}", state);
 
         // ignore states from other run numbers:
         for (HelicityState hs : this.states) {
@@ -297,7 +297,7 @@ public class HelicitySequence {
      * Get whether the pseudo-random generator is initialized.  This must be
      * true before calling the predict methods, because they require a working
      * generator.  The number of valid states required to intialize the generator
-     * is {@link HelicityGenerator.REGISTER_SIZE}.
+     * is {@link HelicityGenerator#REGISTER_SIZE}.
      * 
      * @return whether initialized 
      */
@@ -456,7 +456,7 @@ public class HelicitySequence {
         }
 
         LOGGER.info(
-            "HWP       ERRORS:  "+hwpErrors+
+            "\nHWP       ERRORS:  "+hwpErrors+
             "\nSYNC      ERRORS:  "+syncErrors+
             "\nQUARTET   ERRORS:  "+quartetErrors+
             "\nBIGGAP    ERRORS:  "+bigGapErrors+
@@ -591,5 +591,22 @@ public class HelicitySequence {
         HelicitySequence sequence = new HelicitySequence();
         sequence.addStream(stream);
         sequence.writeFlips(writer, 1);
+    }
+   
+    /**
+     * 
+     * @param sf
+     * @param writer
+     * @param stream 
+     */
+    public static void writeFlips(SchemaFactory sf, HipoWriterSorted writer, TreeSet<HelicityState> stream) {
+        HelicitySequence sequence = new HelicitySequence();
+        sequence.addStream(stream);
+        Event e = new Event();
+        for (Bank b : sequence.getBanks(sf)) {
+            e.write(b);
+            writer.addEvent(e, 1);
+            e.reset();
+        }
     }
 }

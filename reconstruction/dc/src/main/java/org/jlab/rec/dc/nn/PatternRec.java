@@ -14,6 +14,7 @@ import org.jlab.rec.dc.cluster.Cluster;
 import org.jlab.rec.dc.cluster.ClusterCleanerUtilities;
 import org.jlab.rec.dc.cluster.ClusterFinder;
 import org.jlab.rec.dc.cluster.ClusterFitter;
+import org.jlab.rec.dc.cluster.ClusterFitter.CoordSys;
 import org.jlab.rec.dc.cluster.FittedCluster;
 import org.jlab.rec.dc.cross.Cross;
 import org.jlab.rec.dc.cross.CrossList;
@@ -84,8 +85,10 @@ public class PatternRec {
                                     s.get_Region() == r.get(ri).get_Region() &&
                                     s.associatedCrossId == r.get(ri).associatedCrossId &&
                                     r.get(ri).associatedCrossId != -1) {
-                                if (s.get_Superlayer() % 2 == missingSL % 2)
+                                if (s.get_Superlayer() % 2 == missingSL % 2){
                                     Segs2Road.add(s);
+                                    break;
+                                }
                             }
                         }
                     }
@@ -111,7 +114,7 @@ public class PatternRec {
             if(entry.getValue().size()==3)
                 crossList.add(entry.getValue()); 
             for(Cross c : entry.getValue()) 
-                LOGGER.log(Level.FINE, "AI"+c.printInfo()+c.get_Segment1().printInfo()+c.get_Segment2().printInfo());
+                LOGGER.log(Level.FINEST, "AI"+c.printInfo()+c.get_Segment1().printInfo()+c.get_Segment2().printInfo());
         }
         return crossList;
     }
@@ -170,7 +173,7 @@ public class PatternRec {
                             fhit.updateHitPosition(DcDetector); 
                         }
                 
-                        cf.SetFitArray(fclus, "TSC"); 
+                        cf.SetFitArray(fclus, CoordSys.TSC); 
                         cf.Fit(fclus, true); 
                         cf.SetResidualDerivedParams(fclus, false, false, DcDetector); //calcTimeResidual=false, resetLRAmbig=false, local= false
 
@@ -181,7 +184,7 @@ public class PatternRec {
                             fhit.set_AssociatedClusterID(fclus.get_Id());
                             fhit.set_AssociatedHBTrackID(entry.getKey());
                         }
-                        cf.SetFitArray(fclus, "TSC");
+                        cf.SetFitArray(fclus, org.jlab.rec.dc.cluster.ClusterFitter.CoordSys.TSC);
                         cf.Fit(fclus, false);
                         cf.SetSegmentLineParameters(fclus.get(0).get_Z(), fclus);
                         

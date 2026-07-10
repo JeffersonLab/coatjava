@@ -39,6 +39,10 @@ public class DCHBPostClusterAI extends DCEngine {
         this.getBanks().init("HitBasedTrkg", "", "AI");
     }
     
+    public DCHBPostClusterAI(String outputBankPrefix) {
+        super("DCHAI");
+        this.getBanks().init("HitBasedTrkg", "", outputBankPrefix);
+    }
     
     @Override
     public void setDropBanks() {
@@ -51,7 +55,7 @@ public class DCHBPostClusterAI extends DCEngine {
     }
     
     @Override
-    public boolean processDataEvent(DataEvent event) {
+    public boolean processDataEventUser(DataEvent event) {
         
         int run = this.getRun(event);
         if(run==0) {
@@ -66,7 +70,7 @@ public class DCHBPostClusterAI extends DCEngine {
         RecoBankWriter writer = new RecoBankWriter(this.getBanks());
         // get Field
         Swim dcSwim = new Swim();
-        LOGGER.log(Level.FINE, "HB AI process event");
+        LOGGER.log(Level.FINEST, "HB AI process event");
 
         //AI
         List<Track> trkcands = null;
@@ -96,11 +100,11 @@ public class DCHBPostClusterAI extends DCEngine {
         CrossList crosslist = pr.RecomposeCrossList(segments, Constants.getInstance().dcDetector);
         crosses = new ArrayList<>();
         
-        LOGGER.log(Level.FINE, "num cands = "+crosslist.size());
+        LOGGER.log(Level.FINEST, "num cands = "+crosslist.size());
         for (List<Cross> clist : crosslist) {
             crosses.addAll(clist); 
             for(Cross c : clist)
-                LOGGER.log(Level.FINE, "Pass Cross"+c.printInfo());
+                LOGGER.log(Level.FINEST, "Pass Cross"+c.printInfo());
         }
         if (crosses.isEmpty()) {
             for(Segment seg : segments) {
@@ -244,8 +248,10 @@ public class DCHBPostClusterAI extends DCEngine {
                             s.get_Region() == r.get(ri).get_Region() &&
                             s.associatedCrossId == r.get(ri).associatedCrossId &&
                             r.get(ri).associatedCrossId != -1) {
-                        if (s.get_Superlayer() % 2 == missingSL % 2)
+                        if (s.get_Superlayer() % 2 == missingSL % 2){
                             Segs2RoadConv.add(s); 
+                            break;
+                        }
                     }
                 }
             }
@@ -260,6 +266,11 @@ public class DCHBPostClusterAI extends DCEngine {
 
         segmentsConv.addAll(psegmentsConv);
         List<Cross> pcrossesConv = crossMake.find_Crosses(segmentsConv, Constants.getInstance().dcDetector);
+        List<Cross> fullPseudoCrossesConv = new ArrayList(); // Cross by two pseudo segments
+        for(Cross crs : pcrossesConv){
+            if(crs.get_Segment1().get_Id() == -1 && crs.get_Segment2().get_Id() == -1) fullPseudoCrossesConv.add(crs);
+        }
+        pcrossesConv.removeAll(fullPseudoCrossesConv);        
         CrossList pcrosslistConv = crossLister.candCrossLists(event, pcrossesConv,
                 false,
                 null,

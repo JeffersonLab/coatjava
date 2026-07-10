@@ -15,6 +15,8 @@ public class DaqScaler {
     protected long gatedClock=-1;   // counts
     protected long gatedSlm=-1;     // counts
 
+    public final void   setClock(long c) { this.clock = c; }
+    public final void   setGatedClock(long c) { this.gatedClock = c; }
     public final long   getClock()       { return this.clock; }
     public final long   getFcup()        { return this.fcup; }
     public final long   getSlm()         { return this.slm; }
@@ -45,7 +47,7 @@ public class DaqScaler {
 
     @Override
     public String toString() {
-        return String.format("c=%d/%d f=%d/%d s=%d/%d",clock,gatedClock,fcup,gatedFcup,slm,gatedSlm);
+        return String.format("clock=%d/%d fcup=%d/%d slm=%d/%d",clock,gatedClock,fcup,gatedFcup,slm,gatedSlm);
     }
 
     /**

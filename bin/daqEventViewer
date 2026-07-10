@@ -2,7 +2,7 @@
 
 . `dirname $0`/../libexec/env.sh
 
-java -Xms1024m \
-    -cp "$CLAS12DIR/lib/clas/*:$CLAS12DIR/lib/services/*:$CLAS12DIR/lib/utils/*" \
+java ${JAVA_OPTS-} -Xms1024m \
+    -cp ${COATJAVA_CLASSPATH:-''} \
     org.jlab.detector.examples.RawEventViewer \
     $*

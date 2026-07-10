@@ -1,6 +1,5 @@
 package org.jlab.service.eb;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -39,6 +38,7 @@ public class EBEngine extends ReconstructionEngine {
     String cherenkovBank    = null;
     String trackBank        = null;
     String utrackBank       = null;
+    String ftrackBank       = null;
     String crossBank        = null;
     String ftBank           = null;
     String trajectoryBank   = null;
@@ -46,6 +46,7 @@ public class EBEngine extends ReconstructionEngine {
     
     // inputs banks:
     String trackType        = null;
+    String ftrackType       = null;
     String ftofHitsType     = null;
     String trajectoryType   = null;
     String covMatrixType    = null;
@@ -66,7 +67,7 @@ public class EBEngine extends ReconstructionEngine {
     }
 
     @Override
-    public boolean processDataEvent(DataEvent de) {
+    public boolean processDataEventUser(DataEvent de) {
         throw new RuntimeException("EBEngine cannot be used directly.  Use EBTBEngine/EBHBEngine instead.");
     }
 
@@ -80,6 +81,7 @@ public class EBEngine extends ReconstructionEngine {
         this.setScintExtrasBank(prefix+"::ScintExtras");
         this.setTrackBank(prefix+"::Track");
         this.setUTrackBank(prefix+"::UTrack");
+        this.setFTrackBank(prefix+"::FTrack");
         this.setCrossBank(prefix+"::TrackCross");
         this.setTrajectoryBank(prefix+"::Traj");
         this.setFTBank(prefix+"::ForwardTagger");
@@ -91,7 +93,7 @@ public class EBEngine extends ReconstructionEngine {
         }
     }
 
-    public boolean processDataEvent(DataEvent de,EBScalers ebs) {
+    public boolean processDataEventUser(DataEvent de,EBScalers ebs) {
 
         // check run number, get constants from CCDB:
         int run=-1;
@@ -133,6 +135,8 @@ public class EBEngine extends ReconstructionEngine {
         List<DetectorTrack>  tracks = DetectorData.readDetectorTracks(de, trackType, trajectoryType, covMatrixType);
         eb.addTracks(tracks);      
         
+        List<DetectorTrack> ftracks = DetectorData.readFDetectorTracks(de, ftrackType);
+
         List<DetectorTrack> ctracks = DetectorData.readCentralDetectorTracks(de, cvtTrackType, cvtTrajType);
         eb.addTracks(ctracks);
         
@@ -165,6 +169,10 @@ public class EBEngine extends ReconstructionEngine {
         // Do PID etc:
         EBAnalyzer analyzer = new EBAnalyzer(ccdb,rf);
         analyzer.processEvent(eb.getEvent());
+
+        // Overwrite electron momentum for zero-field:
+        if (Math.abs(head.getTorus()) < 1e-8)
+            analyzer.assignElectronMomenta(eb.getEvent());
 
         // Add Forward Tagger particles:
         eb.processForwardTagger(de);
@@ -219,6 +227,11 @@ public class EBEngine extends ReconstructionEngine {
 
                 if (!cutracks.isEmpty()) {
                     DataBank x = DetectorData.getUTracksBank(cutracks, ctracks, de, utrackBank);
+                    de.appendBanks(x);
+                }
+
+                if (!ftracks.isEmpty()) {
+                    DataBank x = DetectorData.getFTracksBank(ftracks, tracks, de, ftrackBank);
                     de.appendBanks(x);
                 }
             }
@@ -284,6 +297,10 @@ public class EBEngine extends ReconstructionEngine {
         this.utrackBank = name;
     }
     
+    public void setFTrackBank(String name) {
+        this.ftrackBank = name;
+    }
+    
     public void setFTBank(String name) {
         this.ftBank = name;
     }
@@ -302,6 +319,10 @@ public class EBEngine extends ReconstructionEngine {
     
     public void setTrackType(String name) {
         this.trackType = name;
+    }
+
+    public void setFTrackType(String name) {
+        this.ftrackType = name;
     }
     
     public void setFTOFHitsType(String name) {
@@ -338,6 +359,7 @@ public class EBEngine extends ReconstructionEngine {
         this.registerOutputBank(cherenkovBank);
         this.registerOutputBank(trackBank);
         this.registerOutputBank(utrackBank);
+        this.registerOutputBank(ftrackBank);
         this.registerOutputBank(crossBank);
         this.registerOutputBank(ftBank);
         this.registerOutputBank(trajectoryBank);
@@ -353,5 +375,8 @@ public class EBEngine extends ReconstructionEngine {
 
         return true;
     }
+
+    @Override
+    public void detectorChanged(int runNumber) {}
     
 }

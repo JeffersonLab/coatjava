@@ -7,10 +7,11 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.text.SimpleDateFormat;
+import java.time.format.DateTimeFormatter;
+import java.time.ZoneId;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.StringTokenizer;
-import java.util.TimeZone;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -40,14 +41,9 @@ public class MagneticFields {
 	/**
 	 * A formatter to get the time in down to seconds (no day info).
 	 */
-	private static SimpleDateFormat formatterlong;
-
-	static {
-		TimeZone tz = TimeZone.getDefault();
-
-		formatterlong = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-		formatterlong.setTimeZone(tz);
-	}
+        private static final DateTimeFormatter formatterlong = DateTimeFormatter
+          .ofPattern("yyyy/MM/dd HH:mm:ss")
+          .withZone(ZoneId.systemDefault());
 
 	// version of mag field package
 	private static String VERSION = "1.20";
@@ -76,6 +72,12 @@ public class MagneticFields {
 	// which field is active
 	private IMagField _activeField;
 
+    // whether the active field is a torus:
+    private boolean _hasActiveTorus = false;
+
+    // whether the active field is a solenoid:
+    private boolean _hasActiveSolenoid = false;
+   
 	// types of fields
 	public enum FieldType {
 		TORUS, SOLENOID, COMPOSITE, COMPOSITEROTATED, ZEROFIELD
@@ -185,7 +187,7 @@ public class MagneticFields {
 		_torus = readTorus(path);
 
 		if (activeFieldWasTorus) {
-			_activeField = _torus;
+			setActiveField(_torus);
 		}
 
 		if (_torus != null) {
@@ -270,7 +272,7 @@ public class MagneticFields {
 		_solenoid = readSolenoid(file.getAbsolutePath(), isTransverse);
 
 		if (activeFieldWasSolenoid) {
-			_activeField = _solenoid;
+			setActiveField(_solenoid);
 		}
 
 		if (_solenoid != null) {
@@ -483,6 +485,57 @@ public class MagneticFields {
 		return s;
 	}
 
+	private boolean getActiveTorus() {
+
+		if (_activeField != null) {
+			if (_activeField instanceof Torus) {
+				return true;
+			} else if (_activeField instanceof TorusProbe) {
+				return true;
+			} else if (_activeField instanceof CompositeProbe) {
+				return ((CompositeProbe) _activeField).hasTorus();
+			} else if (_activeField instanceof CompositeField) {
+				return ((CompositeField) _activeField).hasTorus();
+			}
+		}
+
+		return false;
+	}
+
+	private boolean getActiveSolenoid() {
+		if (_activeField != null) {
+			if (_activeField instanceof Solenoid) {
+				return true;
+			} else if (_activeField instanceof SolenoidProbe) {
+				return true;
+			} else if (_activeField instanceof CompositeProbe) {
+				return ((CompositeProbe) _activeField).hasSolenoid();
+			} else if (_activeField instanceof CompositeField) {
+				return ((CompositeField) _activeField).hasSolenoid();
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * Check whether we have an active torus field
+	 *
+	 * @return <code>true</code> if we have a torus
+	 */
+    public boolean hasActiveTorus() {
+        return _hasActiveTorus;
+    }
+    
+	/**
+	 * Check whether we have an active solenoid field
+	 *
+	 * @return <code>true</code> if we have a solenoid
+	 */
+    public boolean hasActiveSolenoid() {
+        return _hasActiveSolenoid;
+    }
+
 	/**
 	 * Sets the active field
 	 *
@@ -490,6 +543,14 @@ public class MagneticFields {
 	 */
 	public void setActiveField(IMagField field) {
 		_activeField = field;
+        _hasActiveTorus = getActiveTorus(); 
+        _hasActiveSolenoid = getActiveSolenoid(); 
+	}
+
+	private void resetActiveField() {
+		_activeField = null;
+        _hasActiveTorus = false;
+        _hasActiveSolenoid = false;
 	}
 
 	/**
@@ -504,18 +565,28 @@ public class MagneticFields {
 		switch (ftype) {
 		case TORUS:
 			_activeField = _torus;
+            _hasActiveTorus = true;
+            _hasActiveSolenoid = false;
 			break;
 		case SOLENOID:
 			_activeField = _solenoid;
+            _hasActiveTorus = false;
+            _hasActiveSolenoid = true;
 			break;
 		case COMPOSITE:
 			_activeField = _compositeField;
+            _hasActiveTorus = _compositeField.hasTorus();
+            _hasActiveSolenoid = _compositeField.hasSolenoid();
 			break;
 		case COMPOSITEROTATED:
 			_activeField = _rotatedCompositeField;
+            _hasActiveTorus = _rotatedCompositeField.hasTorus();
+            _hasActiveSolenoid = _rotatedCompositeField.hasSolenoid();
 			break;
 		case ZEROFIELD:
 			_activeField = null;
+            _hasActiveTorus = false;
+            _hasActiveSolenoid = false;
 			break;
 		}
 
@@ -1023,21 +1094,19 @@ public class MagneticFields {
 		}
 
 		// set the default active field
-		_activeField = null;
+		resetActiveField();
 		if ((_torus != null) && (_solenoid != null)) {
-			_activeField = _compositeField;
+			setActiveField(_compositeField);
 		}
 		else if ((_torus != null) && (_solenoid != null)) {
-			_activeField = _compositeField;
+			setActiveField(_compositeField);
 		}
-
 		else if (_torus != null) {
-			_activeField = _torus;
+			setActiveField(_torus);
 		}
 		else if (_solenoid != null) {
-			_activeField = _solenoid;
+			setActiveField(_solenoid);
 		}
-
 	}
 
 	// final initialziation
@@ -1138,19 +1207,19 @@ public class MagneticFields {
 		Object source = ae.getSource();
 
 		if (source == _torusItem) {
-			_activeField = _torus;
+			setActiveField(_torus);
 		}
 		else if (source == _solenoidItem) {
-			_activeField = _solenoid;
+			setActiveField(_solenoid);
 		} 
 		else if (source == _bothItem) {
-			_activeField = _compositeField;
+			setActiveField(_compositeField);
 		} 
 		else if ((_bothRotatedItem != null) && (source == _bothRotatedItem)) {
-			_activeField = _rotatedCompositeField;
+			setActiveField(_rotatedCompositeField);
 		} 
 		else if (source == _zeroItem) {
-			_activeField = null;
+			resetActiveField();
 		}
 		else if (source == _interpolateItem) {
 			MagneticField.setInterpolate(true);
@@ -1384,49 +1453,6 @@ public class MagneticFields {
 	}
 
 	/**
-	 * Check whether we have an active torus field
-	 *
-	 * @return <code>true</code> if we have a torus
-	 */
-	public boolean hasActiveTorus() {
-
-		if (_activeField != null) {
-			if (_activeField instanceof Torus) {
-				return true;
-			} else if (_activeField instanceof TorusProbe) {
-				return true;
-			} else if (_activeField instanceof CompositeProbe) {
-				return ((CompositeProbe) _activeField).hasTorus();
-			} else if (_activeField instanceof CompositeField) {
-				return ((CompositeField) _activeField).hasTorus();
-			}
-		}
-
-		return false;
-	}
-
-	/**
-	 * Check whether we have an active solenoid field
-	 *
-	 * @return <code>true</code> if we have a solenoid
-	 */
-	public boolean hasActiveSolenoid() {
-		if (_activeField != null) {
-			if (_activeField instanceof Solenoid) {
-				return true;
-			} else if (_activeField instanceof SolenoidProbe) {
-				return true;
-			} else if (_activeField instanceof CompositeProbe) {
-				return ((CompositeProbe) _activeField).hasSolenoid();
-			} else if (_activeField instanceof CompositeField) {
-				return ((CompositeField) _activeField).hasSolenoid();
-			}
-		}
-
-		return false;
-	}
-
-	/**
 	 * Get the torus field
 	 *
 	 * @return the torus field
@@ -1542,7 +1568,7 @@ public class MagneticFields {
 	 * Converts the clas (lab) 3D coordinates to sector 3D coordinates to
 	 *
 	 * @param sector the 1-based sector [1..6]
-	 * @param lab    will hold the lab 3D Cartesian coordinates (modified)
+         * @param sect
 	 * @param x      the lab x coordinate
 	 * @param y      the lab y coordinate
 	 * @param z      the lab z coordinate
@@ -1660,7 +1686,7 @@ public class MagneticFields {
 	 * @return a string representation of the current time, down to seconds.
 	 */
 	public static String dateStringLong(long longtime) {
-		return formatterlong.format(longtime);
+		return formatterlong.format(Instant.ofEpochMilli(longtime));
 	}
 
 	/**

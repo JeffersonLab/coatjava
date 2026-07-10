@@ -3,7 +3,6 @@ package org.jlab.clas.tracking.kalmanfilter.zReference;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.jlab.clas.clas.math.FastMath;
 import org.jlab.clas.swimtools.Swim;
 import org.jlab.clas.tracking.kalmanfilter.AKFitter;
 import org.jlab.clas.tracking.kalmanfilter.AMeasVecs;
@@ -14,7 +13,9 @@ import org.jlab.clas.tracking.kalmanfilter.zReference.MeasVecs;
 import org.jlab.clas.tracking.kalmanfilter.zReference.StateVecs;
 import org.jlab.clas.tracking.utilities.RungeKuttaDoca;
 import org.jlab.clas.tracking.utilities.MatrixOps.Libr;
+import org.jlab.geom.prim.Line3D;
 import org.jlab.geom.prim.Point3D;
+import org.jlab.geom.prim.Vector3D;
 import org.jlab.jnp.matrix.*;
 
 /**
@@ -273,7 +274,7 @@ public class KFitterStraight extends AKFitter {
 
 			double[] K = new double[5];
 			double V = mVec.surface.unc[0] * KFScale;
-			double[] H = mv.H(sVec.x, sVec.y, mVec.surface.measPoint.z(), mVec.surface.wireLine[0]);
+			double[] H = mv.H(sVec.x, sVec.y, mVec.surface.measPoint.z(), sVec.tx, sVec.ty, mVec.surface.wireLine[0]);
 			Matrix CaInv = this.filterCovMat(H, sVec.CM, V);
 			Matrix cMat = new Matrix();
 			if (CaInv != null) {			
@@ -289,7 +290,9 @@ public class KFitterStraight extends AKFitter {
 			}
 
 			Point3D point = new Point3D(sVec.x, sVec.y, mVec.surface.measPoint.z());
-			double h = mv.hDoca(point, mVec.surface.wireLine[0]);
+                        Vector3D dir = new Vector3D(sVec.tx, sVec.ty, 1);
+                        Line3D line = new Line3D(point, dir);                        
+			double h = mv.hDoca(line, mVec.surface.wireLine[0]);
             
 			double signMeas = 1;
 			double sign = 1;
@@ -322,7 +325,7 @@ public class KFitterStraight extends AKFitter {
 			if (mVec.surface.doca[1] != -99) {
 				// now filter using the other Hit
 				V = mVec.surface.unc[1] * KFScale;
-				H = mv.H(x_filt, y_filt, mVec.surface.measPoint.z(), mVec.surface.wireLine[1]);
+				H = mv.H(x_filt, y_filt, mVec.surface.measPoint.z(), tx_filt, ty_filt, mVec.surface.wireLine[1]);
 				CaInv = this.filterCovMat(H, cMat, V);
 				if (CaInv != null) {
 					for (int i = 0; i < 5; i++) {						
@@ -338,8 +341,10 @@ public class KFitterStraight extends AKFitter {
 				}
 				
 				Point3D point2 = new Point3D(x_filt, y_filt, mVec.surface.measPoint.z());
+                                Vector3D dir2 = new Vector3D(tx_filt, ty_filt, 1);
+                                Line3D line2 = new Line3D(point2, dir2);                                 
 				
-				h = mv.hDoca(point2, mVec.surface.wireLine[1]);				
+				h = mv.hDoca(line2, mVec.surface.wireLine[1]);				
 
 				signMeas = Math.signum(mVec.surface.doca[1]);
 				sign = Math.signum(h);
@@ -437,8 +442,10 @@ public class KFitterStraight extends AKFitter {
             
             double V0 = mv.measurements.get(0).surface.unc[0];
             
-			Point3D point = new Point3D(svc.x, svc.y, mv.measurements.get(0).surface.measPoint.z());            
-            double h0 = mv.hDoca(point, mv.measurements.get(0).surface.wireLine[0]);
+            Point3D point = new Point3D(svc.x, svc.y, mv.measurements.get(0).surface.measPoint.z());    
+            Vector3D dir = new Vector3D(sVec.tx, sVec.ty, 1);
+            Line3D line = new Line3D(point, dir);              
+            double h0 = mv.hDoca(line, mv.measurements.get(0).surface.wireLine[0]);
             
             svc.setProjector(mv.measurements.get(0).surface.wireLine[0].origin().x());
             svc.setProjectorDoca(h0);
@@ -449,7 +456,7 @@ public class KFitterStraight extends AKFitter {
             //USE THE DOUBLE HIT
             if(mv.measurements.get(0).surface.doca[1]!=-99) { 
                 V0 = mv.measurements.get(0).surface.unc[1];
-                h0 = mv.hDoca(point, mv.measurements.get(0).surface.wireLine[1]);
+                h0 = mv.hDoca(line, mv.measurements.get(0).surface.wireLine[1]);
                 res = (mv.measurements.get(0).surface.doca[1] - h0);
                 chi2 += (mv.measurements.get(0).surface.doca[1] - h0) * (mv.measurements.get(0).surface.doca[1] - h0) / V0;
                 nRj[mv.measurements.get(0).region-1]+=res*res/mv.measurements.get(0).error;
@@ -471,9 +478,11 @@ public class KFitterStraight extends AKFitter {
 
                 double V = mv.measurements.get(k1 + 1).surface.unc[0];
                 
-    			point = new Point3D(sv.transported(forward).get(k1+1).x, sv.transported(forward).get(k1+1).y, mv.measurements.get(k1+1).surface.measPoint.z());            
+                point = new Point3D(sv.transported(forward).get(k1+1).x, sv.transported(forward).get(k1+1).y, mv.measurements.get(k1+1).surface.measPoint.z()); 
+                dir = new Vector3D(sv.transported(forward).get(k1+1).tx, sv.transported(forward).get(k1+1).ty, 1);
+                line = new Line3D(point, dir);                     
                 
-                double h = mv.hDoca(point, mv.measurements.get(k1 + 1).surface.wireLine[0]);
+                double h = mv.hDoca(line, mv.measurements.get(k1 + 1).surface.wireLine[0]);
                 svc = sv.transported(forward).get(k1+1);
                 path += (forward ? 1 : -1) * svc.deltaPath;
                 svc.setPathLength(path);
@@ -486,7 +495,7 @@ public class KFitterStraight extends AKFitter {
                 //USE THE DOUBLE HIT
                 if(mv.measurements.get(k1 + 1).surface.doca[1]!=-99) { 
                     V = mv.measurements.get(k1 + 1).surface.unc[1];
-                    h = mv.hDoca(point, mv.measurements.get(k1 + 1).surface.wireLine[1]);
+                    h = mv.hDoca(line, mv.measurements.get(k1 + 1).surface.wireLine[1]);
                     res = (mv.measurements.get(k1 + 1).surface.doca[1]  - h);
                     chi2 += (mv.measurements.get(k1 + 1).surface.doca[1]  - h) * (mv.measurements.get(k1 + 1).surface.doca[1]  - h) / V;                    
                     nRj[mv.measurements.get(k1 + 1).region-1]+=res*res/V;

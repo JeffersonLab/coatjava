@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.jlab.service.mltn;
 
 import j4ml.clas12.Clas12TrackAnalyzer;
@@ -16,7 +11,7 @@ import org.jlab.io.hipo.HipoDataBank;
 /**
  *
  * @author gavalian
- @deprecated 
+ @Deprecated 
  */
 public class MLTNEngine extends ReconstructionEngine {
     
@@ -29,15 +24,17 @@ public class MLTNEngine extends ReconstructionEngine {
     @Override
     public boolean init() {
         classifier.setEnvDirectory("CLAS12DIR");
-        classifier.setEnvPath("etc/nnet/neuroph");
+        classifier.setEnvPath("etc/data/nnet/neuroph");
         classifier.load("trackClassifier.nnet", "trackFixer.nnet");
         System.out.println("Loading neural network files done...");
-        //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         return true;
     }
 
     @Override
-    public boolean processDataEvent(DataEvent de) {
+    public void detectorChanged(int runNumber) {}
+
+    @Override
+    public boolean processDataEventUser(DataEvent de) {
         if(de.hasBank("HitBasedTrkg::Clusters")==true){
             DataBank bank = de.getBank("HitBasedTrkg::Clusters");
             
@@ -96,5 +93,4 @@ public class MLTNEngine extends ReconstructionEngine {
         //System.out.println("appending bank");
         event.appendBank(bank);
     }*/
-    
 }

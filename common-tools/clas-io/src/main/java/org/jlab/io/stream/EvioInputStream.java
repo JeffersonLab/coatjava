@@ -1,9 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package org.jlab.io.stream;
 
 import java.io.File;
@@ -35,19 +29,16 @@ public class EvioInputStream {
     
     private ByteOrder  storeByteOrder = ByteOrder.BIG_ENDIAN;
     private EvioCompactReader evioReader    = null;
-    private int        currentEvent;
     private int        currentFileEntries;
     private EvioCompactStructureHandler cStructure = null;
     
     public void open(String filename){
     try {
             evioReader = new EvioCompactReader(new File(filename));
-            currentEvent = 1;
             currentFileEntries = evioReader.getEventCount();
             storeByteOrder     = evioReader.getFileByteOrder();
             System.out.println("****** opened FILE [] ** NEVENTS = " + 
                     currentFileEntries + " *******");
-            // TODO Auto-generated method stub
         } catch (EvioException ex) {
             Logger.getLogger(EvioSource.class.getName()).log(Level.SEVERE, null, ex);
         } catch (IOException ex) {
@@ -56,14 +47,14 @@ public class EvioInputStream {
     }
     
     public Map<Integer,String> getKeys(){
-        Map<Integer,String> keymap = new HashMap<Integer,String>();
+        Map<Integer,String> keymap = new HashMap<>();
         return keymap;
     }
     
     public int getEntries() { return this.currentFileEntries; }
     
     public TreeMap<Integer,Object>  getObjectFromNode(EvioNode root){
-        TreeMap<Integer,Object> treemap = new TreeMap<Integer,Object>();
+        TreeMap<Integer,Object> treemap = new TreeMap<>();
 
         List<EvioNode>  nodes = root.getAllNodes();
         for(int loop = 0; loop < nodes.size(); loop++){
@@ -113,9 +104,8 @@ public class EvioInputStream {
     }
     
     public ArrayList< TreeMap<Integer,Object> > getObjectTree(){
-        ArrayList< TreeMap<Integer,Object> > objectArray = new ArrayList< TreeMap<Integer,Object> >();
+        ArrayList< TreeMap<Integer,Object> > objectArray = new ArrayList<  >();
         for(int loop = 0; loop < currentFileEntries; loop++){
-            //System.err.println("--- reading file ---");
             try {
                 ByteBuffer evioBuffer = evioReader.getEventBuffer(loop+1, true);
                 EvioCompactStructureHandler structure = new EvioCompactStructureHandler(evioBuffer,DataType.BANK);
@@ -127,7 +117,7 @@ public class EvioInputStream {
                             (node.getDataTypeObj()==DataType.ALSOBANK||
                             node.getDataTypeObj()==DataType.BANK)){
                         TreeMap<Integer,Object> objects = this.getObjectFromNode(node);
-                        if(objects.size()>0) objectArray.add(objects);
+                        if(!objects.isEmpty()) objectArray.add(objects);
                     }
                 }
             } catch (EvioException ex) {
@@ -141,7 +131,7 @@ public class EvioInputStream {
         this.evioReader.close();
     }
     public ArrayList<Integer> getContainerTags(){
-        ArrayList<Integer> tags = new ArrayList<Integer>();
+        ArrayList<Integer> tags = new ArrayList<>();
         for(int loop = 0; loop < currentFileEntries; loop++){
             try {
                 ByteBuffer evioBuffer = evioReader.getEventBuffer(loop+1, true);
@@ -152,7 +142,6 @@ public class EvioInputStream {
                             item.getDataTypeObj()==DataType.BANK||
                             item.getDataTypeObj()==DataType.ALSOBANK)
                         tags.add(item.getTag());
-                    //return item;
                 }
             } catch (EvioException ex) {
                 Logger.getLogger(EvioInputStream.class.getName()).log(Level.SEVERE, null, ex);
@@ -185,10 +174,6 @@ public class EvioInputStream {
                             item.getDataTypeObj()==type)
                         return item;
                 }
-                /*
-                if(item.getTag()==tag&&item.getNum()==num&&
-                item.getDataTypeObj()==type)
-                return item;*/
             }            
         } catch (EvioException ex) {
             System.err.println("**** ERROR ***** : error getting node [" + tag 
@@ -208,9 +193,9 @@ public class EvioInputStream {
                 Logger.getLogger(EvioInputStream.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
-        //byte[] ret = {0};
         return null;
     }
+
     public double[] getDouble(int tag, int num){
         EvioNode node = this.getNodeFromTree(tag,num,DataType.DOUBLE64);
         if(node!=null){
@@ -222,7 +207,6 @@ public class EvioInputStream {
                 Logger.getLogger(EvioInputStream.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
-        //double[] ret = {0.0};
         return null;
     }
     

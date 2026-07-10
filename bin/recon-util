@@ -6,8 +6,8 @@ split_cli $@
 
 export MALLOC_ARENA_MAX=1
 
-java -Xmx1536m -Xms1024m -XX:+UseSerialGC ${jvm_options[@]} \
-    -cp "$CLAS12DIR/lib/clas/*:$CLAS12DIR/lib/services/*:$CLAS12DIR/lib/utils/*" \
+java ${JAVA_OPTS-} -Xmx1536m -Xms1024m -XX:+UseSerialGC ${jvm_options[@]} \
+    -cp ${COATJAVA_CLASSPATH:-''} \
     org.jlab.clas.reco.EngineProcessor \
     ${class_options[@]}
 

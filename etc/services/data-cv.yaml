@@ -1,11 +1,13 @@
 io-services:
   reader:
-    class: org.jlab.io.clara.HipoToHipoReader
-    name: HipoToHipoReader
+    class: org.jlab.io.clara.Clas12Reader
+    name: Clas12Reader
   writer:
-    class: org.jlab.io.clara.HipoToHipoWriter
-    name: HipoToHipoWriter
+    class: org.jlab.io.clara.Clas12Writer
+    name: Clas12Writer
 services:
+  - class: org.jlab.clas.reco.DecoderEngine
+    name: DECO
   - class: org.jlab.clas.swimtools.MagFieldsEngine
     name: MAGFIELDS
   - class: org.jlab.rec.ft.cal.FTCALEngine
@@ -57,19 +59,21 @@ services:
     name: RICH
   - class: org.jlab.service.rtpc.RTPCEngine
     name: RTPC
+  - class: org.jlab.rec.service.vtx.VTXEngine
+    name: VTX
+  - class: org.jlab.calibration.service.CalibBanksEngine
+    name: CALIB    
 configuration:
   global:
-    variation: rgb_spring2019
+    variation: rgd_fall2023
 #    timestamp: 12/31/2020-00:00:00
 #    triggerMask: "0x1"
 ## uncomment the following two lines for compatibility with alignments before the DC fixes
 #    dcMinistagger: "NOTONREFWIRE"
 #    dcFeedthroughs: "OFF"
-#  io-services:
-#    writer:
-#      schema_dir: "absolute-path-to-schema-folder"
-#      for example:
-#      schema_dir: "/home/clas12-1/chef/myClara/plugins/clas12/etc/bankdefs/dst"
+  io-services:
+    writer:
+      schema_dir: dst
   services:
     MAGFIELDS:
       magfieldSolenoidMap: Symm_solenoid_r601_phi1_z1201_13June2018.dat

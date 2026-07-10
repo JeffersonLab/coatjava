@@ -67,7 +67,7 @@ public class FTTRKCross implements Comparable<FTTRKCross> {
 
 	/**
 	 * Sets the sector
-	 * @param _Sector  the sector of the cross
+	 * @param sector  the sector of the cross
 	 */
 	public void set_Sector(int sector) {
 		this._Sector = sector;
@@ -84,7 +84,7 @@ public class FTTRKCross implements Comparable<FTTRKCross> {
 
 	/**
 	 * Sets the region
-	 * @param _Region  the region of the cross
+	 * @param region  the region of the cross
 	 */
 	public void set_Region(int region) {
 		this._Region = region;
@@ -100,7 +100,7 @@ public class FTTRKCross implements Comparable<FTTRKCross> {
 
 	/**
 	 * Sets the cross ID
-	 * @param _Id  the id of the cross
+	 * @param id the id of the cross
 	 */
 	public void set_Id(int id) {
 		this._Id = id;
@@ -126,7 +126,7 @@ public class FTTRKCross implements Comparable<FTTRKCross> {
 
 	/**
 	 * Sets the cross 3-D point 
-	 * @param _Point  a 3-D point characterizing the position of the cross in the tilted coordinate system.
+	 * @param point  a 3-D point characterizing the position of the cross in the tilted coordinate system.
 	 */
 	public void set_Point(Point3D point) {
 		this._Point = point;
@@ -142,7 +142,7 @@ public class FTTRKCross implements Comparable<FTTRKCross> {
 
 	/**
 	 * Sets a 3-dimensional error on the 3-D point 
-	 * @param _PointErr a 3-dimensional error on the 3-D point characterizing the position of the cross in the tilted coordinate system.
+	 * @param pointErr a 3-dimensional error on the 3-D point characterizing the position of the cross in the tilted coordinate system.
 	 */
 	public void set_PointErr(Point3D pointErr) {
 		this._PointErr = pointErr;
@@ -158,7 +158,7 @@ public class FTTRKCross implements Comparable<FTTRKCross> {
 
 	/**
 	 * Sets the cross unit direction vector
-	 * @param _Dir the cross unit direction vector
+	 * @param dir the cross unit direction vector
 	 */
 	public void set_Dir(Vector3D dir) {
 		this._Dir = dir;
@@ -174,7 +174,7 @@ public class FTTRKCross implements Comparable<FTTRKCross> {
 
 	/**
 	 * Sets the cross unit direction vector
-	 * @param _DirErr the cross unit direction vector
+	 * @param dirErr the cross unit direction vector
 	 */
 	public void set_DirErr(Vector3D dirErr) {
 		this._DirErr = dirErr;

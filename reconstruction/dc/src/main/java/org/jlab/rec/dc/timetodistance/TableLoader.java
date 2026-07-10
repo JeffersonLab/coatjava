@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.jlab.detector.base.DetectorType;
 import org.jlab.detector.base.GeometryFactory;
@@ -229,19 +228,16 @@ public class TableLoader {
         return bin;
     }
     
-    private static synchronized void FillAlpha() {
+    private static void FillAlpha() {
+        final double cos30 = Math.cos(Math.toRadians(30.));
         for(int icosalpha =0; icosalpha<maxBinIdxAlpha+1; icosalpha++) {
-
-            double cos30minusalphaM = Math.cos(Math.toRadians(30.)) + (double) 
-                    (icosalpha)*(1. - Math.cos(Math.toRadians(30.)))/5.;
+            double cos30minusalphaM = cos30 + (double) (icosalpha)*(1. - cos30)/5.;
             double alphaM = -(Math.toDegrees(Math.acos(cos30minusalphaM)) - 30);
             AlphaMid[icosalpha]= alphaM;
-            double cos30minusalphaU = Math.cos(Math.toRadians(30.)) + (double) 
-                    (icosalpha+0.5)*(1. - Math.cos(Math.toRadians(30.)))/5.;
+            double cos30minusalphaU = cos30 + (double) (icosalpha+0.5)*(1. - cos30)/5.;
             double alphaU = -(Math.toDegrees(Math.acos(cos30minusalphaU)) - 30);
             AlphaBounds[icosalpha][1] = alphaU;
-            double cos30minusalphaL = Math.cos(Math.toRadians(30.)) + (double) 
-                    (icosalpha-0.5)*(1. - Math.cos(Math.toRadians(30.)))/5.;
+            double cos30minusalphaL = cos30 + (double) (icosalpha-0.5)*(1. - cos30)/5.;
             double alphaL = -(Math.toDegrees(Math.acos(cos30minusalphaL)) - 30);
             AlphaBounds[icosalpha][0] = alphaL;
         }
@@ -250,8 +246,10 @@ public class TableLoader {
         AlphaBounds[0][0] = 0;
         AlphaBounds[5][1] = 30;
     }
+
     public static boolean useP = true;
-    public static synchronized void getConstants(IndexedTable t2dPressure, IndexedTable t2dPressRef, IndexedTable pressure){
+
+    private static void getConstants(IndexedTable t2dPressure, IndexedTable t2dPressRef, IndexedTable pressure){
         double p_ref = t2dPressRef.getDoubleValue("pressure", 0,0,0);
         double p = pressure.getDoubleValue("value", 0,0,3);
         double dp = p - p_ref;
@@ -263,44 +261,46 @@ public class TableLoader {
         
         for(int s = 0; s<6; s++ ){ // loop over sectors
             for(int r = 0; r<6; r++ ){ //loop over slys
+
+                long hash = IndexedTable.DEFAULT_GENERATOR.hashCode(s+1,r+1,0);
+                
                 // Fill constants
-                FracDmaxAtMinVel[s][r] = t2dPressure.getDoubleValue("c1_a0", s+1,r+1,0)
-                        +t2dPressure.getDoubleValue("c1_a1", s+1,r+1,0)*dp*dpscale;
-                v0[s][r] = t2dPressure.getDoubleValue("v0_a0", s+1,r+1,0)
-                        +t2dPressure.getDoubleValue("v0_a1", s+1,r+1,0)*dp*dpscale
-                        +t2dPressure.getDoubleValue("v0_a2", s+1,r+1,0)*dp*dp*dp2scale;
-                vmid[s][r] = t2dPressure.getDoubleValue("vmid_a0", s+1,r+1,0)
-                        +t2dPressure.getDoubleValue("vmid_a1", s+1,r+1,0)*dp*dpscale
-                        +t2dPressure.getDoubleValue("vmid_a2", s+1,r+1,0)*dp*dp*dp2scale;
-                distbeta[s][r] = t2dPressure.getDoubleValue("distbeta_a0", s+1,r+1,0)
-                        +t2dPressure.getDoubleValue("distbeta_a1", s+1,r+1,0)*dp*dpscale
-                        +t2dPressure.getDoubleValue("distbeta_a2", s+1,r+1,0)*dp*dp*dp2scale;
+                FracDmaxAtMinVel[s][r] = t2dPressure.getDoubleValueByHash("c1_a0", hash)
+                        +t2dPressure.getDoubleValueByHash("c1_a1", hash)*dp*dpscale;
+                v0[s][r] = t2dPressure.getDoubleValueByHash("v0_a0", hash)
+                        +t2dPressure.getDoubleValueByHash("v0_a1", hash)*dp*dpscale
+                        +t2dPressure.getDoubleValueByHash("v0_a2", hash)*dp*dp*dp2scale;
+                vmid[s][r] = t2dPressure.getDoubleValueByHash("vmid_a0", hash)
+                        +t2dPressure.getDoubleValueByHash("vmid_a1", hash)*dp*dpscale
+                        +t2dPressure.getDoubleValueByHash("vmid_a2", hash)*dp*dp*dp2scale;
+                distbeta[s][r] = t2dPressure.getDoubleValueByHash("distbeta_a0", hash)
+                        +t2dPressure.getDoubleValueByHash("distbeta_a1", hash)*dp*dpscale
+                        +t2dPressure.getDoubleValueByHash("distbeta_a2", hash)*dp*dp*dp2scale;
                 if(r>1 && r<4) {
-                    delta_bfield_coefficient[s][r] = t2dPressure.getDoubleValue("delta_bfield_a0", s+1,r+1,0)
-                            +t2dPressure.getDoubleValue("delta_bfield_a1", s+1,r+1,0)*dp*dpscale
-                            +t2dPressure.getDoubleValue("delta_bfield_a2", s+1,r+1,0)*dp*dp*dp2scale
-                            +t2dPressure.getDoubleValue("delta_bfield_a1", s+1,r+1,0)*dp*dpscale
-                            +t2dPressure.getDoubleValue("delta_bfield_a2", s+1,r+1,0)*dp*dp*dp2scale;
-                    b1[s][r] = t2dPressure.getDoubleValue("b1_a0", s+1,r+1,0)
-                            +t2dPressure.getDoubleValue("b1_a1", s+1,r+1,0)*dp*dpscale
-                            +t2dPressure.getDoubleValue("b1_a2", s+1,r+1,0)*dp*dp*dp2scale;
-                    b2[s][r] = t2dPressure.getDoubleValue("b2_a0", s+1,r+1,0)
-                            +t2dPressure.getDoubleValue("b2_a1", s+1,r+1,0)*dp*dpscale
-                            +t2dPressure.getDoubleValue("b2_a2", s+1,r+1,0)*dp*dp*dp2scale;
-                    b3[s][r] = t2dPressure.getDoubleValue("b3_a0", s+1,r+1,0)
-                            +t2dPressure.getDoubleValue("b3_a1", s+1,r+1,0)*dp*dpscale
-                            +t2dPressure.getDoubleValue("b3_a2", s+1,r+1,0)*dp*dp*dp2scale;
-                    b4[s][r] = t2dPressure.getDoubleValue("b4_a0", s+1,r+1,0)
-                            +t2dPressure.getDoubleValue("b4_a1", s+1,r+1,0)*dp*dpscale
-                            +t2dPressure.getDoubleValue("b4_a2", s+1,r+1,0)*dp*dp*dp2scale;
+                    delta_bfield_coefficient[s][r] = t2dPressure.getDoubleValueByHash("delta_bfield_a0", hash)
+                            +t2dPressure.getDoubleValueByHash("delta_bfield_a1", hash)*dp*dpscale
+                            +t2dPressure.getDoubleValueByHash("delta_bfield_a2", hash)*dp*dp*dp2scale;
+                    b1[s][r] = t2dPressure.getDoubleValueByHash("b1_a0", hash)
+                            +t2dPressure.getDoubleValueByHash("b1_a1", hash)*dp*dpscale
+                            +t2dPressure.getDoubleValueByHash("b1_a2", hash)*dp*dp*dp2scale;
+                    b2[s][r] = t2dPressure.getDoubleValueByHash("b2_a0", hash)
+                            +t2dPressure.getDoubleValueByHash("b2_a1", hash)*dp*dpscale
+                            +t2dPressure.getDoubleValueByHash("b2_a2", hash)*dp*dp*dp2scale;
+                    b3[s][r] = t2dPressure.getDoubleValueByHash("b3_a0", hash)
+                            +t2dPressure.getDoubleValueByHash("b3_a1", hash)*dp*dpscale
+                            +t2dPressure.getDoubleValueByHash("b3_a2", hash)*dp*dp*dp2scale;
+                    b4[s][r] = t2dPressure.getDoubleValueByHash("b4_a0", hash)
+                            +t2dPressure.getDoubleValueByHash("b4_a1", hash)*dp*dpscale
+                            +t2dPressure.getDoubleValueByHash("b4_a2", hash)*dp*dp*dp2scale;
                 }
-                Tmax[s][r] = t2dPressure.getDoubleValue("tmax_a0", s+1,r+1,0)
-                        +t2dPressure.getDoubleValue("tmax_a1", s+1,r+1,0)*dp*dpscale
-                        +t2dPressure.getDoubleValue("tmax_a2", s+1,r+1,0)*dp*dp*dp2scale;
+                Tmax[s][r] = t2dPressure.getDoubleValueByHash("tmax_a0", hash)
+                        +t2dPressure.getDoubleValueByHash("tmax_a1", hash)*dp*dpscale
+                        +t2dPressure.getDoubleValueByHash("tmax_a2", hash)*dp*dp*dp2scale;
             }
         }
     }
-    public static synchronized void FillTable() {
+
+    public static void FillTable() {
         double stepSize = 0.00010;
         for(int s = 0; s<6; s++ ){ // loop over sectors
             for(int r = 0; r<6; r++ ){ //loop over slys
@@ -363,18 +363,18 @@ public class TableLoader {
         
         TableLoader.fillMissingTableBins();
     }
+
     public static synchronized void Fill(IndexedTable t2dPressure, IndexedTable t2dPressRef, IndexedTable pressure) {
         
         //CCDBTables 0 =  "/calibration/dc/signal_generation/doca_resolution";
         //CCDBTables 1 =  "/calibration/dc/time_to_distance/t2d";
         //CCDBTables 2 =  "/calibration/dc/time_corrections/T0_correction";	
         if (T2DLOADED) return;
-        
+        System.out.println(" FILLING T2D TABLE ....");
         FillAlpha();
         getConstants(t2dPressure,  t2dPressRef,  pressure);
         FillTable();
-        
-        System.out.println(" T2D TABLE FILLED.....");
+        System.out.println(" T2D TABLE FILLED.");
         T2DLOADED = true;
      }
     
@@ -412,7 +412,7 @@ public class TableLoader {
      * @param superlayer superlayer 
      * @return returns time (ns) when given inputs of distance x (cm), local angle alpha (degrees) and magnitude of bfield (Tesla).  
      */
-    public static synchronized double calc_Time(double x, double alpha, double bfield, int sector, int superlayer) {
+    public static double calc_Time(double x, double alpha, double bfield, int sector, int superlayer) {
         int s = sector - 1;
         int r = superlayer - 1;
         double dmax = 2.*Constants.getInstance().wpdist[r]; 
@@ -429,7 +429,7 @@ public class TableLoader {
        
     }
     
-    public static synchronized double getDeltaTimeBeta(double x, double beta, double distbeta, double v_0) {
+    public static double getDeltaTimeBeta(double x, double beta, double distbeta, double v_0) {
       
         double value = (0.5*Math.pow(beta*beta*distbeta,3)*x/(Math.pow(beta*beta*distbeta,3)+x*x*x))/v_0;
         

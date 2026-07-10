@@ -49,6 +49,8 @@ public class Constants {
     
     public static boolean DEBUG = false;
     
+    public static double[][] SHIFTS = null;
+
     // CONSTATNS for TRANSFORMATION
     public static final double SIN25 = Math.sin(Math.toRadians(25.));
     public static final double COS25 = Math.cos(Math.toRadians(25.));
@@ -109,7 +111,7 @@ public class Constants {
     public static final String PRESSURE       = "/hall/weather/pressure";
     public static final String T2DPRESSUREREF = "/calibration/dc/v2/ref_pressure";
     public static final String T0CORRECTION   = "/calibration/dc/v2/t0";
-    public static final String TDCTCUTS       = "/calibration/dc/time_corrections/tdctimingcuts";
+    public static final String TDCTCUTS       = "/calibration/dc/v2/tdc_cuts";
     public static final String WIRESTAT       = "/calibration/dc/tracking/wire_status";
     public static final String TIMEJITTER     = "/calibration/dc/time_jitter";
     public static final String BEAMPOS        = "/geometry/beam/position";
@@ -366,7 +368,6 @@ public class Constants {
     public void setSWAPDCRBBITS(boolean SWAPDCRBBITS) {
         this.SWAPDCRBBITS = SWAPDCRBBITS;
     }
-   
 
     public synchronized void initialize(String engine,
                                         String variation, 
@@ -400,9 +401,6 @@ public class Constants {
             SECTORSELECT        = selectedSector;
 
             LoadConstants();
-
-            LoadGeometry(GEOVARIATION, shifts);
-
             ConstantsLoaded = true;
             printConfig(engine);
         }
@@ -414,9 +412,6 @@ public class Constants {
         }
         else {
             LoadConstants();
-
-            LoadGeometry(GEOVARIATION, null);
-
             ConstantsLoaded = true;
             printConfig(engine);
         }
@@ -515,40 +510,41 @@ public class Constants {
     private void addReverseTT(int run, IndexedTable tt) {
         LOGGER.info("Reversing translation table for run " + run);
         IndexedTable reverse = new IndexedTable(4, "crate/I:slot/I:channel/I");
-        for(int row=0; row<tt.getRowCount(); row++) {
-            int crate   = Integer.valueOf((String)tt.getValueAt(row,0));
-            int slot    = Integer.valueOf((String)tt.getValueAt(row,1));
-            int channel = Integer.valueOf((String)tt.getValueAt(row,2));
-            int sector  = tt.getIntValue("sector",    crate,slot,channel);
-            int layer   = tt.getIntValue("layer",     crate,slot,channel);
-            int comp    = tt.getIntValue("component", crate,slot,channel);
-            int order   = tt.getIntValue("order",     crate,slot,channel);
+        for(Object key : tt.getList().getMap().keySet()) {
+            int crate   = tt.getList().getIndexGenerator().getIndex((long)key, 0);
+            int slot    = tt.getList().getIndexGenerator().getIndex((long)key, 1);
+            int channel = tt.getList().getIndexGenerator().getIndex((long)key, 2);
+            int sector  = tt.getIntValueByHash(0, (long)key);
+            int layer   = tt.getIntValueByHash(1, (long)key);
+            int comp    = tt.getIntValueByHash(2, (long)key);
+            int order   = tt.getIntValueByHash(3, (long)key);
             reverse.addEntry(sector, layer, comp, order);
-            reverse.setIntValue(crate,   "crate",   sector, layer, comp, order);
-            reverse.setIntValue(slot,    "slot",    sector, layer, comp, order);
-            reverse.setIntValue(channel, "channel", sector, layer, comp, order);
+            long hash = IndexedTable.DEFAULT_GENERATOR.hashCode(sector,layer,comp,order);
+            reverse.setIntValueByHash(crate,   0, hash);
+            reverse.setIntValueByHash(slot,    1, hash);
+            reverse.setIntValueByHash(channel, 2, hash);
         }
         reverseTTs.put(run, reverse);
     }
     
-    private synchronized void LoadGeometry(String geoVariation, double[][] shifts) {
+    public synchronized void LoadGeometry(int runNumber, String geoVariation, double[][] shifts) {
         // Load the geometry
-        ConstantProvider provider = GeometryFactory.getConstants(DetectorType.DC, 11, geoVariation);
+        ConstantProvider provider = GeometryFactory.getConstants(DetectorType.DC, runNumber, geoVariation);
         dcDetector = new DCGeant4Factory(provider, MINISTAGGERSTATUS, FEEDTHROUGHSSTATUS, ENDPLATESBOWING, shifts);
         for(int l=0; l<6; l++) {
             wpdist[l] = provider.getDouble("/geometry/dc/superlayer/wpdist", l);
         }
         // Load target
-        ConstantProvider providerTG = GeometryFactory.getConstants(DetectorType.TARGET, 11, geoVariation);
+        ConstantProvider providerTG = GeometryFactory.getConstants(DetectorType.TARGET, runNumber, geoVariation);
         double targetPosition = providerTG.getDouble("/geometry/shifts/target/z",0);
         double targetLength   = providerTG.getDouble("/geometry/materials/target/length",0);
         // Load other geometries
-        ConstantProvider providerFTOF = GeometryFactory.getConstants(DetectorType.FTOF, 11, geoVariation);
+        ConstantProvider providerFTOF = GeometryFactory.getConstants(DetectorType.FTOF, runNumber, geoVariation);
         ftofDetector = new FTOFGeant4Factory(providerFTOF);        
-        ecalDetector =  GeometryFactory.getDetector(DetectorType.ECAL, 11, geoVariation);
-        fmtDetector =  GeometryFactory.getDetector(DetectorType.FMT, 11, geoVariation);
-        ConstantsManager managerRICH = new ConstantsManager(geoVariation);;
-        richDetector = new RICHGeoFactory(0, managerRICH, 11, false);
+        ecalDetector =  GeometryFactory.getDetector(DetectorType.ECAL, runNumber, geoVariation);
+        fmtDetector =  GeometryFactory.getDetector(DetectorType.FMT, runNumber, geoVariation);
+        ConstantsManager managerRICH = new ConstantsManager(geoVariation);
+        richDetector = new RICHGeoFactory(0, managerRICH, runNumber, false);
         // create the surfaces
         trajSurfaces = new TrajectorySurfaces();
         trajSurfaces.loadSurface(targetPosition, targetLength, dcDetector, ftofDetector, ecalDetector, fmtDetector, richDetector);        

@@ -1,26 +1,15 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.jlab.io.utils;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.jlab.coda.jevio.DataType;
 import org.jlab.coda.jevio.EventBuilder;
 import org.jlab.coda.jevio.EventWriter;
-//import org.jlab.coda.jevio.EvioCompactEventWriter;
 import org.jlab.coda.jevio.EvioEvent;
 import org.jlab.coda.jevio.EvioException;
-import org.jlab.coda.jevio.EvioNode;
 import org.jlab.coda.jevio.EvioReader;
-import org.jlab.io.evio.EvioFactory;
 
 /**
  *
@@ -36,11 +25,7 @@ public class EvioFileRecover {
         try {
             EventWriter writer = new EventWriter(outputfile);
             EventBuilder eventBuilder = new EventBuilder(1, DataType.BANK, 1);
-            //byte[] byteData1 = new byte[499990];
-            
             EvioEvent ev = eventBuilder.getEvent();
-            
-            //ev.appendByteData(byteData1);
             writer.writeEvent(ev);
             writer.close();
         } catch (EvioException ex) {
@@ -65,9 +50,8 @@ public class EvioFileRecover {
             return;
         }
         
-        EvioReader reader = null;
-        
-        EventWriter writer = null;
+        EvioReader reader;
+        EventWriter writer;
         
         try {
             
@@ -94,10 +78,6 @@ public class EvioFileRecover {
        
     }
     public static void main(String[] args){
-        /*
-        String inputfile  = "/Users/gavalian/Work/Software/Release-8.0/COATJAVA/coatjava/../svt257er_000015.evio.0";
-        String outputfile = "/Users/gavalian/Work/Software/Release-8.0/COATJAVA/coatjava/../svt257er_000015_recovered.evio";
-        */
         String inputfile  = args[0];
         String outputfile = args[1];
         EvioFileRecover.recoverFile(inputfile, outputfile);
