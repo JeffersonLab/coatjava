@@ -26,9 +26,10 @@ public class HitReader {
     /**
      * t0-calibration pass, enabled with {@code -Dahdc.t0calib=true}. In this mode the
      * per-wire {@code t0} is replaced by {@link #T0_CALIB_T0} (0 by default) and the
-     * per-wire acceptance window ([t_min,t_max], ADC, ToT, pedestal) is skipped, so the
-     * full leading-edge drift-time peak is retained in {@code AHDC::hits} for offline t0
-     * extraction; only the {@code wfType <= 2} good-waveform cut is kept.
+     * t0-dependent window (the {@code [t_min,t_max]} drift-time cut, plus the ADC window)
+     * is skipped, so the full leading-edge drift-time peak is retained in
+     * {@code AHDC::hits} for offline t0 extraction. The t0-INDEPENDENT quality cuts
+     * ({@code wfType <= 2}, time-over-threshold, pedestal) are still applied.
      *
      * <p>With {@code t0 = 0} the time fed to the T2D is uncalibrated, so DOCA/tracking is
      * approximate. If track finding collapses, set a nominal in-range t0 with
@@ -47,8 +48,8 @@ public class HitReader {
         if (T0_CALIB) {
             LOGGER.info(String.format(
                 "AHDC t0-calibration pass ENABLED (-Dahdc.t0calib=true): time = leadingEdgeTime - t0 - startTime "
-                + "with fixed t0 = %.3f ns (-Dahdc.t0calib.t0); per-wire [t_min,t_max]/ADC/ToT/pedestal cuts "
-                + "DISABLED, only wfType<=2 kept.", T0_CALIB_T0));
+                + "with fixed t0 = %.3f ns (-Dahdc.t0calib.t0); per-wire [t_min,t_max] drift-time + ADC "
+                + "cuts DISABLED (wfType<=2, ToT and pedestal quality cuts still applied).", T0_CALIB_T0));
         } else {
             LOGGER.info("AHDC t0-calibration pass DISABLED (-Dahdc.t0calib not set): using CCDB per-wire t0 "
                 + "and the full hit-acceptance cuts.");
@@ -192,16 +193,20 @@ public class HitReader {
 				double ped_min = rawHitCutsTable.getDoubleValueByHash("ped_min", hash);
 				double ped_max = rawHitCutsTable.getDoubleValueByHash("ped_max", hash);
 
-				// In the t0-calibration pass keep only the good-waveform cut so the full
-				// leading-edge / drift-time peak survives; the per-wire [t_min,t_max] /
-				// ADC / ToT / pedestal window is exactly what would otherwise delete the
-				// peak used for the calibration.
+				// In the t0-calibration pass, bypass ONLY the t0-dependent window: the
+				// drift-time cut [t_min,t_max] (time = leadingEdgeTime - t0 - startTime)
+				// was tuned in the old-t0 frame and would delete the leading-edge peak
+				// used for the calibration; the ADC window is bypassed too so low-
+				// amplitude hits survive (needed for the time-walk study). The ToT and
+				// pedestal cuts are t0-INDEPENDENT quality cuts and are KEPT, so the
+				// calibration sample stays clean without biasing t0.
 				boolean passCuts =
-					(wfType <= 2) && (T0_CALIB ||
-					((adcRaw >= adc_min) && (adcRaw <= adc_max) &&
-					(time   >= t_min)   && (time   <= t_max) &&
-					(timeOverThreshold >= tot_min) && (timeOverThreshold <= tot_max) &&
-					(adcOffset >= ped_min) && (adcOffset <= ped_max)));
+					(wfType <= 2)
+					&& (adcOffset >= ped_min) && (adcOffset <= ped_max)
+					&& (timeOverThreshold >= tot_min) && (timeOverThreshold <= tot_max)
+					&& (T0_CALIB ||
+						((adcRaw >= adc_min) && (adcRaw <= adc_max) &&
+						 (time   >= t_min)   && (time   <= t_max)));
 
 				if (!passCuts) continue;
 			}

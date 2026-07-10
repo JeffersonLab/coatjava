@@ -742,7 +742,12 @@ public class ALERTEngine extends ReconstructionEngine {
             }
         }
 
-        /// Clean AHDC bad hits
+        /* Clean AHDC bad hits — DISABLED for t0 / time-walk calibration: this
+           residual-based outlier removal (|residual| > 3*sigma) sculpts the
+           residual / drift-time distribution and biases the on-track sample used
+           to extract t0 and the time-walk. Re-enable (or gate on the
+           ahdc.t0calib system property) for production tracking.
+
         double sigma = 0.5; // mm
         for (Track track : AHDC_tracks) {
             ArrayList<Hit> AHDC_hits = track.getHits();
@@ -754,6 +759,7 @@ public class ALERTEngine extends ReconstructionEngine {
                 }
             }
         }
+        */
 
         /// Second propagation : each AHDC_tracks will be fitted
         KF.set_Niter(15);
