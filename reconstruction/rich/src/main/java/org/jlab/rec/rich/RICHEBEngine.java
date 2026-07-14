@@ -1,6 +1,5 @@
 package org.jlab.rec.rich;
 
-import java.util.Arrays;
 import java.util.Optional;
 import org.jlab.clas.reco.ReconstructionEngine;
 import org.jlab.io.base.DataEvent;
@@ -10,7 +9,6 @@ public class RICHEBEngine extends ReconstructionEngine {
     
     private int Ncalls = 0;
     private RICHGeoFactory richgeo;
-    private boolean engineDebug = false;
     
     public RICHEBEngine() {
         super("RICHEB", "mcontalb", "3.0");
@@ -44,23 +42,17 @@ public class RICHEBEngine extends ReconstructionEngine {
             "/calibration/rich/module2/status_mapmt"
         };
         
-        requireConstants(Arrays.asList(richTables));
+        requireConstants(richTables);
         
-        // initialize constants manager default variation, will be then modified based on yaml settings
-        // Get the constants for the correct variation
-        String engineVariation = Optional.ofNullable(this.getEngineConfigString("variation")).orElse("default");
-        this.getConstantsManager().setVariation(engineVariation);
-        
-        if(this.getEngineConfigString("debug")!=null)
-            this.engineDebug = Boolean.parseBoolean(this.getEngineConfigString("debug"));
+        String v = Optional.ofNullable(this.getEngineConfigString("variation")).orElse("default");
+        this.getConstantsManager().setVariation(v);
         
         return true;
-        
     }
     
     @Override
     public void detectorChanged(int runNumber) {
-        richgeo = new RICHGeoFactory(1, this.getConstantsManager(), runNumber, engineDebug);
+        richgeo = new RICHGeoFactory(1, this.getConstantsManager(), runNumber, false);
     }
     
     @Override
@@ -78,10 +70,10 @@ public class RICHEBEngine extends ReconstructionEngine {
         //  Initialize the CCDB information
         int run = richevent.get_RunID();
         if(run>0){
-            richpar.load_CCDB(this.getConstantsManager(), run, Ncalls, engineDebug);
+            richpar.load_CCDB(this.getConstantsManager(), run, Ncalls, false);
             richcal.load_CCDB(this.getConstantsManager(), run, Ncalls, richgeo, richpar);
         }else{
-            richpar.load_CCDB(this.getConstantsManager(),  11, Ncalls, engineDebug);
+            richpar.load_CCDB(this.getConstantsManager(),  11, Ncalls, false);
             richcal.load_CCDB(this.getConstantsManager(),  11, Ncalls, richgeo, richpar);
         }
         Ncalls++;
