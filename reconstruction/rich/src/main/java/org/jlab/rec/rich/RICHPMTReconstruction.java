@@ -2,23 +2,14 @@ package org.jlab.rec.rich;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
-import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
-import org.jlab.io.evio.EvioDataBank;
 import org.jlab.io.evio.EvioDataEvent;
 import org.jlab.io.hipo.HipoDataEvent;
-
-import javax.swing.JFrame;
 import org.jlab.detector.banks.RawDataBank;
-import org.jlab.groot.graphics.EmbeddedCanvas;
-import org.jlab.groot.data.H1F;
-import org.jlab.groot.data.H2F;
 
 import org.jlab.detector.geom.RICH.RICHGeoFactory;
 
 public class RICHPMTReconstruction {
-
 
     private RICHEvent          richevent;
     private RICHGeoFactory     richgeo;
