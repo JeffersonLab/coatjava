@@ -1,7 +1,6 @@
 package org.jlab.clas.detector;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import org.jlab.detector.base.DetectorDescriptor;
 import org.jlab.detector.base.DetectorType;
