@@ -8,7 +8,6 @@ import org.jlab.geom.prim.Vector3D;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 
-
 /**
  *
  * @author baltzell
