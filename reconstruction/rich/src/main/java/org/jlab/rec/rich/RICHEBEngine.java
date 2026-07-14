@@ -106,9 +106,7 @@ public class RICHEBEngine extends ReconstructionEngine {
         richtime.save_ProcessTime(1, richevent);
         
         
-        /*
-        Process RICH signals to get hits and clusters
-        */
+        //  Process RICH signals to get hits and clusters
         if(richpar.PROCESS_RAWDATA==1){
             if(debugMode>=1)System.out.println("----- Process raw data \n");
             richio.clear_LowBanks(event);
@@ -116,9 +114,7 @@ public class RICHEBEngine extends ReconstructionEngine {
             richtime.save_ProcessTime(2, richevent);
         }
         
-        /*
-        Process RICH-DC event reconstruction
-        */
+        //  Process RICH-DC event reconstruction
         if(richpar.PROCESS_DATA==1){
             if(debugMode>=1)System.out.println("----- Process data \n");
             richio.clear_HighBanks(event);
