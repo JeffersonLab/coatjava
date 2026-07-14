@@ -9,7 +9,7 @@ public class RICHEBEngine extends ReconstructionEngine {
     
     private int Ncalls = 0;
     private RICHGeoFactory richgeo;
-    
+
     public RICHEBEngine() {
         super("RICHEB", "mcontalb", "3.0");
     }
@@ -60,12 +60,12 @@ public class RICHEBEngine extends ReconstructionEngine {
             "RICH::Particle"
         );
         
-        String v = Optional.ofNullable(this.getEngineConfigString("variation")).orElse("default");
+        String v = Optional.ofNullable(getEngineConfigString("variation")).orElse("default");
         getConstantsManager().setVariation(v);
-        
+       
         return true;
     }
-    
+
     @Override
     public void detectorChanged(int runNumber) {
         richgeo = new RICHGeoFactory(1, this.getConstantsManager(), runNumber, false);

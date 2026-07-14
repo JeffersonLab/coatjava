@@ -43,7 +43,7 @@ public class RICHEventBuilder{
         //   look for RICH - DC matches
         if(!process_DCData(event, richpar)) return false;
 
-        richio.write_RECBank(event, richevent, richpar);
+        if(richio!=null) richio.write_RECBank(event, richevent, richpar);
         
         //   create RICH particles
         if(!process_RICHData(event, richtrace, richpar, richcal)) return false;
@@ -54,7 +54,7 @@ public class RICHEventBuilder{
         //   ray-traced solution (all photons)
         if(!reco_Cherenkovs(richtrace, richpar, richcal)) return false;
         
-        richio.write_CherenkovBanks(event, richevent, richpar);
+        if(richio!=null) richio.write_CherenkovBanks(event, richevent, richpar);
         
         return true;
     }

@@ -23,8 +23,6 @@ import org.jlab.clas.pdg.PhysicsConstants;
  */
 public class RICHRayTrace{
     
-    private final static RICHGeoConstants geocost =  new RICHGeoConstants();
-    
     private RICHGeoFactory richgeo;
     private RICHParameters  richpar;
     
@@ -92,7 +90,6 @@ public class RICHRayTrace{
         Point3D vori = rayin.origin();
         Vector3D inVersor = rayin.direction().asUnit();
         Vector3D newVersor = new Vector3D(0.0, 0.0, 0.0);
-        RICHRay rayout = null;
         int type = 0;
         
         RICHLayer layer = richgeo.get_Layer(intersection.get_sector(), intersection.get_layer());
@@ -111,7 +108,7 @@ public class RICHRayTrace{
             }
         }
         
-        rayout = new RICHRay(vori, newVersor.multiply(200));
+        RICHRay rayout = new RICHRay(vori, newVersor.multiply(200));
         rayout.set_type(type);
         return rayout;
     }
@@ -125,7 +122,7 @@ public class RICHRayTrace{
     public ArrayList<RICHRay> RayTrace(RICHParticle photon, Vector3D vlab, double naero) {
         // return the hit position on the PMT plane of a photon emitted at emission with direction vlab
         
-        ArrayList<RICHRay> raytracks = new ArrayList<RICHRay>();
+        ArrayList<RICHRay> raytracks = new ArrayList<>();
         
         int orilay = photon.ilay_emission;
         int orico  = photon.ico_emission;
@@ -137,7 +134,7 @@ public class RICHRayTrace{
         RICHLayer layer = get_Layer(isec, orilay);
         if(layer==null)return null;
         
-        RICHIntersection first_intersection = null;
+        RICHIntersection first_intersection;
         if(richpar.DO_CURVED_AERO==1){
             first_intersection = layer.find_ExitCurved(lastray.asLine3D(), orico);
         }else{
@@ -159,7 +156,7 @@ public class RICHRayTrace{
         
         RICHRay rayin = new RICHRay(new_pos, oriray.direction().multiply(200));
         lastray = OpticalRotation(rayin, first_intersection);
-        lastray.set_refind(geocost.RICH_AIR_INDEX);
+        lastray.set_refind(RICHGeoConstants.RICH_AIR_INDEX);
         RICHIntersection last_intersection = first_intersection;
         
         int jj = 1;
@@ -191,7 +188,7 @@ public class RICHRayTrace{
                     
                     if(test_intersection!=null){
                         //if(test_intersection.get_pos().distance(last_ori)>RICHConstants.PHOTON_DISTMIN_TRACING){
-                        if(new_intersection==null || (new_intersection!=null && test_intersection.get_pos().z()<new_intersection.get_pos().z())) {
+                        if(new_intersection==null || test_intersection.get_pos().z()<new_intersection.get_pos().z()) {
                             new_intersection = test_intersection;
                         }
                     }
@@ -240,7 +237,7 @@ public class RICHRayTrace{
                 
                 RICHRay newray = new RICHRay(last_ori, new_hit);
                 newray.set_type(lastray.get_type());
-                newray.set_refind((float) geocost.RICH_AIR_INDEX);
+                newray.set_refind((float) RICHGeoConstants.RICH_AIR_INDEX);
                 if(detected)newray.set_detected();
                 raytracks.add(newray);
                 
@@ -267,33 +264,26 @@ public class RICHRayTrace{
     
     public void find_EtaC_raytrace_migrad(RICHParticle hadron, RICHParticle photon) {
         
-        double n_a = geocost.RICH_AIR_INDEX;
-        
         double Phi_ini = photon.trial_pho.lab_phi;
         double Theta_ini = photon.trial_pho.lab_theta;
         if(Phi_ini!=0 && Theta_ini!=0) {
             
             double Theta_P = hadron.lab_theta;
             double Phi_P = hadron.lab_phi;
-            double start_EtaC=Math.sin(Theta_P)* Math.sin(Theta_ini)*Math.cos(Phi_ini-Phi_P)+Math.cos(Theta_P)*Math.cos(Theta_ini);
             
             // Minimizing function
-            FCNBase myFunction = new FCNBase() {
-                public double valueOf(double[] par) {
-                    
-                    double theta = par[0];
-                    double phi = par[1];
-                    Vector3D vpho = new Vector3D( Math.sin(theta)*Math.cos(phi), Math.sin(theta)*Math.sin(phi), Math.cos(theta));
-                    ArrayList<RICHRay> rays = RayTrace(photon, vpho);
-                    double Function = 999;
+            FCNBase myFunction = (double[] par) -> {
+                double theta = par[0];
+                double phi = par[1];
+                Vector3D vpho = new Vector3D( Math.sin(theta)*Math.cos(phi), Math.sin(theta)*Math.sin(phi), Math.cos(theta));
+                ArrayList<RICHRay> rays = RayTrace(photon, vpho);
+                double Function = 999;
+                if(rays!=null){
                     Point3D pmt_hit = new Point3D(0.0, 0.0, 0.0);
-                    if(rays!=null){
-                        pmt_hit = rays.get(rays.size()-1).end();
-                        Function = pmt_hit.distance(photon.get_HitPos());
-                    }
-                    
-                    return Function;
+                    pmt_hit = rays.get(rays.size()-1).end();
+                    Function = pmt_hit.distance(photon.get_HitPos());
                 }
+                return Function;
             };
             
             MnUserParameters myParameters = new MnUserParameters();
@@ -306,10 +296,6 @@ public class RICHRayTrace{
             
             int CLASpid = photon.get_CLASpid();
             double n_tile = 1/(hadron.get_beta(CLASpid)*(Math.sin(Theta_P)* Math.sin(Theta_Min)*Math.cos(Phi_Min-Phi_P)+Math.cos(Theta_P)*Math.cos(Theta_Min)));
-            double arg = Math.pow(n_a, 2)-Math.pow(n_tile, 2)*Math.pow(Math.sin(Theta_Min), 2);
-            double Denominator = 1e-4;
-            if(arg>0) Denominator = Math.sqrt(arg);
-            
             double Cos_EtaC=Math.sin(Theta_P)* Math.sin(Theta_Min)*Math.cos(Phi_Min-Phi_P)+Math.cos(Theta_P)*Math.cos(Theta_Min);
             
             photon.traced.set_theta((float) Theta_Min);
@@ -327,7 +313,6 @@ public class RICHRayTrace{
     public void find_EtaC_raytrace_steps(RICHParticle hadron, RICHParticle photon, int hypo) {
         
         if(hypo<0 || hypo>=RICHConstants.N_HYPO ) return;
-        double n_a = geocost.RICH_AIR_INDEX;
         int hypo_pid = RICHConstants.HYPO_LUND[hypo];
         
         if(photon.trial_pho==null){
@@ -344,8 +329,7 @@ public class RICHRayTrace{
         double dthe_min   = 0;
         Point3D pmt_min  = photon.trial_pho.get_HitPos();
         int nrefle_min = photon.trial_pho.traced.get_nrefle();
-        ArrayList<RICHRay> rays_min = new ArrayList();
-        rays_min = photon.trial_pho.traced.get_raytracks();
+        ArrayList<RICHRay> rays_min = photon.trial_pho.traced.get_raytracks();
         
         Vector3D vec_dist = photon.get_HitPos().vectorFrom(pmt_min);
         // ATT: this takes the projection on the z plane. Equivalent but unnecessary.
@@ -439,7 +423,6 @@ public class RICHRayTrace{
         }
         
         if(dist < photon.nominal_sChAngle()*RICHConstants.GAP_NOMINAL_SIZE){
-            int CLASpid = photon.get_CLASpid();
             double n_tile = 1/(hadron.get_beta(hypo_pid)*(Math.sin(Theta_P)* Math.sin(the_min)*Math.cos(phi_min-Phi_P)+Math.cos(Theta_P)*Math.cos(the_min)));
             photon.traced.set_theta((float) the_min);
             photon.traced.set_phi((float) phi_min);
@@ -509,12 +492,12 @@ public class RICHRayTrace{
     
     public void find_EtaC_analytic_migrad (RICHParticle hadron, RICHParticle photon) {
         
-        double n_a = geocost.RICH_AIR_INDEX;
+        double n_a = RICHGeoConstants.RICH_AIR_INDEX;
         
         // The following definition should be read by the geometry
         // ATT: mismatch con la definizione di emission a 3/4 dell'aerogel
         // ATT: L deve essere calcolato con il coseno
-        double T_r = geocost.AERO_REF_THICKNESS*geocost.CM;
+        double T_r = RICHGeoConstants.AERO_REF_THICKNESS*RICHGeoConstants.CM;
         double L = T_r/2.; // middle point is Thickness
         double T_g = hadron.ref_impact.z()-hadron.ref_emission.z()-L;
         
@@ -530,20 +513,17 @@ public class RICHRayTrace{
             
             // Minimizing function
             int CLASpid = photon.get_CLASpid();
-            FCNBase myFunction = new FCNBase() {
-                public double valueOf(double[] par) {
-                    double Theta = par[0];
-                    double nn_tile = 1/(hadron.get_beta(CLASpid)*(Math.sin(Theta_P)* Math.sin(Theta)*Math.cos(Phi-Phi_P)+Math.cos(Theta_P)*Math.cos(Theta)));
-                    double n_tile = nn_tile;
-                    //double n_tile = 1.05;
-                    double arg = Math.pow(n_a, 2)-Math.pow(n_tile, 2)*Math.pow(Math.sin(Theta), 2);
-                    double Denominator = 1e-4;
-                    if(arg>0) Denominator = Math.sqrt(arg);
-                    
-                    double Fun = (T_r -L) * Math.tan(Theta)+T_g* (n_tile * Math.sin(Theta))/Denominator;
-                    double Function = Math.pow(radius - Fun, 2);
-                    return Function;
-                }
+            FCNBase myFunction = (double[] par) -> {
+                double Theta = par[0];
+                double nn_tile = 1/(hadron.get_beta(CLASpid)*(Math.sin(Theta_P)* Math.sin(Theta)*Math.cos(Phi-Phi_P)+Math.cos(Theta_P)*Math.cos(Theta)));
+                double n_tile = nn_tile;
+                //double n_tile = 1.05;
+                double arg = Math.pow(n_a, 2)-Math.pow(n_tile, 2)*Math.pow(Math.sin(Theta), 2);
+                double Denominator = 1e-4;
+                if(arg>0) Denominator = Math.sqrt(arg);
+                
+                double Fun = (T_r -L) * Math.tan(Theta)+T_g* (n_tile * Math.sin(Theta))/Denominator;
+                return Math.pow(radius - Fun, 2);
             };
             
             MnUserParameters myParameters = new MnUserParameters();
@@ -627,7 +607,7 @@ public class RICHRayTrace{
         for(int i=2; i<raytracks.size(); i++){
             double off = Math.pow(10,i-2);
             int ilay = (int) ( raytracks.get(i).get_type() - 10000)/100;
-            int icompo = 0;
+            int icompo;
             if (ilay==11){
                 icompo = (int) ( raytracks.get(i).get_type() - 10000 - ilay*100 - 1);
             }else{

@@ -290,9 +290,12 @@ public class EBEngine extends ReconstructionEngine {
             }
           
         }
-
-        if (rich != null) rich.processDataEventUser(de);
         
+        if (rich != null) {
+            rich.dropBanks(de);
+            rich.processDataEventUser(de);
+        }
+
         return true;
     }
 
