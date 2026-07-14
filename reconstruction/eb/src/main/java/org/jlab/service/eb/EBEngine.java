@@ -89,7 +89,7 @@ public class EBEngine extends ReconstructionEngine {
 
         this.getConstantsManager().setVariation("default");
 
-        if (this.getEngineConfigString("rich") != null) {
+        if (this.getEngineConfigString("eb-rich") != null) {
             rich = new RICHEBEngine();
             rich.init();
         }
