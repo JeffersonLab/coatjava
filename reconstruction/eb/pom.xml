@@ -91,6 +91,11 @@
       <version>14.1.2-SNAPSHOT</version>
     </dependency>
     <dependency>
+      <groupId>org.jlab.clas12.detector</groupId>
+      <artifactId>clas12detector-rich</artifactId>
+      <version>14.1.2-SNAPSHOT</version>
+    </dependency>
+    <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
     </dependency>

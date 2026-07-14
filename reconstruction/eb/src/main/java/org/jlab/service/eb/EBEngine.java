@@ -13,6 +13,7 @@ import org.jlab.rec.eb.EBCCDBConstants;
 import org.jlab.rec.eb.EBCCDBEnum;
 import org.jlab.rec.eb.EBScalers;
 import org.jlab.rec.eb.EBRadioFrequency;
+import org.jlab.rec.rich.RICHEBEngine;
 
 /**
  *
@@ -26,6 +27,8 @@ public class EBEngine extends ReconstructionEngine {
 
     boolean usePOCA = false;
 
+    RICHEBEngine rich;
+    
     // output banks:
     String eventBank        = null;
     String eventBankFT      = null;
@@ -58,9 +61,47 @@ public class EBEngine extends ReconstructionEngine {
         initBankNames();
     }
 
-    public void initBankNames() {
-        //Initialize bank names
+    @Override
+    public boolean init() {
+
+        this.registerOutputBank(eventBank);
+        this.registerOutputBank(particleBank);
+        this.registerOutputBank(eventBankFT);
+        this.registerOutputBank(particleBankFT);
+        this.registerOutputBank(calorimeterBank);
+        this.registerOutputBank(caloextrasBank);
+        this.registerOutputBank(scintillatorBank);
+        this.registerOutputBank(scintextrasBank);
+        this.registerOutputBank(cherenkovBank);
+        this.registerOutputBank(trackBank);
+        this.registerOutputBank(utrackBank);
+        this.registerOutputBank(ftrackBank);
+        this.registerOutputBank(crossBank);
+        this.registerOutputBank(ftBank);
+        this.registerOutputBank(trajectoryBank);
+        this.registerOutputBank(covMatrixBank);
+
+	    if (this.getEngineConfigString("outputBankPrefix")!=null) {
+	        this.setOutputBankPrefix(this.getEngineConfigString("outputBankPrefix"));
+        }
+
+        requireConstants(EBCCDBConstants.getAllTableNames());
+
+        this.getConstantsManager().setVariation("default");
+
+        if (this.getEngineConfigString("rich") != null) {
+            rich = new RICHEBEngine();
+            rich.init();
+        }
+        return true;
     }
+
+    @Override
+    public void detectorChanged(int run) {
+        if (rich != null) rich.detectorChanged(run);
+    }
+    
+    public void initBankNames() {}
 
     public void setUsePOCA(boolean val) {
         this.usePOCA=val;
@@ -250,6 +291,8 @@ public class EBEngine extends ReconstructionEngine {
           
         }
 
+        if (rich != null) rich.processDataEventUser(de);
+        
         return true;
     }
 
@@ -344,39 +387,5 @@ public class EBEngine extends ReconstructionEngine {
     public void setCvtTrajType(String name) {
         this.cvtTrajType = name;
     }
-    
-    @Override
-    public boolean init() {
-
-        this.registerOutputBank(eventBank);
-        this.registerOutputBank(particleBank);
-        this.registerOutputBank(eventBankFT);
-        this.registerOutputBank(particleBankFT);
-        this.registerOutputBank(calorimeterBank);
-        this.registerOutputBank(caloextrasBank);
-        this.registerOutputBank(scintillatorBank);
-        this.registerOutputBank(scintextrasBank);
-        this.registerOutputBank(cherenkovBank);
-        this.registerOutputBank(trackBank);
-        this.registerOutputBank(utrackBank);
-        this.registerOutputBank(ftrackBank);
-        this.registerOutputBank(crossBank);
-        this.registerOutputBank(ftBank);
-        this.registerOutputBank(trajectoryBank);
-        this.registerOutputBank(covMatrixBank);
-
-	    if (this.getEngineConfigString("outputBankPrefix")!=null) {
-	        this.setOutputBankPrefix(this.getEngineConfigString("outputBankPrefix"));
-        }
-
-        requireConstants(EBCCDBConstants.getAllTableNames());
-
-        this.getConstantsManager().setVariation("default");
-
-        return true;
-    }
-
-    @Override
-    public void detectorChanged(int runNumber) {}
     
 }
