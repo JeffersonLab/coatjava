@@ -262,9 +262,7 @@ public class EBAnalyzer {
                         ebrf.getStartTime(trig, type, layer, 
                         event.getParticles().get(ii).vertex().z()));
             }
-            
         }
-        
     }
 
     public void assignNeutralMomenta(DetectorEvent de) {
@@ -325,9 +323,8 @@ public class EBAnalyzer {
             event.getEventHeader().getStartTime();
 
         for (DetectorParticle p : event.getParticles()) {
-            double beta = -99;
-            final double thisStartTime = p.getCharge()==0 ? startTime : p.getStartTime();
 
+            double beta = -99;
             if (p.isTriggerParticle()) {
                 final double mass = PDGDatabase.getParticleById(p.getPid()).mass();
                 final double mom  = p.vector().mag();
@@ -359,6 +356,7 @@ public class EBAnalyzer {
             p.setBeta(beta);
         }
     }
+
     public void assignPids(DetectorEvent event,final boolean useStartTimeFromFT) {
 
         PIDHypothesis pidHyp = new PIDHypothesis(event.getEventHeader().getTorus());
@@ -389,12 +387,9 @@ public class EBAnalyzer {
         }
     }
 
-
-
     public class PIDHypothesis {
 
         private float torus = 0;
-        private int theoryPID = -1;
         private double PIDquality = 0.0;
         private DetectorEvent event;
         private boolean useStartTimeFromFT = false;
@@ -426,7 +421,6 @@ public class EBAnalyzer {
             
             final boolean htccPionThreshold = p.vector().mag()>EBConstants.HTCC_PION_THRESHOLD;
             final boolean ltccPionThreshold = p.vector().mag()>EBConstants.LTCC_PION_THRESHOLD;
-            final boolean ltccKaonThreshold = p.vector().mag()>EBConstants.LTCC_KAON_THRESHOLD;
 
             switch(abs(pid)) {
                 case 11:
@@ -594,12 +588,10 @@ public class EBAnalyzer {
          */
         public void finalizePID(DetectorParticle p, int pid) {
             p.setPid(pid);
-            theoryPID = pid;
             PIDquality = this.PIDQuality(p, pid);
             p.setPidQuality(PIDquality);
 
         }
-        
     }
 }
 
