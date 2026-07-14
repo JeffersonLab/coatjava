@@ -4,72 +4,10 @@ import java.util.List;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 import org.jlab.clas.detector.DetectorResponse;
-import org.jlab.detector.geom.RICH.RICHGeoConstants;
 
 public class RICHio {
     
-    private static double MRAD = RICHGeoConstants.MRAD;
-    private static double RAD  = RICHGeoConstants.RAD;
-    
     public RICHio() {}
-    
-    public void clear_LowBanks(DataEvent event) {
-        
-        // remove previous version of low-level banks from the event
-        if(event.hasBank("RICH::hits")){
-            event.removeBank("RICH::hits");
-        }
-        if(event.hasBank("RICH::clusters")){
-            event.removeBank("RICH::clusters");
-        }
-        if(event.hasBank("RICH::Hit")){
-            event.removeBank("RICH::Hit");
-        }
-        if(event.hasBank("RICH::Cluster")){
-            event.removeBank("RICH::Cluster");
-        }
-        if(event.hasBank("RICH::Signal")){
-            event.removeBank("RICH::Signal");
-        }
-    }
-    
-    
-    public void clear_HighBanks(DataEvent event) {
-        
-        // remove previous version of high-level banks from the event
-        if(event.hasBank("RICH::response")){
-            event.removeBank("RICH::response");
-        }
-        if(event.hasBank("RICH::hadrons")){
-            event.removeBank("RICH::hadrons");
-        }
-        if(event.hasBank("RICH::photons")){
-            event.removeBank("RICH::photons");
-        }
-        if(event.hasBank("RICH::ringCher")){
-            event.removeBank("RICH::ringCher");
-        }
-        if(event.hasBank("RICH::hadCher")){
-            event.removeBank("RICH::hadCher");
-        }
-        
-        if(event.hasBank("RICH::Response")){
-            event.removeBank("RICH::Response");
-        }
-        if(event.hasBank("RICH::Hadron")){
-            event.removeBank("RICH::Hadron");
-        }
-        if(event.hasBank("RICH::Photon")){
-            event.removeBank("RICH::Photon");
-        }
-        if(event.hasBank("RICH::Ring")){
-            event.removeBank("RICH::Ring");
-        }
-        if(event.hasBank("RICH::Particle")){
-            event.removeBank("RICH::Particle");
-        }
-    }
-    
     
     public void write_PMTBanks(DataEvent event, RICHEvent richevent) {
         if(richevent.get_nHit()>0)write_HitBank(event, richevent);

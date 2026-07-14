@@ -17,7 +17,7 @@ public class RICHEBEngine extends ReconstructionEngine {
     @Override
     public boolean init() {
         
-        String[] richTables = new String[]{
+        requireConstants(
             "/geometry/rich/setup",
             "/geometry/rich/geo_parameter",
             "/geometry/rich/module1/aerogel",
@@ -40,12 +40,28 @@ public class RICHEBEngine extends ReconstructionEngine {
             "/calibration/rich/module2/status_mirror",
             "/calibration/rich/module2/status_aerogel",
             "/calibration/rich/module2/status_mapmt"
-        };
-        
-        requireConstants(richTables);
+        );
+
+        registerOutputBank(
+            "RICH::hits",
+            "RICH::clusters",
+            "RICH::Hit",
+            "RICH::Cluster",
+            "RICH::Signal",
+            "RICH::response",
+            "RICH::hadrons",
+            "RICH::photons",
+            "RICH::ringCher",
+            "RICH::hadCher",
+            "RICH::Response",
+            "RICH::Hadron",
+            "RICH::Photon",
+            "RICH::Ring",
+            "RICH::Particle"
+        );
         
         String v = Optional.ofNullable(this.getEngineConfigString("variation")).orElse("default");
-        this.getConstantsManager().setVariation(v);
+        getConstantsManager().setVariation(v);
         
         return true;
     }
@@ -80,16 +96,14 @@ public class RICHEBEngine extends ReconstructionEngine {
         
         //  Process RICH signals to get hits and clusters
         if(richpar.PROCESS_RAWDATA==1){
-            richio.clear_LowBanks(event);
             rpmt.process_RawData(event, richpar, richcal);
         }
         
         //  Process RICH-DC event reconstruction
         if(richpar.PROCESS_DATA==1){
-            richio.clear_HighBanks(event);
-            if( !reb.process_Data(event, richpar, richcal, richtrace)) return false;
+            reb.process_Data(event, richpar, richcal, richtrace);
         }
-        
+
         return true;
     }
 }
