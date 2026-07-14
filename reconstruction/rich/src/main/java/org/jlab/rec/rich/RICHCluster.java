@@ -3,11 +3,10 @@ package org.jlab.rec.rich;
 import java.util.ArrayList;
 import org.jlab.geom.prim.Point3D;
 
-public class RICHCluster extends ArrayList<RICHHit> {
-    
-    /**
-     * A cluster in the RICH consists of an array of anodes in one PMT
-     */
+/**
+ * A cluster in the RICH consists of an array of anodes in one PMT
+ */
+public final class RICHCluster extends ArrayList<RICHHit> {
     
     private int clusid;    // cluster ID
     private int signal;    // pointer to the derived RICH signal
@@ -44,7 +43,6 @@ public class RICHCluster extends ArrayList<RICHHit> {
     // ----------------
     public int get_iMax() {
         // return anode with maximum charge
-        
         int    imax      = 0;
         double maxcharge = 0;
         for(int i=0; i<this.size(); i++) {

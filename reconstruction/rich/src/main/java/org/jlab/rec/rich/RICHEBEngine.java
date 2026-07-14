@@ -9,8 +9,7 @@ import org.jlab.detector.geom.RICH.RICHGeoFactory;
 public class RICHEBEngine extends ReconstructionEngine {
     
     private int Ncalls = 0;
-    private RICHGeoFactory       richgeo;
-    private RICHTime             richtime = new RICHTime();
+    private RICHGeoFactory richgeo;
     private boolean engineDebug = false;
     
     public RICHEBEngine() {
@@ -19,9 +18,6 @@ public class RICHEBEngine extends ReconstructionEngine {
     
     @Override
     public boolean init() {
-        
-        int debugMode = 0;
-        if(debugMode>=1)System.out.format("I am in RICHEBEngine init \n");
         
         String[] richTables = new String[]{
             "/geometry/rich/setup",
@@ -65,34 +61,21 @@ public class RICHEBEngine extends ReconstructionEngine {
     @Override
     public void detectorChanged(int runNumber) {
         richgeo = new RICHGeoFactory(1, this.getConstantsManager(), runNumber, engineDebug);
-        richtime.init_ProcessTime();
     }
     
     @Override
     public boolean processDataEventUser(DataEvent event) {
-        
-        int debugMode = 0;
         
         // create instances of all event-dependent classes in processDataEventUser to avoid interferences between different threads when running in clara
         RICHEvent              richevent = new RICHEvent();
         RICHio                 richio    = new RICHio();
         RICHCalibration        richcal   = new RICHCalibration();
         RICHParameters         richpar   = new RICHParameters();
-        
         RICHPMTReconstruction  rpmt      = new RICHPMTReconstruction(richevent, richgeo, richio);
         RICHEventBuilder       reb       = new RICHEventBuilder(event, richevent, richgeo, richio);
         RICHRayTrace           richtrace = new RICHRayTrace(richgeo, richpar);
         
-        richtime.save_ProcessTime(0, richevent);
-        
-        if(debugMode>=1){
-            System.out.println("---------------------------------");
-            System.out.println("RICH Engine call: "+Ncalls+" New Event Process "+richevent.get_EventID());
-            System.out.println("---------------------------------");
-        }
-        
         //  Initialize the CCDB information
-        if(debugMode>=1)System.out.println("----- Load CCDB data \n");
         int run = richevent.get_RunID();
         if(run>0){
             richpar.load_CCDB(this.getConstantsManager(), run, Ncalls, engineDebug);
@@ -103,28 +86,18 @@ public class RICHEBEngine extends ReconstructionEngine {
         }
         Ncalls++;
         
-        richtime.save_ProcessTime(1, richevent);
-        
-        
         //  Process RICH signals to get hits and clusters
         if(richpar.PROCESS_RAWDATA==1){
-            if(debugMode>=1)System.out.println("----- Process raw data \n");
             richio.clear_LowBanks(event);
             rpmt.process_RawData(event, richpar, richcal);
-            richtime.save_ProcessTime(2, richevent);
         }
         
         //  Process RICH-DC event reconstruction
         if(richpar.PROCESS_DATA==1){
-            if(debugMode>=1)System.out.println("----- Process data \n");
             richio.clear_HighBanks(event);
-            if( !reb.process_Data(event, richpar, richcal, richtrace, richtime)) return false;
-            richtime.save_ProcessTime(8, richevent);
+            if( !reb.process_Data(event, richpar, richcal, richtrace)) return false;
         }
         
-        if(richpar.DEBUG_PROC_TIME>=1) richtime.dump_ProcessTime();
-        
         return true;
-        
     }
 }

@@ -76,42 +76,14 @@ public class RICHParameters{
     public RICHParameters() {}
     
     public void load_CCDB(ConstantsManager manager, int run, int ncalls, boolean engineDebug){
-        
-        int debugMode = 0;
-        
         init_FlagCCDB( manager.getConstants(run, "/calibration/rich/reco_flag"), engineDebug );
         init_ParameterCCDB( manager.getConstants(run, "/calibration/rich/reco_parameter") );
-        
-        if((debugMode>=1 || DEBUG_RECO_FLAG>=1) && ncalls<Math.max(1,DEBUG_RECO_FLAG)){
-            System.out.format("------------------------------------------------------------- \n");
-            System.out.format("RICH: Load RECO Flags from CCDB for run %6d  (ncalls %3d) \n", run,ncalls);
-            System.out.format("------------------------------------------------------------- \n");
-            System.out.format("Banks \n /calibration/rich/reco_flag \n /calibration/rich/reco_parameter  \n ");
-            
-            dump_RecoFlags(run);
-        }
-        
-        if((debugMode>=1 || DEBUG_RECO_PAR>=1) && ncalls<Math.max(1,DEBUG_RECO_PAR)) {
-            System.out.format("------------------------------------------------------------- \n");
-            System.out.format("RICH: Load RECO Parameters from CCDB for run %6d (ncalls %3d) \n", run,ncalls);
-            System.out.format("------------------------------------------------------------- \n");
-            
-            dump_RecoParameters(run);
-        }
-        
         if(RICHConstants.RECOPAR_FROM_FILE==1){
-            
-            if(debugMode>0)System.out.format("RICHFactory: Load calibration parameters from TxT\n");
             init_ParameterTxT();
-            
         }
-        
     }
     
-    
     public void init_FlagCCDB(IndexedTable flagConstants, boolean engineDebug) {
-        
-        int debugMode = 0;
         
         PROCESS_RAWDATA             =  flagConstants.getIntValue("reco_raw", 0, 0, 0);
         PROCESS_DATA                =  flagConstants.getIntValue("reco_data", 0, 0, 0);
@@ -154,19 +126,15 @@ public class RICHParameters{
         RING_ONLY_USED              =  flagConstants.getIntValue("ring_only_used", 0, 0, 0);
         
         if(!engineDebug){
-            if(debugMode>=1)System.out.format("RICH RECO debugging set to OFF \n");
             DEBUG_RECO_FLAG             =  0;
             DEBUG_RECO_PAR              =  0;
             DEBUG_CAL_COST              =  0;
             DEBUG_PROC_TIME             =  0;
         }
-        
     }
     
     
     public void init_ParameterCCDB(IndexedTable paraConstants) {
-        
-        int debugMode = 0;
         
         OFFSET_TIME                 =  paraConstants.getDoubleValue("global_time_off", 0, 0, 0);
         GOODHIT_FRAC                =  paraConstants.getDoubleValue("xtalk_frac", 0, 0, 0);

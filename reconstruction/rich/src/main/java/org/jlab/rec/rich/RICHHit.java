@@ -36,9 +36,6 @@ public class RICHHit implements Comparable<RICHHit>{
     
     public RICHHit(int hid, int phase, RICHEdge lead, RICHEdge trail, RICHGeoFactory richgeo, RICHCalibration richcal) {
         
-        
-        int debugMode = 0;
-        
         // Edge channel runs [1:192], Hit channel runs [0:191]
         this.id        = hid;
         this.sector    = lead.get_sector();
@@ -62,12 +59,6 @@ public class RICHHit implements Comparable<RICHHit>{
         this.cluster   = 0;
         this.xtalk     = 0;
         
-        if(debugMode>=2)System.out.format("Correzione time  til %3d ch %6d pmt %3d  anode %4d  dur %5d  raw %7.2f  toff %7.2f  twalk %7.3f  --> time %7.2f \n",
-            this.tile, this.channel, this.pmt,this.anode,this.duration, this.rawtime, toff_corr, twalk_corr, this.time);
-        
-        if(debugMode>=2)System.out.format(" Hittime %4d %4d %8d %7.2f %7d %7.2f %7.2f %7.2f \n", hid, pmt, this.duration, this.rawtime,
-            phase*4, toff_corr, -twalk_corr, this.time);
-        
         //this.glx       = richgeo.get_PixelMap().get_Globalidx(pmt, anode);
         //this.gly       = richgeo.get_PixelMap().get_Globalidy(pmt, anode);
         this.idx       = richgeo.get_PixelMap().Anode2idx(anode);
@@ -77,10 +68,7 @@ public class RICHHit implements Comparable<RICHHit>{
         this.y         =  CesPos.y();
         this.z         =  CesPos.z();
         
-        if(debugMode>=1)System.out.format(" Hit pmt %4d  anode %3d -->  %8.2f %8.2f %8.2f \n", pmt, anode, this.x, this.y, this.z);
-        
     }
-    
     
     public int get_id() { return id; }
     

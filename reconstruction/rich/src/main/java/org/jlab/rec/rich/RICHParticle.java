@@ -11,11 +11,10 @@ import org.jlab.clas.detector.DetectorResponse;
 import org.jlab.detector.geom.RICH.RICHIntersection;
 import org.jlab.detector.geom.RICH.RICHGeoConstants;
 
+/*
+* A particle in the RICH consists of an array of ray lines plus particle information
+*/
 public class RICHParticle {
-    
-    /*
-    * A particle in the RICH consists of an array of ray lines plus particle information
-    */
     
     private int      id                = -999;
     private int      parent_index      = -999;
@@ -86,7 +85,6 @@ public class RICHParticle {
         /*
         * RICHParticle from a CLAS charged particle for RICH reconstruction
         */
-        int debugMode = 0;
         
         this.id = id;
         // ATT: vedere se si puo' evitare tenendolo fuori
@@ -110,7 +108,6 @@ public class RICHParticle {
         int detid          = DetectorType.RICH.getDetectorId();;
         this.path          = p.getTrackTrajectory().get(detid,0).getPathLength();
         if(richpar.FORCE_DC_MATCH==1){
-            if(debugMode>=1)System.out.println(" FORCE DC-RICH match \n");
             this.direct_ray = new Line3D(p.getFirstCross().origin(), exr.getPosition().toPoint3D());
         }
         this.lab_phi       = direct_ray.toVector().phi();
@@ -263,9 +260,6 @@ public class RICHParticle {
     
     public double chbackgr() {
         
-        int debugMode = 0;
-        
-        if(debugMode>=1)System.out.format("Pixel back %7.2f %7.2f (1e-9)\n",pixel_backr*1e9,richpar.PIXEL_NOMINAL_DARKRATE*1e9);
         if(richpar.USE_CALIBRATED_PIXELS==1 && pixel_backr>0) return pixel_backr;
         return richpar.PIXEL_NOMINAL_DARKRATE;
         
@@ -327,9 +321,9 @@ public class RICHParticle {
     
     public int get_type() {return type;}
     
-    public boolean is_throw() {if(get_type()>10)return true; return false;}
+    public boolean is_throw() {return get_type()>10;}
     
-    public boolean is_real() {if(get_type()<10)return true; return false;}
+    public boolean is_real() {return get_type()<10;}
     
     public int get_recofound() {return recofound;}
     
@@ -415,43 +409,29 @@ public class RICHParticle {
         // calculate the cherenkov angle from the aerogel
         // nominal refractive index for the four accepted
         // particle hypothesis
-        
-        int debugMode = 0;
-        
         int ok = 0;
         for (int ip=0; ip<RICHConstants.N_HYPO; ip++)if(Math.abs(pid) == RICHConstants.HYPO_LUND[ip])ok=1;
         if(ok==0) return 0.0;
-        
         double arg = 0.0;
         double beta = get_beta(pid);
         if(beta>0) arg = 1.0/beta/refi_emission;
-        if(debugMode>=1)  System.out.format(" Nominal Ch Angle %8.4f  beta %8.4f  n %7.3f  arg %8.4f\n",get_mass(pid),beta,refi_emission, Math.acos(arg)*MRAD);
-        
         if(arg>0.0 && arg<1.0) return Math.acos(arg);
         return 0.0;
     }
     
     
     public double nominal_nChAngle(int pid){
-        
-        int debugMode = 0;
-        
         int ok = 0;
         for (int ip=0; ip<RICHConstants.N_HYPO; ip++)if(Math.abs(pid) == RICHConstants.HYPO_LUND[ip])ok=1;
         if(ok==0) return 0.0;
-        
         if(changle(11,0)==0)return 0.0;
         double ratio = Math.pow(Math.sin(changle(pid,0)),2)/Math.pow(Math.sin(changle(11,0)),2);
         double nele  = richpar.RICH_NOMINAL_NELE;
-        
-        if(debugMode>=1)  System.out.format(" Expected N photo PID %5d  Ne %7.2f r %7.2f -->   n %7.3f \n",pid,nele,ratio,nele*ratio);
-        
         return nele*ratio;
     }
     
     
     public double calibrated_sChAngle(int irefle){
-        
         return schele_emission[irefle];
     }
     
@@ -460,21 +440,13 @@ public class RICHParticle {
         // recalculate the expected Cherenkov angle
         // for the given particle hypothesis starting
         // from the electron measured values
-        
-        int debugMode = 0;
-        
         int ok = 0;
         for (int ip=0; ip<RICHConstants.N_HYPO; ip++)if(Math.abs(pid) == RICHConstants.HYPO_LUND[ip])ok=1;
         if(ok==0 || irefle<0 || irefle>RICHConstants.N_PATH) return 0.0;
-        
         double beta = get_beta(pid);
         double cose = Math.cos(chele_emission[irefle]);
-        
         double arg = 0.0;
         if(beta>0) arg = 1.0/beta*cose;
-        if(debugMode>=1)  System.out.format(" Calibrated Ch Angle %7.2f %8.4f  beta %8.4f  n %7.3f  arg %8.4f [%4d %4d]\n",
-            chele_emission[irefle]*MRAD,get_mass(pid),beta,refi_emission, Math.acos(arg)*MRAD, ilay_emission, ico_emission);
-        
         if(arg>0.0 && arg<1.0) return Math.acos(arg);
         return 0.0;
     }
@@ -484,19 +456,12 @@ public class RICHParticle {
         // recalculate the expected Cherenkov photon yield
         // for the given particle hypothesis starting
         // from the electron measured values
-        
-        int debugMode = 0;
-        
         int ok = 0;
         for (int ip=0; ip<RICHConstants.N_HYPO; ip++)if(Math.abs(pid) == RICHConstants.HYPO_LUND[ip])ok=1;
         if(ok==0 || irefle<0 || irefle>RICHConstants.N_PATH) return 0.0;
-        
         if(changle(11,0)==0)return 0.0;
         double ratio = Math.pow(Math.sin(changle(pid,0)),2)/Math.pow(Math.sin(changle(11,0)),2);
         double nele  = nchele_emission[irefle];
-        
-        if(debugMode>=1)  System.out.format(" Expected N photo PID %5d  Ne %7.2f r %7.2f -->   n %7.3f \n",pid,nele,ratio,nele*ratio);
-        
         return nele*ratio;
     }
     
@@ -537,22 +502,14 @@ public class RICHParticle {
     }
     
     public void set_PixelProp(RICHCalibration richcal){
-        
-        int debugMode = 0;
-        
         int isec = hit.get_sector();
         int ipmt = hit.get_pmt();
         int ich  = hit.get_anode();
-        
         pixel_gain  = richcal.get_PixelGain(isec, ipmt, ich);
         pixel_eff   = richcal.get_PixelEff(isec, ipmt, ich);
         pixel_mtime = richcal.get_PixelMeanTime(isec, ipmt, ich);
         pixel_stime = richcal.get_PixelRMSTime(isec, ipmt, ich);
         pixel_backr = richcal.get_PixelDarkRate(isec, ipmt, ich)*1e-9;
-        
-        if(debugMode>=1) System.out.format("Photon pixel %4d %4d %4d --> %7.2f %7.2f %7.2f %7.2f %7.3f (e-9) \n",hit.get_id(), ipmt-1, ich-1,
-            pixel_gain, pixel_eff, pixel_mtime, pixel_stime, pixel_backr*1e9);
-        
     }
     
     
@@ -562,40 +519,20 @@ public class RICHParticle {
         * Take the first (in z) with track pointing inside as Entrance
         * Take the last (in z) with track pointing outside as Exit
         */
-        
-        int debugMode = 0;
-        boolean found_exit = false;
-        boolean found_entrance = false;
-        RICHIntersection compo     = null;
-        
-        if(debugMode>=1){
-            if(debugMode>=3)  System.out.println(" \n RICHParticle::set_aerogel_points \n");
-            System.out.format(" from ray %s \n",direct_ray.origin().toStringBrief(2));
-            if(debugMode>=3)  System.out.println(" Look for intersection with layer 201 \n");
-        }
         RICHIntersection entrance  = richtrace.get_Layer(sector, "AEROGEL_2CM_B1").find_Entrance(direct_ray, -1);
-        if(debugMode>=1 && entrance!=null)  System.out.format(" B1 entrance %4d %6d  %s \n",entrance.get_layer(),entrance.get_component(), entrance.get_pos().toStringBrief(2));
         RICHIntersection exit      = richtrace.get_Layer(sector, "AEROGEL_2CM_B1").find_Exit(direct_ray, -1);
-        if(debugMode>=1 && exit!=null)      System.out.format(" B1 exit     %4d %6d  %s \n",exit.get_layer(),exit.get_component(), exit.get_pos().toStringBrief(2));
         
         if(entrance==null || exit==null){
-            if(debugMode>=3)  System.out.println(" Look for intersection with layer 202 \n");
             entrance  = richtrace.get_Layer(sector, "AEROGEL_2CM_B2").find_Entrance(direct_ray, -1);
-            if(debugMode>=1 && entrance!=null)  System.out.format(" B2 entrance %4d %6d  %s \n",entrance.get_layer(),entrance.get_component(), entrance.get_pos().toStringBrief(2));
             exit      = richtrace.get_Layer(sector, "AEROGEL_2CM_B2").find_Exit(direct_ray, -1);
-            if(debugMode>=1 && exit!=null)      System.out.format(" B2 exit     %4d %6d  %s \n",exit.get_layer(),exit.get_component(), exit.get_pos().toStringBrief(2));
         }
         
         if(entrance==null || exit==null){
-            if(debugMode>=3)  System.out.println(" Look for intersection with layer 203/204 \n");
             entrance  = richtrace.get_Layer(sector, "AEROGEL_3CM_L2").find_Entrance(direct_ray, -1);
-            if(debugMode>=1 && entrance!=null)  System.out.format(" B3 entrance %4d %6d  %s \n",entrance.get_layer(),entrance.get_component(), entrance.get_pos().toStringBrief(2));
             exit      = richtrace.get_Layer(sector, "AEROGEL_3CM_L1").find_Exit(direct_ray, -1);
-            if(debugMode>=1 && exit!=null)      System.out.format(" B3 exit     %4d %6d  %s \n",exit.get_layer(),exit.get_component(), exit.get_pos().toStringBrief(2));
         }
         
         if(entrance==null || exit==null){
-            if(debugMode>=1)System.out.format(" No intersection with aerogel plane found \n");
             return false;
         }
         
@@ -618,11 +555,6 @@ public class RICHParticle {
         int Nqua = richpar.QUADRANT_NUMBER;
         iqua_emission = richtrace.get_Layer(sector, ilay_emission).get_Quadrant(Nqua, ico_emission, exit.get_pos());
         
-        if(debugMode>=1){
-            System.out.format(" AERO lay %3d ico %3d  qua  %3d \n",ilay_emission,ico_emission,iqua_emission);
-            if(entrance.get_layer()!=ilay_emission || entrance.get_component()!=ico_emission)
-                System.out.format(" AERO CROSS ilay %4d %4d  ico %4d %4d \n",entrance.get_layer(),ilay_emission,entrance.get_component(),ico_emission);
-        }
         // perform photon reconstruction, to be saved in RICH::Ring
         /*if(richcal.get_AeroStatus(sector, ilay_emission, ico_emission)>0){
         if(debugMode>=1)System.out.format(" AERO bad status: disregard \n");
@@ -634,8 +566,6 @@ public class RICHParticle {
                 chele_emission[iref]  = richcal.get_ChElectron(sector, ilay_emission, ico_emission, iqua_emission, iref, charge);
                 schele_emission[iref] = richcal.get_SChElectron(sector, ilay_emission, ico_emission, iqua_emission, iref, charge);
                 nchele_emission[iref] = richcal.get_NElectron(sector, ilay_emission, ico_emission, iqua_emission, iref, charge);
-                if(debugMode>=1 && iref==0)System.out.format(" AERO [%4d %4d] iref %4d --> %8.3f  %7.2f \n",
-                    ilay_emission, ico_emission, iref, chele_emission[iref]*MRAD,nchele_emission[iref]);
             }
         }
         
@@ -648,16 +578,6 @@ public class RICHParticle {
         double dist = aero_middle.distance(direct_ray.origin());
         if(aero_middle.z()-direct_ray.origin().z()<0) dist*=-1;
         start_time += (path + dist)/get_beta(CLASpid)/(PhysicsConstants.speedOfLight());
-        
-        if(debugMode>=3){
-            System.out.println(" AERO entrance %s "+aero_entrance.toStringBrief(2));
-            System.out.println(" AERO middle   %s "+aero_middle.toStringBrief(2));
-            System.out.println(" AERO exit     %s "+aero_exit.toStringBrief(2));
-            System.out.println(" AERO normal   %s "+aero_normal.toStringBrief(2));
-            System.out.println(" AERO layer       "+ilay_emission);
-            System.out.println(" AERO compo       "+ico_emission);
-            System.out.println(" AERO refi        "+refi_emission);
-        }
         
         return true;
     }
@@ -682,10 +602,7 @@ public class RICHParticle {
     
     public boolean set_rotated_points() {
         
-        int debugMode = 0;
         if(lab_emission==null)return false;
-        
-        if(debugMode>=2)  System.out.println(" \n RICHParticle::set_rotated_points \n");
         
         // define an arbitrary reference point, here taken to be the photon emission point
         reference = lab_emission;
@@ -702,12 +619,6 @@ public class RICHParticle {
         this.ref_phi = ref_impact.toVector3D().phi();
         this.ref_theta = ref_impact.toVector3D().theta();
         
-        if(debugMode>=2){
-            System.out.format(" --> Track projection (P_PCP) %s ",ref_proj.toStringBrief(2));
-            System.out.format(" --> Track impact (P_P)       %s ",ref_impact.toStringBrief(2));
-            System.out.format(" --> Track angles             %8.2f %8.2f \n", this.ref_theta*57.3, this.ref_phi*57.3);
-        }
-        
         return true;
     }
     
@@ -721,17 +632,13 @@ public class RICHParticle {
         double Cos_EtaC = Math.sin(Theta_P)* Math.sin(theta)*Math.cos(this.ref_phi-Phi_P)+Math.cos(Theta_P)*Math.cos(theta);
         
         return Math.acos(Cos_EtaC);
-        
     }
-    
     
     
     public double time_probability(double testtime, int recotype) {
         /*
         * calculate probability for a given time hypothesis
         */
-        int debugMode = 0;
-        
         RICHSolution reco = new RICHSolution();
         if(recotype==0) reco = analytic;
         if(recotype==1) reco = traced;
@@ -747,14 +654,7 @@ public class RICHParticle {
             funt = Math.exp((-0.5)*Math.pow((testtime - meant)/sigmat, 2) )/ (sigmat*Math.sqrt(2* Math.PI));
         }
         
-        double prob = funt*dfunt;
-        double back = richpar.PIXEL_NOMINAL_DARKRATE*richpar.NSIGMA_TIME*richpar.PIXEL_NOMINAL_STIME;
-        
-        if(debugMode>=1)if(prob>back)System.out.format(
-            "TIM prob   meant %8.3f  time %8.3f -->  %g  %g \n",
-            meant,testtime,funt*dfunt,Math.log(prob));
-        return prob;
-        
+       return funt*dfunt;
     }
     
     
@@ -767,7 +667,6 @@ public class RICHParticle {
         * the photon yiled decreases and pions outnumber koans.
         */
         
-        int debugMode = 0;
         RICHSolution reco = new RICHSolution();
         if(recotype==0) reco = analytic;
         if(recotype==1) reco = traced;
@@ -811,13 +710,7 @@ public class RICHParticle {
         }
         
         double back = richpar.PIXEL_NOMINAL_DARKRATE*richpar.NSIGMA_TIME*richpar.PIXEL_NOMINAL_STIME;
-        double prob = 1 + pixel_eff *func*dfunc*funt*dfunt + back;
-        
-        if(debugMode>=1)System.out.format(
-            "PID prob %4d    mean %7.2f etaC %7.2f sigma %7.2f   meant %7.2f (%7.2f + %7.2f) time %7.2f sigmat %7.2f  eff %7.2f -->  %10.4g  %10.4g  %8.4f e-3\n",hypo_pid,
-            mean*MRAD,reco.get_EtaC()*MRAD,sigma*MRAD,recot+meant,recot,meant,hit.get_Time(),sigmat,pixel_eff,func*dfunc,funt*dfunt,Math.log(prob)*1e3);
-        return prob;
-        
+        return 1 + pixel_eff *func*dfunc*funt*dfunt + back;
     }
     
     
@@ -830,7 +723,6 @@ public class RICHParticle {
         * the photon yiled decreases and pions outnumber koans.
         */
         
-        int debugMode = 0;
         RICHSolution reco = new RICHSolution();
         if(recotype==0) reco = analytic;
         if(recotype==1) reco = traced;
@@ -877,13 +769,7 @@ public class RICHParticle {
             
         }
         double back = richpar.PIXEL_NOMINAL_DARKRATE*richpar.NSIGMA_TIME*richpar.PIXEL_NOMINAL_STIME;
-        double prob = 1 + pixel_eff *func*dfunc*funt*dfunt + back;
-        
-        if(debugMode>=1)System.out.format(
-            "PID prob %4d    mean %7.2f etaC %7.2f sigma %7.2f   meant %7.2f (%7.2f + %7.2f) time %7.2f sigmat %7.2f  eff %7.2f -->  %10.4g  %10.4g  %8.4f\n",hypo_pid,
-            mean*MRAD,reco.get_EtaC()*MRAD,sigma*MRAD,recot+meant,recot,meant,hit.get_Time(),sigmat,pixel_eff,func*dfunc,funt*dfunt,prob);
-        return prob;
-        
+        return 1 + pixel_eff *func*dfunc*funt*dfunt + back;
     }
     
     
@@ -895,7 +781,6 @@ public class RICHParticle {
         * background; iref = 1 forces a right hypothesis
         */
         
-        int debugMode = 0;
         RICHSolution reco = new RICHSolution();
         if(recotype==0) reco = analytic;
         if(recotype==1) reco = traced;
@@ -955,18 +840,6 @@ public class RICHParticle {
         
         if(richpar.USE_PIXEL_BACKGR==1) prob += backgr;
         
-        if(debugMode>=1 && iref==0){
-            System.out.format("\n HYPO %4d %4d %3d: A %6.2f (%6.2f, %5.2f) ",
-                hit.get_id(),hypo_pid,irefle,reco.get_EtaC()*MRAD,mean*MRAD,sigma*MRAD);
-            //System.out.format(" T %6.2f (%6.2f, %5.2f) E %5.2f B %8.4g",
-            //    hit.get_Time(),recot+meant,sigmat,pixel_eff,backgr);
-            //System.out.format("--> %5.1f %10.4g %10.4g %10.4g --> %8.4g \n",
-            //    Npho,ftheta*dtheta,dphi,ftime*dtime,prob);
-            System.out.format(" T %6.2f (%6.2f, %5.2f) ",
-                hit.get_Time(),recot+meant,sigmat);
-            System.out.format("--> %5.1f %10.4g %10.4g %10.4g %10.4g %10.4g %10.4g --> %8.4g \n\n",
-                Npho,ftheta,dtheta,dphi,ftime,dtime,backgr,prob);
-        }
         return prob;
         
     }
@@ -978,7 +851,6 @@ public class RICHParticle {
         * based on angle and time of RICH resolution;
         */
         
-        int debugMode = 0;
         RICHSolution reco = new RICHSolution();
         if(recotype==0) reco = analytic;
         if(recotype==1) reco = traced;
@@ -1002,35 +874,8 @@ public class RICHParticle {
         
         double ftime  = Math.pow((hit.get_Time() - recot - meant)/sigmat, 2);
         
-        double prob = ftheta + ftime;
-        //if(prob>12)prob=12.;
-        
-        if(debugMode>=1){
-            System.out.format("HYPO %4d %4d %3d: A %6.2f (%6.2f, %5.2f) ",
-                hit.get_id(),hypo_pid,irefle,reco.get_EtaC()*MRAD,mean*MRAD,sigma*MRAD);
-            System.out.format(" T %6.2f (%6.2f, %5.2f) ",
-                hit.get_Time(),recot+meant,sigmat);
-            System.out.format("--> %10.4g %10.4g --> %10.4g \n",
-                ftheta,ftime,prob);
-        }
-        return prob;
-        
+        return ftheta + ftime;
     }
-    
-    
-    /*
-    public double set_likelihood(double etaC) {
-    
-    double pi = probability(211, etaC)
-    double k = probability(211, etaC)
-    double pr = probability(211, etaC)
-    
-    pi_like = Math.log(pi/(pi+k+pr));
-    k_like  = Math.log(k/(pi+k+pr));
-    pr_like = Math.log(pr/(pi+k+pr));
-    
-    }
-    */
     
     
     public void show() {

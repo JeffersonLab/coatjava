@@ -15,16 +15,8 @@ import java.io.BufferedReader;
  */
 public class RICHCalibration{
     
-    private final static int NSEC   =  RICHGeoConstants.NSEC;
-    private final static int NLAY   =  RICHGeoConstants.NLAY;
-    private final static int NPMT   =  RICHGeoConstants.NPMT;
-    private final static int NPIX   =  RICHGeoConstants.NPIX;
-    private final static int NCOMPO =  RICHGeoConstants.NCOMPO;
-    private final static int NWALK  =  RICHGeoConstants.NWALK;
-    
-    private final static int NAERMAX  = RICHGeoConstants.NAERMAX;
-    
-    private static IndexedTable richTable;
+    private RICHParameters richpar;
+    private IndexedTable richTable;
     private ArrayList<IndexedTable> timewalkTables  = new ArrayList<>();
     private ArrayList<IndexedTable> timeoffTables   = new ArrayList<>();
     private ArrayList<IndexedTable> anglerefTables  = new ArrayList<>();
@@ -32,21 +24,16 @@ public class RICHCalibration{
     private ArrayList<IndexedTable> pixstatusTables = new ArrayList<>();
     private ArrayList<IndexedTable> aerstatusTables = new ArrayList<>();
     private ArrayList<IndexedTable> mirstatusTables = new ArrayList<>();
-    
-    private RICHParameters richpar;
-    
-    private double aero_chele_dir[][][] = new double[4][NAERMAX][225];
-    private double aero_chele_lat[][][] = new double[4][NAERMAX][225];
-    private double aero_chele_spe[][][] = new double[4][NAERMAX][225];
-    private double aero_schele_dir[][][] = new double[4][NAERMAX][225];
-    private double aero_schele_lat[][][] = new double[4][NAERMAX][225];
-    private double aero_schele_spe[][][] = new double[4][NAERMAX][225];
+    private double aero_chele_dir[][][] = new double[4][RICHGeoConstants.NAERMAX][225];
+    private double aero_chele_lat[][][] = new double[4][RICHGeoConstants.NAERMAX][225];
+    private double aero_chele_spe[][][] = new double[4][RICHGeoConstants.NAERMAX][225];
+    private double aero_schele_dir[][][] = new double[4][RICHGeoConstants.NAERMAX][225];
+    private double aero_schele_lat[][][] = new double[4][RICHGeoConstants.NAERMAX][225];
+    private double aero_schele_spe[][][] = new double[4][RICHGeoConstants.NAERMAX][225];
     
     public RICHCalibration() {}
     
     public void load_CCDB(ConstantsManager manager, int run, int ncalls, RICHGeoFactory richgeo, RICHParameters richpar){
-        
-        int debugMode = 0;
         
         this.richpar = richpar;
         this.richTable = richgeo.get_richTable();
@@ -72,75 +59,18 @@ public class RICHCalibration{
                 manager.getConstants(run, stat_pmts),
                 manager.getConstants(run, stat_mirr) );
             
-            /*if(irich==1){
-            // first RICH module
-            init_CalConstantsCCDB( manager.getConstants(run, "/calibration/rich/module1/time_walk"),
-            manager.getConstants(run, "/calibration/rich/module1/time_offset"),
-            manager.getConstants(run, "/calibration/rich/module1/cherenkov_angle"),
-            manager.getConstants(run, "/calibration/rich/module1/status_aerogel"),
-            manager.getConstants(run, "/calibration/rich/module1/mapmt_pixel"),
-            manager.getConstants(run, "/calibration/rich/module1/status_mapmt"),
-            manager.getConstants(run, "/calibration/rich/module1/status_mirror"), irich );
-            }else{
-            // second RICH module
-            init_CalConstantsCCDB( manager.getConstants(run, "/calibration/rich/module2/time_walk"),
-            manager.getConstants(run, "/calibration/rich/module2/time_offset"),
-            manager.getConstants(run, "/calibration/rich/module2/cherenkov_angle"),
-            manager.getConstants(run, "/calibration/rich/module2/status_aerogel"),
-            manager.getConstants(run, "/calibration/rich/module2/mapmt_pixel"),
-            manager.getConstants(run, "/calibration/rich/module2/status_mapmt"),
-            manager.getConstants(run, "/calibration/rich/module2/status_mirror"), irich );
-            }*/
-            
-            if((debugMode>=1 || richpar.DEBUG_CAL_COST>=1) && ncalls<Math.max(1,richpar.DEBUG_CAL_COST)) {
-                System.out.format("------------------------------------------------------------- \n");
-                System.out.format("RICH: Load RECO Calibration from CCDB for RICH %4d  sector %4d  run %6d (ncalls %3d) \n", irich, isec, run, ncalls);
-                System.out.format("------------------------------------------------------------- \n");
-                System.out.format("Banks \n %s \n %s \n %s \n %s \n %s \n %s \n %s \n \n",time_walk,time_offs,cher_angs,stat_aero,pmts_pixe,stat_pmts,stat_mirr);
-                
-                dump_CalConstants(irich);
-            }
-            
             if(RICHConstants.TIMECAL_FROM_FILE==1 && ncalls==0){
-                
                 init_CalConstantsTxT(1, isec, ncalls);
-                
-                if((debugMode>=1 || richpar.DEBUG_CAL_COST>=1) && ncalls<Math.max(1,richpar.DEBUG_CAL_COST)) {
-                    System.out.format("------------------------------------------------------------- \n");
-                    System.out.format("RICH: Load TIME calib constants from local TxT file for RICH 4d  sector %4d  run %6d \n", irich, isec, run);
-                    System.out.format("------------------------------------------------------------- \n");
-                    
-                    dump_TimeConstants(irich);
-                }
             }
             
             if(RICHConstants.AEROCAL_FROM_FILE==1){
-                
                 init_CalConstantsTxT(2, isec, ncalls);
-                
-                if((debugMode>=1 || richpar.DEBUG_CAL_COST>=1) && ncalls<Math.max(1,richpar.DEBUG_CAL_COST)) {
-                    System.out.format("------------------------------------------------------------- \n");
-                    System.out.format("RICH: Load AERO calib constants from local TxT file for RICH 4d  sector %4d  run %6d \n", irich, isec, run);
-                    System.out.format("------------------------------------------------------------- \n");
-                    
-                    dump_AeroConstants(irich);
-                }
             }
             
             if(RICHConstants.PIXECAL_FROM_FILE==1){
-                
                 init_CalConstantsTxT(3, isec, ncalls);
-                
-                if((debugMode>=1 || richpar.DEBUG_CAL_COST>=1) && ncalls<Math.max(1,richpar.DEBUG_CAL_COST)) {
-                    System.out.format("------------------------------------------------------------- \n");
-                    System.out.format("RICH: Load PIXEL calib constants from local TxT file for RICH 4d  sector %4d  run %6d \n", irich, isec, run);
-                    System.out.format("------------------------------------------------------------- \n");
-                    
-                    dump_PixelConstants(irich);
-                }
             }
         }
-        
     }
     
     
@@ -161,8 +91,6 @@ public class RICHCalibration{
     
     public void init_CalConstantsTxT(int ifile, int isec, int ncalls){
         // To be moved to CCDB
-        
-        int debugMode = 0;
         
         if(ifile==1){
             /*
@@ -251,9 +179,6 @@ public class RICHCalibration{
                     int iaer  = Integer.parseInt(array[2]);
                     int iqua  = Integer.parseInt(array[3]);
                     
-                    if((debugMode>=1 || richpar.DEBUG_CAL_COST>=1) && ncalls<Math.max(1,richpar.DEBUG_CAL_COST))
-                        System.out.format("Read chele for AERO lay %3d  compo %3d quadrant  %3d", idlay, iaer, iqua);
-                    
                     int ndir     = Integer.parseInt(array[4]);
                     float chdir  = Float.parseFloat(array[5]);
                     float sdir   = Float.parseFloat(array[6]);
@@ -282,20 +207,14 @@ public class RICHCalibration{
                 e.printStackTrace();
             }
             
-            if((debugMode>=1 || richpar.DEBUG_CAL_COST>=1) && ncalls<Math.max(1,richpar.DEBUG_CAL_COST))System.out.format("initConstants: DONE \n");
-            
         }
-        
     }
     
     public void dump_CalConstants(int irich) {
-        
-        
         dump_TimeConstants(irich);
         dump_AeroConstants(irich);
         dump_MirrorConstants(irich);
         dump_PixelConstants(irich);
-        
     }
     
     
@@ -304,7 +223,7 @@ public class RICHCalibration{
         int isec = find_RICHSector(irich);
         if(isec==0) return;
         
-        for(int ipmt=1; ipmt<=NPMT; ipmt++){
+        for(int ipmt=1; ipmt<=RICHGeoConstants.NPMT; ipmt++){
             
             if(ipmt<=10 || ipmt>=382)System.out.format("CCDB RICH TOFF    ipmt %4d  %8.3f (ch1)  %8.3f (ch2)  %8.3f (ch63)  %8.3f (ch64) \n", ipmt,
                 -get_PixelTimeOff(isec, ipmt, 1), -get_PixelTimeOff(isec, ipmt, 2), -get_PixelTimeOff(isec, ipmt, 63), -get_PixelTimeOff(isec, ipmt, 64));
@@ -312,7 +231,7 @@ public class RICHCalibration{
             if(ipmt==391)System.out.format("  \n");
         }
         
-        for(int ipmt=1; ipmt<=NPMT; ipmt++){
+        for(int ipmt=1; ipmt<=RICHGeoConstants.NPMT; ipmt++){
             if(ipmt<=10 || ipmt>=382)System.out.format("CCDB RICH TWALK   ipmt %4d  D0 = %8.3f  T0 = %8.3f  m1 = %8.4f  m2 = %8.4f\n", ipmt,
                 timewalkTables.get(irich-1).getDoubleValue("D0", isec, ipmt, 0), timewalkTables.get(irich-1).getDoubleValue("m1", isec, ipmt, 0),
                 timewalkTables.get(irich-1).getDoubleValue("m2", isec, ipmt, 0), timewalkTables.get(irich-1).getDoubleValue("T0", isec, ipmt, 0));
@@ -330,7 +249,7 @@ public class RICHCalibration{
         int isec = find_RICHSector(irich);
         if(isec==0) return;
         
-        for(int ipmt=1; ipmt<=NPMT; ipmt++){
+        for(int ipmt=1; ipmt<=RICHGeoConstants.NPMT; ipmt++){
             
             if(ipmt<=2 || ipmt>=390)System.out.format("CCDB PIXEL GAIN    ipmt %4d  %8.2f (ch1)  %8.2f (ch2)  %8.2f (ch63)  %8.2f (ch64) \n", ipmt,
                 get_PixelGain(isec, ipmt, 1), get_PixelGain(isec, ipmt, 2), get_PixelGain(isec, ipmt, 63), get_PixelGain(isec, ipmt, 64));
@@ -359,10 +278,9 @@ public class RICHCalibration{
         }
         System.out.format("  \n");
         
-        
         int p_dead = 0;
-        for(int ipmt=1; ipmt<=NPMT; ipmt++){
-            for(int ianode=1; ianode<=NPIX; ianode++){
+        for(int ipmt=1; ipmt<=RICHGeoConstants.NPMT; ipmt++){
+            for(int ianode=1; ianode<=RICHGeoConstants.NPIX; ianode++){
                 if(get_PixelStatus(isec, ipmt, ianode)==2){
                     System.out.format("CCDB PIXEL DEAD Sec %4d  PMT %4d  Anode %6d  Status %6d \n",isec, ipmt, ianode, get_PixelStatus(isec, ipmt, ianode));
                     p_dead++;
@@ -372,8 +290,8 @@ public class RICHCalibration{
         
         int p_hot = 0;
         System.out.format("  \n");
-        for(int ipmt=1; ipmt<=NPMT; ipmt++){
-            for(int ianode=1; ianode<=NPIX; ianode++){
+        for(int ipmt=1; ipmt<=RICHGeoConstants.NPMT; ipmt++){
+            for(int ianode=1; ianode<=RICHGeoConstants.NPIX; ianode++){
                 if(get_PixelStatus(isec, ipmt, ianode)==5){
                     System.out.format("CCDB PIXEL HOT  Sec %4d  PMT %4d  Anode %6d  Status %6d \n",isec, ipmt, ianode, get_PixelStatus(isec, ipmt, ianode));
                     p_hot++;
@@ -475,7 +393,6 @@ public class RICHCalibration{
     
     public double get_SChElectron(int isec, int ila, int ico, int iqua, int irefle, int icharge) {
         
-        
         if(ico<0 || ico>=RICHGeoConstants.NAERCO[ila]) return 0.0;
         int irich = find_RICHModule(isec);
         if(irich==0) return 0.0;
@@ -574,7 +491,6 @@ public class RICHCalibration{
         int irow = ico*225+iqua+1;
         
         return aerstatusTables.get(irich-1).getIntValue("status", isec, 201+ila, irow);
-        
     }
     
     
@@ -588,7 +504,6 @@ public class RICHCalibration{
         if(lla==-1 || cco==-1) return 0;
         
         return mirstatusTables.get(irich-1).getIntValue("status", isec, lla, cco);
-        
     }
     
     
@@ -705,11 +620,8 @@ public class RICHCalibration{
     
     
     public int find_RICHSector(int irich){
-        int debugMode = 0;
-        
         for (int isec=1; isec<=RICHGeoConstants.NSEC; isec++){
             if(richTable.hasEntry(isec,0,0)){
-                if(debugMode>=1)System.out.format(" trovo %4d <--> %4d \n",irich, richTable.getIntValue("module", isec, 0, 0));
                 if(richTable.getIntValue("module", isec, 0, 0) == irich)  return isec;
             }
         }
