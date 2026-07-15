@@ -164,6 +164,40 @@ public class DetectorData {
         return detectorEvent;
     }
 
+    public static void readRichParticles(List<DetectorParticle> particles, DataEvent event, String richbank) {
+        if (event.hasBank(richbank)) {
+            DataBank rich = event.getBank(richbank);
+            int nrows = rich.rows();
+            for (int row = 0; row<nrows; row++) {
+                DetectorParticle p = particles.get(rich.getByte("pindex", row));
+                p.setPid(rich.getShort("best_PID", row));
+                p.setChi2(rich.getShort("best_c2", row));
+                p.particleScores[0] = rich.getFloat("el_logl", row);
+                p.particleScores[1] = rich.getFloat("pi_logl", row);
+                p.particleScores[2] = rich.getFloat("k_logl", row);
+                p.particleScores[3] = rich.getFloat("pr_logl", row);
+            }
+        }
+    }
+
+    public static DataBank getHypothesesBank(List<DetectorParticle> particles, DataEvent event) {
+        final int np = particles.size();
+        int nrows = 0;
+        for (int i=0; i<np; i++) if (particles.get(i).particleScores[0] > 0) nrows++;
+        DataBank bank = event.createBank("REC::Hypotheses", nrows);
+        for (int i=0; i<np; i++) {
+            for (int j=0; j<4; j++) {
+                if (particles.get(i).particleScores[j] > 0) {
+                    int row = j + i*4;
+                    bank.setByte("pindex", row, (byte)i);
+                    bank.setInt("pid", row, 11);
+                    bank.setFloat("logl", row, (float)particles.get(i).particleScores[j]);
+                }
+            }
+        }
+        return bank;
+    }
+
     /**
      * creates a bank with particles information.
      *
