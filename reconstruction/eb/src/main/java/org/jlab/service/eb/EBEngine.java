@@ -97,9 +97,7 @@ public class EBEngine extends ReconstructionEngine {
     }
 
     @Override
-    public void detectorChanged(int run) {
-        if (rich != null) rich.detectorChanged(run);
-    }
+    public void detectorChanged(int run) {}
     
     public void initBankNames() {}
 
@@ -291,10 +289,7 @@ public class EBEngine extends ReconstructionEngine {
           
         }
         
-        if (rich != null) {
-            rich.dropBanks(de);
-            rich.processDataEventUser(de);
-        }
+        if (rich != null) rich.processDataEvent(de);
 
         return true;
     }
