@@ -13,8 +13,6 @@ import org.jlab.detector.geant4.v2.CTOFGeant4Factory;
 import org.jlab.geom.base.ConstantProvider;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
-import org.jlab.io.hipo.HipoDataSource;
-import org.jlab.io.hipo.HipoDataSync;
 import org.jlab.rec.ctof.Constants;
 import org.jlab.rec.tof.banks.ctof.HitReader;
 import org.jlab.rec.tof.banks.ctof.RecoBankWriter;
@@ -183,44 +181,5 @@ public class CTOFEngine extends ReconstructionEngine {
 
         return true;
 
-    }
-
-    public static void main(String[] args)  {
-
-        String inputFile  = "/Users/ziegler/Desktop/Work/Files/GEMC/CTOF/pions1degphi80degtheta.hipo";
-        String outputFile = "/Users/ziegler/Desktop/Work/Files/GEMC/CTOF/pions1degphi80degthetaRECWithNewCCDB.hipo";
-        
-        // String inputFile = args[0];
-        // String outputFile = args[1];
-
-        System.err.println(" \n[PROCESSING FILE] : " + inputFile);
-        
-        CTOFEngine en = new CTOFEngine();
-        en.init();
-
-        HipoDataSource reader = new HipoDataSource();
-        HipoDataSync writer = new HipoDataSync();
-        writer.open(outputFile);
-        
-        int counter = 0;
-        reader.open(inputFile);
-        long t1 = System.currentTimeMillis();
-        while (reader.hasEvent()) {
-
-            counter++;
-            DataEvent event = reader.getNextEvent();
-           
-            en.processDataEventUser(event);
-            writer.writeEvent(event);
-            if (counter > 3) {
-                break;
-            }
-            // if(counter%100==0)
-            System.out.println("run " + counter + " events");
-
-        }
-        double t = System.currentTimeMillis() - t1;
-        System.out.println("TOTAL  PROCESSING TIME = " + t);
-        writer.close();
     }
 }

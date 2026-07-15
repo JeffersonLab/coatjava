@@ -19,10 +19,6 @@
       <artifactId>jnp-hipo</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.jlab</groupId>
-      <artifactId>groot</artifactId>
-    </dependency>
-    <dependency>
       <groupId>org.jlab.clas</groupId>
       <artifactId>swim-tools</artifactId>
       <version>14.1.2-SNAPSHOT</version>

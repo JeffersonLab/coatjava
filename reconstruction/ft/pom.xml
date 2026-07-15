@@ -17,6 +17,7 @@
     <dependency>
       <groupId>org.jlab</groupId>
       <artifactId>groot</artifactId>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.jlab.clas</groupId>

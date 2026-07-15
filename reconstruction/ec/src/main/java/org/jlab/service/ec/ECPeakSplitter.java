@@ -1,13 +1,8 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Interface.java to edit this template
- */
 package org.jlab.service.ec;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import org.jlab.display.ec.Renderer;
 
 /**
  *

@@ -3,13 +3,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.swing.JFrame;
 import org.jlab.clas.reco.ReconstructionEngine;
-import org.jlab.groot.data.H2F;
-import org.jlab.groot.graphics.EmbeddedCanvas;
 import org.jlab.io.base.DataEvent;
 import org.jlab.io.base.DataBank;
-import org.jlab.io.hipo.HipoDataSource;
 import org.jlab.utils.groups.IndexedTable;
 
 /*
@@ -107,59 +103,4 @@ public class RasterEngine extends ReconstructionEngine {
         return pos;
     }
     
-    public static void main(String arg[]) {
-        
-        RasterEngine engine = new RasterEngine();
-        engine.init();
- 
-        // open hipo file
-        String input = "/vol0/pilleux-l/Bureau/dev_COATJAVA/rastersoftware/out_rastersoftware_eventsRndm9mm_updated_16.hipo";
-        HipoDataSource  reader = new HipoDataSource();
-        reader.open(input);
-		
-	// initialize histos
-        H2F hx = new H2F("x","", 100, -1000, 1000, 100, -1, 1);         
-        hx.setTitleX("ADC X");
-        hx.setTitleY("x (cm)");
-        H2F hy = new H2F("y","", 100, -1000, 1000, 100, -1, 1);         
-        hy.setTitleX("ADC Y");
-        hy.setTitleY("y (cm)");
-          
-        // loop through events
-        while(reader.hasEvent()){
-            DataEvent event = (DataEvent) reader.getNextEvent();
-            
-            // for comparison
-            DataBank MC_Part = event.getBank("MC::Particle");
-            System.out.print("MC position read : " + MC_Part.getFloat("vx",0) +"\n");
-            
-            // run the raster engine
-            engine.processDataEventUser(event);
-            
-            // read the output bank and fill the histograms
-            if(event.hasBank("RASTER::position")) {
-                DataBank bank = event.getBank("RASTER::position");
-                double xpos = bank.getFloat("x", 0);
-                double ypos = bank.getFloat("y", 0);
-                // fill histograms
-                System.out.print("Raster position : " + xpos + "\n");
-                hx.fill(bank.getInt("ped",0), xpos);
-                hy.fill(bank.getInt("ped",1), ypos);
-            }
-            
-        }
-        
-        reader.close();
-        
-        JFrame frame = new JFrame("Raster");
-        frame.setSize(800,400);
-        EmbeddedCanvas canvas = new EmbeddedCanvas();
-        canvas.divide(2,1);
-        canvas.cd(0); canvas.draw(hx);
-        canvas.cd(1); canvas.draw(hy);
-        frame.add(canvas);
-        frame.setLocationRelativeTo(null);
-        frame.setVisible(true);
-
-    }
 }

@@ -4,20 +4,13 @@ import java.util.List;
 import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.swing.JFrame;
 import org.jlab.clas.reco.ReconstructionEngine;
-import org.jlab.detector.base.DetectorType;
-import org.jlab.detector.calib.utils.DatabaseConstantProvider;
 import org.jlab.detector.geant4.v2.MPGD.URWT.URWTStripFactory;
-import org.jlab.geom.prim.Point3D;
 import org.jlab.groot.data.H1F;
 import org.jlab.groot.fitter.DataFitter;
-import org.jlab.groot.graphics.EmbeddedCanvas;
-import org.jlab.groot.group.DataGroup;
 import org.jlab.groot.math.F1D;
 import org.jlab.io.base.DataEvent;
 import org.jlab.io.base.DataBank;
-import org.jlab.io.hipo.HipoDataSource;
 
 /**
  *
@@ -155,94 +148,4 @@ public class URWTEngine extends ReconstructionEngine {
         }
     }    
     
-    public static void main (String arg[])  {
-
-        URWTEngine engine = new URWTEngine();
-        engine.init();
-
-        String input = "/Users/devita/urwell3d.hipo";
-
-        DataGroup dg = new DataGroup(3, 2);
-        String[] axes = {"x", "y"};
-        for(int il=0; il<URWTConstants.NLAYER; il++) {
-            int layer = il+1;
-            H1F h1 = new H1F("hiEnergyL"+layer, "Cluster Energy (eV)", "Counts", 100, 0., 1500.);         
-            h1.setOptStat(Integer.parseInt("1111")); 
-            H1F h2 = new H1F("hiTimeL"+layer, "Cluster Time (ns)", "Counts", 100, 0., 400.);         
-            h2.setOptStat(Integer.parseInt("1111")); 
-            H1F h3 = new H1F("hiSpace"+axes[il], "Cross #Delta" + axes[il] + " (mm)", "Counts", 100, -2.0, 2.0);         
-            h3.setOptStat(Integer.parseInt("1111")); 
-            dg.addDataSet(h1, il*3 + 0);
-            dg.addDataSet(h2, il*3 + 1);
-            dg.addDataSet(h3, il*3 + 2);
-        }
-
-        HipoDataSource  reader = new HipoDataSource();
-        reader.open(input);
-
-        while(reader.hasEvent()) {
-            DataEvent event = reader.getNextEvent();
-
-            engine.processDataEventUser(event);
-            
-            double xtrue = 0;
-            double ytrue = 0;
-            double ztrue = 0;
-            Point3D mc = new Point3D();
-            if(event.hasBank("MC::True")) {
-                DataBank bankMC = event.getBank("MC::True");
-                for(int i=0; i<bankMC.rows(); i++) {
-                    int detector = bankMC.getByte("detector",i);  
-                    if(detector==DetectorType.URWT.getDetectorId()) {
-                        xtrue = bankMC.getFloat("avgX",i);
-                        ytrue = bankMC.getFloat("avgY",i);
-                        ztrue = bankMC.getFloat("avgZ",i);
-                        mc = new Point3D(xtrue, ytrue, ztrue);
-                        break;
-                    }
-                }
-            }
-            mc.rotateY(-Math.toRadians(25.0));
-            System.out.println(mc);
-            if(event.hasBank("URWT::clusters")) {
-                DataBank bankC = event.getBank("URWT::clusters");
-                bankC.show();
-                for(int i=0; i<bankC.rows(); i++) {
-                    int    layer  = bankC.getByte("layer", i);
-                    double energy = bankC.getFloat("energy", i);
-                    double time   = bankC.getFloat("time", i);
-                    dg.getH1F("hiEnergyL"+layer).fill(energy);
-                    dg.getH1F("hiTimeL"+layer).fill(time);
-                }
-            }
-            if(event.hasBank("URWT::crosses")) {
-                DataBank bankX = event.getBank("URWT::crosses");
-                bankX.show();
-                for(int i=0; i<bankX.rows(); i++) {
-                    double x = bankX.getFloat("x", i);
-                    double y = bankX.getFloat("y", i);
-                    double z = bankX.getFloat("z", i);
-                    Point3D rec = new Point3D(x*10, y*10, z*10);
-                    rec.rotateY(-Math.toRadians(25));
-                    dg.getH1F("hiSpace"+axes[0]).fill(rec.x()-mc.x());
-                    dg.getH1F("hiSpace"+axes[1]).fill(rec.y()-mc.y());
-                }
-            }
-
-        }
-        reader.close();
-        
-        for(int i=0; i<URWTConstants.NLAYER; i++) {
-           URWTEngine.fitGauss(dg.getH1F("hiTimeL"+(i+1)));
-           URWTEngine.fitGauss(dg.getH1F("hiSpace"+axes[i]));
-        }
-        JFrame frame = new JFrame("URWT Reconstruction");
-        frame.setSize(800,800);
-        EmbeddedCanvas canvas = new EmbeddedCanvas();
-        canvas.draw(dg);
-        frame.add(canvas);
-        frame.setLocationRelativeTo(null);
-        frame.setVisible(true);     
-
-    }
 }
