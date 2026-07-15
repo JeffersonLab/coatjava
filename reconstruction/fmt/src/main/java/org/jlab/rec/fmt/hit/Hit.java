@@ -6,7 +6,6 @@ import java.util.List;
 import org.jlab.detector.banks.RawDataBank;
 import org.jlab.geom.prim.Line3D;
 import org.jlab.geom.prim.Point3D;
-import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 import org.jlab.rec.fmt.Constants;
 import org.jlab.utils.groups.IndexedTable;

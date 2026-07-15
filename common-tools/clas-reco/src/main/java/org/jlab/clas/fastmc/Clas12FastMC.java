@@ -7,7 +7,6 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import org.jlab.clas.physics.Particle;
-import org.jlab.clas.physics.PhysicsEvent;
 import org.jlab.geom.DetectorHit;
 import org.jlab.geom.base.Detector;
 import org.jlab.geom.prim.Path3D;
@@ -19,14 +18,13 @@ import org.jlab.geom.prim.Path3D;
 public class Clas12FastMC {
 
 	private ParticleSwimmer particleSwimmer = null;
-	List<DetectorSensitivity> mcSensitivity = new ArrayList<DetectorSensitivity>();
-	Map<String, Detector> mcDetectors = new LinkedHashMap<String, Detector>();
+	List<DetectorSensitivity> mcSensitivity = new ArrayList<>();
+	Map<String, Detector> mcDetectors = new LinkedHashMap<>();
 	private double torusScale = 0.0;
 	private double solenoidScale = 0.0;
 	// For smearing
-	private final TreeMap<Integer, IParticleResolution> pResolutions = new TreeMap<Integer, IParticleResolution>();
+	private final TreeMap<Integer, IParticleResolution> pResolutions = new TreeMap<>();
 	public boolean isSmeared = false;
-	private int debugMode = 0;
 
 	/**
 	 * constructor initialized part Monte-Carlo module module. arguments given are field strengths for torus and solenoid magnets. The scale value -1.0 is for
@@ -104,15 +102,6 @@ public class Clas12FastMC {
 	}
 
 	/**
-	 * set debug mode to control printout of the fast MC.
-	 * 
-	 * @param mode
-	 */
-	public void setDebugMode(int mode) {
-		this.debugMode = mode;
-	}
-
-	/**
 	 * Swims particle through magnetic field and checks if all detector requirements are passed. returns false if any detector cut required is not satisfied.
 	 * 
 	 * @param part
@@ -141,39 +130,8 @@ public class Clas12FastMC {
 		return false;
 	}
 
-	public PhysicsEvent getEvent(PhysicsEvent event) {
-
-		PhysicsEvent recEvent = new PhysicsEvent();
-		recEvent.setBeamParticle(event.beamParticle());
-		recEvent.setTargetParticle(event.targetParticle());
-
-		int ncount = event.count();
-		for (int i = 0; i < ncount; i++) {
-			Particle genPart = event.getParticle(i);
-			if (this.checkParticle(genPart) == true) {
-				Particle recParticle = new Particle();
-				recParticle.copy(genPart);
-				recEvent.addParticle(recParticle);
-			}
-		}
-		/**
-		 * Apply resolution smearing if the flag is set.
-		 */
-		if (this.isSmeared == true) {
-			for (int p = 0; p < recEvent.count(); p++) {
-				int pid = recEvent.getParticle(p).pid();
-				int charge = recEvent.getParticle(p).charge();
-				if (this.pResolutions.containsKey(pid) == true) {
-					this.pResolutions.get(pid).apply(recEvent.getParticle(p), this.torusScale, this.solenoidScale);
-				}
-			}
-		}
-
-		return recEvent;
-	}
-
 	public Map<String, Integer> getDetectorResponses(Particle part) {
-		Map<String, Integer> detectors = new LinkedHashMap<String, Integer>();
+		Map<String, Integer> detectors = new LinkedHashMap<>();
 		Path3D particlePath = this.particleSwimmer.getParticlePath(part);
 		for (Map.Entry<String, Detector> entry : mcDetectors.entrySet()) {
 			List<DetectorHit> hits = entry.getValue().getLayerHits(particlePath);
@@ -210,7 +168,7 @@ public class Clas12FastMC {
 	 */
 	public static class DetectorSensitivity {
 
-		Map<String, Integer> detectorHits = new LinkedHashMap<String, Integer>();
+		Map<String, Integer> detectorHits = new LinkedHashMap<>();
 		int charge = 0;
 
 		public DetectorSensitivity(int pch, String[] dnames, int[] hits) {

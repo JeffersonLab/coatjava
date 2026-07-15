@@ -13,8 +13,6 @@ import org.jlab.detector.geant4.v2.FTOFGeant4Factory;
 import org.jlab.geom.base.ConstantProvider;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
-import org.jlab.io.hipo.HipoDataSource;
-import org.jlab.io.hipo.HipoDataSync;
 import org.jlab.rec.ftof.Constants;
 import org.jlab.rec.tof.banks.ftof.HitReader;
 import org.jlab.rec.tof.banks.ftof.RecoBankWriter;
@@ -213,55 +211,4 @@ public class FTOFEngine extends ReconstructionEngine {
         return true;
     }
 
-    public static void main(String arg[]) {
-        FTOFHBEngine en = new FTOFHBEngine();
-        en.init();
-
-        int counter = 0;
-        String inputFile = "/Users/ziegler/Desktop/Work/Files/GEMC/out_gemc_orig.hipo";
-
-        // String inputFile = args[0];
-        // String outputFile = args[1];
-
-        System.err.println(" \n[PROCESSING FILE] : " + inputFile);
-
-        HipoDataSource reader = new HipoDataSource();
-        reader.open(inputFile);
-
-        HipoDataSync writer = new HipoDataSync();
-        // Writer
-        String outputFile = "/Users/ziegler/Desktop/Work/Files/GEMC/out_gemc_orig_rec.hipo";
-        writer.open(outputFile);
-
-        long t1 = 0;
-        while (reader.hasEvent() && counter<10) {
-
-            counter++;
-
-            DataEvent event = reader.getNextEvent();
-            if (counter > 0) {
-                t1 = System.currentTimeMillis();
-            }
-
-            //en0.processDataEventUser(event);
-            //	if (counter > 3062)
-            //en0.processDataEventUser(event);
-            //en1.processDataEventUser(event);
-            en.processDataEventUser(event);
-            System.out.println("  EVENT " + counter);
-            //if (counter > 3066)
-            //	break;
-            // event.show();
-            // if(counter%100==0)
-            //System.out.println("run " + counter + " events");
-            //if (event.hasBank("HitBasedTrkg::HBTracks")) {
-            //    
-            //}
-            writer.writeEvent(event);
-        }
-        writer.close();
-        double t = System.currentTimeMillis() - t1;
-        System.out.println(t1 + " TOTAL  PROCESSING TIME = "
-                + (t / (float) counter));
-    }
 }

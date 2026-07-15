@@ -1,11 +1,9 @@
 package org.jlab.service.rtpc;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.HashMap;
-import org.jlab.clas.reco.EngineProcessor;
 
 import org.jlab.clas.reco.ReconstructionEngine;
 import org.jlab.clas.tracking.kalmanfilter.Units;
@@ -169,69 +167,6 @@ public class RTPCEngine extends ReconstructionEngine{
             return true;
         }
         return true;
-    }
-
-    public static void main(String[] args){
-
-        System.setProperty("CLAS12DIR", "/Users/davidpayette/Desktop/newrtpcbranch/clas12-offline-software");
-        double starttime = System.nanoTime();
-
-        File f = new File("/Users/davidpayette/Desktop/SignalStudies/sig.txt");
-        f.delete();
-        f = new File("/Users/davidpayette/Desktop/SignalStudies/trackenergy.txt");
-        f.delete();
-        f = new File("/Users/davidpayette/Desktop/SignalStudies/timespectra.txt");
-        f.delete();
-        f = new File("/Users/davidpayette/Desktop/SignalStudies/sigafter.txt");
-        f.delete();
-        f = new File("/Users/davidpayette/Desktop/SignalStudies/sigTF.txt");
-        f.delete();
-        f = new File("/Users/davidpayette/Desktop/SignalStudies/timeenergy.txt");
-        f.delete();
-        f = new File("/Users/davidpayette/Desktop/SignalStudies/signalbins.txt");
-        f.delete();
-
-
-        //String inputFile = "/Users/davidpayette/Desktop/6b.2.0/myClara/good.hipo";
-        //String inputFile = "/Users/davidpayette/Desktop/6b.2.0/myClara/cosmics.hipo";
-        //String inputFile = "/Users/davidpayette/Desktop/6b.2.0/myClara/ctest.hipo";
-        //String inputFile = "/Users/davidpayette/Desktop/6b.2.0/myClara/new40p.hipo";
-        //String inputFile = "/Users/davidpayette/Desktop/rtpcbranch/1ep.hipo";
-        //String inputFile = "/Users/davidpayette/Desktop/6b.2.0/myClara/plugins/clas12/340_40p.hipo";
-        String inputFile = "/Users/davidpayette/Desktop/newrtpcbranch/input.hipo";
-        String outputFile = "/Users/davidpayette/Desktop/6b.2.0/myClara/out_cosmic.hipo";
-
-        System.err.println(" \n[PROCESSING FILE] : " + inputFile);
-
-        RTPCEngine en = new RTPCEngine();
-        en.init();
-
-
-        EngineProcessor processor = new EngineProcessor();
-        processor.addEngine("RTPC", en);
-        processor.processFile(inputFile, outputFile);
-
-        /*
-        HipoDataSource reader = new HipoDataSource();
-        HipoDataSync writer = reader.createWriter();
-
-        reader.open(inputFile);
-        writer.open(outputFile);
-        //System.out.println("starting " + starttime);
-        int eventcount = 0;
-        int eventselect = 144; //144
-        while(reader.hasEvent()){
-            DataEvent event = reader.getNextEvent();
-            //if(eventcount == eventselect){
-            en.processDataEventUser(event);
-            writer.writeEvent(event);
-            //}else if(eventcount > eventselect) break;
-            eventcount ++;
-        }
-
-        writer.close();
-        */
-        System.out.println("finished " + (System.nanoTime() - starttime)*Math.pow(10,-9));
     }
 
     private static HashMap<String, Material> generateMaterials() {

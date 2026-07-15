@@ -5,8 +5,6 @@ import java.util.Arrays;
 import org.jlab.clas.reco.ReconstructionEngine;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
-import org.jlab.io.hipo.HipoDataSource;
-import org.jlab.io.hipo.HipoDataSync;
 import org.jlab.rec.band.constants.CalibrationConstantsLoader;
 import org.jlab.rec.band.constants.Parameters;
 import org.jlab.rec.band.banks.HitReader;
@@ -100,41 +98,6 @@ public class BANDEngine extends ReconstructionEngine {
 				Parameters.CreateGeometry(); // loading BAND params
 			}
 		}
-
-	}
-
-	public static void main (String arg[]) {
-
-		BANDEngine en = new BANDEngine();
-		en.init();
-
-
-		String input = "bandtest.hipo";
-
-		HipoDataSource  reader = new HipoDataSource();
-		reader.open(input);
-		String outputFile="test.hipo";
-		HipoDataSync  writer = new HipoDataSync();
-		writer.open(outputFile);
-		
-		int nevent = 0;
-
-		while(reader.hasEvent() && nevent<2) {
-			DataEvent event = (DataEvent) reader.getNextEvent();
-			//System.out.println("***********  NEXT EVENT ************");
-			//event.show();
-			//if (event.hasBank("band::adc") && event.hasBank("band::tdc")){
-			//	event.getBank("band::adc").show();
-			//	event.getBank("band::tdc").show();
-			//}
-			en.processDataEventUser(event);
-			writer.writeEvent(event);
-			//event.getBank("band::hits").show();
-			nevent++;
-
-		}		
-		writer.close();
-
 
 	}
 }

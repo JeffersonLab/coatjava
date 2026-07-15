@@ -2,33 +2,11 @@ package org.jlab.rec.ft;
 
 import java.util.Arrays;
 import java.util.List;
-
-import javax.swing.JFrame;
-import org.jlab.clas.detector.DetectorData;
-import org.jlab.clas.detector.DetectorEvent;
-
 import org.jlab.clas.reco.ReconstructionEngine;
-import org.jlab.detector.base.DetectorLayer;
-import org.jlab.geom.prim.Line3D;
-import org.jlab.geom.prim.Point3D;
-import org.jlab.geom.prim.Vector3D;
-import org.jlab.groot.data.H1F;
-import org.jlab.groot.data.H2F;
-import org.jlab.groot.data.DataLine;
-import org.jlab.groot.math.F1D;
-import org.jlab.groot.fitter.DataFitter;
-import org.jlab.groot.graphics.EmbeddedCanvas;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 import org.jlab.io.evio.EvioDataBank;
 import org.jlab.io.evio.EvioDataEvent;
-import org.jlab.io.hipo.HipoDataSource;
-import org.jlab.rec.ft.cal.FTCALConstantsLoader;
-import org.jlab.rec.ft.cal.FTCALEngine;
-import org.jlab.rec.ft.hodo.FTHODOEngine;
-import org.jlab.rec.ft.trk.FTTRKEngine;
-import org.jlab.rec.ft.trk.FTTRKConstantsLoader;
-import org.jlab.rec.ft.trk.FTTRKReconstruction;
 
 public class FTEBEngine extends ReconstructionEngine {
 

@@ -7,8 +7,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.jlab.clas.reco.ReconstructionEngine;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
-import org.jlab.io.hipo.HipoDataSource;
-import org.jlab.io.hipo.HipoDataSync;
 import org.jlab.rec.cnd.constants.CalibrationConstantsLoader;
 import org.jlab.rec.cnd.banks.HitReader;
 import org.jlab.rec.cnd.banks.RecoBankWriter;
@@ -33,16 +31,8 @@ public class CNDCalibrationEngine extends ReconstructionEngine {
 	}
 
 	RecoBankWriter rbc;
-	static int enb =0;
-	static int ecnd=0;
-	static int hcvt=0;
-	static int match=0;
-	static int posmatch=0;
-	static int ctof=0;
-	static int ctoftot=0;
         
     private AtomicInteger Run = new AtomicInteger(0);
-    private int newRun = 0;
 
 	@Override
 	public boolean processDataEventUser(DataEvent event) {
@@ -62,18 +52,15 @@ public class CNDCalibrationEngine extends ReconstructionEngine {
         }
         CalibrationConstantsLoader constantsLoader = new CalibrationConstantsLoader(newRun, this.getConstantsManager());
             
-        ArrayList<HalfHit> halfhits = new ArrayList<HalfHit>();   
-		ArrayList<CndHit> hits = new ArrayList<CndHit>();
-
-		halfhits = HitReader.getCndHalfHits(event, constantsLoader);		
+		ArrayList<HalfHit> halfhits = HitReader.getCndHalfHits(event, constantsLoader);		
 		//1) exit if halfhit list is empty
-		if(halfhits.size()==0 ){
+		if(halfhits.isEmpty() ){
 			return true;
 		}
 
 		//2) find the CND hits from these half-hits
 		CndHitFinder hitFinder = new CndHitFinder();
-		hits = hitFinder.findHits(halfhits,0, constantsLoader);
+		ArrayList<CndHit> hits = hitFinder.findHits(halfhits,0, constantsLoader);
 
 		CvtGetHTrack cvttry = new CvtGetHTrack();
 		cvttry.getCvtHTrack(event,constantsLoader); // get the list of helix associated with the event
@@ -90,7 +77,7 @@ public class CNDCalibrationEngine extends ReconstructionEngine {
         CNDClusterFinder cndclusterFinder = new CNDClusterFinder();
         ArrayList<CNDCluster> cndclusters = cndclusterFinder.findClusters(hits,constantsLoader);
 
-		if(hits.size()!=0){
+		if(!hits.isEmpty()){
 			rbc.appendCNDBanks(event,hits,cndclusters);
 		}
 
@@ -109,83 +96,5 @@ public class CNDCalibrationEngine extends ReconstructionEngine {
     @Override
     public void detectorChanged(int runNumber) {}
 
-	public static void main (String arg[]) {
-		CNDCalibrationEngine en = new CNDCalibrationEngine();
-
-		en.init();
-		//String input = "/Users/ziegler/Workdir/Files/GEMC/ForwardTracks/pi-.r100.evio";
-		//String input = "/projet/nucleon/silvia/test.hipo";
-		//String input = "/projet/nucleon/silvia/ctof_pion.rec.hipo";
-		//String input = "/projet/nucleon/silvia/out_ep.hipo";
-		//String input = "/projet/nucleon/silvia/out_out_bis.hipo";
-		//String input = "/projet/nucleon/silvia/out_bis.hipo";
-		//String input = "/projet/nucleon/silvia/test.rec.hipo";
-		//String input = "/projet/nucleon/pierre/test_out3.hipo";
-		//String input = "/projet/nucleon/silvia/test.hipo";
-		String input = "/projet/nucleon/pierre/RecCND/clas_002227.evio.18.hipo";
-		//String input = "/projet/nucleon/pierre/RecCND/test.hipo";
-		//String input = "/projet/nucleon/silvia/CLARA/out_clasdispr_small.00849.hipo";
-		HipoDataSource  reader = new HipoDataSource();
-		reader.open(input);
-		String outputFile="/projet/nucleon/pierre/RecCND/test1.hipo";
-		HipoDataSync  writer = new HipoDataSync();
-		writer.open(outputFile);
-
-		while(reader.hasEvent()) {
-			enb++;		
-			DataEvent event = (DataEvent) reader.getNextEvent();
-			//event.show();
-			//System.out.println("event nb "+enb);
-
-			//			System.out.println("event avant process ");
-			//			event.show();
-
-			//event.getBank("MC::Particle").show();
-			//if(event.hasBank("CVT::Tracks")){event.getBank("CVT::Tracks").show();};
-			en.processDataEventUser(event);
-
-			//			System.out.println("event après process ");
-			//			event.show();
-
-			//System.out.println("avant write ");
-			writer.writeEvent(event);
-			//System.out.println("après write ");
-
-//				if(event.hasBank("CND::hits")){
-//							//event.show();
-//				System.out.println("event nb "+enb);
-//				event.getBank("CND::hits").show();	
-//			event.getBank("CND::adc").show();	
-//			event.getBank("CND::tdc").show();	
-//				}
-
-
-
-			if(enb==30) break;
-
-		}		
-		writer.close();
-
-		//some statitics on cvt/cnd matching
-		System.out.println("enb "+enb);
-		System.out.println("ecnd "+ecnd);
-		System.out.println("hcvt "+hcvt);
-		System.out.println("posmatch "+posmatch);
-		System.out.println("match "+match);
-		System.out.println("%match cnd "+100.*match/posmatch);
-		System.out.println("Done");
-
-
-		HipoDataSource  sortie = new HipoDataSource();
-		sortie.open(outputFile);
-
-		System.out.println("Fichier de sortie : ");
-		while(sortie.hasEvent()) {
-
-			DataEvent event = (DataEvent) sortie.getNextEvent();
-			//event.show();
-
-		}		
-	}
 }
 
