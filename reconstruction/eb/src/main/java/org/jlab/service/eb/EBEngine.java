@@ -291,6 +291,10 @@ public class EBEngine extends ReconstructionEngine {
                 if (particleBankFT!=null) {
                     DataBank bankPFT = DetectorData.getDetectorParticleShadowBank(eb.getEvent().getParticles(), de, particleBankFT);
                     de.appendBanks(bankPFT);
+                    if (rich != null) {
+                        DetectorData.richifyParticles(eb.getEvent().getParticles(), de, particleBank);
+                        de.appendBank(DetectorData.getHypothesesBank(eb.getEvent().getParticles(), de));
+                    }
                 }
             }
           
