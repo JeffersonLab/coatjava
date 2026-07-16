@@ -55,6 +55,7 @@ public class EBEngine extends ReconstructionEngine {
     String covMatrixType    = null;
     String cvtTrackType     = null;
     String cvtTrajType      = null;
+    public String richParticleType = null;
     
     public EBEngine(String name){
         super(name,"gavalian","1.0");
@@ -275,6 +276,12 @@ public class EBEngine extends ReconstructionEngine {
                 }
             }
       
+            if (rich != null) {
+                rich.processDataEvent(de);
+                DetectorData.richifyParticles(eb.getEvent().getParticles(), de, particleBank);
+                de.appendBank(DetectorData.getHypothesesBank(eb.getEvent().getParticles(), de));
+            }
+
             // update PID for FT-based start time:
             // WARNING:  this modified particles
             analyzer.processEventFT(eb.getEvent());
@@ -289,8 +296,6 @@ public class EBEngine extends ReconstructionEngine {
           
         }
         
-        if (rich != null) rich.processDataEvent(de);
-
         return true;
     }
 

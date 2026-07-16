@@ -75,6 +75,7 @@ public class EBTBEngine extends EBEngine {
         this.setCovMatrixType("TimeBasedTrkg::TBCovMat");
         this.setCvtTrackType("CVTRec::Tracks");
         this.setCvtTrajType("CVTRec::Trajectory");
+        this.richParticleType = "RICH::Particle";
     }
     
 }

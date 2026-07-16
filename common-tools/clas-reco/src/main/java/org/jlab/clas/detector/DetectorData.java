@@ -164,9 +164,16 @@ public class DetectorData {
         return detectorEvent;
     }
 
-    public static void readRichParticles(List<DetectorParticle> particles, DataEvent event, String richbank) {
-        if (event.hasBank(richbank)) {
-            DataBank rich = event.getBank(richbank);
+    public static final int[] HYPOTHESES = {11,211,321,2212};
+
+    /**
+     * @param particles
+     * @param event
+     * @param richParticleBank RICH::Particles
+     */
+    public static void richifyParticles(List<DetectorParticle> particles, DataEvent event, String richParticleBank) {
+        if (event.hasBank(richParticleBank)) {
+            DataBank rich = event.getBank(richParticleBank);
             int nrows = rich.rows();
             for (int row = 0; row<nrows; row++) {
                 DetectorParticle p = particles.get(rich.getByte("pindex", row));
@@ -180,17 +187,24 @@ public class DetectorData {
         }
     }
 
+    /**
+     * @param particles
+     * @param event
+     * @return a REC::Hypotheses bank 
+     */
     public static DataBank getHypothesesBank(List<DetectorParticle> particles, DataEvent event) {
-        final int np = particles.size();
         int nrows = 0;
-        for (int i=0; i<np; i++) if (particles.get(i).particleScores[0] > 0) nrows++;
+        final int np = particles.size();
+        for (int i=0; i<np; i++)
+            for (int j=0; j<HYPOTHESES.length; j++)
+                if (particles.get(i).particleScores[j] > 0) nrows += 1;
         DataBank bank = event.createBank("REC::Hypotheses", nrows);
         for (int i=0; i<np; i++) {
-            for (int j=0; j<4; j++) {
+            for (int j=0; j<HYPOTHESES.length; j++) {
                 if (particles.get(i).particleScores[j] > 0) {
-                    int row = j + i*4;
+                    int row = j + i*HYPOTHESES.length;
                     bank.setByte("pindex", row, (byte)i);
-                    bank.setInt("pid", row, 11);
+                    bank.setInt("pid", row, HYPOTHESES[j]*particles.get(i).getCharge());
                     bank.setFloat("logl", row, (float)particles.get(i).particleScores[j]);
                 }
             }
