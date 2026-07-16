@@ -169,11 +169,11 @@ public class DetectorData {
     /**
      * @param particles
      * @param event
-     * @param richParticleBank RICH::Particles
+     * @param bank_name a RICH::Particle bank
      */
-    public static void richifyParticles(List<DetectorParticle> particles, DataEvent event, String richParticleBank) {
-        if (event.hasBank(richParticleBank)) {
-            DataBank rich = event.getBank(richParticleBank);
+    public static void richifyParticles(List<DetectorParticle> particles, DataEvent event, String bank_name) {
+        if (event.hasBank(bank_name)) {
+            DataBank rich = event.getBank(bank_name);
             int nrows = rich.rows();
             for (int row = 0; row<nrows; row++) {
                 DetectorParticle p = particles.get(rich.getByte("pindex", row));
@@ -190,15 +190,16 @@ public class DetectorData {
     /**
      * @param particles
      * @param event
-     * @return a REC::Hypotheses bank 
+     * @param bank_name
+     * @return a REC::Hypothesis bank 
      */
-    public static DataBank getHypothesesBank(List<DetectorParticle> particles, DataEvent event) {
+    public static DataBank getHypothesesBank(List<DetectorParticle> particles, DataEvent event, String bank_name) {
         int nrows = 0;
         final int np = particles.size();
         for (int i=0; i<np; i++)
             for (int j=0; j<HYPOTHESES.length; j++)
                 if (particles.get(i).particleScores[j] > 0) nrows += 1;
-        DataBank bank = event.createBank("REC::Hypotheses", nrows);
+        DataBank bank = event.createBank(bank_name, nrows);
         for (int i=0; i<np; i++) {
             for (int j=0; j<HYPOTHESES.length; j++) {
                 if (particles.get(i).particleScores[j] > 0) {

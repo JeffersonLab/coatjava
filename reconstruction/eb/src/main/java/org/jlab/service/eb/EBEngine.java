@@ -46,6 +46,7 @@ public class EBEngine extends ReconstructionEngine {
     String ftBank           = null;
     String trajectoryBank   = null;
     String covMatrixBank    = null;
+    public String hypothesisBank   = null;
     
     // inputs banks:
     String trackType        = null;
@@ -81,6 +82,7 @@ public class EBEngine extends ReconstructionEngine {
         this.registerOutputBank(ftBank);
         this.registerOutputBank(trajectoryBank);
         this.registerOutputBank(covMatrixBank);
+        this.registerOutputBank(hypothesisBank);
 
 	    if (this.getEngineConfigString("outputBankPrefix")!=null) {
 	        this.setOutputBankPrefix(this.getEngineConfigString("outputBankPrefix"));
@@ -131,6 +133,7 @@ public class EBEngine extends ReconstructionEngine {
             this.setParticleBankFT(prefix+"FT::Particle");
             this.setCovMatrixBank(prefix+"::CovMat");
         }
+        hypothesisBank = prefix+"::Hypothesis";
     }
 
     public boolean processDataEventUser(DataEvent de,EBScalers ebs) {
@@ -278,8 +281,10 @@ public class EBEngine extends ReconstructionEngine {
       
             if (rich != null) {
                 rich.processDataEvent(de);
-                DetectorData.richifyParticles(eb.getEvent().getParticles(), de, particleBank);
-                de.appendBank(DetectorData.getHypothesesBank(eb.getEvent().getParticles(), de));
+                de.removeBank("REC::Particle");
+                DetectorData.richifyParticles(eb.getEvent().getParticles(), de, richParticleType);
+                de.appendBank(DetectorData.getHypothesesBank(eb.getEvent().getParticles(), de, "REC::Hypotheses"));
+                de.appendBanks(DetectorData.getDetectorParticleBank(eb.getEvent().getParticles(), de, particleBank));
             }
 
             // update PID for FT-based start time:
@@ -293,7 +298,7 @@ public class EBEngine extends ReconstructionEngine {
                     de.appendBanks(bankPFT);
                     if (rich != null) {
                         DetectorData.richifyParticles(eb.getEvent().getParticles(), de, particleBank);
-                        de.appendBank(DetectorData.getHypothesesBank(eb.getEvent().getParticles(), de));
+                        de.appendBank(DetectorData.getHypothesesBank(eb.getEvent().getParticles(), de, hypothesisBank));
                     }
                 }
             }
