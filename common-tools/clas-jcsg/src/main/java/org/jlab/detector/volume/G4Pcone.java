@@ -18,13 +18,13 @@ public class G4Pcone extends Geant4Basic {
               setName( name );
               setType("Polycone");
               
-              Measurement[] dimensions = new Measurement[4+3*numZPlanes];
+              Measurement[] dimensions = new Measurement[3+3*numZPlanes];
               dimensions[0] = Angle.value(phiStart);
               dimensions[1] = Angle.value(phiTotal);
-              dimensions[3] = new Measurement(numZPlanes,"counts");
-              for(int i=0; i<numZPlanes; i++) dimensions[4+0*numZPlanes+i] = Length.value(rInner[i]);
-              for(int i=0; i<numZPlanes; i++) dimensions[4+1*numZPlanes+i] = Length.value(rOuter[i]);
-              for(int i=0; i<numZPlanes; i++) dimensions[4+2*numZPlanes+i] = Length.value(zPlane[i]);
+              dimensions[2] = new Measurement(numZPlanes,"counts");
+              for(int i=0; i<numZPlanes; i++) dimensions[3+0*numZPlanes+i] = Length.value(rInner[i]);
+              for(int i=0; i<numZPlanes; i++) dimensions[3+1*numZPlanes+i] = Length.value(rOuter[i]);
+              for(int i=0; i<numZPlanes; i++) dimensions[3+2*numZPlanes+i] = Length.value(zPlane[i]);
               setDimensions(dimensions);
         	}
 
