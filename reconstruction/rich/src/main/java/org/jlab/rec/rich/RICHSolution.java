@@ -10,8 +10,6 @@ import org.jlab.geom.prim.Point3D;
 
 public class RICHSolution {
     
-    private int debugMode = 0;
-    
     public RICHSolution(){}
     
     public RICHSolution(int type) {
@@ -128,7 +126,6 @@ public class RICHSolution {
         double rpath = 0.0;
         for (RICHRay ray : raytracks) {
             rpath = rpath + ray.direction().mag();
-            if(debugMode>=2)System.out.format(" photon ray path %s --> %8.2f %8.2f \n",ray.direction().toStringBrief(3), ray.direction().mag(),rpath);
         }
         return (double) rpath;
     }
@@ -139,7 +136,6 @@ public class RICHSolution {
         for (RICHRay ray : raytracks) {
             double dtime = ray.direction().mag()/PhysicsConstants.speedOfLight()*ray.get_refind();
             time = time + (double) dtime;
-            if(debugMode>=3)System.out.format(" photon ray path %8.2f  n %8.2f  --> %8.2f %8.2f \n", ray.direction().mag(),ray.get_refind(),dtime,time);
         }
         return time;
     }
@@ -148,14 +144,11 @@ public class RICHSolution {
     public int get_RefleLayers() {
         // return a coded flag with the layer sequence alongt the photon path
         
-        int debugMode = 0;
-        
         int relay = 0 ;
         if(raytracks.size()<=2) return relay;
         for(int i=2; i<raytracks.size(); i++){
             double off = Math.pow(10,i-2);
             int ilay = (int) ( raytracks.get(i).get_type() - 10000)/100;
-            if(debugMode==1)System.out.format(" layers %8d --> %3d %7.2f %5d \n",raytracks.get(i).get_type(),i,off,ilay);
             if (ilay==11){
                 relay += off*2;
             }else{
@@ -221,11 +214,9 @@ public class RICHSolution {
     public boolean exist(){
         // return true if a raytrace solution was found
         if(raytracks.size()<=1) {
-            if(debugMode>0)System.out.format("No raytrace solution \n");
             return false;
         }
         if(!get_lastray().is_detected()){
-            if(debugMode>0)System.out.format("No raytrace detected \n");
             return false;
         }
         return true;
@@ -236,8 +227,6 @@ public class RICHSolution {
     
     public void set_status(int isec, int lai, int ico, int iqua, RICHCalibration richcal) {
         // record if there is a bad-status mirror on the photon path
-        
-        int debugMode = 0;
         
         if(!exist()) return;
         if(richcal.get_AeroStatus(isec, lai, ico, iqua)>0){status=1; return;}
@@ -252,7 +241,6 @@ public class RICHSolution {
                     icompo = 0;
                 }
                 int check = richcal.get_MirrorStatus(isec, ilay, icompo+1);
-                if(debugMode>0)System.out.format("check ray %3d %6d %3d %3d --> %3d \n",i,raytracks.get(i).get_type(),ilay,icompo, check);
                 if(check>0){status=1; return;}
             }
         }
@@ -285,15 +273,11 @@ public class RICHSolution {
     
     public int get_Nrefle() {
         
-        int debugMode = 0;
-        
-        if(debugMode==1)System.out.format("RICHSolution::get_Nrefle \n");
         int nrfl=0;
         int ira=0;
         for (RICHRay ray : raytracks) {
             int refe = (int) ray.get_type()/10000;
             if(refe == 1) nrfl++;
-            if(debugMode==1)System.out.format(" ray %3d  type %6d  refe %3d  nrfl %4d \n",ira, ray.get_type(), refe, nrfl);
             ira++;
         }
         return nrfl;
@@ -399,13 +383,10 @@ public class RICHSolution {
     
     public double assign_LHCbPID(double lh[]) {
         
-        int debugMode = 0;
-        
         set_ElProb(lh[0]);
         set_PiProb(lh[1]);
         set_KProb(lh[2]);
         set_PrProb(lh[3]);
-        if(debugMode==1)System.out.format(" assign (LHCB) %10.4g [%10.4g %10.4g %10.4g] --> ",lh[0],lh[1],lh[2],lh[3]);
         
         int ibest=-1;
         double lhtest=0.0;
@@ -453,21 +434,16 @@ public class RICHSolution {
             }
         }
         
-        if(debugMode==1)System.out.format(" --> %5d (%10.4g) %5d (%10.4g) %8.4f %8.4f \n",bestH,bestprob,secH,secprob,R_QP,Re_QP);
-        
         return R_QP;
     }
     
     
     public double assign_HypoPID(double lh[]) {
         
-        int debugMode = 0;
-        
         set_ElProb(lh[0]);
         set_PiProb(lh[1]);
         set_KProb(lh[2]);
         set_PrProb(lh[3]);
-        if(debugMode==1)System.out.format(" assign (PASS2) %10.4g [%10.4g %10.4g %10.4g] --> ",lh[0],lh[1],lh[2],lh[3]);
         
         int ibest=-1;
         double lhtest=999.0;
@@ -515,21 +491,16 @@ public class RICHSolution {
             }
         }
         
-        if(debugMode==1)System.out.format(" --> %5d (%10.4g) %5d (%10.4g) %8.4f %8.4f \n",bestH,bestprob,secH,secprob,R_QP,Re_QP);
-        
         return R_QP;
     }
     
     
     public double assign_PID(double lh[]) {
         
-        int debugMode = 0;
-        
         set_ElProb(lh[0]);
         set_PiProb(lh[1]);
         set_KProb(lh[2]);
         set_PrProb(lh[3]);
-        if(debugMode==1)System.out.format(" assign (PASS1) %10.4g [%10.4g %10.4g %10.4g] --> ",lh[0],lh[1],lh[2],lh[3]);
         
         double likeh[] = {lh[1], lh[2], lh[3]};
         Arrays.sort(likeh);
@@ -557,7 +528,6 @@ public class RICHSolution {
                 //}
             }
         }
-        if(debugMode==1)System.out.format(" --> %5d (%10.4g) %5d (%10.4g) %8.4f %8.4f \n",bestH,bestprob,secH,secprob,R_QP,Re_QP);
         
         return R_QP;
     }
@@ -603,10 +573,8 @@ public class RICHSolution {
     
     public void set_raytracks(ArrayList<RICHRay> rays){
         
-        int debugMode = 0;
-        
         //ATT: Vedere se puo' succedere
-        if(rays==null){if(debugMode>=1)System.out.format("No RAYTRACE solution\n"); return;}
+        if(rays==null) return;
         for (RICHRay ray: rays){
             this.raytracks.add(ray);
         }
@@ -678,12 +646,10 @@ public class RICHSolution {
     
     public double get_EqPixelNumber(){
         
-        int debugMode = 0;
         double dthe_delta = dthe_res*dthe_bin;
         double dphi_delta = dphi_res*dphi_bin;
         double solid = dthe_delta/RICHConstants.PIXEL_NOMINAL_SIZE*dphi_delta/RICHConstants.PIXEL_NOMINAL_SIZE;
         
-        if(debugMode>=1)System.out.format(" Eq Pixel %7.2f %7.2f (%7.2f) --> %8.4f \n",dthe_delta,dphi_delta,RICHConstants.PIXEL_NOMINAL_SIZE,solid);
         return solid;
     }
     

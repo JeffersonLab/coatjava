@@ -13,6 +13,7 @@ import org.jlab.rec.eb.EBCCDBConstants;
 import org.jlab.rec.eb.EBCCDBEnum;
 import org.jlab.rec.eb.EBScalers;
 import org.jlab.rec.eb.EBRadioFrequency;
+import org.jlab.rec.rich.RICHEBEngine;
 
 /**
  *
@@ -26,6 +27,8 @@ public class EBEngine extends ReconstructionEngine {
 
     boolean usePOCA = false;
 
+    RICHEBEngine rich;
+    
     // output banks:
     String eventBank        = null;
     String eventBankFT      = null;
@@ -43,6 +46,7 @@ public class EBEngine extends ReconstructionEngine {
     String ftBank           = null;
     String trajectoryBank   = null;
     String covMatrixBank    = null;
+    public String hypothesisBank   = null;
     
     // inputs banks:
     String trackType        = null;
@@ -52,15 +56,53 @@ public class EBEngine extends ReconstructionEngine {
     String covMatrixType    = null;
     String cvtTrackType     = null;
     String cvtTrajType      = null;
+    public String richParticleType = null;
     
     public EBEngine(String name){
         super(name,"gavalian","1.0");
         initBankNames();
     }
 
-    public void initBankNames() {
-        //Initialize bank names
+    @Override
+    public boolean init() {
+
+        this.registerOutputBank(eventBank);
+        this.registerOutputBank(particleBank);
+        this.registerOutputBank(eventBankFT);
+        this.registerOutputBank(particleBankFT);
+        this.registerOutputBank(calorimeterBank);
+        this.registerOutputBank(caloextrasBank);
+        this.registerOutputBank(scintillatorBank);
+        this.registerOutputBank(scintextrasBank);
+        this.registerOutputBank(cherenkovBank);
+        this.registerOutputBank(trackBank);
+        this.registerOutputBank(utrackBank);
+        this.registerOutputBank(ftrackBank);
+        this.registerOutputBank(crossBank);
+        this.registerOutputBank(ftBank);
+        this.registerOutputBank(trajectoryBank);
+        this.registerOutputBank(covMatrixBank);
+        this.registerOutputBank(hypothesisBank);
+
+	    if (this.getEngineConfigString("outputBankPrefix")!=null) {
+	        this.setOutputBankPrefix(this.getEngineConfigString("outputBankPrefix"));
+        }
+
+        requireConstants(EBCCDBConstants.getAllTableNames());
+
+        this.getConstantsManager().setVariation("default");
+
+        if (this.getEngineConfigString("eb-rich") != null) {
+            rich = new RICHEBEngine();
+            rich.init();
+        }
+        return true;
     }
+
+    @Override
+    public void detectorChanged(int run) {}
+    
+    public void initBankNames() {}
 
     public void setUsePOCA(boolean val) {
         this.usePOCA=val;
@@ -91,6 +133,7 @@ public class EBEngine extends ReconstructionEngine {
             this.setParticleBankFT(prefix+"FT::Particle");
             this.setCovMatrixBank(prefix+"::CovMat");
         }
+        hypothesisBank = prefix+"::Hypothesis";
     }
 
     public boolean processDataEventUser(DataEvent de,EBScalers ebs) {
@@ -236,6 +279,14 @@ public class EBEngine extends ReconstructionEngine {
                 }
             }
       
+            if (rich != null) {
+                rich.processDataEvent(de);
+                de.removeBank("REC::Particle");
+                DetectorData.richifyParticles(eb.getEvent().getParticles(), de, richParticleType);
+                de.appendBank(DetectorData.getHypothesesBank(eb.getEvent().getParticles(), de, "REC::Hypotheses"));
+                de.appendBanks(DetectorData.getDetectorParticleBank(eb.getEvent().getParticles(), de, particleBank));
+            }
+
             // update PID for FT-based start time:
             // WARNING:  this modified particles
             analyzer.processEventFT(eb.getEvent());
@@ -245,11 +296,15 @@ public class EBEngine extends ReconstructionEngine {
                 if (particleBankFT!=null) {
                     DataBank bankPFT = DetectorData.getDetectorParticleShadowBank(eb.getEvent().getParticles(), de, particleBankFT);
                     de.appendBanks(bankPFT);
+                    if (rich != null) {
+                        DetectorData.richifyParticles(eb.getEvent().getParticles(), de, particleBank);
+                        de.appendBank(DetectorData.getHypothesesBank(eb.getEvent().getParticles(), de, hypothesisBank));
+                    }
                 }
             }
           
         }
-
+        
         return true;
     }
 
@@ -344,39 +399,5 @@ public class EBEngine extends ReconstructionEngine {
     public void setCvtTrajType(String name) {
         this.cvtTrajType = name;
     }
-    
-    @Override
-    public boolean init() {
-
-        this.registerOutputBank(eventBank);
-        this.registerOutputBank(particleBank);
-        this.registerOutputBank(eventBankFT);
-        this.registerOutputBank(particleBankFT);
-        this.registerOutputBank(calorimeterBank);
-        this.registerOutputBank(caloextrasBank);
-        this.registerOutputBank(scintillatorBank);
-        this.registerOutputBank(scintextrasBank);
-        this.registerOutputBank(cherenkovBank);
-        this.registerOutputBank(trackBank);
-        this.registerOutputBank(utrackBank);
-        this.registerOutputBank(ftrackBank);
-        this.registerOutputBank(crossBank);
-        this.registerOutputBank(ftBank);
-        this.registerOutputBank(trajectoryBank);
-        this.registerOutputBank(covMatrixBank);
-
-	    if (this.getEngineConfigString("outputBankPrefix")!=null) {
-	        this.setOutputBankPrefix(this.getEngineConfigString("outputBankPrefix"));
-        }
-
-        requireConstants(EBCCDBConstants.getAllTableNames());
-
-        this.getConstantsManager().setVariation("default");
-
-        return true;
-    }
-
-    @Override
-    public void detectorChanged(int runNumber) {}
     
 }

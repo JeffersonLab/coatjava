@@ -8,9 +8,6 @@ public class RICHEdge implements Comparable<RICHEdge>{
         this.sector    = isector;
         this.tile      = ilayer;
         this.channel   = icomponent;
-        this.anode     = 0;
-        this.idx       = 0;
-        this.idy       = 0;
         this.polarity  = iorder;
         this.tdc       = itdc;
     }
@@ -19,9 +16,6 @@ public class RICHEdge implements Comparable<RICHEdge>{
     private int sector;                               //         Sector
     private int tile;                                 //         Front-End TILE ID
     private int channel;                              //         MAROC channel
-    private int anode;                                //         MA-PMT anode
-    private int idx;                                  //         MA-PMT idx
-    private int idy;                                  //         MA-PMT idy
     private int polarity;                             //         Edge polarity
     private int tdc;                                  //         Edge TDC
     private int hit;                                  //         Hit belonging to
@@ -42,12 +36,7 @@ public class RICHEdge implements Comparable<RICHEdge>{
     public void set_hit(int hit) { this.hit = hit; }
     
     public boolean pass_EdgeSelection() {
-        // a selection cut to pass the edge
-        if(this.get_tdc() > 0) {
-            return true;
-        } else {
-            return false;
-        }
+        return this.get_tdc() > 0;
     }
     
     /*
@@ -61,7 +50,6 @@ public class RICHEdge implements Comparable<RICHEdge>{
     }*/
     
     public int compareTo(RICHEdge oedge) {
-        //System.out.println(" --> comp "+this.get_channel()+" "+this.get_tdc()+" "+oedge.get_channel()+" "+oedge.get_tdc());
         if(this.get_tdc() == oedge.get_tdc())return 0;
         if(this.get_tdc() > oedge.get_tdc()){
             return 1;
@@ -69,7 +57,6 @@ public class RICHEdge implements Comparable<RICHEdge>{
             return -1;
         }
     }
-    
     
     public void showEdge() {
         System.out.println(

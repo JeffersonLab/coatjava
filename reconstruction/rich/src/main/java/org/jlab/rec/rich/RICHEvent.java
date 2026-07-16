@@ -18,7 +18,6 @@ public class RICHEvent {
     private int runID;
     private int eventID;
     private float eventTime;
-    private long CPUTime;
     private int  phase;
     
     private ArrayList<RICHCluster>       clusters  = new ArrayList<>();
@@ -44,7 +43,6 @@ public class RICHEvent {
     public void set_RunID(int ID) { runID = ID; }
     public void set_EventID(int ID) { eventID = ID; }
     public void set_EventTime(float time) { eventTime = time; }
-    public void set_CPUTime(long CPUTime) { this.CPUTime = CPUTime; }
     public int getFTOFphase() {return phase;}
     public void add_Hit(RICHHit hit){ hits.add(hit); }
     public void add_Cluster(RICHCluster cluster){ clusters.add(cluster); }
@@ -63,7 +61,6 @@ public class RICHEvent {
     public int get_RunID() {return runID;}
     public int get_EventID() {return eventID;}
     public float get_EventTime() {return eventTime;}
-    public long get_CPUTime() {return CPUTime;}
     public void setFTOFphase(int phase) { this.phase = phase; }
     public RICHCluster get_Cluster(int i){ return  clusters.get(i); }
     public RICHHit get_Hit(int i){ return  hits.get(i); }
@@ -120,13 +117,9 @@ public class RICHEvent {
     
     
     public int count_Signals() {
-        
-        int debugMode = 0;
-        
         int nsig = 0;
         for( RICHHit hit: hits) if(hit.get_signal()>0)nsig++;
         for( RICHCluster clu: clusters) if(clu.get_signal()>0) nsig++;
-        
         return nsig;
     }
     
@@ -389,8 +382,6 @@ public class RICHEvent {
         double ma_dir[]  = {0.0, 0.0, 0.0, 0.0};
         double ma_lat[]  = {0.0, 0.0, 0.0, 0.0};
         double ma_spe[]  = {0.0, 0.0, 0.0, 0.0};
-        
-        double ch_had   = 0.0;
         
         for (int hypo=0; hypo<RICHConstants.N_HYPO; hypo++){
             

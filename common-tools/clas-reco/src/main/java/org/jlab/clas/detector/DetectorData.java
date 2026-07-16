@@ -164,6 +164,55 @@ public class DetectorData {
         return detectorEvent;
     }
 
+    public static final int[] HYPOTHESES = {11,211,321,2212};
+
+    /**
+     * @param particles
+     * @param event
+     * @param bank_name a RICH::Particle bank
+     */
+    public static void richifyParticles(List<DetectorParticle> particles, DataEvent event, String bank_name) {
+        if (event.hasBank(bank_name)) {
+            DataBank rich = event.getBank(bank_name);
+            int nrows = rich.rows();
+            for (int row = 0; row<nrows; row++) {
+                DetectorParticle p = particles.get(rich.getByte("pindex", row));
+                p.setPid(rich.getShort("best_PID", row));
+                p.setChi2(rich.getShort("best_c2", row));
+                p.particleScores[0] = rich.getFloat("el_logl", row);
+                p.particleScores[1] = rich.getFloat("pi_logl", row);
+                p.particleScores[2] = rich.getFloat("k_logl", row);
+                p.particleScores[3] = rich.getFloat("pr_logl", row);
+            }
+        }
+    }
+
+    /**
+     * @param particles
+     * @param event
+     * @param bank_name
+     * @return a REC::Hypothesis bank 
+     */
+    public static DataBank getHypothesesBank(List<DetectorParticle> particles, DataEvent event, String bank_name) {
+        int nrows = 0;
+        final int np = particles.size();
+        for (int i=0; i<np; i++)
+            for (int j=0; j<HYPOTHESES.length; j++)
+                if (particles.get(i).particleScores[j] > 0) nrows += 1;
+        DataBank bank = event.createBank(bank_name, nrows);
+        for (int i=0; i<np; i++) {
+            for (int j=0; j<HYPOTHESES.length; j++) {
+                if (particles.get(i).particleScores[j] > 0) {
+                    int row = j + i*HYPOTHESES.length;
+                    bank.setByte("pindex", row, (byte)i);
+                    bank.setInt("pid", row, HYPOTHESES[j]*particles.get(i).getCharge());
+                    bank.setFloat("logl", row, (float)particles.get(i).particleScores[j]);
+                }
+            }
+        }
+        return bank;
+    }
+
     /**
      * creates a bank with particles information.
      *

@@ -644,5 +644,16 @@
             {"name":"py",       "type":"F", "info":"y component of the momentum (GeV)"},
             {"name":"pz",       "type":"F", "info":"z component of the momentum (GeV)"}
         ]
+    },
+    {
+        "name": "REC::Hypothesis",
+        "group": 300,
+        "item": 50,
+        "info": "Particle identification bank",
+        "entries": [
+            {"name":"pindex","type":"S", "info":"row index in REC::Particle"},
+            {"name":"pid",   "type":"I", "info":"particle id hypothesis in LUND conventions"},
+            {"name":"logl",  "type":"F", "info":"log(Likelihood) for this hypothesis"}
+        ]
     }
 ]

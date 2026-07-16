@@ -1,7 +1,6 @@
 package org.jlab.clas.detector;
 
 import java.util.ArrayList;
-import java.util.List;
 import org.jlab.detector.base.DetectorType;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
@@ -15,10 +14,6 @@ public class RingCherenkovResponse extends DetectorResponse {
 
     private int cluster = 0;
     private int xtalk   = 0;
-    
-    //public RingCherenkovResponse(){
-    //    super();
-    //}
     
     public RingCherenkovResponse(int sector, int layer, int component){
         this.getDescriptor().setSectorLayerComponent(sector, layer, component);
@@ -34,13 +29,11 @@ public class RingCherenkovResponse extends DetectorResponse {
     public void   set_cluster(int cluster){ this.cluster = cluster;}
     public void   set_xtalk(int xtalk){ this.xtalk = xtalk;}
     
-    // ----------------
     public static ArrayList<DetectorResponse>  readHipoEvent(DataEvent event, 
             String bankName, DetectorType type, int signal_type){        
-    // ----------------
 
         int debugMode = 0;
-        ArrayList<DetectorResponse> responseList = new ArrayList<DetectorResponse>();
+        ArrayList<DetectorResponse> responseList = new ArrayList<>();
 
         if(debugMode==1){
             if(signal_type==0)System.out.format(" reading bank %s for single hits \n", bankName);
@@ -72,8 +65,7 @@ public class RingCherenkovResponse extends DetectorResponse {
                     z           = bank.getFloat("z", row);
                     if(debugMode>=1)System.out.format(" ---> read cluster %4d %4d  %8.2f %8.2f ",row,id,energy,time);
                 }
-
-                if(bankName.equals("RICH::Hit")){
+                else if(bankName.equals("RICH::Hit")){
                     id          = bank.getShort("id", row); 
                     int cluster = bank.getShort("cluster", row); 
                     int xtalk   = bank.getShort("xtalk", row);
@@ -88,7 +80,7 @@ public class RingCherenkovResponse extends DetectorResponse {
                     if(debugMode>=1)System.out.format(" ---> read hit %4d %4d (%3d %3d %5d --> %3d) %8.2f %8.2f ",
                         row,id,status,cluster,xtalk,good,energy,time);
                 }
-                if(bankName.equals("RICH::Signal")){
+                else if(bankName.equals("RICH::Signal")){
                     id         = bank.getShort("id", row); 
                     int hindex = bank.getShort("hindex", row); 
                     int size   = bank.getShort("size", row); 
