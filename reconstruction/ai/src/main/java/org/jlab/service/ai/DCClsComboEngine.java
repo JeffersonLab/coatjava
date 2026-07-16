@@ -36,6 +36,9 @@ public class DCClsComboEngine extends ReconstructionEngine {
     
     final static String CONF_THREADS = "threads";
     
+    final static String LIMIT_CLSCOMBOS_PERSECTOR = "limitClsCombosPerSector";
+    int limitClsCombosPerSector = (int)1e6;
+    
     final static String CONF_MODEL_FILE_6CLS = "modelFile6Cls";
     final static String CONF_THRESHOLD_6CLS = "threshold6Cls";  
     String modelFile6Cls = "mlp_64h_4l_6cls.pt";
@@ -51,7 +54,7 @@ public class DCClsComboEngine extends ReconstructionEngine {
     Criteria<float[][], float[]> criteria5Cls;
     ZooModel<float[][], float[]> model5Cls;
     PredictorPool predictors5Cls;    
-    
+            
     final static int SUPERLAYERS = 6;    
     
     public DCClsComboEngine() {
@@ -68,6 +71,9 @@ public class DCClsComboEngine extends ReconstructionEngine {
         System.setProperty("ai.djl.pytorch.graph_optimizer", "false");
         
         int threads = Integer.parseInt(getEngineConfigString(CONF_THREADS,"64"));
+        
+        if (getEngineConfigString(LIMIT_CLSCOMBOS_PERSECTOR) != null)
+            limitClsCombosPerSector = Integer.parseInt(getEngineConfigString(LIMIT_CLSCOMBOS_PERSECTOR));
         
         if (getEngineConfigString(CONF_THRESHOLD_6CLS) != null)
             threshold6Cls = Float.parseFloat(getEngineConfigString(CONF_THRESHOLD_6CLS));
@@ -340,6 +346,9 @@ public class DCClsComboEngine extends ReconstructionEngine {
     */
     public void generate6ClsCombos(Map<Integer, List<DCCluster>> map, int sl, DCCluster[] current, List<DCClusterCombo> comboList) {
 
+        // Limit for combos
+        if (comboList.size() >= limitClsCombosPerSector) return; 
+        
         // Base case: if all superlayers have been processed (sl > 6)
         // then we have a complete 6-cluster combination
         if (sl > SUPERLAYERS) {
@@ -368,7 +377,7 @@ public class DCClsComboEngine extends ReconstructionEngine {
      */
     public void generate5ClsCombos(Map<Integer, List<DCCluster>> mapSL,
                                    List<DCClusterCombo> outputList) {
-
+        
         // Iterate over all possible missing superlayers (1 to 6)
         for (int missingSL = 1; missingSL <= SUPERLAYERS; missingSL++) {
 
@@ -404,6 +413,9 @@ public class DCClsComboEngine extends ReconstructionEngine {
                                        DCCluster[] current,
                                        int idx,
                                        List<DCClusterCombo> outputList) {
+        
+        // Limit for combos
+        if (outputList.size() >= limitClsCombosPerSector) return; 
 
         // Base case: all superlayers processed
         if (sl > SUPERLAYERS) {
