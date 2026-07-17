@@ -37,7 +37,7 @@ public class DCClsComboEngine extends ReconstructionEngine {
     final static String CONF_THREADS = "threads";
     
     final static String LIMIT_CLSCOMBOS_PERSECTOR = "limitClsCombosPerSector";
-    int limitClsCombosPerSector = (int)1e6;
+    int limitClsCombosPerSector = (int)1e5;
     
     final static String CONF_MODEL_FILE_6CLS = "modelFile6Cls";
     final static String CONF_THRESHOLD_6CLS = "threshold6Cls";  
