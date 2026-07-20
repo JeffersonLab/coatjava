@@ -289,8 +289,8 @@ public class Hit implements Comparable<Hit> {
     }
     
 
-    public void setAssociatedTrackID(int associatedSeedID) {
-        AssociatedTrackID = associatedSeedID;
+    public void setAssociatedTrackID(int associatedTrackID) {
+        AssociatedTrackID = associatedTrackID;
     }
 
     public int getAssociatedSeedID() {
@@ -299,7 +299,7 @@ public class Hit implements Comparable<Hit> {
     
 
     public void setAssociatedSeedID(int associatedSeedID) {
-        AssociatedSeedID = associatedSeedID;
+        this.AssociatedSeedID = associatedSeedID;
     }
 
     
