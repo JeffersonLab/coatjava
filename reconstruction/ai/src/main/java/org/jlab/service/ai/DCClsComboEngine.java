@@ -57,6 +57,10 @@ public class DCClsComboEngine extends ReconstructionEngine {
             
     final static int SUPERLAYERS = 6;    
     
+    private static final Logger LOGGER = Logger.getLogger(DCClsComboEngine.class.getName());
+    private boolean warned6ClsLimit = false;
+    private boolean warned5ClsLimit = false;
+    
     public DCClsComboEngine() {
         super("DCClsComboEngine","tongtong","1.0");
     }
@@ -94,7 +98,7 @@ public class DCClsComboEngine extends ReconstructionEngine {
             model6Cls = criteria6Cls.loadModel();
             predictors6Cls = new PredictorPool(threads, model6Cls);
         } catch (NullPointerException | MalformedModelException | IOException | ModelNotFoundException ex) {
-            Logger.getLogger(DCClsComboEngine.class.getName()).log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, null, ex);
             return false;
         }
         
@@ -117,7 +121,7 @@ public class DCClsComboEngine extends ReconstructionEngine {
             model5Cls = criteria5Cls.loadModel();
             predictors5Cls = new PredictorPool(threads, model5Cls);
         } catch (NullPointerException | MalformedModelException | IOException | ModelNotFoundException ex) {
-            Logger.getLogger(DCClsComboEngine.class.getName()).log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, null, ex);
             return false;
         }  
         
@@ -147,8 +151,9 @@ public class DCClsComboEngine extends ReconstructionEngine {
             allClusterList.add(cls);
             map.computeIfAbsent(sector, s -> new HashMap<>()).computeIfAbsent(superlayer, sl -> new ArrayList<>()).add(cls);
         }
-        
+                        
         // Make 6-cluster combos
+        warned6ClsLimit = false;
         List<DCClusterCombo> all6ClsCombos = new ArrayList();
         for(Map<Integer, List<DCCluster>> map_sl_clsList : map.values()){
             if(map_sl_clsList.size() == 6){
@@ -230,10 +235,12 @@ public class DCClsComboEngine extends ReconstructionEngine {
         }
         
         // Make 5-cluster combos
+        warned5ClsLimit = false;
         List<DCClusterCombo> all5ClsCombos = new ArrayList<>();
         for (Map<Integer, List<DCCluster>> map_sl_clsList : map.values()) {
             if(map_sl_clsList.size() >= 5){
                 Map<Integer, List<DCCluster>> orderedMap = new TreeMap<>(map_sl_clsList); // Sorts entries by superlayer in ascending order
+                
                 List<DCClusterCombo> combos = new ArrayList<>();
                 generate5ClsCombos(orderedMap, combos);
                 all5ClsCombos.addAll(combos);
@@ -346,8 +353,18 @@ public class DCClsComboEngine extends ReconstructionEngine {
     */
     public void generate6ClsCombos(Map<Integer, List<DCCluster>> map, int sl, DCCluster[] current, List<DCClusterCombo> comboList) {
 
-        // Limit for combos
-        if (comboList.size() >= limitClsCombosPerSector) return; 
+        // Limit for combos        
+        if (comboList.size() >= limitClsCombosPerSector) {
+            if (!warned6ClsLimit) {                
+                LOGGER.log(Level.FINE, String.format(
+                    "6-cluster combo generation reached limit: %d combos per sector. "
+                    + "Further combinations are discarded.",
+                    limitClsCombosPerSector
+                ));
+                warned6ClsLimit = true;
+            }
+            return;
+        }
         
         // Base case: if all superlayers have been processed (sl > 6)
         // then we have a complete 6-cluster combination
@@ -415,7 +432,17 @@ public class DCClsComboEngine extends ReconstructionEngine {
                                        List<DCClusterCombo> outputList) {
         
         // Limit for combos
-        if (outputList.size() >= limitClsCombosPerSector) return; 
+        if (outputList.size() >= limitClsCombosPerSector) {
+            if (!warned5ClsLimit) {
+                LOGGER.log(Level.FINE, String.format(
+                    "5-cluster combo generation reached limit: %d combos per sector. "
+                    + "Further combinations are discarded.",
+                    limitClsCombosPerSector
+                ));
+                warned5ClsLimit = true;
+            }
+            return;
+        }
 
         // Base case: all superlayers processed
         if (sl > SUPERLAYERS) {
