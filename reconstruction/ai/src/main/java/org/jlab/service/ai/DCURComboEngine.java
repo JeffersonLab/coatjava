@@ -69,6 +69,16 @@ public class DCURComboEngine extends ReconstructionEngine {
     private static final float URCROSSPAIRYCUT = 0.65f;
     private static final float URCROSSPAIRTIMECUT = 28.0f;
     
+    private static final Logger LOGGER = Logger.getLogger(DCClsComboEngine.class.getName());
+    private boolean warnedDCClsComboLimit = false;
+    private boolean warnedDCURComboLimit = false;
+    
+    final static String LIMIT_DCCLSCOMBOS_PERSECTOR = "limitDCClsCombosPerSector";
+    int limitDCClsCombosPerSector = (int)1e5;
+    final static String LIMIT_DCURCOMBOS_PERSECTOR = "limitDCURCombosPerSector";
+    int limitDCURCombosPerSector = (int)2e5;
+    
+    
     public DCURComboEngine() {
         super("DCURComboEngine","tongtong","1.0");
     }
@@ -83,6 +93,12 @@ public class DCURComboEngine extends ReconstructionEngine {
         System.setProperty("ai.djl.pytorch.graph_optimizer", "false");
         
         int threads = Integer.parseInt(getEngineConfigString(CONF_THREADS,"64"));
+        
+        if (getEngineConfigString(LIMIT_DCCLSCOMBOS_PERSECTOR) != null)
+            limitDCClsCombosPerSector = Integer.parseInt(getEngineConfigString(LIMIT_DCCLSCOMBOS_PERSECTOR));
+        
+        if (getEngineConfigString(LIMIT_DCURCOMBOS_PERSECTOR) != null)
+            limitDCURCombosPerSector = Integer.parseInt(getEngineConfigString(LIMIT_DCURCOMBOS_PERSECTOR));        
         
         for(int i = 0; i < 8; i++){
             if (getEngineConfigString(CONF_THRESHOLDS[i]) != null)
@@ -104,7 +120,7 @@ public class DCURComboEngine extends ReconstructionEngine {
                 ZooModel<float[][], float[]> model= criteria.loadModel();
                 predictors[i] = new PredictorPool(threads, model);
             } catch (NullPointerException | MalformedModelException | IOException | ModelNotFoundException ex) {
-                Logger.getLogger(DCURComboEngine.class.getName()).log(Level.SEVERE, null, ex);
+                LOGGER.log(Level.SEVERE, null, ex);
                 return false;
             }
         }                
@@ -156,6 +172,8 @@ public class DCURComboEngine extends ReconstructionEngine {
         }   
         
         // Predict combos for 8 categories in order
+        warnedDCClsComboLimit = false;
+        warnedDCURComboLimit = false;
         List<DCURCombo> allFinalDCURComboList = new ArrayList<>();        
         for(int i = 0; i < 8; i++){
             List<DCURCombo> finalComboList = predictFinalDCURComboList(nDCClses[i], nURCrses[i], allDCClusterList, allURCrossList, predictors[i], thresholds[i]);
@@ -371,6 +389,19 @@ public class DCURComboEngine extends ReconstructionEngine {
     public void generateDCURCombos(List<DCClusterCombo> dcClsCombos, List<List<URCross>> urCrsCombos, List<DCURCombo> dcURCombos){
         for(DCClusterCombo dcClsCombo : dcClsCombos){
             for(List<URCross> crsList : urCrsCombos){                
+                // Limit for combos                        
+                if (dcURCombos.size() >= limitDCURCombosPerSector) {
+                    if (!warnedDCURComboLimit) {                
+                        LOGGER.log(Level.FINE, String.format(
+                            "DC-uRWell combo generation reached limit: %d combos per sector. "
+                            + "Further combinations are discarded.",
+                            limitDCURCombosPerSector
+                        ));
+                        warnedDCURComboLimit = true;
+                    }
+                    return;
+                }
+                
                 DCURCombo dcURCombo = new DCURCombo(dcClsCombo, dcClsCombo.getMissingSL(),dcClsCombo.getMissingSL1(), dcClsCombo.getMissingSL2(), crsList);
                 dcURCombos.add(dcURCombo);
             }
@@ -404,8 +435,20 @@ public class DCURComboEngine extends ReconstructionEngine {
     * @param current    an array storing the current combination of clusters being built
     * @param comboList  the list to store all generated DCClusterCombo objects
     */
-    public void generate6ClsCombos(Map<Integer, List<DCCluster>> map, int sl, DCCluster[] current, List<DCClusterCombo> comboList) {
-
+    public void generate6ClsCombos(Map<Integer, List<DCCluster>> map, int sl, DCCluster[] current, List<DCClusterCombo> comboList) {        
+        // Limit for combos          
+        if (comboList.size() >= limitDCClsCombosPerSector) {
+            if (!warnedDCClsComboLimit) {                
+                LOGGER.log(Level.FINE, String.format(
+                    "DC cluster combo generation reached limit: %d combos per sector. "
+                    + "Further combinations are discarded.",
+                    limitDCClsCombosPerSector
+                ));
+                warnedDCClsComboLimit = true;
+            }
+            return;
+        }
+        
         // Base case: if all superlayers have been processed (sl > 6)
         // then we have a complete 6-cluster combination
         if (sl > SUPERLAYERS) {
@@ -470,6 +513,18 @@ public class DCURComboEngine extends ReconstructionEngine {
                                        DCCluster[] current,
                                        int idx,
                                        List<DCClusterCombo> outputList) {
+        // Limit for combos 
+        if (outputList.size() >= limitDCClsCombosPerSector) {
+            if (!warnedDCClsComboLimit) {                
+                LOGGER.log(Level.FINE, String.format(
+                    "DC cluster combo generation reached limit: %d combos per sector. "
+                    + "Further combinations are discarded.",
+                    limitDCClsCombosPerSector
+                ));
+                warnedDCClsComboLimit = true;
+            }
+            return;
+        }
 
         // Base case: all superlayers processed
         if (sl > SUPERLAYERS) {
@@ -543,6 +598,18 @@ public class DCURComboEngine extends ReconstructionEngine {
                                        DCCluster[] current,
                                        int idx,
                                        List<DCClusterCombo> outputList) {
+        // Limit for combos 
+        if (outputList.size() >= limitDCClsCombosPerSector) {
+            if (!warnedDCClsComboLimit) {                
+                LOGGER.log(Level.FINE, String.format(
+                    "DC cluster combo generation reached limit: %d combos per sector. "
+                    + "Further combinations are discarded.",
+                    limitDCClsCombosPerSector
+                ));
+                warnedDCClsComboLimit = true;
+            }
+            return;
+        }
 
         // Base case: all superlayers processed
         if (sl > SUPERLAYERS) {
