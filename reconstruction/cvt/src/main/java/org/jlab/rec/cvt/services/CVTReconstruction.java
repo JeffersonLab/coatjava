@@ -28,6 +28,8 @@ public class CVTReconstruction {
     private List<ArrayList<Cluster>> CVTclusters = new ArrayList<>();
     private List<ArrayList<Cross>>   CVTcrosses  = new ArrayList<>();
 
+    public  boolean filterHits = false;
+
     private Swim swimmer;
 
     public CVTReconstruction() {
@@ -78,11 +80,11 @@ public class CVTReconstruction {
             }
         }
         setTotalNbTruHits(totmctru);
-        
-        if(filterHits) {
+
         //filter hits
-            List<ArrayList<Hit>>         hits = new ArrayList<>();
-            for(int b =0; b<2; b++) {
+        if(filterHits) {
+            List<ArrayList<Hit>> hits = new ArrayList<>();
+            for(int b=0; b<2; b++) {
                 hits.add(new ArrayList<>()); 
                 for(Hit h : CVThits.get(b)) {
                     if(h.MCstatus!=0) {
@@ -90,14 +92,15 @@ public class CVTReconstruction {
                     }
                 }
             }
-            for(int b =0; b<2; b++) {
+            for(int b=0; b<2; b++) {
                 CVThits.set(b, hits.get(b));
             }
         }
-        
+
         return CVThits;
     }
-    public boolean filterHits=false;
+
+
     public List<ArrayList<Cluster>> findClusters() {
         
         List<Cluster> clusters = new ArrayList<>();
