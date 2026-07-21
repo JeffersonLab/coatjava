@@ -95,7 +95,8 @@
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
     </dependency>
-    <!-- FIXME(CD): should we move javafx-dependent code to a separate Maven module? -->
+    <!-- FIXME(CD): only the new code in `src/main/java/org/jlab/rec/cvt/ml` needs the 4 following dependencies;
+         should we move this `ml` directory to a new module? -->
     <dependency>
       <groupId>org.openjfx</groupId>
       <artifactId>javafx-base</artifactId>
@@ -112,7 +113,7 @@
       <classifier>linux</classifier>
     </dependency>
     <dependency>
-      <groupId>org.jlab.jnp</groupId> <!-- FIXME(CD): who needs this? -->
+      <groupId>org.jlab.jnp</groupId>
       <artifactId>jnp-hipo4</artifactId>
     </dependency>
   </dependencies>
