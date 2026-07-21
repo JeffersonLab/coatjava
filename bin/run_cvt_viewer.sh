@@ -28,6 +28,6 @@ if [ ! -f "$INPUT_ABS" ]; then
 fi
 
 mvn -f "$POM_FILE" -q exec:java \
-  -Dexec.mainClass="org.jlab.rec.cvt.ml.qcddat.Browser" \
+  -Dexec.mainClass="org.jlab.qcddat.CVTBrowser" \
   -Dexec.args="$INPUT_ABS"
 
