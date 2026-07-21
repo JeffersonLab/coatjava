@@ -95,27 +95,9 @@
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
     </dependency>
-    <!-- FIXME(CD): only the new code in `src/main/java/org/jlab/rec/cvt/ml` needs this dependency;
-         should we move this `ml/qcddat` directory to a new module? -->
     <dependency>
       <groupId>org.jlab.jnp</groupId>
       <artifactId>jnp-hipo4</artifactId>
-    </dependency>
-    <!-- FIXME(CD): within this `ml/` directory, the `qcddat` subdirectory additionally needs these `javafx` dependencies -->
-    <dependency>
-      <groupId>org.openjfx</groupId>
-      <artifactId>javafx-base</artifactId>
-      <classifier>linux</classifier>
-    </dependency>
-    <dependency>
-      <groupId>org.openjfx</groupId>
-      <artifactId>javafx-graphics</artifactId>
-      <classifier>linux</classifier>
-    </dependency>
-    <dependency>
-      <groupId>org.openjfx</groupId>
-      <artifactId>javafx-controls</artifactId>
-      <classifier>linux</classifier>
     </dependency>
   </dependencies>
 

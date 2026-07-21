@@ -1,4 +1,4 @@
-package org.jlab.rec.cvt.ml.qcddat;
+package org.jlab.qcddat;
 
 import javafx.application.Application;
 import javafx.geometry.Insets;
@@ -30,7 +30,7 @@ import java.util.List;
  * @author veronique
  */
 
-public class Viewer extends Application {
+public class CVTViewer extends Application {
 
     // ---------- config ----------
     private static String inputFile;
@@ -43,7 +43,7 @@ public class Viewer extends Application {
 
     public static void main(String[] args) {
         if (args.length < 1) {
-            System.err.println("Usage: java org.jlab.rec.cvt.ml.qcddat.Viewer <input.hipo>");
+            System.err.println("Usage: java org.jlab.qcddat.CVTViewer <input.hipo>");
             System.exit(1);
         }
         configure(args[0]);
@@ -125,7 +125,7 @@ public class Viewer extends Application {
     @Override
     public void start(Stage stage) {
         if (inputFile == null || bankName == null) {
-            throw new IllegalStateException("Viewer.configure(inputFile) must be called before launch.");
+            throw new IllegalStateException("CVTViewer.configure(inputFile) must be called before launch.");
         }
 
         initializeFile(inputFile);
