@@ -1,6 +1,5 @@
-package org.jlab.rec.cvt.ml.qcddat;
+package org.jlab.rec.cvt.ml;
 
-import org.jlab.rec.cvt.ml.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -27,15 +26,15 @@ import org.jlab.rec.cvt.banks.HitReader;
  * @author ziegler
  *
  */
-public class SampleMaker extends ReconstructionEngine {
+public class QCDDATSampleMaker extends ReconstructionEngine {
 
     private String svtHitBank;
     
-    public SampleMaker(String name) {
+    public QCDDATSampleMaker(String name) {
         super(name, "ziegler", "6.0");
     }
 
-    public SampleMaker() {
+    public QCDDATSampleMaker() {
         super("CVTQCDDATEngine", "ziegler", "6.0");
     }
 

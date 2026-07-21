@@ -1,15 +1,11 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
-package org.jlab.rec.cvt.ml.qcddat;
+package org.jlab.qcddat;
 
 import javafx.application.Application;
 /**
  *
  * @author veronique
  */
-public class Browser {
+public class CVTBrowser {
 
     public static void main(String[] args) {
         if (args.length < 1) {
@@ -20,7 +16,7 @@ public class Browser {
 
         String inputFile = args[0];
 
-        Viewer.configure(inputFile);
-        Application.launch(Viewer.class);
+        CVTViewer.configure(inputFile);
+        Application.launch(CVTViewer.class);
     }
 }
