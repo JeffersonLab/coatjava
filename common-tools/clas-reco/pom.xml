@@ -21,12 +21,6 @@
     </dependency>
 
     <dependency>
-      <groupId>org.openjfx</groupId>
-      <artifactId>javafx-base</artifactId>
-      <classifier>linux</classifier>
-    </dependency>
-
-    <dependency>
       <groupId>org.jlab.coda</groupId>
       <artifactId>jclara</artifactId>
     </dependency>
