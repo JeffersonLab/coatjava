@@ -1282,7 +1282,9 @@ public class GraphicsUtilities {
 	 * Draw a styled line
 	 * 
 	 * @param g     the graphics context
-	 * @param style the style
+	 * @param lineColor
+	 * @param lineWidth
+	 * @param lineStyle
 	 * @param x1    starting x
 	 * @param y1    starting y
 	 * @param x2    ending x
@@ -1384,10 +1386,7 @@ public class GraphicsUtilities {
 
 	/**
 	 * Initialize the look and feel.
-	 * 
-	 * @param desiredLnf the desired look and feel.
 	 */
-
 	public static void initializeLookAndFeel() {
 
 		LookAndFeelInfo[] lnfinfo = UIManager.getInstalledLookAndFeels();

@@ -290,8 +290,6 @@ public final class Swimmer {
 	 *                             maxPathLength if reached first)
 	 * @param accuracy             the accuracy of the fixed rho termination, in
 	 *                             meters
-	 * @param stopper              an optional object that can terminate the
-	 *                             swimming based on some condition
 	 * @param sMax                 in meters. This determines the max number of
 	 *                             steps based on the step size. If a stopper is
 	 *                             used, the integration might terminate before all
@@ -524,8 +522,6 @@ public final class Swimmer {
 	 *                             maxPathLength if reached first)
 	 * @param accuracy             the accuracy of the fixed rho termination, in
 	 *                             meters
-	 * @param stopper              an optional object that can terminate the
-	 *                             swimming based on some condition
 	 * @param sMax                 in meters. This determines the max number of
 	 *                             steps based on the step size. If a stopper is
 	 *                             used, the integration might terminate before all
@@ -971,9 +967,6 @@ public final class Swimmer {
 	 *            if reached first)
 	 * @param accuracy
 	 *            the accuracy of the fixed z termination, in meters
-	 * @param stopper
-	 *            an optional object that can terminate the swimming based on
-	 *            some condition
 	 * @param maxPathLength
 	 *            in meters. This determines the max number of steps based on
 	 *            the step size. If a stopper is used, the integration might

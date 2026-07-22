@@ -524,8 +524,12 @@ public class ALERTEngine extends ReconstructionEngine {
         if (!event.hasBank("AHDC::track")) {return false;}
         if (!event.hasBank("AHDC::hits")) {return false;}
 
-        /// tmp: misalignement with respect to the center of the AHDC (mm)
-        double clas_alignement = +75;
+        /// vz shift with respect to the center of the CLAS (mm)
+        double torus = runBank.getFloat("torus", 0);
+        // inbending  --> torus -1 --> 10.6 GeV run
+        // outbending --> torus +1 --> 2.24 GeV run
+        double vz_shift = (torus > 0) ? -67 : -36 ;
+        // atof vz shift with respect to the AHDC
         double atof_alignement = 0;
 
         /// Read the electron vertex
@@ -538,17 +542,21 @@ public class ALERTEngine extends ReconstructionEngine {
                 if (recBank.getInt("pid", row) == 11) {
                     vz_electron = 10*recBank.getFloat("vz",row); // conversion in mm
                     IsVertexDefined = true;
-                    
 
-                    //double px = recBank.getFloat("px",row);
-                    //double py = recBank.getFloat("py",row);
-                    //double pz = recBank.getFloat("pz",row);
-                    //double p = Math.sqrt(px*px+py*py+pz*pz);
-                    //double theta = Math.acos(pz/p);
-                    
-                    // set the resolutions on r and z! to be done
-                    vz_error2[0] = 0.09; // should depend on p and theta
-                    vz_error2[2] = 64; // should depend on p and theta
+                    int status = recBank.getShort("status", row);
+
+                    // If the electron is not from the FT, we can assign a finite resolution
+                    if (Math.abs(status) / 1000 != 1) {
+                        //double px = recBank.getFloat("px",row);
+                        //double py = recBank.getFloat("py",row);
+                        //double pz = recBank.getFloat("pz",row);
+                        //double p = Math.sqrt(px*px+py*py+pz*pz);
+                        //double theta = Math.acos(pz/p);
+                        
+                        // set the resolutions on r and z! to be done
+                        vz_error2[0] = 0.09; // should depend on p and theta
+                        vz_error2[2] = 64; // should depend on p and theta
+                    }
 
                     break; // only look at the first electron
                 }
@@ -605,7 +613,7 @@ public class ALERTEngine extends ReconstructionEngine {
 
         /// Associate the electron vertex (the beamline hit) to each track
         boolean IsMC = event.hasBank("MC::Particle");
-        double vz_constraint = vz_electron + (IsMC ? 0 : clas_alignement); // we don't have the misalignment in simulation
+        double vz_constraint = vz_electron - (IsMC ? 0 : vz_shift); // we don't have the misalignment in simulation, to be checked again !
         for (Track track : AHDC_tracks) {
             RadialKFHit hit_beam = new RadialKFHit(0, 0, vz_constraint);
             RealMatrix measurementNoise = new Array2DRowRealMatrix(
@@ -630,7 +638,7 @@ public class ALERTEngine extends ReconstructionEngine {
                         double x = bank_ATOFHits.getFloat("x", row);
                         double y = bank_ATOFHits.getFloat("y", row);
                         double z = bank_ATOFHits.getFloat("z", row);
-                        z += atof_alignement; // there is a shift between AHDC and ATOF (still don't know why) !
+                        z += atof_alignement;
                         RadialKFHit hit = new RadialKFHit(x, y, z);
                             // error on r
                         double wedge_width = 20; //mm
@@ -696,7 +704,7 @@ public class ALERTEngine extends ReconstructionEngine {
                             double x = bank_ATOFHits.getFloat("x", row);
                             double y = bank_ATOFHits.getFloat("y", row);
                             double z = bank_ATOFHits.getFloat("z", row);
-                            z += atof_alignement; // there is a shift between AHDC and ATOF (still don't know why) !
+                            z += atof_alignement;
                             RadialKFHit hit = new RadialKFHit(x, y, z);
                                 // error on r
                             double wedge_width = 20; //mm

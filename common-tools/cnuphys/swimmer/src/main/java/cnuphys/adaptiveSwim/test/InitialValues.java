@@ -86,7 +86,7 @@ public class InitialValues {
 
 	/**
 	 * For setting up an array of initial values for testing. In cases where the difference between
-	 * a min val and a max val is < SMALL, the min val is used and the variable is no
+	 * a min val and a max val is {@code < SMALL}, the min val is used and the variable is no
 	 * randomized.
 	 * @param rand and random number generator
 	 * @param num the number to create
@@ -123,7 +123,7 @@ public class InitialValues {
 
 	/**
 	 * For setting up an array of initial values for testing. In cases where the difference between
-	 * a min val and a max val is < SMALL, the min val is used and the variable is no
+	 * a min val and a max val is {@code < SMALL}, the min val is used and the variable is no
 	 * randomized.
 	 * @param rand and random number generator
 	 * @param initVal the object to fill with random values

@@ -33,8 +33,8 @@ public abstract class MPGDTrapezoidStripFactory {
 
     /**
      * Detector-specific hook: Must return the volume object given its
-     * name.Typically implemented by indexing geo.getAllVolumes() into a
-     * Map<String,Geant4Basic>.
+     * name.Typically implemented by indexing {@code geo.getAllVolumes()} into a
+     * {@code Map<String,Geant4Basic>}.
      *
      * @param name
      * @return

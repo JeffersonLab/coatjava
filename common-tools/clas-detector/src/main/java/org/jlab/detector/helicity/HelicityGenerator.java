@@ -145,11 +145,11 @@ public final class HelicityGenerator implements Comparable<HelicityGenerator>, C
      * Let the user add a state to initialize the sequence.
      * 
      * This just calls {@link #addState(HelicityBit)} with the raw
-     * {@link #HelicityBit} from the given {@link #HelicityState}.
+     * {@link HelicityBit} from the given {@link HelicityState}.
      *
      * This must be the first helicity state in the next pattern.  States
      * must be added serially and without skipped patterns.  Requires
-     * {@link initialized} is false and a defined {@link #HelicityState}.
+     * {@link initialized} is false and a defined {@link HelicityState}.
      * 
      * @param state the HelicityState to add to the sequence.
      */

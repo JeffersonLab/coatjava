@@ -99,9 +99,9 @@ public class Cell3D {
 	/**
 	 * Calculate the field in kG by trilinear interpolation
 	 * 
-	 * @param phi    the phi coordinate in degrees
-	 * @param rho    the rho coordinate in cm
-	 * @param z      the z component in cm
+	 * @param q1
+	 * @param q2
+	 * @param q3
 	 * @param result the field in kG
 	 */
 	public void trilinear(double q1, double q2, double q3, float[] result) {
@@ -135,9 +135,9 @@ public class Cell3D {
 	/**
 	 * Calculate the field in kG
 	 * 
-	 * @param phi    the phi coordinate in degrees
-	 * @param rho    the rho coordinate in cm
-	 * @param z      the z coordinate int cm
+	 * @param q1
+	 * @param q2
+	 * @param q3
 	 * @param result the field in kG
 	 */
 	public void calculate(double q1, double q2, double q3, float[] result) {

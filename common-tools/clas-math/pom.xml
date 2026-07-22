@@ -4,13 +4,13 @@
 
   <groupId>org.jlab.clas</groupId>
   <artifactId>clas-math</artifactId>
-  <version>14.1.1-SNAPSHOT</version>
+  <version>14.1.2-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <parent>
     <groupId>org.jlab.clas</groupId>
     <artifactId>common-tools</artifactId>
-    <version>14.1.1-SNAPSHOT</version>
+    <version>14.1.2-SNAPSHOT</version>
   </parent>
 
   <dependencies>

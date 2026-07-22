@@ -98,6 +98,7 @@ public class SVTVolumeFactory
 	 * Default: false
 	 * @deprecated
 	 */
+        @Deprecated
 	public boolean HALFBOXES = false;
 	
 	

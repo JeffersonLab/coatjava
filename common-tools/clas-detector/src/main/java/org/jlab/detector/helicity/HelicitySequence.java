@@ -297,7 +297,7 @@ public class HelicitySequence {
      * Get whether the pseudo-random generator is initialized.  This must be
      * true before calling the predict methods, because they require a working
      * generator.  The number of valid states required to intialize the generator
-     * is {@link HelicityGenerator.REGISTER_SIZE}.
+     * is {@link HelicityGenerator#REGISTER_SIZE}.
      * 
      * @return whether initialized 
      */

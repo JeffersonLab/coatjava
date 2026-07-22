@@ -466,30 +466,6 @@ public class Util
 	
 	
 	/**
-	 * Recursively multiplies each linear dimension of the given volume and its children by the given scale factor.
-	 * 
-	 * @param aVol volume
-	 * @param aFactor scale factor
-	 * @deprecated
-	 */
-        /*
-	public static void scaleDimensions( Geant4Basic aVol, double aFactor, boolean bRecursive )
-	{
-		aVol.scaleDimensions( aFactor );
-		//aVol.scale( aFactor );
-		
-		if( bRecursive )
-		{
-			List<Geant4Basic> children = aVol.getChildren();
-			for( int i = 0; i < children.size(); i++ )
-			{
-				scaleDimensions( children.get(i), aFactor, true ); // tail recursive
-			}
-		}
-	}
-	*/
-	
-	/**
 	 * Translates the given volume's position by the given shifts. 
 	 * 
 	 * @param aVol volume

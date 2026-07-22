@@ -42,7 +42,7 @@ public class Hit implements Comparable<Hit>, KFHit {
 	 * @param _Super_layer super layer id
 	 * @param _Layer layer id
 	 * @param _Wire wire id 
-	 * @param _Doca distance from the timing information using the time2distance, matches {@link Hit.#time}
+	 * @param _Doca distance from the timing information using the time2distance, matches {@link Hit#time}
 	 * @param _ADC raw ADC
 	 * @param _Time calibrated time
 	 */

@@ -13,6 +13,7 @@ cleanBuild=false
 runSpotBugs=false
 downloadMaps=true
 downloadNets=true
+downloadSqlites=true
 runUnitTests=false
 dataRetrieval=lfs
 installClara=false
@@ -40,6 +41,7 @@ DATA RETRIEVAL OPTIONS
   Additional options
     --nomaps          do not download/overwrite field maps
     --nonets          do not download/overwrite neural networks
+    --nosqlites       do not download/overwrite SQLite files for CCDB/RCDB
     --wipe            remove retrieved data
 
 TESTING OPTIONS
@@ -66,6 +68,7 @@ do
     -n)          runSpotBugs=false  ;;
     --nomaps)    downloadMaps=false ;;
     --nonets)    downloadNets=false ;;
+    --nosqlites) downloadSqlites=false ;;
     --unittests) runUnitTests=true  ;;
     --clean)     cleanBuild=true    ;;
     --depana)
@@ -277,6 +280,19 @@ if $downloadNets; then
     *)
       echo 'WARNING: neural networks not downloaded; run with `--help` for guidance' >&2
       sleep 1
+      ;;
+  esac
+fi
+
+# download neural networks
+if $downloadSqlites; then
+  case $dataRetrieval in
+    lfs)
+      notify_retrieval 'ccdb/rcdb SQLite files' 'lfs'
+      download_lfs etc/data/sqlite
+      ;;
+    *)
+      echo 'WARNING: sqlites not downloaded; run with `--help` for guidance' >&2
       ;;
   esac
 fi

@@ -303,8 +303,8 @@ public final class RICHGeant4Factory extends Geant4Factory {
     }
     /**
      * @author: gangel
-     * @param   layer nr, component nr
-     * Layer can be (Aerogel) 201,202,203,204,  (Planar Mirror) 301, (Spherical Mirror)302
+     * @param   Layer_nr Layer can be (Aerogel) 201,202,203,204,  (Planar Mirror) 301, (Spherical Mirror)302
+     * @param   Component_nr
      * @return: the G4Stl file
      */
     public G4Stl getStlComponent(int Layer_nr , int Component_nr){

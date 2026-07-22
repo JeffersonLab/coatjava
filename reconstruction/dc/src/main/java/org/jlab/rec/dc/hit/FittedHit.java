@@ -1031,7 +1031,7 @@ public class FittedHit extends Hit implements Comparable<Hit> {
 
     /**
      * 
-     * @return a value <=1 resetting beta to 1 for overflows
+     * @return a value {@code <=1} resetting beta to 1 for overflows
      */
     public double get_Beta0to1() {
         double beta = this.get_Beta();

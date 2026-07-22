@@ -17,7 +17,6 @@ public abstract class ANonlinearFit implements IValueGetter {
 	 * Create a Error function Fit
 	 * 
 	 * @param fit       the fit data
-	 * @param tolerance the tolerance
 	 */
 	public ANonlinearFit(Fit fit) throws IllegalArgumentException {
 

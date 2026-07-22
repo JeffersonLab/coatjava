@@ -32,9 +32,9 @@ public interface IField {
 	 * system. The field is returned as a Cartesian vector in kiloGauss.
 	 * 
 	 * @param sector the sector [1..6]
-	 * @param x      the x sector coordinate in cm
-	 * @param y      the y sector coordinate in cm
-	 * @param z      the z sector coordinate in cm
+	 * @param xs     the x sector coordinate in cm
+	 * @param ys     the y sector coordinate in cm
+	 * @param zs     the z sector coordinate in cm
 	 * @param result the result is a float array holding the retrieved field in
 	 *               kiloGauss. The 0,1 and 2 indices correspond to x, y, and z
 	 *               components.

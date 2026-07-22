@@ -353,7 +353,7 @@ public class NoiseReductionParameters {
 	/**
 	 * Set new raw data. The analyzed flag is set to false.
 	 * 
-	 * @param rawData the new raw data to set.
+	 * @param packedData
 	 */
 	public void setPackedData(ExtendedWord[] packedData) {
 		_rawData = packedData;
