@@ -207,6 +207,9 @@ public class DetectorEventDecoder {
     private void fitPulses(DetectorDataDgtz data, IndexedTable cfg) {
         final DetectorDescriptor dd = data.getDescriptor();
         final long hash = IndexedTable.DEFAULT_GENERATOR.hashCode(dd.getCrate(), dd.getSlot(), dd.getChannel());
+        // Guard re-added (was removed in PR #1323): skip channels with no FADC config entry,
+        // otherwise getIntValueByHash returns null and NPEs (e.g. LTCC crate 19 / slot 18 / chan 150).
+        if (!cfg.hasEntryByHash(hash)) return;
         final int nsa = cfg.getIntValueByHash("nsa", hash);
         final int nsb = cfg.getIntValueByHash("nsb", hash);
         final int tet = cfg.getIntValueByHash("tet", hash);
