@@ -27,6 +27,14 @@
       <id>jnp-maven</id>
       <url>https://clasweb.jlab.org/.jhep/maven</url>
     </repository>
+    <!-- `jnp-hipo4` is now built and published from its own repository,
+         https://code.jlab.org/hallb/clas12/hipo-java, rather than being cut from
+         the monolithic `jnp` tree. Project 919's package registry is public, so
+         this needs no credentials. -->
+    <repository>
+      <id>clas12-hipo-java</id>
+      <url>https://code.jlab.org/api/v4/projects/919/packages/maven</url>
+    </repository>
   </repositories>
 
   <profiles>
@@ -168,7 +176,7 @@
       <dependency>
         <groupId>org.jlab.jnp</groupId>
         <artifactId>jnp-hipo4</artifactId>
-        <version>4.3-SNAPSHOT</version> <!-- WARNING: if changed, check the `net.objecthunter:exp4j` version; see `docs/dependency_conflicts.md` -->
+        <version>4.5</version> <!-- from code.jlab.org/hallb/clas12/hipo-java; WARNING: if changed, check the `net.objecthunter:exp4j` version; see `docs/dependency_conflicts.md` -->
       </dependency>
 
       <dependency>
@@ -216,7 +224,7 @@
         - see `docs/dependency_conflicts.md` for more info
       -->
 
-      <!-- resolve conflict between `org.jlab.jnp:jnp-hipo:jar:2.0-SNAPSHOT` and `org.jlab.jnp:jnp-hipo4:jar:4.3-SNAPSHOT`
+      <!-- resolve conflict between `org.jlab.jnp:jnp-hipo:jar:2.0-SNAPSHOT` and `org.jlab.jnp:jnp-hipo4:jar:4.5`
            by choosing the later version of their `net.objecthunter:exp4j` dependency -->
       <dependency>
         <groupId>net.objecthunter</groupId>
