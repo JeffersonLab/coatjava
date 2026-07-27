@@ -60,7 +60,7 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-java@v5.4.0
+      - uses: actions/setup-java@v5.5.0
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.java_distribution }}
@@ -90,7 +90,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-java@v5.4.0
+      - uses: actions/setup-java@v5.5.0
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.java_distribution }}
@@ -136,7 +136,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-java@v5.4.0
+      - uses: actions/setup-java@v5.5.0
         with:
           java-version: ${{ matrix.JAVA_VERSION }}
           distribution: ${{ env.java_distribution }}
@@ -160,7 +160,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - name: Set up JDK
-        uses: actions/setup-java@v5.4.0
+        uses: actions/setup-java@v5.5.0
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.java_distribution }}
@@ -179,7 +179,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - name: Set up JDK
-        uses: actions/setup-java@v5.4.0
+        uses: actions/setup-java@v5.5.0
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.java_distribution }}
@@ -208,7 +208,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - name: Set up JDK
-        uses: actions/setup-java@v5.4.0
+        uses: actions/setup-java@v5.5.0
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.java_distribution }}
@@ -259,7 +259,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - name: Set up JDK
-        uses: actions/setup-java@v5.4.0
+        uses: actions/setup-java@v5.5.0
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.java_distribution }}
@@ -287,7 +287,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - name: Set up JDK
-        uses: actions/setup-java@v5.4.0
+        uses: actions/setup-java@v5.5.0
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.java_distribution }}
@@ -312,7 +312,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - name: Set up JDK
-        uses: actions/setup-java@v5.4.0
+        uses: actions/setup-java@v5.5.0
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.java_distribution }}
@@ -350,7 +350,7 @@ jobs:
           path: pages/jacoco
       ### javadoc
       - name: set up JDK
-        uses: actions/setup-java@v5.4.0
+        uses: actions/setup-java@v5.5.0
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.java_distribution }}
