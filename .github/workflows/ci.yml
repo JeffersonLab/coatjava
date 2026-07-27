@@ -229,7 +229,13 @@ jobs:
         run: |
           ls -lhtr
           ./bin/run-clara -y ./etc/services/rgd-clarode.yml -t 4 -n 500 -c ./clara -o ./tmp ./clas_018779.evio.00001 
+          mv -v tmp/rec_clas_018779.evio.00001 rec.hipo
           ls -lhtr
+      - uses: actions/upload-artifact@v7
+        with:
+          name: test_clara_result
+          retention-days: 1
+          path: rec.hipo
 
   test_coatjava:
     needs: [ build ]
@@ -328,6 +334,30 @@ jobs:
         run: tar xzvf coatjava.tar.gz
       - name: test run-groovy
         run: coatjava/bin/run-groovy validation/advanced-tests/test-run-groovy.groovy
+
+  test_qcddat:
+    needs: test_clara
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Set up JDK
+        uses: actions/setup-java@v5.5.0
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: ${{ env.java_distribution }}
+          cache: maven
+      - uses: actions/download-artifact@v8
+        with:
+          name: test_clara_result
+      - uses: actions/download-artifact@v8
+        with:
+          name: build_ubuntu-latest
+      - name: untar build
+        run: tar xzvf coatjava.tar.gz
+      - name: hipoToNpz
+        run: ./coatjava/bin/hipoToNpz rec.hipo rec.npz RUN::config,REC::Event,REC::Particle
+      - name: hipoToNpz-dump
+        run: ./coatjava/bin/hipoToNpz-dump rec.npz 1
 
   # documentation
   #############################################################################

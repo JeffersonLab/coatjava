@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-Show values for a few events from all banks in an NPZ produced by HipoToNpz.
+Show values for a few events from all banks in an NPZ produced by hipoToNpz.
 
 Usage:
-    python list_npz_banks.py file.npz
-    python list_npz_banks.py file.npz 3
+    python hipoToNpz-dump file.npz
+    python hipoToNpz-dump file.npz 3
 """
 
 from __future__ import annotations
