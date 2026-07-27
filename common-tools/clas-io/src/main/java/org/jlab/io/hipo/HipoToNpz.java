@@ -25,6 +25,8 @@ import java.util.zip.ZipOutputStream;
 
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
+import org.jlab.utils.system.ClasUtilsFile;
+
 /**
  *
  * @author veronique
@@ -98,7 +100,7 @@ public class HipoToNpz {
         }
 
         static CliOptions parse(String[] args) throws Exception {
-            if (args.length < 4) {
+            if (args.length < 2) {
                 printUsageAndExit();
             }
 
@@ -149,7 +151,7 @@ public class HipoToNpz {
             }
 
             if (schemaDir == null) {
-                throw new IllegalArgumentException("--schema-dir is required");
+                schemaDir = new File(ClasUtilsFile.getResourceDir("CLAS12DIR", "etc/bankdefs/hipo4"));
             }
             if (!schemaDir.isDirectory()) {
                 throw new IllegalArgumentException("Schema directory not found: " + schemaDir.getAbsolutePath());
@@ -178,8 +180,20 @@ public class HipoToNpz {
         }
 
         private static void printUsageAndExit() {
-            System.err.println("Usage:");
-            System.err.println("  java org.jlab.io.hipo.HipoToNpz <input.hipo> <output.npz> --schema-dir <json_dir> [bank1,bank2,...|*] [--bank-file banks.txt]");
+            System.err.println("USAGE:");
+            System.err.println("  hipoToNpz <input.hipo> <output.npz> [OPTIONS...] [bank1,bank2,...|*]");
+            System.err.println("");
+            System.err.println("Specify a comma-delimited list of banks, otherwise it will use all banks found in the HIPO file");
+            System.err.println("");
+            System.err.println("OPTIONS:");
+            System.err.println("  --bank-file FILE      a file with one bank name per line, '#' comments allowed;");
+            System.err.println("                        both comma list and `--bank-file` may be used together");
+            System.err.println("  --schema-dir DIR      use a custom schema directory");
+            System.err.println("");
+            System.err.println("EXAMPLES:");
+            System.err.println("*   hipoToNpz input.hipo output.npz");
+            System.err.println("*   hipoToNpz input.hipo output.npz BST::adc,RUN::config");
+            System.err.println("*   hipoToNpz input.hipo output.npz --bank-file banks.txt");
             System.exit(2);
         }
     }
