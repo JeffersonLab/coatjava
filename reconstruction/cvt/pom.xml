@@ -82,8 +82,8 @@
     <dependency>
       <groupId>org.jlab.clas12.detector</groupId>
       <artifactId>clas12detector-ai</artifactId>
-      <version>13.7.1-SNAPSHOT</version>
-    </dependency>     
+      <version>14.1.2-SNAPSHOT</version>
+    </dependency>
     <dependency>
       <groupId>org.jlab.clas12.detector</groupId>
       <artifactId>clas12detector-eb</artifactId>
@@ -103,7 +103,7 @@
     <dependency>
       <groupId>ai.djl</groupId>
       <artifactId>api</artifactId>
-    </dependency>    
+    </dependency>
   </dependencies>
 
 </project>
