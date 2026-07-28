@@ -19,6 +19,35 @@
   </modules>
 
   <repositories>
+    <!-- `jnp-hipo4` is now built and published from its own repository,
+         https://code.jlab.org/hallb/clas12/hipo-java, rather than being cut from
+         the monolithic `jnp` tree. Project 919's package registry is public, so
+         this needs no credentials.
+
+         LISTED FIRST DELIBERATELY, and it has to stay first. Maven queries
+         repositories in declaration order and takes the first one that answers
+         with the coordinate, so whichever is listed first *decides* what
+         `org.jlab.jnp:jnp-hipo4` means. The clasweb repositories below still
+         carry the old fat-jar `jnp-hipo4`; if either ever serves a 4.5, being
+         ahead of this entry would silently shadow the artifact this project
+         means to consume, with no error to notice.
+
+         The cost is that Maven now asks code.jlab.org first for *every*
+         artifact it has to fetch, and everything except `jnp-hipo4` misses.
+         Verified: resolving `org.json:json` walks clas12-hipo-java →
+         clas12maven → jnp-maven → central and is served by central. A miss is
+         *silent* at default verbosity — no 404 in the log, Maven just moves to
+         the next repository — so the symptom is not errors but latency, one
+         extra round trip per artifact, and a stall on every resolution whenever
+         that host is slow or down rather than cleanly 404ing.
+
+         That is accepted: waiting on a request beats resolving a dependency
+         from a source nobody chose. It goes away if JLab ever runs a real
+         repository manager to proxy these. -->
+    <repository>
+      <id>clas12-hipo-java</id>
+      <url>https://code.jlab.org/api/v4/projects/919/packages/maven</url>
+    </repository>
     <repository>
       <id>clas12maven</id>
       <url>https://clasweb.jlab.org/.clas12maven</url>
@@ -26,14 +55,6 @@
     <repository>
       <id>jnp-maven</id>
       <url>https://clasweb.jlab.org/.jhep/maven</url>
-    </repository>
-    <!-- `jnp-hipo4` is now built and published from its own repository,
-         https://code.jlab.org/hallb/clas12/hipo-java, rather than being cut from
-         the monolithic `jnp` tree. Project 919's package registry is public, so
-         this needs no credentials. -->
-    <repository>
-      <id>clas12-hipo-java</id>
-      <url>https://code.jlab.org/api/v4/projects/919/packages/maven</url>
     </repository>
   </repositories>
 
