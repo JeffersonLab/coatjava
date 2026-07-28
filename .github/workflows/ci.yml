@@ -355,10 +355,10 @@ jobs:
           name: build_ubuntu-latest
       - name: untar build
         run: tar xzvf coatjava.tar.gz
-      - name: hipoToNpz
-        run: ./coatjava/bin/hipoToNpz rec.hipo rec.npz RUN::config,REC::Event,REC::Particle
-      - name: hipoToNpz-dump
-        run: ./coatjava/bin/hipoToNpz-dump rec.npz 1
+      - name: hipo2npz
+        run: ./coatjava/bin/hipo2npz rec.hipo rec.npz RUN::config,REC::Event,REC::Particle
+      - name: hipo2npz-dump
+        run: ./coatjava/bin/hipo2npz-dump rec.npz 1
 
   # documentation
   #############################################################################

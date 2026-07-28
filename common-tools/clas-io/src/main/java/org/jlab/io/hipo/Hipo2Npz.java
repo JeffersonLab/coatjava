@@ -47,13 +47,13 @@ import org.jlab.utils.system.ClasUtilsFile;
  *   - if no banks are selected, all JSON files in the folder are parsed
  *
  * Example: after compiling coatjava, cd coatjava, run the script:
- *   ./bin/hipoToNpz input.hipo output.npz --schema-dir /path/to/json
+ *   ./bin/hipo2npz input.hipo output.npz --schema-dir /path/to/json
  *
- *   ./bin/hipoToNpz input.hipo output.npz --schema-dir /path/to/json BST::adc,RUN::config
+ *   ./bin/hipo2npz input.hipo output.npz --schema-dir /path/to/json BST::adc,RUN::config
  *
- *   ./bin/hipoToNpz input.hipo output.npz --schema-dir /path/to/json --bank-file banks.txt
+ *   ./bin/hipo2npz input.hipo output.npz --schema-dir /path/to/json --bank-file banks.txt
  */
-public class HipoToNpz {
+public class Hipo2Npz {
 
     public static void main(String[] args) throws Exception {
         CliOptions options = CliOptions.parse(args);
@@ -181,7 +181,7 @@ public class HipoToNpz {
 
         private static void printUsageAndExit() {
             System.err.println("USAGE:");
-            System.err.println("  hipoToNpz <input.hipo> <output.npz> [OPTIONS...] [bank1,bank2,...|*]");
+            System.err.println("  hipo2npz <input.hipo> <output.npz> [OPTIONS...] [bank1,bank2,...|*]");
             System.err.println("");
             System.err.println("Specify a comma-delimited list of banks, otherwise it will use all banks found in the HIPO file");
             System.err.println("");
@@ -191,9 +191,9 @@ public class HipoToNpz {
             System.err.println("  --schema-dir DIR      use a custom schema directory");
             System.err.println("");
             System.err.println("EXAMPLES:");
-            System.err.println("*   hipoToNpz input.hipo output.npz");
-            System.err.println("*   hipoToNpz input.hipo output.npz BST::adc,RUN::config");
-            System.err.println("*   hipoToNpz input.hipo output.npz --bank-file banks.txt");
+            System.err.println("*   hipo2npz input.hipo output.npz");
+            System.err.println("*   hipo2npz input.hipo output.npz BST::adc,RUN::config");
+            System.err.println("*   hipo2npz input.hipo output.npz --bank-file banks.txt");
             System.exit(2);
         }
     }
