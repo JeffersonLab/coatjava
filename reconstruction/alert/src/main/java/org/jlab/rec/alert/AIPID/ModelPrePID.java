@@ -2,9 +2,7 @@ package org.jlab.rec.alert.AIPID;
 
 import ai.djl.MalformedModelException;
 import ai.djl.inference.Predictor;
-import ai.djl.ndarray.NDArray;
 import ai.djl.ndarray.NDList;
-import ai.djl.ndarray.NDManager;
 import ai.djl.ndarray.types.Shape;
 import ai.djl.repository.zoo.Criteria;
 import ai.djl.repository.zoo.ModelNotFoundException;
@@ -13,92 +11,96 @@ import ai.djl.training.util.ProgressBar;
 import ai.djl.translate.TranslateException;
 import ai.djl.translate.Translator;
 import ai.djl.translate.TranslatorContext;
-
-import org.jlab.utils.CLASResources;
-
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.logging.Logger;
+import org.jlab.utils.CLASResources;
 
 public class ModelPrePID {
-    
-    static final Logger LOGGER = Logger.getLogger(ModelPrePID.class.getName());
-    // Must match training class order
-    private static final int[] CLASS_IDS = new int[]{2212, 45, 46, 47, 49};
 
-    private final ZooModel<float[], float[]> model;
+    private static final Logger LOGGER = Logger.getLogger(ModelPrePID.class.getName());
+    private static final int[] CLASS_IDS = {2212, 45, 46, 49, 47};
+
+    private final ZooModel<float[], float[]> ahdcModel;
+    private final ZooModel<float[], float[]> atofModel;
 
     public ModelPrePID() {
-
-        Translator<float[], float[]> my_translator = new Translator<>() {
-
-            @Override
-            public NDList processInput(TranslatorContext ctx, float[] floats) {
-                NDManager manager = ctx.getNDManager();
-
-                // IMPORTANT: model expects (batch, 23). Provide (1, 23).
-                NDArray x = manager.create(floats, new Shape(1, 23));
-                return new NDList(x);
-            }
-
-            @Override
-            public float[] processOutput(TranslatorContext ctx, NDList ndList) {
-                NDArray logits = ndList.get(0);      // (1,5)
-                NDArray probs = logits.softmax(1);   // (1,5)
-
-                float[] p = probs.toFloatArray();    // length 5 (row-major)
-
-                // argmax
-                int bestIdx = 0;
-                float best = p[0];
-                for (int k = 1; k < 5; k++) {
-                    if (p[k] > best) { best = p[k]; bestIdx = k; }
-                }
-                int prepid = CLASS_IDS[bestIdx];
-
-                // Return: prepid + probabilities in fixed class order
-                return new float[]{
-                    (float) prepid,
-                    p[0], p[1], p[2], p[3], p[4]
-                };
-            }
-        };
-
         System.setProperty("ai.djl.pytorch.num_interop_threads", "1");
         System.setProperty("ai.djl.pytorch.num_threads", "1");
         System.setProperty("ai.djl.pytorch.graph_optimizer", "false");
 
-        String path = CLASResources.getResourcePath("etc/data/nnet/rg-l/model_PrePID/");
+        ahdcModel = loadModel("model_prePID_AHDC", 11);
+        atofModel = loadModel("model_prePID_ATOF", 16);
+    }
 
+    public ZooModel<float[], float[]> getModel() {
+        return ahdcModel;
+    }
+
+    public float[] prediction(float[] features) throws TranslateException {
+        if (features != null && features.length == 16) {
+            return predictionATOF(features);
+        }
+        return predictionAHDC(features);
+    }
+
+    public float[] predictionAHDC(float[] features) throws TranslateException {
+        return predict(ahdcModel, features, 11);
+    }
+
+    public float[] predictionATOF(float[] features) throws TranslateException {
+        return predict(atofModel, features, 16);
+    }
+
+    private static float[] predict(ZooModel<float[], float[]> model, float[] features,
+            int expectedSize) throws TranslateException {
+        if (features == null || features.length != expectedSize) {
+            LOGGER.warning("PrePID input must be float[" + expectedSize + "]");
+            return null;
+        }
+        try (Predictor<float[], float[]> predictor = model.newPredictor()) {
+            return predictor.predict(features);
+        }
+    }
+
+    private static ZooModel<float[], float[]> loadModel(String directory, int inputSize) {
+        String path = CLASResources.getResourcePath("etc/data/nnet/rg-l/" + directory + "/");
         Criteria<float[], float[]> criteria = Criteria.builder()
                 .setTypes(float[].class, float[].class)
                 .optModelPath(Paths.get(path))
                 .optEngine("PyTorch")
-                .optTranslator(my_translator)
+                .optTranslator(translator(inputSize))
                 .optProgress(new ProgressBar())
                 .build();
-
         try {
-            model = criteria.loadModel();
+            return criteria.loadModel();
         } catch (IOException | ModelNotFoundException | MalformedModelException e) {
             throw new RuntimeException(e);
         }
     }
 
-    public ZooModel<float[], float[]> getModel() {
-        return model;
-    }
+    private static Translator<float[], float[]> translator(int inputSize) {
+        return new Translator<>() {
+            @Override
+            public NDList processInput(TranslatorContext ctx, float[] features) {
+                return new NDList(ctx.getNDManager().create(features, new Shape(1, inputSize)));
+            }
 
-    /** Returns float[]{prepid} where prepid in {2212,45,46,47,49}.
-     * @param features23
-     * @return 
-     * @throws ai.djl.translate.TranslateException */
-    public float[] prediction(float[] features23) throws TranslateException {
-        if (features23 == null || features23.length != 23) {
-            LOGGER.warning("PrePID input must be float[23]");
-            return null;
-        }
-        Predictor<float[], float[]> predictor = model.newPredictor();
-        return predictor.predict(features23);
+            @Override
+            public float[] processOutput(TranslatorContext ctx, NDList output) {
+                float[] probabilities = output.get(0).toFloatArray();
+                int bestIndex = 0;
+                for (int i = 1; i < probabilities.length; i++) {
+                    if (probabilities[i] > probabilities[bestIndex]) {
+                        bestIndex = i;
+                    }
+                }
+                return new float[]{
+                    CLASS_IDS[bestIndex],
+                    probabilities[0], probabilities[1], probabilities[2],
+                    probabilities[3], probabilities[4]
+                };
+            }
+        };
     }
 }
