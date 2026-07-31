@@ -163,7 +163,9 @@ public class CVTDenoiseEngine extends ReconstructionEngine {
     public CVTDenoiseEngine() {
         super("CVTDenoiseEngine","Tongtong","1.0");
     }
-    
+
+    @Override
+    public void detectorChanged(int run){}
     
     @Override
     public boolean init() {
@@ -213,7 +215,7 @@ public class CVTDenoiseEngine extends ReconstructionEngine {
     }
     
     @Override
-    public boolean processDataEvent(DataEvent event) {
+    public boolean processDataEventUser(DataEvent event) {
         
         Swim swimmer = new Swim();
         

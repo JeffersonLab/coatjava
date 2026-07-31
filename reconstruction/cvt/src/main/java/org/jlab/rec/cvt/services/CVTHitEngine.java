@@ -234,9 +234,12 @@ public class CVTHitEngine extends ReconstructionEngine {
     public void setBmtzmaxclussize(int bmtzmaxclussize) {
         this.bmtzmaxclussize = bmtzmaxclussize;
     }
-    
+   
     @Override
-    public boolean processDataEvent(DataEvent event) {
+    public void detectorChanged(int run) {}
+
+    @Override
+    public boolean processDataEventUser(DataEvent event) {
         
         Swim swimmer = new Swim();
         
