@@ -2,7 +2,7 @@ package org.jlab.clas.detector.matching;
 
 import java.util.Comparator;
 import java.util.List;
-import javafx.util.Pair;
+import java.util.AbstractMap.SimpleImmutableEntry;
 import org.jlab.clas.detector.DetectorParticle;
 import org.jlab.clas.detector.DetectorResponse;
 import org.jlab.detector.base.DetectorType;
@@ -11,7 +11,7 @@ import org.jlab.detector.base.DetectorType;
  *
  * @author baltzell
  */
-public interface IMatch extends Comparator<Pair<DetectorParticle,DetectorResponse>> {
+public interface IMatch extends Comparator<SimpleImmutableEntry<DetectorParticle,DetectorResponse>> {
     
     public abstract boolean matches(DetectorParticle p, DetectorResponse r);
 
