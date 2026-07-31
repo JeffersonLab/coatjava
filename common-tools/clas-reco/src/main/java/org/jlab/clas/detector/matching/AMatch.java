@@ -1,7 +1,7 @@
 package org.jlab.clas.detector.matching;
 
 import java.util.List;
-import javafx.util.Pair;
+import java.util.AbstractMap.SimpleImmutableEntry;
 import org.jlab.clas.detector.DetectorParticle;
 import org.jlab.clas.detector.DetectorResponse;
 import org.jlab.detector.base.DetectorType;
@@ -123,8 +123,8 @@ public abstract class AMatch implements IMatch {
      * @return 
      */
     @Override
-    public int compare(Pair<DetectorParticle,DetectorResponse> a,
-                       Pair<DetectorParticle,DetectorResponse> b) {
+    public int compare(SimpleImmutableEntry<DetectorParticle,DetectorResponse> a,
+                       SimpleImmutableEntry<DetectorParticle,DetectorResponse> b) {
         if (this.quality(a.getKey(),a.getValue()) <
             this.quality(b.getKey(),b.getValue())) {
             return 1;
@@ -138,9 +138,9 @@ public abstract class AMatch implements IMatch {
     
     /*
     public DetectorResponse findMatch2(DetectorParticle p, List<DetectorResponse> r) {
-        List<Pair<DetectorParticle,DetectorResponse>> l = new ArrayList<>();
+        List<SimpleImmutableEntry<DetectorParticle,DetectorResponse>> l = new ArrayList<>();
         for (DetectorResponse r1 : r) {
-            l.add(new Pair<>(p,r1));
+            l.add(new SimpleImmutableEntry<>(p,r1));
         }
         Collections.sort(l, this);
         return l.get(0).getValue();
