@@ -183,7 +183,7 @@ public class ALERTEngine extends ReconstructionEngine {
                 "AHDC::interclusters", "AHDC::docaclusters", "AHDC::ai:prediction",
                 "AHDC::mc", "AHDC::kftrack",
                 "ALERT::projections", "ALERT::ai:projections", 
-                "ALERT::ai:prePID", "ALERT::ai:postPID");
+                "ALERT::ai:prepid", "ALERT::ai:pid");
 
         return true;
     }
@@ -820,8 +820,9 @@ public class ALERTEngine extends ReconstructionEngine {
                         LOGGER.warning(() -> "Exception in ALERTEngine PostPID: " + ex);
                     }
                 }
+				rbc.appendPIDBank(event, pidResults);
             }
-            rbc.appendPIDBank(event, pidResults);
+            
         }
 
         return true;
