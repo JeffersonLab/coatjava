@@ -270,10 +270,12 @@ public class RICHPMTReconstruction {
     // ----------------
 
         int debugMode = 0;
+
+
         ArrayList<RICHCluster> allclusters = new ArrayList();
         if(debugMode>=2) {
             System.out.println("--------------------\n");
-            System.out.println("Building allclusters\n");
+            System.out.println("Building allclusters for event number " + richevent.get_EventID() + "\n");
             System.out.println("--------------------\n");
         }
 
@@ -301,12 +303,16 @@ public class RICHPMTReconstruction {
             }
         }
 
-      if(debugMode>=2){
+	// Ordering the cluster 
+        Collections.sort(allclusters);
+
+
+	if(debugMode>=2){
             System.out.println("List of all Clusters");
             for(int i=0; i<allclusters.size(); i++) {
                 allclusters.get(i).showCluster();
             }
-      }
+	}
 
         return allclusters;
     }
@@ -317,54 +323,102 @@ public class RICHPMTReconstruction {
     // ----------------
 
         int debugMode = 0;
+
+        if(debugMode>=1) {
+            System.out.println("--------------------\n");
+	    System.out.println("Selecting good clusters");
+            System.out.println("--------------------\n");
+        }
+
         ArrayList<RICHCluster> clusters = new ArrayList();
-        if(debugMode>=2) System.out.println("\nSelecting good clusters");
+        ArrayList<RICHCluster> goodclusters = new ArrayList();
+
 
         int nclu = 0;
         for(int i=0; i<allclusters.size(); i++) {
-            if(allclusters.get(i).isgoodCluster()) {
-                RICHCluster goodclu = allclusters.get(i);
-                int merge = 0 ;
-                for (int j=0; j<clusters.size(); j++){
-                    if(clusters.get(j).get(0).get_pmt() == goodclu.get(0).get_pmt()){
-                        clusters.get(j).merge(goodclu);
-                        merge = 1;
-                        if(debugMode>=1)System.out.format(" merge clu %d %d  xyz %7.2f %7.2f %7.2f  to %d %d \n",i,goodclu.get_id(),goodclu.get_x(), goodclu.get_y(), goodclu.get_z(), j,clusters.get(j).get_id());
-                    }
-                }
-                if(merge==0){
-                    nclu++;
-                    goodclu.set_id(nclu);
-                    clusters.add(goodclu);
-                }
-          }else{
-                // cancel hit to cluster link
-                RICHCluster badclu = allclusters.get(i);
-                for(int j = 0; j< badclu.size(); j++) {
-                    badclu.get(j).set_cluster(0);
-                }
-            }
-        }
+	    RICHCluster clu = allclusters.get(i);
 
-        if(debugMode>=1){
+	    if (debugMode>=1) {
+		System.out.println(" ---> Looking at cluster " + i + "  id=" + clu.get_id() + "  Sector=" + clu.get(0).get_sector() + "  PMT=" + clu.get(0).get_pmt() + "   size=" + clu.size());
+		for (int k=0; k<clu.size(); k++) {
+		    System.out.println("           k=" + k + "  hit id=" + clu.get(k).get_id() + "   anode " + clu.get(k).get_anode());
+		}
+	    }
+
+	    int merge = 0;
+	    for (int j=0; j<clusters.size(); j++) {
+
+		if ( clusters.get(j).overlaps(clu) ) {
+		    clusters.get(j).merge(clu);
+		    merge = 1;
+
+		    if(debugMode>=1) {
+			System.out.println("    merging cluster " + clu.get_id() + " to cluster " + clusters.get(j).get_id() + " newsize=" +  clusters.get(j).size() );
+		    }
+		}
+	    }
+
+
+	    if(merge==0){
+		nclu++;
+		clu.set_id(nclu);
+		clusters.add(clu);
+
+		if(debugMode>=1) {
+		    System.out.println("    Creating new cluster " + clusters.get(nclu-1).get_id() + "  size=" +  clusters.get(nclu-1).size() );
+		}
+		
+	    }
+
+	}
+
+        /*if(debugMode>=1){
             System.out.format("-------------------------\n");
-            System.out.format("List of selected Clusters %4d \n",clusters.size());
+            System.out.format("List of merged Clusters %4d \n",clusters.size());
             System.out.format("-------------------------\n");
             for(int i=0; i<clusters.size(); i++) {
                 clusters.get(i).showCluster();
             }
-        }
+	    }*/
 
-        /*Collections.sort(clusters);
+
+	/* Now selecting the good clusters */
+	int ngoodclu = 0;
+	for(int i=0; i<clusters.size(); i++) {
+	    RICHCluster clu = clusters.get(i);
+	    if(clu.isgoodCluster()){
+		if (debugMode>=1) {
+		    System.out.println(" ---> Selecting good cluster " + i + "  id=" + clu.get_id() + "  Sector=" + clu.get(0).get_sector() + "  PMT=" + clu.get(0).get_pmt() + "   size=" + clu.size());
+		}
+
+		ngoodclu++;
+		clu.set_id(ngoodclu);
+		for (int j=0; j<clu.size(); j++) {
+		    clu.get(j).set_cluster(ngoodclu);
+		}
+
+                goodclusters.add(clu);
+	    }
+	    else {
+		for (int j=0; j<clu.size(); j++) {
+		    clu.get(j).set_cluster(0);
+		}
+
+	    }
+
+	}
 
         if(debugMode>=1){
-            System.out.println("List of sorted Clusters");
-            for(int i=0; i<clusters.size(); i++) {
-                clusters.get(i).showCluster();
+            System.out.format("-------------------------\n");
+            System.out.format("List of good Clusters %4d \n", goodclusters.size());
+            System.out.format("-------------------------\n");
+            for(int i=0; i<goodclusters.size(); i++) {
+                goodclusters.get(i).showCluster();
             }
-        }*/
+        }
 
-        return clusters;
+
+        return goodclusters;
     }
 
 
@@ -389,7 +443,7 @@ public class RICHPMTReconstruction {
                 if(hiti.get_cluster()!=0)  continue; // this hit is not yet associated with a cluster
                 if(debugMode==1)System.out.println("Hit pair "+ih+" "+hiti.get_id()+" "+hiti.get_pmt()+" "+hiti.get_channel()+" "+hiti.get_duration()+" "+hiti.get_cluster()+" | " +jh+" "+hitj.get_id()+" "+hitj.get_pmt()+" "+hitj.get_channel()+" "+hitj.get_duration()+" "+hitj.get_cluster());
 
-                if(hiti.get_pmt()==hitj.get_pmt() && hitj.get_duration()*100 < hiti.get_duration()*richpar.GOODHIT_FRAC){
+                if(hiti.get_sector()==hitj.get_sector() && hiti.get_pmt()==hitj.get_pmt() && hitj.get_duration()*100 < hiti.get_duration()*richpar.GOODHIT_FRAC){
                     for(int k=-1; k<=1; k+=2 ) {
                         if(hiti.get_channel() == (k+hitj.get_channel())) {hitj.set_xtalk(1000+hiti.get_id()+1); if(debugMode==1)System.out.println(" E Xtalk "+hitj.get_xtalk());}
                     }

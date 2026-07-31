@@ -3,7 +3,7 @@ package org.jlab.rec.rich;
 import java.util.ArrayList;
 import org.jlab.geom.prim.Point3D;
 
-public class RICHCluster extends ArrayList<RICHHit> {
+public class RICHCluster extends ArrayList<RICHHit> implements Comparable<RICHCluster> {
 
     /**
      * A cluster in the RICH consists of an array of anodes in one PMT
@@ -340,12 +340,29 @@ public class RICHCluster extends ArrayList<RICHHit> {
     }
 
     // ----------------
+    public boolean overlaps(RICHCluster clu) {
+    // ----------------
+
+	if (this.get(0).get_sector() != clu.get(0).get_sector() ) return false;
+	if (this.get(0).get_pmt() != clu.get(0).get_pmt() ) return false;
+
+        for(int i=0; i<clu.size(); i++){
+            RICHHit rhit = clu.get(i);
+            if(this.contains(rhit) || this.containsHit(rhit))
+                return true;
+        }
+        return false;
+    }
+
+    // ----------------
     public boolean containsHit(RICHHit hit) {
     // ----------------
         // checks if the hit belongs to any nonet around its already associated hits
 
         boolean addFlag = false;
+        if(this.get(0).get_sector()!=hit.get_sector())return addFlag;
         if(this.get(0).get_pmt()!=hit.get_pmt())return addFlag;
+
 
         for(int j = 0; j< this.size(); j++) {
             double tDiff = Math.abs(hit.get_Time() - this.get(j).get_Time());
@@ -358,23 +375,41 @@ public class RICHCluster extends ArrayList<RICHHit> {
 
 
     // ----------------
+    @Override
+    // ----------------
     public int compareTo(RICHCluster ocluster) {
     // ----------------
         //System.out.println(" --> comp "+this.get_channel()+" "+this.get_charge()+" "+ocluster.get_channel()+" "+ocluster.get_charge());
-        if(this.get_charge() == ocluster.get_charge())return 0;
-        if(this.get_charge() > ocluster.get_charge()){
-            return 1;
-        }else{
+        //if(this.get_charge() == ocluster.get_charge())return 0;
+        //if(this.get_charge() > ocluster.get_charge()){
+        //    return 1;
+        //}else{
+        //    return -1;
+	//}
+
+        if(this.get(0).get_sector()!=ocluster.get(0).get_sector())
+            return this.get(0).get_sector()>ocluster.get(0).get_sector() ? 1 : -1;
+        
+        if(this.get(0).get_pmt()!=ocluster.get(0).get_pmt())
+            return this.get(0).get_pmt()>ocluster.get(0).get_pmt() ? 1 : -1;
+        
+        if(this.get_size() == ocluster.get_size())
+            return 0;
+        else if(this.get_size() > ocluster.get_size())
             return -1;
-        }
+        else
+            return 1;
+
+
     }
 
        
     // ----------------
     public void showCluster() {
     // ----------------
-        System.out.format("Cluster ID %3d  PMT %4d  Siz %4d  Ch %7.1f  T %7.1f  raw %7.1f  wT %7.1f  glxy %4d %4d  XYZ %7.2f %7.2f %7.2f  wXYZ %7.2f %7.2f %7.2f \n",
+        System.out.format("Cluster ID %3d  sector %1d PMT %4d  Siz %4d  Ch %7.1f  T %7.1f  raw %7.1f  wT %7.1f  glxy %4d %4d  XYZ %7.2f %7.2f %7.2f  wXYZ %7.2f %7.2f %7.2f \n",
             this.clusid,  
+            this.get(0).get_sector(),
             this.get(0).get_pmt(),
             this.get_size(),
             this.get_charge(),
@@ -383,9 +418,9 @@ public class RICHCluster extends ArrayList<RICHHit> {
             this.get_x(), this.get_y(), this.get_z(),
             this.get_wx(), this.get_wy(), this.get_wz());
             for(int j = 0; j< this.size(); j++) {
-                System.out.format("  --> hit # %3d  ID %3d  idxy %3d %3d  dur %4d \n",
-                j, this.get(j).get_id(), 
-                this.get(j).get_idx(), this.get(j).get_idy(), this.get(j).get_duration());
+                System.out.format("  --> hit # %3d  ID %3d  anode %2d  idxy %3d %3d  dur %4d clu %2d\n",
+                j, this.get(j).get_id(), this.get(j).get_anode(), 
+                this.get(j).get_idx(), this.get(j).get_idy(), this.get(j).get_duration(), this.get(j).get_cluster());
             }
         }
     
