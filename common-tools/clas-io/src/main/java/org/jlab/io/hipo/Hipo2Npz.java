@@ -13,6 +13,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -83,7 +84,7 @@ public class Hipo2Npz {
             }
         }
 
-        Converter converter = new Converter(options.selectedBanks, schemaTypes, options.tmpDir);
+        Converter converter = new Converter(options.selectedBanks, schemaTypes);
         converter.convert(options.input, options.output);
     }
 
@@ -95,14 +96,12 @@ public class Hipo2Npz {
         final File input;
         final File output;
         final File schemaDir;
-        final File tmpDir;
         final Set<String> selectedBanks; // null means all banks
 
-        private CliOptions(File input, File output, File schemaDir, File tmpDir, Set<String> selectedBanks) {
+        private CliOptions(File input, File output, File schemaDir, Set<String> selectedBanks) {
             this.input         = input;
             this.output        = output;
             this.schemaDir     = schemaDir;
-            this.tmpDir        = tmpDir;
             this.selectedBanks = selectedBanks;
         }
 
@@ -115,7 +114,6 @@ public class Hipo2Npz {
             File output = new File(args[1]);
 
             File schemaDir = null;
-            File tmpDir    = null;
             Set<String> selectedBanks = new LinkedHashSet<>();
             boolean selectAll = true;
 
@@ -130,14 +128,6 @@ public class Hipo2Npz {
                         throw new IllegalArgumentException("--schema-dir requires a directory path");
                     }
                     schemaDir = new File(args[++i]);
-                    continue;
-                }
-
-                if ("--tmp-dir".equals(arg)) {
-                    if (i + 1 >= args.length) {
-                        throw new IllegalArgumentException("--tmp-dir requires a directory path");
-                    }
-                    tmpDir = new File(args[++i]);
                     continue;
                 }
 
@@ -173,20 +163,11 @@ public class Hipo2Npz {
                 throw new IllegalArgumentException("Schema directory not found: " + schemaDir.getAbsolutePath());
             }
 
-            if (tmpDir != null) {
-                if (!tmpDir.isDirectory()) {
-                    throw new IllegalArgumentException("Temp directory not found: " + tmpDir.getAbsolutePath());
-                }
-                if (!tmpDir.canWrite()) {
-                    throw new IllegalArgumentException("Temp directory not writable: " + tmpDir.getAbsolutePath());
-                }
-            }
-
             if (!input.exists()) {
                 throw new IllegalArgumentException("Input HIPO file not found: " + input.getAbsolutePath());
             }
 
-            return new CliOptions(input, output, schemaDir, tmpDir, selectAll ? null : selectedBanks);
+            return new CliOptions(input, output, schemaDir, selectAll ? null : selectedBanks);
         }
 
         private static Set<String> readBankNames(File bankFile) throws IOException {
@@ -215,7 +196,7 @@ public class Hipo2Npz {
             System.err.println("  --bank-file FILE      a file with one bank name per line, '#' comments allowed;");
             System.err.println("                        both comma list and `--bank-file` may be used together");
             System.err.println("  --schema-dir DIR      use a custom schema directory");
-            System.err.println("  --tmp-dir DIR         use a custom directory for temporary files");
+            System.err.println("                        default: the one included with this coatjava installation");
             System.err.println("");
             System.err.println("EXAMPLES:");
             System.err.println("*   hipo2npz input.hipo output.npz");
@@ -267,34 +248,48 @@ public class Hipo2Npz {
         private final Map<String, BankStore> banks = new LinkedHashMap<>();
         private final Set<String> selectedBanks; // null means all banks
         private final Map<String, ColumnType> schemaTypes; // BANK/COLUMN -> type
-        private final File tmpDir;
+        private Path tmpDir;
+        private Thread cleanupHook;
 
-        Converter(Set<String> selectedBanks, Map<String, ColumnType> schemaTypes, File tmpDir) {
+        Converter(Set<String> selectedBanks, Map<String, ColumnType> schemaTypes) {
             this.selectedBanks = selectedBanks;
             this.schemaTypes   = schemaTypes;
-            this.tmpDir        = tmpDir;
         }
 
         void convert(File input, File output) throws Exception {
             System.out.println(selectedBanks==null ? "Including all banks" : "Including selected banks only");
+
+            File tmpDirFile = new File(output.getPath() + ".tmp");
+            tmpDir = createRunDir(tmpDirFile);
+            cleanupHook = new Thread(() -> deleteRecursively(tmpDir));
+            Runtime.getRuntime().addShutdownHook(cleanupHook);
 
             HipoDataSource reader = new HipoDataSource();
             reader.open(input);
 
             long nEvents = 0;
             try {
-                while (reader.hasEvent()) {
-                    DataEvent event = reader.getNextEvent();
-                    nEvents++;
-                    ingestEvent(event);
-                    if ((nEvents % 10000) == 0) {
-                        System.out.printf("Processed %,d events%n", nEvents);
+                try {
+                    while (reader.hasEvent()) {
+                        DataEvent event = reader.getNextEvent();
+                        nEvents++;
+                        ingestEvent(event);
+                        if ((nEvents % 10000) == 0) {
+                            System.out.printf("Processed %,d events%n", nEvents);
+                        }
                     }
+                } finally {
+                    reader.close();
                 }
-                reader.close();
                 writeNpz(output);
             } finally {
-                cleanupTempFiles();
+                closeAllQuietly();
+                deleteRecursively(tmpDir);
+                try {
+                    Runtime.getRuntime().removeShutdownHook(cleanupHook);
+                } catch (IllegalStateException ignored) {
+                    // JVM is already shutting down — the hook itself will run deleteRecursively
+                }
             }
 
             System.out.printf("Wrote %s with %,d events and %,d banks%n", output.getAbsolutePath(), nEvents, banks.size());
@@ -328,7 +323,7 @@ public class Hipo2Npz {
                 int rows = bank.rows();
                 presentRows.put(bankName, rows);
 
-                BankStore store = banks.computeIfAbsent(bankName, name -> new BankStore(name, tmpDir));
+                BankStore store = banks.computeIfAbsent(bankName, name -> new BankStore(name, tmpDir.toFile()));
                 ensureColumns(store, bank);
 
                 String[] cols = bank.getColumnList();
@@ -362,7 +357,7 @@ public class Hipo2Npz {
                     continue;
                 }
                 ColumnType type = discoverColumnType(bank, col);
-                store.columns.put(col, new ColumnStore(col, type, tmpDir));
+                store.columns.put(col, new ColumnStore(col, type, tmpDir.toFile()));
             }
         }
 
@@ -510,24 +505,50 @@ public class Hipo2Npz {
             zos.closeEntry();
         }
 
-        private void cleanupTempFiles() {
+        /**
+         * Safety net for any stores that weren't already closed by writeNpz (e.g. because an
+         * earlier bank threw partway through). Closing an already-closed stream is a no-op.
+         */
+        private void closeAllQuietly() {
             for (BankStore bank : banks.values()) {
-                deleteQuietly(bank.rowsPerEventFile);
-                deleteQuietly(bank.offsetsFile);
+                closeQuietly(bank);
                 for (ColumnStore col : bank.columns.values()) {
-                    deleteQuietly(col.tempFile);
+                    closeQuietly(col);
                 }
             }
         }
 
-        private void deleteQuietly(File f) {
-            if (f != null) {
-                f.delete();
+        private void closeQuietly(Closeable c) {
+            if (c == null) {
+                return;
+            }
+            try {
+                c.close();
+            } catch (IOException ignored) {
             }
         }
 
         private String sanitize(String s) {
             return s.replace("::", "__").replace('/', '_').replace(' ', '_');
+        }
+
+        private static Path createRunDir(File dir) throws IOException {
+            if (dir.exists()) {
+                throw new RuntimeException("tmp directory still exists, possibly from a failed previous run: " + dir.getAbsolutePath());
+            }
+            return Files.createDirectory(dir.toPath());
+        }
+
+        private static void deleteRecursively(Path dir) {
+            if (dir == null || !Files.exists(dir)) {
+                return;
+            }
+            try (var files = Files.walk(dir)) {
+                files.sorted(Comparator.reverseOrder())
+                     .forEach(p -> p.toFile().delete());
+            } catch (IOException | UncheckedIOException ignored) {
+                // best-effort; nothing more we can do here
+            }
         }
     }
 
@@ -653,11 +674,9 @@ public class Hipo2Npz {
             try {
                 // create rows per event temp file
                 this.rowsPerEventFile = File.createTempFile("hipo2npz_rpe_", ".bin", tmpDir);
-                this.rowsPerEventFile.deleteOnExit();
                 this.rowsPerEventOut = new BufferedOutputStream(new FileOutputStream(rowsPerEventFile), 1 << 16);
                 // create offsets file
                 this.offsetsFile = File.createTempFile("hipo2npz_off_", ".bin", tmpDir);
-                this.offsetsFile.deleteOnExit();
                 this.offsetsOut = new BufferedOutputStream(new FileOutputStream(offsetsFile), 1 << 16);
                 writeOffset(0L);
             } catch (IOException e) {
@@ -703,7 +722,6 @@ public class Hipo2Npz {
             this.columnName = columnName;
             this.type = type;
             this.tempFile = File.createTempFile("hipo2npz_col_", ".bin", tmpDir);
-            this.tempFile.deleteOnExit();
             this.out = new BufferedOutputStream(new FileOutputStream(tempFile), 1 << 16);
         }
 
