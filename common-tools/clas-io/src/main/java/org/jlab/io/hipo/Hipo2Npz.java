@@ -23,6 +23,9 @@ import java.util.zip.Deflater;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 import org.jlab.utils.system.ClasUtilsFile;
@@ -491,17 +494,15 @@ public class Hipo2Npz {
 
             Map<String, File> bankToFile = new HashMap<>();
             for (File file : files) {
-                Object root = Json.parse(Files.readString(file.toPath(), StandardCharsets.UTF_8));
-                if (!(root instanceof List<?> banks)) {
-                    continue;
-                }
+                JSONArray root = new JSONArray(Files.readString(file.toPath(), StandardCharsets.UTF_8));
 
-                for (Object bankObj : banks) {
-                    if (!(bankObj instanceof Map<?, ?> bankMap)) {
+                for (int i = 0; i < root.length(); i++) {
+                    JSONObject bankObj = root.optJSONObject(i);
+                    if (bankObj == null) {
                         continue;
                     }
-                    Object nameObj = bankMap.get("name");
-                    if (nameObj instanceof String bankName && !bankName.isBlank()) {
+                    String bankName = bankObj.optString("name", null);
+                    if (bankName != null && !bankName.isBlank()) {
                         bankToFile.put(bankName, file);
                     }
                 }
@@ -544,30 +545,29 @@ public class Hipo2Npz {
             sorted.sort(Comparator.comparing(File::getName));
 
             for (File file : sorted) {
-                Object root = Json.parse(Files.readString(file.toPath(), StandardCharsets.UTF_8));
-                if (!(root instanceof List<?> banks)) {
-                    continue;
-                }
+                JSONArray root = new JSONArray(Files.readString(file.toPath(), StandardCharsets.UTF_8));
 
-                for (Object bankObj : banks) {
-                    if (!(bankObj instanceof Map<?, ?> bankMap)) {
+                for (int i = 0; i < root.length(); i++) {
+                    JSONObject bankObj = root.optJSONObject(i);
+                    if (bankObj == null) {
                         continue;
                     }
 
-                    Object nameObj = bankMap.get("name");
-                    Object entriesObj = bankMap.get("entries");
-                    if (!(nameObj instanceof String bankName) || !(entriesObj instanceof List<?> entries)) {
+                    String bankName = bankObj.optString("name", null);
+                    JSONArray entries = bankObj.optJSONArray("entries");
+                    if (bankName == null || entries == null) {
                         continue;
                     }
 
-                    for (Object entryObj : entries) {
-                        if (!(entryObj instanceof Map<?, ?> entryMap)) {
+                    for (int j = 0; j < entries.length(); j++) {
+                        JSONObject entryObj = entries.optJSONObject(j);
+                        if (entryObj == null) {
                             continue;
                         }
 
-                        Object entryNameObj = entryMap.get("name");
-                        Object entryTypeObj = entryMap.get("type");
-                        if (!(entryNameObj instanceof String colName) || !(entryTypeObj instanceof String typeCode)) {
+                        String colName = entryObj.optString("name", null);
+                        String typeCode = entryObj.optString("type", null);
+                        if (colName == null || typeCode == null) {
                             continue;
                         }
 
@@ -647,197 +647,6 @@ public class Hipo2Npz {
                 case FLOAT -> Npy.writeFloatArray(floats.toArray(), type.npyDescr);
                 case DOUBLE -> Npy.writeDoubleArray(doubles.toArray(), type.npyDescr);
             };
-        }
-    }
-
-    // ------------------------------------------------------------------------
-    // Minimal JSON parser
-    // ------------------------------------------------------------------------
-
-    private static final class Json {
-        static Object parse(String text) {
-            return new Parser(text).parseValue();
-        }
-
-        private static final class Parser {
-            private final String s;
-            private int i = 0;
-
-            Parser(String s) {
-                this.s = s;
-            }
-
-            Object parseValue() {
-                skipWs();
-                if (i >= s.length()) {
-                    throw new IllegalStateException("Unexpected end of JSON");
-                }
-
-                char c = s.charAt(i);
-                return switch (c) {
-                    case '{' -> parseObject();
-                    case '[' -> parseArray();
-                    case '"' -> parseString();
-                    case 't' -> parseTrue();
-                    case 'f' -> parseFalse();
-                    case 'n' -> parseNull();
-                    default -> parseNumber();
-                };
-            }
-
-            private Map<String, Object> parseObject() {
-                expect('{');
-                Map<String, Object> obj = new LinkedHashMap<>();
-                skipWs();
-                if (peek('}')) {
-                    expect('}');
-                    return obj;
-                }
-
-                while (true) {
-                    skipWs();
-                    String key = parseString();
-                    skipWs();
-                    expect(':');
-                    Object value = parseValue();
-                    obj.put(key, value);
-                    skipWs();
-                    if (peek('}')) {
-                        expect('}');
-                        break;
-                    }
-                    expect(',');
-                }
-                return obj;
-            }
-
-            private List<Object> parseArray() {
-                expect('[');
-                List<Object> arr = new ArrayList<>();
-                skipWs();
-                if (peek(']')) {
-                    expect(']');
-                    return arr;
-                }
-
-                while (true) {
-                    arr.add(parseValue());
-                    skipWs();
-                    if (peek(']')) {
-                        expect(']');
-                        break;
-                    }
-                    expect(',');
-                }
-                return arr;
-            }
-
-            private String parseString() {
-                expect('"');
-                StringBuilder sb = new StringBuilder();
-                while (i < s.length()) {
-                    char c = s.charAt(i++);
-                    if (c == '"') {
-                        return sb.toString();
-                    }
-                    if (c == '\\') {
-                        if (i >= s.length()) {
-                            throw new IllegalStateException("Bad escape");
-                        }
-                        char e = s.charAt(i++);
-                        switch (e) {
-                            case '"', '\\', '/' -> sb.append(e);
-                            case 'b' -> sb.append('\b');
-                            case 'f' -> sb.append('\f');
-                            case 'n' -> sb.append('\n');
-                            case 'r' -> sb.append('\r');
-                            case 't' -> sb.append('\t');
-                            case 'u' -> {
-                                if (i + 4 > s.length()) {
-                                    throw new IllegalStateException("Bad unicode escape");
-                                }
-                                String hex = s.substring(i, i + 4);
-                                sb.append((char) Integer.parseInt(hex, 16));
-                                i += 4;
-                            }
-                            default -> throw new IllegalStateException("Bad escape: \\" + e);
-                        }
-                    } else {
-                        sb.append(c);
-                    }
-                }
-                throw new IllegalStateException("Unterminated string");
-            }
-
-            private Object parseNumber() {
-                int start = i;
-                if (s.charAt(i) == '-') {
-                    i++;
-                }
-                while (i < s.length() && Character.isDigit(s.charAt(i))) {
-                    i++;
-                }
-                boolean isFloat = false;
-                if (i < s.length() && s.charAt(i) == '.') {
-                    isFloat = true;
-                    i++;
-                    while (i < s.length() && Character.isDigit(s.charAt(i))) {
-                        i++;
-                    }
-                }
-                if (i < s.length() && (s.charAt(i) == 'e' || s.charAt(i) == 'E')) {
-                    isFloat = true;
-                    i++;
-                    if (i < s.length() && (s.charAt(i) == '+' || s.charAt(i) == '-')) {
-                        i++;
-                    }
-                    while (i < s.length() && Character.isDigit(s.charAt(i))) {
-                        i++;
-                    }
-                }
-
-                String num = s.substring(start, i);
-                return isFloat ? Double.parseDouble(num) : Long.parseLong(num);
-            }
-
-            private Boolean parseTrue() {
-                expect('t'); expect('r'); expect('u'); expect('e');
-                return Boolean.TRUE;
-            }
-
-            private Boolean parseFalse() {
-                expect('f'); expect('a'); expect('l'); expect('s'); expect('e');
-                return Boolean.FALSE;
-            }
-
-            private Object parseNull() {
-                expect('n'); expect('u'); expect('l'); expect('l');
-                return null;
-            }
-
-            private void skipWs() {
-                while (i < s.length()) {
-                    char c = s.charAt(i);
-                    if (c == ' ' || c == '\n' || c == '\r' || c == '\t') {
-                        i++;
-                    } else {
-                        break;
-                    }
-                }
-            }
-
-            private boolean peek(char c) {
-                skipWs();
-                return i < s.length() && s.charAt(i) == c;
-            }
-
-            private void expect(char c) {
-                skipWs();
-                if (i >= s.length() || s.charAt(i) != c) {
-                    throw new IllegalStateException("Expected '" + c + "' at position " + i);
-                }
-                i++;
-            }
         }
     }
 
