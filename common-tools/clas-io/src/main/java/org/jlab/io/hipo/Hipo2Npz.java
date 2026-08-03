@@ -83,7 +83,7 @@ public class Hipo2Npz {
             }
         }
 
-        Converter converter = new Converter(options.selectedBanks, schemaTypes);
+        Converter converter = new Converter(options.selectedBanks, schemaTypes, options.tmpDir);
         converter.convert(options.input, options.output);
     }
 
@@ -95,12 +95,14 @@ public class Hipo2Npz {
         final File input;
         final File output;
         final File schemaDir;
+        final File tmpDir;
         final Set<String> selectedBanks; // null means all banks
 
-        private CliOptions(File input, File output, File schemaDir, Set<String> selectedBanks) {
-            this.input = input;
-            this.output = output;
-            this.schemaDir = schemaDir;
+        private CliOptions(File input, File output, File schemaDir, File tmpDir, Set<String> selectedBanks) {
+            this.input         = input;
+            this.output        = output;
+            this.schemaDir     = schemaDir;
+            this.tmpDir        = tmpDir;
             this.selectedBanks = selectedBanks;
         }
 
@@ -113,6 +115,7 @@ public class Hipo2Npz {
             File output = new File(args[1]);
 
             File schemaDir = null;
+            File tmpDir    = null;
             Set<String> selectedBanks = new LinkedHashSet<>();
             boolean selectAll = true;
 
@@ -127,6 +130,14 @@ public class Hipo2Npz {
                         throw new IllegalArgumentException("--schema-dir requires a directory path");
                     }
                     schemaDir = new File(args[++i]);
+                    continue;
+                }
+
+                if ("--tmp-dir".equals(arg)) {
+                    if (i + 1 >= args.length) {
+                        throw new IllegalArgumentException("--tmp-dir requires a directory path");
+                    }
+                    tmpDir = new File(args[++i]);
                     continue;
                 }
 
@@ -161,11 +172,21 @@ public class Hipo2Npz {
             if (!schemaDir.isDirectory()) {
                 throw new IllegalArgumentException("Schema directory not found: " + schemaDir.getAbsolutePath());
             }
+
+            if (tmpDir != null) {
+                if (!tmpDir.isDirectory()) {
+                    throw new IllegalArgumentException("Temp directory not found: " + tmpDir.getAbsolutePath());
+                }
+                if (!tmpDir.canWrite()) {
+                    throw new IllegalArgumentException("Temp directory not writable: " + tmpDir.getAbsolutePath());
+                }
+            }
+
             if (!input.exists()) {
                 throw new IllegalArgumentException("Input HIPO file not found: " + input.getAbsolutePath());
             }
 
-            return new CliOptions(input, output, schemaDir, selectAll ? null : selectedBanks);
+            return new CliOptions(input, output, schemaDir, tmpDir, selectAll ? null : selectedBanks);
         }
 
         private static Set<String> readBankNames(File bankFile) throws IOException {
@@ -194,6 +215,7 @@ public class Hipo2Npz {
             System.err.println("  --bank-file FILE      a file with one bank name per line, '#' comments allowed;");
             System.err.println("                        both comma list and `--bank-file` may be used together");
             System.err.println("  --schema-dir DIR      use a custom schema directory");
+            System.err.println("  --tmp-dir DIR         use a custom directory for temporary files");
             System.err.println("");
             System.err.println("EXAMPLES:");
             System.err.println("*   hipo2npz input.hipo output.npz");
@@ -245,18 +267,16 @@ public class Hipo2Npz {
         private final Map<String, BankStore> banks = new LinkedHashMap<>();
         private final Set<String> selectedBanks; // null means all banks
         private final Map<String, ColumnType> schemaTypes; // BANK/COLUMN -> type
+        private final File tmpDir;
 
-        Converter(Set<String> selectedBanks, Map<String, ColumnType> schemaTypes) {
+        Converter(Set<String> selectedBanks, Map<String, ColumnType> schemaTypes, File tmpDir) {
             this.selectedBanks = selectedBanks;
-            this.schemaTypes = schemaTypes;
+            this.schemaTypes   = schemaTypes;
+            this.tmpDir        = tmpDir;
         }
 
         void convert(File input, File output) throws Exception {
-            if (selectedBanks == null) {
-                System.out.println("Including all banks");
-            } else {
-                System.out.println("Including selected banks only");
-            }
+            System.out.println(selectedBanks==null ? "Including all banks" : "Including selected banks only");
 
             HipoDataSource reader = new HipoDataSource();
             reader.open(input);
@@ -267,23 +287,17 @@ public class Hipo2Npz {
                     DataEvent event = reader.getNextEvent();
                     nEvents++;
                     ingestEvent(event);
-
                     if ((nEvents % 10000) == 0) {
                         System.out.printf("Processed %,d events%n", nEvents);
                     }
                 }
-            } finally {
                 reader.close();
-            }
-
-            try {
                 writeNpz(output);
             } finally {
                 cleanupTempFiles();
             }
 
-            System.out.printf("Wrote %s with %,d events and %,d banks%n",
-                    output.getAbsolutePath(), nEvents, banks.size());
+            System.out.printf("Wrote %s with %,d events and %,d banks%n", output.getAbsolutePath(), nEvents, banks.size());
         }
 
         private boolean keepBank(String bankName) {
@@ -314,7 +328,7 @@ public class Hipo2Npz {
                 int rows = bank.rows();
                 presentRows.put(bankName, rows);
 
-                BankStore store = banks.computeIfAbsent(bankName, BankStore::new);
+                BankStore store = banks.computeIfAbsent(bankName, name -> new BankStore(name, tmpDir));
                 ensureColumns(store, bank);
 
                 String[] cols = bank.getColumnList();
@@ -348,7 +362,7 @@ public class Hipo2Npz {
                     continue;
                 }
                 ColumnType type = discoverColumnType(bank, col);
-                store.columns.put(col, new ColumnStore(store.bankName, col, type));
+                store.columns.put(col, new ColumnStore(col, type, tmpDir));
             }
         }
 
@@ -634,15 +648,15 @@ public class Hipo2Npz {
         long nEvents = 0;
         long totalRows = 0;
 
-        BankStore(String bankName) {
+        BankStore(String bankName, File tmpDir) {
             this.bankName = bankName;
             try {
                 // create rows per event temp file
-                this.rowsPerEventFile = File.createTempFile("hipo2npz_rpe_", ".bin");
+                this.rowsPerEventFile = File.createTempFile("hipo2npz_rpe_", ".bin", tmpDir);
                 this.rowsPerEventFile.deleteOnExit();
                 this.rowsPerEventOut = new BufferedOutputStream(new FileOutputStream(rowsPerEventFile), 1 << 16);
                 // create offsets file
-                this.offsetsFile = File.createTempFile("hipo2npz_off_", ".bin");
+                this.offsetsFile = File.createTempFile("hipo2npz_off_", ".bin", tmpDir);
                 this.offsetsFile.deleteOnExit();
                 this.offsetsOut = new BufferedOutputStream(new FileOutputStream(offsetsFile), 1 << 16);
                 writeOffset(0L);
@@ -678,7 +692,6 @@ public class Hipo2Npz {
     // ------------------------------------------------------------------------
 
     private static final class ColumnStore implements Closeable {
-        final String bankName;
         final String columnName;
         final ColumnType type;
         final File tempFile;
@@ -686,44 +699,25 @@ public class Hipo2Npz {
         private final ByteBuffer scratch = ByteBuffer.allocate(8).order(ByteOrder.LITTLE_ENDIAN);
         long count = 0;
 
-        ColumnStore(String bankName, String columnName, ColumnType type) throws IOException {
-            this.bankName = bankName;
+        ColumnStore(String columnName, ColumnType type, File tmpDir) throws IOException {
             this.columnName = columnName;
             this.type = type;
-            this.tempFile = File.createTempFile("hipo2npz_col_", ".bin");
+            this.tempFile = File.createTempFile("hipo2npz_col_", ".bin", tmpDir);
             this.tempFile.deleteOnExit();
             this.out = new BufferedOutputStream(new FileOutputStream(tempFile), 1 << 16);
         }
 
         void append(DataBank bank, String col, int row) throws IOException {
+            scratch.clear();
             switch (type) {
-                case BYTE -> out.write(bank.getByte(col, row));
-                case SHORT -> {
-                    scratch.clear();
-                    scratch.putShort(bank.getShort(col, row));
-                    out.write(scratch.array(), 0, 2);
-                }
-                case INT -> {
-                    scratch.clear();
-                    scratch.putInt(bank.getInt(col, row));
-                    out.write(scratch.array(), 0, 4);
-                }
-                case LONG -> {
-                    scratch.clear();
-                    scratch.putLong(bank.getLong(col, row));
-                    out.write(scratch.array(), 0, 8);
-                }
-                case FLOAT -> {
-                    scratch.clear();
-                    scratch.putFloat(bank.getFloat(col, row));
-                    out.write(scratch.array(), 0, 4);
-                }
-                case DOUBLE -> {
-                    scratch.clear();
-                    scratch.putDouble(bank.getDouble(col, row));
-                    out.write(scratch.array(), 0, 8);
-                }
+                case BYTE   -> scratch.put(bank.getByte(col, row));
+                case SHORT  -> scratch.putShort(bank.getShort(col, row));
+                case INT    -> scratch.putInt(bank.getInt(col, row));
+                case LONG   -> scratch.putLong(bank.getLong(col, row));
+                case FLOAT  -> scratch.putFloat(bank.getFloat(col, row));
+                case DOUBLE -> scratch.putDouble(bank.getDouble(col, row));
             }
+            out.write(scratch.array(), 0, type.byteWidth);
             count++;
         }
 
