@@ -1,16 +1,19 @@
 package org.jlab.io.hipo;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.Closeable;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -18,7 +21,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.zip.CRC32;
 import java.util.zip.Deflater;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -206,17 +208,19 @@ public class Hipo2Npz {
     // ------------------------------------------------------------------------
 
     private enum ColumnType {
-        BYTE("<i1"),
-        SHORT("<i2"),
-        INT("<i4"),
-        LONG("<i8"),
-        FLOAT("<f4"),
-        DOUBLE("<f8");
+        BYTE("<i1", 1),
+        SHORT("<i2", 2),
+        INT("<i4", 4),
+        LONG("<i8", 8),
+        FLOAT("<f4", 4),
+        DOUBLE("<f8", 8);
 
         final String npyDescr;
+        final int byteWidth;
 
-        ColumnType(String npyDescr) {
+        ColumnType(String npyDescr, int byteWidth) {
             this.npyDescr = npyDescr;
+            this.byteWidth = byteWidth;
         }
 
         static ColumnType fromSchemaCode(String code, String fullName) {
@@ -258,18 +262,26 @@ public class Hipo2Npz {
             reader.open(input);
 
             long nEvents = 0;
-            while (reader.hasEvent()) {
-                DataEvent event = reader.getNextEvent();
-                nEvents++;
-                ingestEvent(event);
+            try {
+                while (reader.hasEvent()) {
+                    DataEvent event = reader.getNextEvent();
+                    nEvents++;
+                    ingestEvent(event);
 
-                if ((nEvents % 10000) == 0) {
-                    System.out.printf("Processed %,d events%n", nEvents);
+                    if ((nEvents % 10000) == 0) {
+                        System.out.printf("Processed %,d events%n", nEvents);
+                    }
                 }
+            } finally {
+                reader.close();
             }
-            reader.close();
 
-            writeNpz(output);
+            try {
+                writeNpz(output);
+            } finally {
+                cleanupTempFiles();
+            }
+
             System.out.printf("Wrote %s with %,d events and %,d banks%n",
                     output.getAbsolutePath(), nEvents, banks.size());
         }
@@ -278,7 +290,7 @@ public class Hipo2Npz {
             return selectedBanks == null || selectedBanks.contains(bankName);
         }
 
-        private void ingestEvent(DataEvent event) {
+        private void ingestEvent(DataEvent event) throws IOException {
             String[] bankNames = event.getBankList();
             if (bankNames == null) {
                 return;
@@ -325,7 +337,7 @@ public class Hipo2Npz {
             }
         }
 
-        private void ensureColumns(BankStore store, DataBank bank) {
+        private void ensureColumns(BankStore store, DataBank bank) throws IOException {
             String[] cols = bank.getColumnList();
             if (cols == null) {
                 return;
@@ -449,30 +461,55 @@ public class Hipo2Npz {
                 zos.setLevel(Deflater.BEST_SPEED);
 
                 for (BankStore bank : banks.values()) {
+                    bank.close(); // flush + close the rowsPerEvent/offsets temp-file streams
+
                     String bankBase = sanitize(bank.bankName);
 
-                    addEntry(zos, bankBase + "__rows_per_event.npy",
-                            Npy.writeIntArray(bank.rowsPerEvent.toArray(), "<i4"));
-                    addEntry(zos, bankBase + "__offsets.npy",
-                            Npy.writeLongArray(bank.offsets.toArray(), "<i8"));
+                    streamEntry(zos, bankBase + "__rows_per_event.npy", "<i4", bank.nEvents,     bank.rowsPerEventFile);
+                    streamEntry(zos, bankBase + "__offsets.npy",        "<i8", bank.nEvents + 1, bank.offsetsFile);
 
                     for (ColumnStore col : bank.columns.values()) {
+                        col.close(); // flush + close the column's temp-file stream
+
                         String entryName = bankBase + "__" + sanitize(col.columnName) + ".npy";
-                        addEntry(zos, entryName, col.toNpyBytes());
+                        streamEntry(zos, entryName, col.type.npyDescr, col.count, col.tempFile);
                     }
                 }
             }
         }
 
-        private void addEntry(ZipOutputStream zos, String name, byte[] data) throws IOException {
+        /**
+         * Writes one NPY entry into the zip by writing a small header (built once the final
+         * element count is known) followed by a streamed copy of the temp file's raw bytes.
+         * Never materializes the full column/index array in memory.
+         */
+        private void streamEntry(ZipOutputStream zos, String name, String descr, long count, File dataFile) throws IOException {
             ZipEntry entry = new ZipEntry(name);
-            entry.setSize(data.length);
-            CRC32 crc = new CRC32();
-            crc.update(data);
-            entry.setCrc(crc.getValue());
             zos.putNextEntry(entry);
-            zos.write(data);
+
+            zos.write(Npy.buildHeader(descr, count));
+
+            try (BufferedInputStream in = new BufferedInputStream(new FileInputStream(dataFile), 1 << 16)) {
+                in.transferTo(zos);
+            }
+
             zos.closeEntry();
+        }
+
+        private void cleanupTempFiles() {
+            for (BankStore bank : banks.values()) {
+                deleteQuietly(bank.rowsPerEventFile);
+                deleteQuietly(bank.offsetsFile);
+                for (ColumnStore col : bank.columns.values()) {
+                    deleteQuietly(col.tempFile);
+                }
+            }
+        }
+
+        private void deleteQuietly(File f) {
+            if (f != null) {
+                f.delete();
+            }
         }
 
         private String sanitize(String s) {
@@ -582,71 +619,117 @@ public class Hipo2Npz {
     }
 
     // ------------------------------------------------------------------------
-    // Stores
+    // BankStore
     // ------------------------------------------------------------------------
 
-    private static final class BankStore {
+    private static final class BankStore implements Closeable {
         final String bankName;
         final Map<String, ColumnStore> columns = new LinkedHashMap<>();
-        final IntList rowsPerEvent = new IntList();
-        final LongList offsets = new LongList();
+        final File rowsPerEventFile;
+        final File offsetsFile;
+        private final BufferedOutputStream rowsPerEventOut;
+        private final BufferedOutputStream offsetsOut;
+        private final ByteBuffer scratch4 = ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN);
+        private final ByteBuffer scratch8 = ByteBuffer.allocate(8).order(ByteOrder.LITTLE_ENDIAN);
+        long nEvents = 0;
         long totalRows = 0;
 
         BankStore(String bankName) {
             this.bankName = bankName;
-            this.offsets.add(0L);
-        }
-
-        void appendEventRows(int rows) {
-            rowsPerEvent.add(rows);
-            totalRows += rows;
-            offsets.add(totalRows);
-        }
-    }
-
-    private static final class ColumnStore {
-        final String bankName;
-        final String columnName;
-        final ColumnType type;
-        final ByteList bytes;
-        final ShortList shorts;
-        final IntList ints;
-        final LongList longs;
-        final FloatList floats;
-        final DoubleList doubles;
-
-        ColumnStore(String bankName, String columnName, ColumnType type) {
-            this.bankName = bankName;
-            this.columnName = columnName;
-            this.type = type;
-            this.bytes = type == ColumnType.BYTE ? new ByteList() : null;
-            this.shorts = type == ColumnType.SHORT ? new ShortList() : null;
-            this.ints = type == ColumnType.INT ? new IntList() : null;
-            this.longs = type == ColumnType.LONG ? new LongList() : null;
-            this.floats = type == ColumnType.FLOAT ? new FloatList() : null;
-            this.doubles = type == ColumnType.DOUBLE ? new DoubleList() : null;
-        }
-
-        void append(DataBank bank, String col, int row) {
-            switch (type) {
-                case BYTE -> bytes.add(bank.getByte(col, row));
-                case SHORT -> shorts.add(bank.getShort(col, row));
-                case INT -> ints.add(bank.getInt(col, row));
-                case LONG -> longs.add(bank.getLong(col, row));
-                case FLOAT -> floats.add(bank.getFloat(col, row));
-                case DOUBLE -> doubles.add(bank.getDouble(col, row));
+            try {
+                // create rows per event temp file
+                this.rowsPerEventFile = File.createTempFile("hipo2npz_rpe_", ".bin");
+                this.rowsPerEventFile.deleteOnExit();
+                this.rowsPerEventOut = new BufferedOutputStream(new FileOutputStream(rowsPerEventFile), 1 << 16);
+                // create offsets file
+                this.offsetsFile = File.createTempFile("hipo2npz_off_", ".bin");
+                this.offsetsFile.deleteOnExit();
+                this.offsetsOut = new BufferedOutputStream(new FileOutputStream(offsetsFile), 1 << 16);
+                writeOffset(0L);
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
             }
         }
 
-        byte[] toNpyBytes() throws IOException {
-            return switch (type) {
-                case BYTE -> Npy.writeByteArray(bytes.toArray(), type.npyDescr);
-                case SHORT -> Npy.writeShortArray(shorts.toArray(), type.npyDescr);
-                case INT -> Npy.writeIntArray(ints.toArray(), type.npyDescr);
-                case LONG -> Npy.writeLongArray(longs.toArray(), type.npyDescr);
-                case FLOAT -> Npy.writeFloatArray(floats.toArray(), type.npyDescr);
-                case DOUBLE -> Npy.writeDoubleArray(doubles.toArray(), type.npyDescr);
-            };
+        void appendEventRows(int rows) throws IOException {
+            scratch4.clear();
+            scratch4.putInt(rows);
+            rowsPerEventOut.write(scratch4.array(), 0, 4);
+            nEvents++;
+            totalRows += rows;
+            writeOffset(totalRows);
+        }
+
+        private void writeOffset(long value) throws IOException {
+            scratch8.clear();
+            scratch8.putLong(value);
+            offsetsOut.write(scratch8.array(), 0, 8);
+        }
+
+        @Override
+        public void close() throws IOException {
+            rowsPerEventOut.close();
+            offsetsOut.close();
+        }
+    }
+
+    // ------------------------------------------------------------------------
+    // ColumnStore
+    // ------------------------------------------------------------------------
+
+    private static final class ColumnStore implements Closeable {
+        final String bankName;
+        final String columnName;
+        final ColumnType type;
+        final File tempFile;
+        private final BufferedOutputStream out;
+        private final ByteBuffer scratch = ByteBuffer.allocate(8).order(ByteOrder.LITTLE_ENDIAN);
+        long count = 0;
+
+        ColumnStore(String bankName, String columnName, ColumnType type) throws IOException {
+            this.bankName = bankName;
+            this.columnName = columnName;
+            this.type = type;
+            this.tempFile = File.createTempFile("hipo2npz_col_", ".bin");
+            this.tempFile.deleteOnExit();
+            this.out = new BufferedOutputStream(new FileOutputStream(tempFile), 1 << 16);
+        }
+
+        void append(DataBank bank, String col, int row) throws IOException {
+            switch (type) {
+                case BYTE -> out.write(bank.getByte(col, row));
+                case SHORT -> {
+                    scratch.clear();
+                    scratch.putShort(bank.getShort(col, row));
+                    out.write(scratch.array(), 0, 2);
+                }
+                case INT -> {
+                    scratch.clear();
+                    scratch.putInt(bank.getInt(col, row));
+                    out.write(scratch.array(), 0, 4);
+                }
+                case LONG -> {
+                    scratch.clear();
+                    scratch.putLong(bank.getLong(col, row));
+                    out.write(scratch.array(), 0, 8);
+                }
+                case FLOAT -> {
+                    scratch.clear();
+                    scratch.putFloat(bank.getFloat(col, row));
+                    out.write(scratch.array(), 0, 4);
+                }
+                case DOUBLE -> {
+                    scratch.clear();
+                    scratch.putDouble(bank.getDouble(col, row));
+                    out.write(scratch.array(), 0, 8);
+                }
+            }
+            count++;
+        }
+
+        @Override
+        public void close() throws IOException {
+            out.close();
         }
     }
 
@@ -657,59 +740,12 @@ public class Hipo2Npz {
     private static final class Npy {
         private static final byte[] MAGIC = {(byte) 0x93, 'N', 'U', 'M', 'P', 'Y'};
 
-        static byte[] writeByteArray(byte[] values, String descr) throws IOException {
+        /**
+         * Builds just the NPY header bytes for an array of the given dtype and length.
+         * The actual array data is streamed separately from a temp file.
+         */
+        static byte[] buildHeader(String descr, long length) throws IOException {
             ByteArrayOutputStream out = new ByteArrayOutputStream();
-            writeHeader(out, descr, values.length);
-            out.write(values);
-            return out.toByteArray();
-        }
-
-        static byte[] writeShortArray(short[] values, String descr) throws IOException {
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            writeHeader(out, descr, values.length);
-            ByteBuffer bb = ByteBuffer.allocate(values.length * 2).order(ByteOrder.LITTLE_ENDIAN);
-            for (short v : values) bb.putShort(v);
-            out.write(bb.array());
-            return out.toByteArray();
-        }
-
-        static byte[] writeIntArray(int[] values, String descr) throws IOException {
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            writeHeader(out, descr, values.length);
-            ByteBuffer bb = ByteBuffer.allocate(values.length * 4).order(ByteOrder.LITTLE_ENDIAN);
-            for (int v : values) bb.putInt(v);
-            out.write(bb.array());
-            return out.toByteArray();
-        }
-
-        static byte[] writeLongArray(long[] values, String descr) throws IOException {
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            writeHeader(out, descr, values.length);
-            ByteBuffer bb = ByteBuffer.allocate(values.length * 8).order(ByteOrder.LITTLE_ENDIAN);
-            for (long v : values) bb.putLong(v);
-            out.write(bb.array());
-            return out.toByteArray();
-        }
-
-        static byte[] writeFloatArray(float[] values, String descr) throws IOException {
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            writeHeader(out, descr, values.length);
-            ByteBuffer bb = ByteBuffer.allocate(values.length * 4).order(ByteOrder.LITTLE_ENDIAN);
-            for (float v : values) bb.putFloat(v);
-            out.write(bb.array());
-            return out.toByteArray();
-        }
-
-        static byte[] writeDoubleArray(double[] values, String descr) throws IOException {
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            writeHeader(out, descr, values.length);
-            ByteBuffer bb = ByteBuffer.allocate(values.length * 8).order(ByteOrder.LITTLE_ENDIAN);
-            for (double v : values) bb.putDouble(v);
-            out.write(bb.array());
-            return out.toByteArray();
-        }
-
-        private static void writeHeader(ByteArrayOutputStream out, String descr, int length) throws IOException {
             out.write(MAGIC);
             out.write(1);
             out.write(0);
@@ -728,58 +764,8 @@ public class Hipo2Npz {
             hlen.putShort((short) fullHeaderBytes.length);
             out.write(hlen.array());
             out.write(fullHeaderBytes);
+
+            return out.toByteArray();
         }
-    }
-
-    // ------------------------------------------------------------------------
-    // Primitive dynamic arrays
-    // ------------------------------------------------------------------------
-
-    private static final class ByteList {
-        private byte[] data = new byte[1024];
-        private int size = 0;
-        void add(byte v) { ensure(size + 1); data[size++] = v; }
-        byte[] toArray() { return Arrays.copyOf(data, size); }
-        private void ensure(int n) { if (n > data.length) data = Arrays.copyOf(data, Math.max(n, data.length * 2)); }
-    }
-
-    private static final class ShortList {
-        private short[] data = new short[1024];
-        private int size = 0;
-        void add(short v) { ensure(size + 1); data[size++] = v; }
-        short[] toArray() { return Arrays.copyOf(data, size); }
-        private void ensure(int n) { if (n > data.length) data = Arrays.copyOf(data, Math.max(n, data.length * 2)); }
-    }
-
-    private static final class IntList {
-        private int[] data = new int[1024];
-        private int size = 0;
-        void add(int v) { ensure(size + 1); data[size++] = v; }
-        int[] toArray() { return Arrays.copyOf(data, size); }
-        private void ensure(int n) { if (n > data.length) data = Arrays.copyOf(data, Math.max(n, data.length * 2)); }
-    }
-
-    private static final class LongList {
-        private long[] data = new long[1024];
-        private int size = 0;
-        void add(long v) { ensure(size + 1); data[size++] = v; }
-        long[] toArray() { return Arrays.copyOf(data, size); }
-        private void ensure(int n) { if (n > data.length) data = Arrays.copyOf(data, Math.max(n, data.length * 2)); }
-    }
-
-    private static final class FloatList {
-        private float[] data = new float[1024];
-        private int size = 0;
-        void add(float v) { ensure(size + 1); data[size++] = v; }
-        float[] toArray() { return Arrays.copyOf(data, size); }
-        private void ensure(int n) { if (n > data.length) data = Arrays.copyOf(data, Math.max(n, data.length * 2)); }
-    }
-
-    private static final class DoubleList {
-        private double[] data = new double[1024];
-        private int size = 0;
-        void add(double v) { ensure(size + 1); data[size++] = v; }
-        double[] toArray() { return Arrays.copyOf(data, size); }
-        private void ensure(int n) { if (n > data.length) data = Arrays.copyOf(data, Math.max(n, data.length * 2)); }
     }
 }
