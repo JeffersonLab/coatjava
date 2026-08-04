@@ -15,10 +15,9 @@ runUnitTests=false
 installClara=false
 downloadData=false
 auxRetrieval=lfs
-declare -A auxDownload
-auxDownload['maps']=true
-auxDownload['nets']=true
-auxDownload['sqlites']=true
+auxDownloadMaps=true
+auxDownloadNets=true
+auxDownloadSqlites=true
 
 ################################################################################
 # usage
@@ -81,13 +80,13 @@ do
     --https) auxRetrieval=https ;;
     --wipe)  auxRetrieval=wipe  ;;
     --no-aux|--noaux)
-      for key in "${!auxDownload[@]}"; do
-        auxDownload[$key]=false
-      done
+      auxDownloadMaps=false
+      auxDownloadNets=false
+      auxDownloadSqlites=false
       ;;
-    --no-maps|--nomaps)       auxDownload['maps']=false    ;;
-    --no-nets|--nonets)       auxDownload['nets']=false    ;;
-    --no-sqlites|--nosqlites) auxDownload['sqlites']=false ;;
+    --no-maps|--nomaps)       auxDownloadMaps=false    ;;
+    --no-nets|--nonets)       auxDownloadNets=false    ;;
+    --no-sqlites|--nosqlites) auxDownloadSqlites=false ;;
     --spotbugs)  runSpotBugs=true  ;;
     -n)          runSpotBugs=false ;;
     --unittests) runUnitTests=true ;;
@@ -116,9 +115,9 @@ print_arg "runUnitTests" "$runUnitTests"
 print_arg "installClara" "$installClara"
 print_arg "downloadData" "$downloadData"
 print_arg "auxRetrieval" "$auxRetrieval"
-for key in "${!auxDownload[@]}"; do
-  print_arg "auxDownload[$key]" "${auxDownload[$key]}"
-done
+print_arg "auxDownloadMaps" "$auxDownloadMaps"
+print_arg "auxDownloadNets" "$auxDownloadNets"
+print_arg "auxDownloadSqlites" "$auxDownloadSqlites"
 print_arg "mvnArgs" "${mvnArgs[@]:-}"
 print_arg "wgetArgs" "${wgetArgs[@]:-}"
 echo "-------------------------------------------------------"
@@ -256,7 +255,7 @@ download_map () {
 
 # download the default field maps, as defined in libexec/env.sh:
 # (and duplicated in etc/services/reconstruction.yaml):
-if ${auxDownload['maps']}; then
+if $auxDownloadMaps; then
   case $auxRetrieval in
     lfs)
       notify_retrieval 'field maps' 'lfs'
@@ -289,7 +288,7 @@ if ${auxDownload['maps']}; then
 fi
 
 # download neural networks
-if ${auxDownload['nets']}; then
+if $auxDownloadNets; then
   case $auxRetrieval in
     lfs)
       notify_retrieval 'neural networks' 'lfs'
@@ -307,7 +306,7 @@ if ${auxDownload['nets']}; then
 fi
 
 # download neural networks
-if ${auxDownload['sqlites']}; then
+if $auxDownloadSqlites; then
   case $auxRetrieval in
     lfs)
       notify_retrieval 'ccdb/rcdb SQLite files' 'lfs'
