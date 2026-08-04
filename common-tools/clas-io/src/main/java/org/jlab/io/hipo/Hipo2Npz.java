@@ -85,7 +85,7 @@ public class Hipo2Npz {
         }
 
         Converter converter = new Converter(options.selectedBanks, schemaTypes);
-        converter.convert(options.input, options.output);
+        converter.convert(options.input, options.output, options.numEvents, options.firstEvent);
     }
 
     // ------------------------------------------------------------------------
@@ -96,12 +96,16 @@ public class Hipo2Npz {
         final File input;
         final File output;
         final File schemaDir;
+        final long numEvents;
+        final long firstEvent;
         final Set<String> selectedBanks; // null means all banks
 
-        private CliOptions(File input, File output, File schemaDir, Set<String> selectedBanks) {
+        private CliOptions(File input, File output, File schemaDir, long numEvents, long firstEvent, Set<String> selectedBanks) {
             this.input         = input;
             this.output        = output;
             this.schemaDir     = schemaDir;
+            this.numEvents     = numEvents;
+            this.firstEvent    = firstEvent;
             this.selectedBanks = selectedBanks;
         }
 
@@ -110,10 +114,11 @@ public class Hipo2Npz {
                 printUsageAndExit();
             }
 
-            File input = new File(args[0]);
-            File output = new File(args[1]);
-
-            File schemaDir = null;
+            File input                = new File(args[0]);
+            File output               = new File(args[1]);
+            File schemaDir            = null;
+            long numEvents            = 0;
+            long firstEvent           = 0;
             Set<String> selectedBanks = new LinkedHashSet<>();
             boolean selectAll = true;
 
@@ -138,6 +143,22 @@ public class Hipo2Npz {
                     File bankFile = new File(args[++i]);
                     selectedBanks.addAll(readBankNames(bankFile));
                     selectAll = false;
+                    continue;
+                }
+
+                if ("--num-events".equals(arg)) {
+                    if (i + 1 >= args.length) {
+                        throw new IllegalArgumentException("--num-events requires a number");
+                    }
+                    numEvents = Long.parseLong(args[++i]);
+                    continue;
+                }
+
+                if ("--first-event".equals(arg)) {
+                    if (i + 1 >= args.length) {
+                        throw new IllegalArgumentException("--first-event requires a number");
+                    }
+                    firstEvent = Long.parseLong(args[++i]);
                     continue;
                 }
 
@@ -167,7 +188,7 @@ public class Hipo2Npz {
                 throw new IllegalArgumentException("Input HIPO file not found: " + input.getAbsolutePath());
             }
 
-            return new CliOptions(input, output, schemaDir, selectAll ? null : selectedBanks);
+            return new CliOptions(input, output, schemaDir, numEvents, firstEvent, selectAll ? null : selectedBanks);
         }
 
         private static Set<String> readBankNames(File bankFile) throws IOException {
@@ -197,6 +218,8 @@ public class Hipo2Npz {
             System.err.println("                        both comma list and `--bank-file` may be used together");
             System.err.println("  --schema-dir DIR      use a custom schema directory");
             System.err.println("                        default: the one included with this coatjava installation");
+            System.err.println("  --num-events NUM      process this many events (default: all)");
+            System.err.println("  --first-event NUM     start from this event (default: 0)");
             System.err.println("");
             System.err.println("EXAMPLES:");
             System.err.println("*   hipo2npz input.hipo output.npz");
@@ -256,7 +279,7 @@ public class Hipo2Npz {
             this.schemaTypes   = schemaTypes;
         }
 
-        void convert(File input, File output) throws Exception {
+        void convert(File input, File output, long numEvents, long firstEvent) throws Exception {
             System.out.println(selectedBanks==null ? "Including all banks" : "Including selected banks only");
 
             File tmpDirFile = new File(output.getPath() + ".tmp");
@@ -267,20 +290,23 @@ public class Hipo2Npz {
             HipoDataSource reader = new HipoDataSource();
             reader.open(input);
 
-            long nEvents = 0;
+            long nevRead = 0;
+            long nevProc = 0;
             try {
                 try {
                     while (reader.hasEvent()) {
                         DataEvent event = reader.getNextEvent();
-                        nEvents++;
+                        nevRead++;
+                        if (nevRead <= firstEvent) continue;
                         ingestEvent(event);
-                        if ((nEvents % 10000) == 0) {
-                            System.out.printf("Processed %,d events%n", nEvents);
-                        }
+                        nevProc++;
+                        if ((nevProc % 10000) == 0) System.out.printf("Processed %,d events%n", nevProc);
+                        if (numEvents > 0 && nevProc >= numEvents) break;
                     }
                 } finally {
                     reader.close();
                 }
+                System.out.println("Writing NPZ file...");
                 writeNpz(output);
             } finally {
                 closeAllQuietly();
@@ -292,7 +318,7 @@ public class Hipo2Npz {
                 }
             }
 
-            System.out.printf("Wrote %s with %,d events and %,d banks%n", output.getAbsolutePath(), nEvents, banks.size());
+            System.out.printf("Wrote %s with %,d events and %,d banks%n", output.getAbsolutePath(), nevProc, banks.size());
         }
 
         private boolean keepBank(String bankName) {
