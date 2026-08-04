@@ -24,6 +24,7 @@ import org.jlab.io.hipo.HipoDataSource;
 import org.jlab.io.hipo.HipoDataSync;
 import org.jlab.rec.alert.TrackMatchingAI.ModelTrackMatching;
 import org.jlab.rec.alert.AIPID.ModelPrePID;
+import org.jlab.rec.alert.AIPID.ModelPostPID;
 import org.jlab.rec.alert.banks.RecoBankWriter;
 import org.jlab.rec.alert.projections.TrackProjector;
 import org.jlab.rec.atof.hit.ATOFHit;
@@ -60,6 +61,7 @@ import java.util.logging.Logger;
 
 import ai.djl.util.Pair;
 import org.jlab.rec.alert.AIPID.PrePIDResult;
+import org.jlab.rec.alert.AIPID.PIDResult;
 
 
 /**
@@ -115,6 +117,7 @@ public class ALERTEngine extends ReconstructionEngine {
 
     private ModelTrackMatching modelTrackMatching;
     private ModelPrePID modelPrePID;
+    private ModelPostPID modelPostPID;
 
     // AHDC track-finding strategy (driven by ALERT.Mode YAML key)
     private TrackFinder trackFinder;
@@ -158,6 +161,7 @@ public class ALERTEngine extends ReconstructionEngine {
 
         modelTrackMatching = new ModelTrackMatching();
         modelPrePID = new ModelPrePID();
+        modelPostPID = new ModelPostPID();
 
         Map<String, Integer> tableMap = new HashMap<>();
         tableMap.put("/calibration/alert/ahdc/gains", 3);
@@ -178,7 +182,8 @@ public class ALERTEngine extends ReconstructionEngine {
                 "AHDC::preclusters", "AHDC::clusters", "AHDC::track",
                 "AHDC::interclusters", "AHDC::docaclusters", "AHDC::ai:prediction",
                 "AHDC::mc", "AHDC::kftrack",
-                "ALERT::projections", "ALERT::ai:projections", "ALERT::prePID");
+                "ALERT::projections", "ALERT::ai:projections", 
+                "ALERT::ai:prepid", "ALERT::ai:pid");
 
         return true;
     }
@@ -430,9 +435,12 @@ public class ALERTEngine extends ReconstructionEngine {
             matched_ATOF_hit_id.add(new Pair<>(track_id, matchHitId));
         }
         rbc.appendTrackMatchingAIBank(event, matched_ATOF_hit_id);
+
+        HashMap<Integer, Integer> prePidByTrack = new HashMap<>();
         
         // ---------------------------------------------------------------------------------------
-        // PrePID using AI (AHDC::track + ATOF::clusters matched via ALERT::ai:projections)
+        // PrePID using AI. Use the ATOF model when a matched wedge and start time exist;
+        // otherwise use the AHDC-only model.
         // ---------------------------------------------------------------------------------------
         if (event.hasBank("ALERT::ai:projections") && event.hasBank("AHDC::track") && event.hasBank("ATOF::hits")) {
 
@@ -441,71 +449,58 @@ public class ALERTEngine extends ReconstructionEngine {
             DataBank bankHit  = event.getBank("ATOF::hits");
 
             ArrayList<PrePIDResult> prepid_results = new ArrayList<>();
+            double startTime = getEventStartTime(event);
 
             for (int i = 0; i < bankProj.rows(); i++) {
 
                 int trackid = bankProj.getInt("trackid", i);
-                int hitid = bankProj.getInt("matched_atof_hit_id", i); // TODO: Fix to hit_id instead of clusterid
+                int hitid = bankProj.getInt("matched_atof_hit_id", i);
+                int trkRow = findRow(bankTrk, "trackid", trackid);
+                 if (trkRow < 0) continue;
+
+                float px = bankTrk.getFloat("px", trkRow);
+                float py = bankTrk.getFloat("py", trkRow);
+                float pz = bankTrk.getFloat("pz", trkRow);
+                double pMag = Math.sqrt(px * px + py * py + pz * pz);
+                double pt = Math.sqrt(px * px + py * py);
+                float[] ahdcFeatures = {
+                    bankTrk.getFloat("x", trkRow),
+                    bankTrk.getFloat("y", trkRow),
+                    bankTrk.getFloat("z", trkRow),
+                    (float) Math.log1p(pMag),
+                    (float) Math.log1p(pt),
+                    (float) Math.atan2(py, px),
+                    pMag > 0 ? (float) Math.acos(pz / pMag) : Float.NaN,
+                    bankTrk.getInt("n_hits", trkRow),
+                    (float) Math.log1p(bankTrk.getFloat("path", trkRow)),
+                    (float) Math.log1p(bankTrk.getFloat("dEdx", trkRow)),
+                    (float) Math.log1p(bankTrk.getFloat("chi2", trkRow))
+                };
+                if (!allFinite(ahdcFeatures)) continue;
                 
-                // TODO: refactor this to replace this with single line
-                int trkRow = -1;
-                for (int r = 0; r < bankTrk.rows(); r++) {
-                    if (bankTrk.getInt("trackid", r) == trackid) { trkRow = r; break; }
-                }
-                if (trkRow < 0) continue;
-
-                int hitRow = -1;
-                for (int r = 0; r < bankHit.rows(); r++) {
-                    if (bankHit.getInt("id", r) == hitid) { hitRow = r; break; }
-                }
-                if (hitRow < 0) continue;
-
-                // Build feature vector float[23] in the exact training order
-                float[] x = new float[23];
-
-                // AHDC::track (13)
-                x[0]  = bankTrk.getFloat("x", trkRow);
-                x[1]  = bankTrk.getFloat("y", trkRow);
-                x[2]  = bankTrk.getFloat("z", trkRow);
-                x[3]  = bankTrk.getFloat("px", trkRow);
-                x[4]  = bankTrk.getFloat("py", trkRow);
-                x[5]  = bankTrk.getFloat("pz", trkRow);
-                x[6]  = bankTrk.getInt("n_hits", trkRow);
-                x[7]  = bankTrk.getInt("sum_adc", trkRow);
-                x[8]  = bankTrk.getFloat("path", trkRow);
-                x[9]  = bankTrk.getFloat("dEdx", trkRow);
-                x[10] = bankTrk.getFloat("p_drift", trkRow);
-                x[11] = bankTrk.getFloat("chi2", trkRow);
-                x[12] = bankTrk.getFloat("sum_residuals", trkRow);
-
-                /*// ATOF::clusters (10)
-                x[13] = bankClu.getInt("n_bar", cluRow);
-                x[14] = bankClu.getInt("n_wedge", cluRow);
-                x[15] = bankClu.getFloat("time", cluRow);
-                x[16] = bankClu.getFloat("x", cluRow);
-                x[17] = bankClu.getFloat("y", cluRow);
-                x[18] = bankClu.getFloat("z", cluRow);
-                x[19] = bankClu.getFloat("energy", cluRow);
-                x[20] = bankClu.getFloat("pathlength", cluRow);
-                x[21] = bankClu.getFloat("inpathlength", cluRow);
-                x[22] = bankClu.getInt("projID", cluRow);*/
-                
-                // ATOF::Hits (Temporarily updating to the same 10 slots as ATOF Clusters would have if it worked)
-                x[13] = 0f;
-                x[14] = 0f;
-                x[15] = bankHit.getFloat("time", hitRow);
-                x[16] = bankHit.getFloat("x", hitRow);
-                x[17] = bankHit.getFloat("y", hitRow);
-                x[18] = bankHit.getFloat("z", hitRow);
-                x[19] = bankHit.getFloat("energy", hitRow);
-                x[20] = 0f;
-                x[21] = 0f;
-                x[22] = 0f;
-
                 try {
-                    float[] pred = modelPrePID.prediction(x);
-                    int prepid = (int) pred[0];
-                    prepid_results.add(new PrePIDResult(trackid, hitid, prepid, pred[1], pred[2], pred[3], pred[4], pred[5]));
+                    float[] prediction = null;
+                    int hitRow = findRow(bankHit, "id", hitid);
+                    int clusterid = hitRow >= 0 ? bankHit.getInt("clusterid", hitRow) : -1;
+                    if (hitRow >= 0 && Double.isFinite(startTime)) {
+                        float[] atofFeatures = new float[16];
+                        System.arraycopy(ahdcFeatures, 0, atofFeatures, 0, ahdcFeatures.length);
+                        atofFeatures[11] = bankHit.getFloat("x", hitRow);
+                        atofFeatures[12] = bankHit.getFloat("y", hitRow);
+                        atofFeatures[13] = bankHit.getFloat("z", hitRow);
+                        atofFeatures[14] = (float) Math.log1p(bankHit.getFloat("energy", hitRow));
+                        atofFeatures[15] = (float) (bankHit.getFloat("time", hitRow) - startTime);
+                        if (allFinite(atofFeatures)) {
+                            prediction = modelPrePID.predictionATOF(atofFeatures);
+                        }
+                    }
+                    if (prediction == null) {
+                        prediction = modelPrePID.predictionAHDC(ahdcFeatures);
+                    }
+                    if (prediction != null) {
+                        prepid_results.add(new PrePIDResult(trackid, clusterid, prediction));
+                        prePidByTrack.put(trackid, (int) prediction[0]);
+                    }
                 } catch (TranslateException ex) {
                     LOGGER.warning(() -> "Exception in ALERTEngine PrePID: " + ex);
                 }
@@ -766,9 +761,104 @@ public class ALERTEngine extends ReconstructionEngine {
         }     
         DataBank recoKFHitsBank = ahdc_writer.fillAHDCHitsBank(event, AHDC_hits);
         event.appendBank(recoKFHitsBank); // remark: only  hits assocuated to a track are saved
- 
+        
+        // Post-KF PID: score every valid ALERT::ai:projections pair independently.
+        if (event.hasBank("ALERT::ai:projections") && event.hasBank("AHDC::kftrack")
+                && event.hasBank("ATOF::hits") && event.hasBank("ATOF::clusters")) {
+            DataBank bankProj = event.getBank("ALERT::ai:projections");
+            DataBank bankKF = event.getBank("AHDC::kftrack");
+            DataBank bankHit = event.getBank("ATOF::hits");
+            DataBank bankCluster = event.getBank("ATOF::clusters");
+            ArrayList<PIDResult> pidResults = new ArrayList<>();
+            double startTime = getEventStartTime(event);
 
+            if (Double.isFinite(startTime)) {
+                for (int i = 0; i < bankProj.rows(); i++) {
+                    int trackid = bankProj.getInt("trackid", i);
+                    int hitid = bankProj.getInt("matched_atof_hit_id", i);
+                    int trackRow = findRow(bankKF, "trackid", trackid);
+                    int hitRow = findRow(bankHit, "id", hitid);
+                    if (trackRow < 0 || hitRow < 0) continue;
+
+                    int clusterid = bankHit.getInt("clusterid", hitRow);
+                    int clusterRow = findRow(bankCluster, "id", clusterid);
+                    if (clusterid < 0 || clusterRow < 0) continue;
+
+                    float px = bankKF.getFloat("px", trackRow);
+                    float py = bankKF.getFloat("py", trackRow);
+                    float pz = bankKF.getFloat("pz", trackRow);
+                    double pMag = Math.sqrt(px * px + py * py + pz * pz);
+                    double pt = Math.sqrt(px * px + py * py);
+                    float[] features = {
+                        bankKF.getFloat("x", trackRow),
+                        bankKF.getFloat("y", trackRow),
+                        bankKF.getFloat("z", trackRow),
+                        (float) Math.log1p(pMag),
+                        (float) Math.log1p(pt),
+                        (float) Math.atan2(py, px),
+                        pMag > 0 ? (float) Math.acos(pz / pMag) : Float.NaN,
+                        bankKF.getInt("n_hits", trackRow),
+                        bankCluster.getInt("n_bar", clusterRow),
+                        bankCluster.getInt("n_wedge", clusterRow),
+                        (float) Math.log1p(bankKF.getFloat("dEdx", trackRow)),
+                        bankKF.getFloat("sum_residuals", trackRow),
+                        (float) Math.log1p(bankCluster.getFloat("energy", clusterRow)),
+                        bankCluster.getFloat("x", clusterRow),
+                        bankCluster.getFloat("y", clusterRow),
+                        bankCluster.getFloat("z", clusterRow),
+                        (float) (bankCluster.getFloat("time", clusterRow) - startTime),
+                        bankCluster.getFloat("pathlength", clusterRow)
+                    };
+                    if (!allFinite(features)) continue;
+
+                    try {
+                        float[] prediction = modelPostPID.prediction(features);
+                        if (prediction != null) {
+                            pidResults.add(new PIDResult(trackid, clusterid, prediction));
+                        }
+                    } catch (TranslateException ex) {
+                        LOGGER.warning(() -> "Exception in ALERTEngine PostPID: " + ex);
+                    }
+                }
+            }
+                if (pidResults != null && !pidResults.isEmpty()) {
+                    rbc.appendPIDBank(event, pidResults);
+            }     
+        }
         return true;
+    }
+
+    private static int findRow(DataBank bank, String field, int value) {
+        for (int row = 0; row < bank.rows(); row++) {
+            if (bank.getInt(field, row) == value) return row;
+        }
+        return -1;
+    }
+
+    private static boolean allFinite(float[] values) {
+        for (float value : values) {
+            if (!Float.isFinite(value)) return false;
+        }
+        return true;
+    }
+
+    private static double getEventStartTime(DataEvent event) {
+        if (event.hasBank("MC::Particle")) {
+            DataBank bank = event.getBank("MC::Particle");
+            if (bank.rows() > 0) return bank.getFloat("vt", 0);
+        }
+        if (event.hasBank("REC::Event")) {
+            DataBank bank = event.getBank("REC::Event");
+            if (bank.rows() > 0) {
+                double startTime = bank.getFloat("startTime", 0);
+                if (startTime > 0) {
+                    return 0.0; // REC::Event startTime is already accounted for in ATOF timing; return 0.0 to avoid double-counting.
+                } else {
+                    return Double.NaN;
+                }
+            }
+        }
+        return Double.NaN;
     }
 
     /** Extract a deduplicated list of ATOF hits from {@code ATOF::hits} for the

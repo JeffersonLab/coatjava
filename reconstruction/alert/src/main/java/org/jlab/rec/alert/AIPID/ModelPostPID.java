@@ -16,46 +16,37 @@ import java.nio.file.Paths;
 import java.util.logging.Logger;
 import org.jlab.utils.CLASResources;
 
-public class ModelPrePID {
+public class ModelPostPID {
 
-    private static final Logger LOGGER = Logger.getLogger(ModelPrePID.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(ModelPostPID.class.getName());
     private static final int[] CLASS_IDS = {2212, 45, 46, 49, 47};
+    private static final int INPUT_SIZE = 18;
 
-    private final ZooModel<float[], float[]> ahdcModel;
-    private final ZooModel<float[], float[]> atofModel;
+    private final ZooModel<float[], float[]> model;
 
-    public ModelPrePID() {
+    public ModelPostPID() {
         System.setProperty("ai.djl.pytorch.num_interop_threads", "1");
         System.setProperty("ai.djl.pytorch.num_threads", "1");
         System.setProperty("ai.djl.pytorch.graph_optimizer", "false");
 
-        ahdcModel = loadModel("model_prePID_AHDC", 11);
-        atofModel = loadModel("model_prePID_ATOF", 16);
-    }
-
-    public ZooModel<float[], float[]> getModel() {
-        return ahdcModel;
+        String path = CLASResources.getResourcePath("etc/data/nnet/rg-l/model_PID/");
+        Criteria<float[], float[]> criteria = Criteria.builder()
+                .setTypes(float[].class, float[].class)
+                .optModelPath(Paths.get(path))
+                .optEngine("PyTorch")
+                .optTranslator(translator())
+                .optProgress(new ProgressBar())
+                .build();
+        try {
+            model = criteria.loadModel();
+        } catch (IOException | ModelNotFoundException | MalformedModelException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public float[] prediction(float[] features) throws TranslateException {
-        if (features != null && features.length == 16) {
-            return predictionATOF(features);
-        }
-        return predictionAHDC(features);
-    }
-
-    public float[] predictionAHDC(float[] features) throws TranslateException {
-        return predict(ahdcModel, features, 11);
-    }
-
-    public float[] predictionATOF(float[] features) throws TranslateException {
-        return predict(atofModel, features, 16);
-    }
-
-    private static float[] predict(ZooModel<float[], float[]> model, float[] features,
-            int expectedSize) throws TranslateException {
-        if (features == null || features.length != expectedSize) {
-            LOGGER.warning("PrePID input must be float[" + expectedSize + "]");
+        if (features == null || features.length != INPUT_SIZE) {
+            LOGGER.warning("PostPID input must be float[18]");
             return null;
         }
         try (Predictor<float[], float[]> predictor = model.newPredictor()) {
@@ -63,27 +54,11 @@ public class ModelPrePID {
         }
     }
 
-    private static ZooModel<float[], float[]> loadModel(String directory, int inputSize) {
-        String path = CLASResources.getResourcePath("etc/data/nnet/rg-l/" + directory + "/");
-        Criteria<float[], float[]> criteria = Criteria.builder()
-                .setTypes(float[].class, float[].class)
-                .optModelPath(Paths.get(path))
-                .optEngine("PyTorch")
-                .optTranslator(translator(inputSize))
-                .optProgress(new ProgressBar())
-                .build();
-        try {
-            return criteria.loadModel();
-        } catch (IOException | ModelNotFoundException | MalformedModelException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private static Translator<float[], float[]> translator(int inputSize) {
+    private static Translator<float[], float[]> translator() {
         return new Translator<>() {
             @Override
             public NDList processInput(TranslatorContext ctx, float[] features) {
-                return new NDList(ctx.getNDManager().create(features, new Shape(1, inputSize)));
+                return new NDList(ctx.getNDManager().create(features, new Shape(1, INPUT_SIZE)));
             }
 
             @Override
