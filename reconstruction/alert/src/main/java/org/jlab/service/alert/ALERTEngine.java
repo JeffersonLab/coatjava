@@ -820,11 +820,11 @@ public class ALERTEngine extends ReconstructionEngine {
                         LOGGER.warning(() -> "Exception in ALERTEngine PostPID: " + ex);
                     }
                 }
-				rbc.appendPIDBank(event, pidResults);
             }
-            
+                if (pidResults != null && !pidResults.isEmpty()) {
+                    rbc.appendPIDBank(event, pidResults);
+            }     
         }
-
         return true;
     }
 
