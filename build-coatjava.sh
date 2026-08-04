@@ -11,13 +11,15 @@ set -o pipefail
 
 cleanBuild=false
 runSpotBugs=false
-downloadMaps=true
-downloadNets=true
-downloadSqlites=true
 runUnitTests=false
-dataRetrieval=lfs
 installClara=false
 downloadData=false
+auxRetrieval=lfs
+declare -A auxDownload=(
+  [maps]=true
+  [nets]=true
+  [sqlites]=true
+)
 
 ################################################################################
 # usage
@@ -32,17 +34,18 @@ GENERAL OPTIONS
     --no-progress     no download progress printouts
     --help            show this message
 
-DATA RETRIEVAL OPTIONS
+AUXILIARY DATA RETRIEVAL OPTIONS
   How to retrieve magnetic field maps, neural network models, etc.
-  Choose only one; default is `--'$dataRetrieval'`
+  Choose only one; default is `--'$auxRetrieval'`
     --lfs             use Git Large File Storage (requires `git-lfs`)
     --cvmfs           use CernVM-FS (requires `/cvfms`)
     --https           use clasweb HTTPS (field maps only)
-  Additional options
-    --nomaps          do not download/overwrite field maps
-    --nonets          do not download/overwrite neural networks
-    --nosqlites       do not download/overwrite SQLite files for CCDB/RCDB
-    --wipe            remove retrieved data
+    --wipe            remove ALL retrieved auxiliary data and exit
+  Options for disabling downloads:
+    --no-aux          ignore ALL auxiliary data
+    --no-maps         ignore field maps
+    --no-nets         ignore neural networks
+    --no-sqlites      ignore CCDB/RCDB SQLite files
 
 TESTING OPTIONS
     --spotbugs        also run spotbugs plugin
@@ -64,17 +67,8 @@ wgetArgs=()
 for xx in $@
 do
   case $xx in
-    --spotbugs)  runSpotBugs=true   ;;
-    -n)          runSpotBugs=false  ;;
-    --nomaps)    downloadMaps=false ;;
-    --nonets)    downloadNets=false ;;
-    --nosqlites) downloadSqlites=false ;;
-    --unittests) runUnitTests=true  ;;
-    --clean)     cleanBuild=true    ;;
-    --depana)
-      echo "ERROR: option \`$xx\` has been removed; dependency tree printout and analysis now happen automatically in the Maven build lifecycle" >&2
-      exit 1
-      ;;
+    --clara) installClara=true ;;
+    --clean) cleanBuild=true   ;;
     --quiet)
       mvnArgs+=(--quiet --batch-mode)
       wgetArgs+=(--quiet)
@@ -83,12 +77,26 @@ do
       mvnArgs+=(--no-transfer-progress)
       wgetArgs+=(--no-verbose)
       ;;
-    --cvmfs) dataRetrieval=cvmfs ;;
-    --lfs)   dataRetrieval=lfs   ;;
-    --https) dataRetrieval=https ;;
-    --wipe)  dataRetrieval=wipe  ;;
-    --clara) installClara=true   ;;
-    --data)  downloadData=true   ;;
+    --lfs)   auxRetrieval=lfs   ;;
+    --cvmfs) auxRetrieval=cvmfs ;;
+    --https) auxRetrieval=https ;;
+    --wipe)  auxRetrieval=wipe  ;;
+    --no-aux|--noaux)
+      for key in "${!auxDownload[@]}"; do
+        auxDownload[$key]=false
+      done
+      ;;
+    --no-maps|--nomaps)       auxDownload['maps']=false    ;;
+    --no-nets|--nonets)       auxDownload['nets']=false    ;;
+    --no-sqlites|--nosqlites) auxDownload['sqlites']=false ;;
+    --spotbugs)  runSpotBugs=true  ;;
+    -n)          runSpotBugs=false ;;
+    --unittests) runUnitTests=true ;;
+    --data)      downloadData=true ;;
+    --depana)
+      echo "ERROR: option \`$xx\` has been removed; dependency tree printout and analysis now happen automatically in the Maven build lifecycle" >&2
+      exit 1
+      ;;
     --xrootd)
       echo "ERROR: option \`$xx\` has been removed; use \`--help\` for guidance" >&2
       exit 1
@@ -100,6 +108,21 @@ do
     *) mvnArgs+=($xx) ;;
   esac
 done
+
+echo "---------------------- ARGUMENTS ----------------------"
+print_arg() { printf "  %30s = %s\n" "$1" "$2"; }
+print_arg "cleanBuild" "$cleanBuild"
+print_arg "runSpotBugs" "$runSpotBugs"
+print_arg "runUnitTests" "$runUnitTests"
+print_arg "installClara" "$installClara"
+print_arg "downloadData" "$downloadData"
+print_arg "auxRetrieval" "$auxRetrieval"
+for key in "${!auxDownload[@]}"; do
+  print_arg "auxDownload[$key]" "${auxDownload[$key]}"
+done
+print_arg "mvnArgs" "${mvnArgs[@]:-}"
+print_arg "wgetArgs" "${wgetArgs[@]:-}"
+echo "-------------------------------------------------------"
 
 
 ################################################################################
@@ -142,13 +165,13 @@ if $cleanBuild; then
 fi
 
 # wipe retrieved data (field maps, NN models, etc.)
-if [ "$dataRetrieval" = "wipe" ]; then
+if [ "$auxRetrieval" = "wipe" ]; then
   git submodule deinit --all --force
 fi
 
 # print cleanup note and exit
-if $cleanBuild || [ "$dataRetrieval" = "wipe" ]; then
-  [ "$dataRetrieval" = "wipe" ] && echo "[+] REMOVED RETRIEVED DATA" || echo "[+] NOTE: retrieved data not removed; use \`--wipe\` if you need to remove them"
+if $cleanBuild || [ "$auxRetrieval" = "wipe" ]; then
+  [ "$auxRetrieval" = "wipe" ] && echo "[+] REMOVED RETRIEVED DATA" || echo "[+] NOTE: retrieved data not removed; use \`--wipe\` if you need to remove them"
   $cleanBuild && echo "[+] DONE CLEANING; rerun without \`--clean\` to build"
   exit
 fi
@@ -164,7 +187,7 @@ command_exists () {
 }
 
 # check data-retrieval options, and prepare accordingly
-case $dataRetrieval in
+case $auxRetrieval in
   lfs)
     if ! command_exists git-lfs ; then
       echo 'ERROR: `git-lfs` not found; please install it, or use a different data-retrieval option other than `--lfs`' >&2
@@ -182,7 +205,7 @@ case $dataRetrieval in
   https)
     ;;
   *)
-    echo "ERROR: data retrieval option '$dataRetrieval' is not supported" >&2
+    echo "ERROR: data retrieval option \`--$auxRetrieval\` is not supported" >&2
     exit 1
     ;;
 esac
@@ -202,7 +225,7 @@ download_lfs() {
 # download a magnetic field map
 download_map () {
   ret=0
-  case $dataRetrieval in
+  case $auxRetrieval in
     cvmfs)
       notify_retrieval 'field map' 'cvmfs'
       cp $1 ./
@@ -226,7 +249,7 @@ download_map () {
       ;;
     *)
       ret=1
-      echo "ERROR:::::::::::  called 'download_map' with bad 'dataRetrieval'." >&2
+      echo "ERROR:::::::::::  called 'download_map' with bad 'auxRetrieval' option \`--$auxRetrieval\`." >&2
       ;;
   esac
   return $ret
@@ -234,15 +257,15 @@ download_map () {
 
 # download the default field maps, as defined in libexec/env.sh:
 # (and duplicated in etc/services/reconstruction.yaml):
-if $downloadMaps; then
-  case $dataRetrieval in
+if ${auxDownload['maps']}; then
+  case $auxRetrieval in
     lfs)
       notify_retrieval 'field maps' 'lfs'
       download_lfs etc/data/magfield
       ;;
     cvmfs|https)
       webDir=https://clasweb.jlab.org/clas12offline/magfield
-      if [ "$dataRetrieval" = "cvmfs" ]; then
+      if [ "$auxRetrieval" = "cvmfs" ]; then
         webDir=/cvmfs/oasis.opensciencegrid.org/jlab/hallb/clas12/sw/noarch/data/magfield
       fi
       mkdir -p $magfield_dir
@@ -253,22 +276,22 @@ if $downloadMaps; then
         if [ $? -ne 0 ]; then
             echo "ERROR:::::::::::  Could not download field map:" >&2
             echo "$webDir/$map" >&2
-            echo "One option is to download manually into etc/data/magfield and then run this build script with --nomaps" >&2
+            echo "One option is to download manually into \`etc/data/magfield\` and then run this build script with \`--no-maps\`" >&2
             exit 1
         fi
       done
       cd -
       ;;
     *)
-      echo "ERROR: data retrieval option '$dataRetrieval' not supported for field maps" >&2
+      echo "ERROR: data retrieval option \`--$auxRetrieval\` not supported for field maps" >&2
       exit 1
       ;;
   esac
 fi
 
 # download neural networks
-if $downloadNets; then
-  case $dataRetrieval in
+if ${auxDownload['nets']}; then
+  case $auxRetrieval in
     lfs)
       notify_retrieval 'neural networks' 'lfs'
       download_lfs etc/data/nnet
@@ -285,8 +308,8 @@ if $downloadNets; then
 fi
 
 # download neural networks
-if $downloadSqlites; then
-  case $dataRetrieval in
+if ${auxDownload['sqlites']}; then
+  case $auxRetrieval in
     lfs)
       notify_retrieval 'ccdb/rcdb SQLite files' 'lfs'
       download_lfs etc/data/sqlite
@@ -299,7 +322,7 @@ fi
 
 # download validation data
 if $downloadData; then
-  case $dataRetrieval in
+  case $auxRetrieval in
     lfs)
       notify_retrieval 'validation data' 'lfs'
       download_lfs validation/advanced-tests/data
