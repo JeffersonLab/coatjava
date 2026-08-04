@@ -15,11 +15,10 @@ runUnitTests=false
 installClara=false
 downloadData=false
 auxRetrieval=lfs
-declare -A auxDownload=(
-  [maps]=true
-  [nets]=true
-  [sqlites]=true
-)
+declare -A auxDownload
+auxDownload['maps']=true
+auxDownload['nets']=true
+auxDownload['sqlites']=true
 
 ################################################################################
 # usage
