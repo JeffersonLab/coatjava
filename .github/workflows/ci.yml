@@ -20,6 +20,7 @@ env:
   java_distribution: zulu
   groovy_version: 4.x
   CCDB_CONNECTION: 'sqlite:///${{ github.workspace }}/coatjava/etc/data/sqlite/ccdb.sqlite'
+  RCDB_CONNECTION: 'sqlite:///${{ github.workspace }}/coatjava/etc/data/sqlite/rcdb.sqlite'
   nthreads: 1
 
 jobs:
