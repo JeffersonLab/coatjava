@@ -357,7 +357,7 @@ jobs:
       - name: untar build
         run: tar xzvf coatjava.tar.gz
       - name: hipo2npz
-        run: ./coatjava/bin/hipo2npz rec.hipo rec.npz RUN::config,REC::Event,REC::Particle
+        run: ./coatjava/bin/hipo2npz rec.hipo rec.npz
       - name: hipo2npz-dump
         run: ./coatjava/bin/hipo2npz-dump rec.npz 1
 
