@@ -37,8 +37,8 @@ public class TrajectoryRowData {
 	// source
 	protected String source;
 	
-	//MC or Recon
-	protected SwimType swimType;
+	// MC or reconstructed-event trajectory
+	protected TrajectoryType trajectoryType;
 
 	/**
 	 * Create a data row for display in the table.
@@ -59,7 +59,7 @@ public class TrajectoryRowData {
 	 *            the initial azimuthal angle (degrees)
 	 */
 	public TrajectoryRowData(int trackId, LundId lundId, double xo, double yo, double zo, double p, double theta, double phi,
-			int status, String source, SwimType swimType) {
+			int status, String source, TrajectoryType trajectoryType) {
 		super();
 		this.trackId = trackId;
 		this.lundId = lundId;
@@ -71,11 +71,29 @@ public class TrajectoryRowData {
 		this.phi = phi;
 		this.status = status;
 		this.source = source;
-		this.swimType = swimType;
+		this.trajectoryType = trajectoryType;
 
 		if (lundId == null) {
 			lundId = LundSupport.getInstance().get(0);
 		}
+	}
+
+	/**
+	 * Compatibility constructor for callers using the legacy adaptive-swimmer enum.
+	 */
+	public TrajectoryRowData(int trackId, LundId lundId, double xo, double yo, double zo, double p, double theta,
+			double phi, int status, String source, SwimType swimType) {
+		this(trackId, lundId, xo, yo, zo, p, theta, phi, status, source,
+				swimType == SwimType.MCSWIM ? TrajectoryType.MC : TrajectoryType.RECON);
+	}
+
+	/**
+	 * Get whether this row represents an MC or reconstructed trajectory.
+	 *
+	 * @return the trajectory source type
+	 */
+	public TrajectoryType getTrajectoryType() {
+		return trajectoryType;
 	}
 	
 	/**
@@ -83,7 +101,7 @@ public class TrajectoryRowData {
 	 * @return the swim type
 	 */
 	public SwimType getSwimType() {
-		return swimType;
+		return trajectoryType == TrajectoryType.MC ? SwimType.MCSWIM : SwimType.RECONSWIM;
 	}
  
 	/**
