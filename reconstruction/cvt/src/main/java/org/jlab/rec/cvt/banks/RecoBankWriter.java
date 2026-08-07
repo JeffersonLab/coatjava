@@ -55,7 +55,9 @@ public class RecoBankWriter {
 
             bank.setShort("clusterID", i, (short) hitlist.get(i).getAssociatedClusterID());
             bank.setShort("trkID", i, (short) hitlist.get(i).getAssociatedTrackID());
-            bank.setByte("status", i, (byte) hitlist.get(i).getStrip().getStatus());            
+            bank.setByte("status", i, (byte) hitlist.get(i).getStrip().getStatus());  
+            
+            bank.setByte("ai", i, hitlist.get(i).getDenoiseStatus());                        
         }
         //bank.show();
         return bank;
@@ -207,7 +209,9 @@ public class RecoBankWriter {
 
             bank.setShort("clusterID", i, (short) hitlist.get(i).getAssociatedClusterID());
             bank.setShort("trkID", i, (short) hitlist.get(i).getAssociatedTrackID());
-            bank.setByte("status", i, (byte) hitlist.get(i).getStrip().getStatus());  
+            bank.setByte("status", i, (byte) hitlist.get(i).getStrip().getStatus()); 
+            
+            bank.setByte("ai", i, hitlist.get(i).getDenoiseStatus());
         }
         
         return bank;

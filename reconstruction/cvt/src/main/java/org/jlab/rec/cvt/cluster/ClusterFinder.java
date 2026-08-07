@@ -41,6 +41,10 @@ public class ClusterFinder {
             if (hit.getStrip().getStatus()>0 && hit.getStrip().getStatus()<5) {
                 continue;
             }
+            
+            if (hit.isNoiseInAllPresentSections()) {
+                continue;
+            }
 
             int w = hit.getStrip().getStrip();
             int l = hit.getLayer();

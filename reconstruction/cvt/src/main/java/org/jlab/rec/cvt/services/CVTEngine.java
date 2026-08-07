@@ -88,12 +88,24 @@ public class CVTEngine extends ReconstructionEngine {
     private double rcut = 120.0;
     private double z0cut = 10;
     
+    // Model files and thresholds for the three models; They could be set in yaml files
+    final static String USE_DENOISE = "useDenoise";
+    final static String CONF_MODEL_FILES[] = {"modelFile1", "modelFile2", "modelFile3"};
+    final static String CONF_THRESHOLDS[] = {"threshold1", "threshold2", "threshold3"};  
+    boolean useDenoise = true;
+    String[] modelFiles = {"classifier_torchscript_sector1_noCSWeight_weightInTraining.pt", "classifier_torchscript_sector2_noCSWeight_weightInTraining.pt", "classifier_torchscript_sector3_noCSWeight_weightInTraining.pt"};
+    float[] thresholds = {0.1f, 0.1f, 0.1f}; // To be determined
+    
+    private CVTDenoise denoise = null;
+    
     public CVTEngine(String name) {
         super(name, "ziegler", "6.0");
+        if(useDenoise) denoise = new CVTDenoise(modelFiles, thresholds);
     }
 
     public CVTEngine() {
         super("CVTEngine", "ziegler", "6.0");
+        if(useDenoise) denoise = new CVTDenoise(modelFiles, thresholds);
     }
 
     
@@ -300,6 +312,8 @@ public class CVTEngine extends ReconstructionEngine {
         List<ArrayList<Hit>>         hits = reco.readHits(event, svtStatus, bmtStatus, bmtTime, 
                                                             bmtStripVoltage, bmtStripThreshold,
                                                             adcStatus);
+        if(useDenoise) denoise.predict(hits);
+
         List<ArrayList<Cluster>> clusters = reco.findClusters();
         List<ArrayList<Cross>>    crosses = reco.findCrosses();
         
@@ -457,6 +471,16 @@ public class CVTEngine extends ReconstructionEngine {
         
         if (this.getEngineConfigString("z0cut")!=null)
             this.z0cut = Double.valueOf(this.getEngineConfigString("z0cut"));
+        
+        if (this.getEngineConfigString("USE_DENOISE")!=null)
+            this.useDenoise = Boolean.valueOf(this.getEngineConfigString("USE_DENOISE"));
+        
+        for(int i = 0; i < 3; i++){
+            if (this.getEngineConfigString(CONF_THRESHOLDS[i]) != null)
+                thresholds[i] = Float.parseFloat(this.getEngineConfigString(CONF_THRESHOLDS[i]));
+            if (this.getEngineConfigString(CONF_MODEL_FILES[i]) != null)
+                modelFiles[i] = this.getEngineConfigString(CONF_MODEL_FILES[i]);
+        }
         
     }
 

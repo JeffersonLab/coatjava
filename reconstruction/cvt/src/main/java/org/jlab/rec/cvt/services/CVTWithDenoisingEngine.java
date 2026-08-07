@@ -11,17 +11,22 @@ import org.jlab.io.base.DataEvent;
 import org.jlab.rec.cvt.Constants;
 import org.jlab.rec.cvt.Geometry;
 import org.jlab.rec.cvt.banks.RecoBankWriter;
+import org.jlab.rec.cvt.cluster.Cluster;
+import org.jlab.rec.cvt.cross.Cross;
 import org.jlab.rec.cvt.hit.Hit;
+import org.jlab.rec.cvt.track.Seed;
+import org.jlab.rec.cvt.track.StraightTrack;
+import org.jlab.rec.cvt.track.Track;
 import org.jlab.utils.groups.IndexedTable;
 
 /**
- * Service to return reconstructed HITS
+ * Service to return reconstructed TRACKS with application of hit denoising
+ * format
  *
- * @author ziegler
+ * @author ziegler, tongtong
  *
  */
-public class CVTHitEngine extends ReconstructionEngine {
-
+public class CVTWithDenoisingEngine extends ReconstructionEngine {
 
     /**
      * @param docacutsum the docacutsum to set
@@ -33,7 +38,18 @@ public class CVTHitEngine extends ReconstructionEngine {
     private int Run = -1;
 
     private String svtHitBank;
+    private String svtClusterBank;
+    private String svtCrossBank;
     private String bmtHitBank;
+    private String bmtClusterBank;
+    private String bmtCrossBank;
+    private String cvtSeedBank;
+    private String cvtSeedClusBank;
+    private String cvtTrackBank;
+    private String cvtUTrackBank;
+    private String cvtTrajectoryBank;
+    private String cvtKFTrajectoryBank;
+    private String cvtCovMatBank;    
     private String bankPrefix = "";
     
     // run-time options
@@ -72,12 +88,12 @@ public class CVTHitEngine extends ReconstructionEngine {
     private double rcut = 120.0;
     private double z0cut = 10;
     
-    public CVTHitEngine(String name) {
+    public CVTWithDenoisingEngine(String name) {
         super(name, "ziegler", "6.0");
     }
 
-    public CVTHitEngine() {
-        super("CVTHitEngine", "ziegler", "6.0");
+    public CVTWithDenoisingEngine() {
+        super("CVTEngine", "ziegler", "6.0");
     }
 
     
@@ -117,7 +133,14 @@ public class CVTHitEngine extends ReconstructionEngine {
         this.initConstantsTables();
         this.registerBanks();
         this.printConfiguration();
-        return true;    
+        return true;
+    }
+
+    @Override
+    public void detectorChanged(int runNumber) {
+        IndexedTable svtLorentz = this.getConstantsManager().getConstants(runNumber, "/calibration/svt/lorentz_angle");
+        IndexedTable bmtVoltage = this.getConstantsManager().getConstants(runNumber, "/calibration/mvt/bmt_voltage");
+        Geometry.initialize(this.getConstantsManager().getVariation(), runNumber, svtLorentz, bmtVoltage);
     }
     
     public final void setOutputBankPrefix(String prefix) {
@@ -128,9 +151,31 @@ public class CVTHitEngine extends ReconstructionEngine {
         String prefix = bankPrefix;
         if(Constants.getInstance().isCosmics) prefix = "Rec";
         this.setBmtHitBank("BMT" + prefix + "::Hits");
+        this.setBmtClusterBank("BMT" + prefix + "::Clusters");
+        this.setBmtCrossBank("BMT" + prefix + "::Crosses");
         this.setSvtHitBank("BST" + prefix + "::Hits");
+        this.setSvtClusterBank("BST" + prefix + "::Clusters");
+        this.setSvtCrossBank("BST" + prefix + "::Crosses");
+        this.setSeedBank("CVT" + prefix + "::Seeds");
+        this.setSeedClusBank("CVT" + prefix + "::SeedClusters");
+        this.setTrackBank("CVT" + prefix + "::Tracks");
+        this.setUTrackBank("CVT" + prefix + "::UTracks");
+        this.setCovMatBank("CVT" + prefix + "::TrackCovMat");
+        this.setTrajectoryBank("CVT" + prefix + "::Trajectory");
+        this.setKFTrajectoryBank("CVT" + prefix + "::KFTrajectory");
         super.registerOutputBank(this.bmtHitBank);
+        super.registerOutputBank(this.bmtClusterBank);
+        super.registerOutputBank(this.bmtCrossBank);
         super.registerOutputBank(this.svtHitBank);
+        super.registerOutputBank(this.svtClusterBank);
+        super.registerOutputBank(this.svtCrossBank);
+        super.registerOutputBank(this.cvtSeedBank);
+        super.registerOutputBank(this.cvtSeedClusBank);
+        super.registerOutputBank(this.cvtTrackBank);
+        super.registerOutputBank(this.cvtUTrackBank);
+        super.registerOutputBank(this.cvtCovMatBank);                
+        super.registerOutputBank(this.cvtTrajectoryBank); 
+        super.registerOutputBank(this.cvtKFTrajectoryBank); 
     }
     
     public int getRun(DataEvent event) {
@@ -234,10 +279,7 @@ public class CVTHitEngine extends ReconstructionEngine {
     public void setBmtzmaxclussize(int bmtzmaxclussize) {
         this.bmtzmaxclussize = bmtzmaxclussize;
     }
-   
-    @Override
-    public void detectorChanged(int run) {}
-
+    
     @Override
     public boolean processDataEventUser(DataEvent event) {
         
@@ -246,29 +288,69 @@ public class CVTHitEngine extends ReconstructionEngine {
         int run = this.getRun(event); 
         
         IndexedTable svtStatus          = this.getConstantsManager().getConstants(run, "/calibration/svt/status");
-        IndexedTable svtLorentz         = this.getConstantsManager().getConstants(run, "/calibration/svt/lorentz_angle");
         IndexedTable bmtStatus          = this.getConstantsManager().getConstants(run, "/calibration/mvt/bmt_status");
         IndexedTable bmtTime            = this.getConstantsManager().getConstants(run, "/calibration/mvt/bmt_time");
-        IndexedTable bmtVoltage         = this.getConstantsManager().getConstants(run, "/calibration/mvt/bmt_voltage");
         IndexedTable bmtStripVoltage    = this.getConstantsManager().getConstants(run, "/calibration/mvt/bmt_strip_voltage");
         IndexedTable bmtStripThreshold  = this.getConstantsManager().getConstants(run, "/calibration/mvt/bmt_strip_voltage_thresholds");
         IndexedTable beamPos            = this.getConstantsManager().getConstants(run, "/geometry/beam/position");
         IndexedTable adcStatus            = this.getConstantsManager().getConstants(run, "/calibration/svt/adcstatus");
-        
-        Geometry.getInstance().initialize(this.getConstantsManager().getVariation(), run, svtLorentz, bmtVoltage);
         
         CVTReconstruction reco = new CVTReconstruction(swimmer);
         
         List<ArrayList<Hit>>         hits = reco.readHits(event, svtStatus, bmtStatus, bmtTime, 
                                                             bmtStripVoltage, bmtStripThreshold,
                                                             adcStatus);
+        List<ArrayList<Cluster>> clusters = reco.findClusters();
+        List<ArrayList<Cross>>    crosses = reco.findCrosses();
         
                 
         List<DataBank> banks = new ArrayList<>();
 
+        if(crosses != null) {
+            if(Constants.getInstance().isCosmics) {
+                CosmicTracksRec trackFinder = new CosmicTracksRec();
+                List<StraightTrack>  seeds = trackFinder.getSeeds(event, clusters.get(0), clusters.get(1), crosses);
+                List<StraightTrack> tracks = trackFinder.getTracks(event, this.isInitFromMc(), 
+                                                                          this.isKfFilterOn(), 
+                                                                          this.getKfIterations());
+                if(seeds!=null) banks.add(RecoBankWriter.fillStraightSeedsBank(event, seeds, "CVTRec::CosmicSeeds"));
+                if(tracks!=null) {
+                    banks.add(RecoBankWriter.fillStraightTracksBank(event, tracks, "CVTRec::Cosmics"));
+                    banks.add(RecoBankWriter.fillStraightTracksTrajectoryBank(event, tracks, "CVTRec::Trajectory"));
+                    banks.add(RecoBankWriter.fillStraightTrackKFTrajectoryBank(event, tracks, "CVTRec::KFTrajectory"));
+                }            
+            } 
+            else {
+                double[] xyBeam = CVTReconstruction.getBeamSpot(event, beamPos);
+                TracksFromTargetRec  trackFinder = new TracksFromTargetRec(swimmer, xyBeam);
+                trackFinder.totTruthHits = reco.getTotalNbTruHits();
+                List<Seed>   seeds = trackFinder.getSeeds(clusters, crosses);
+                
+                
+                List<Track> tracks = trackFinder.getTracks(event, this.isInitFromMc(), 
+                                                                  this.isKfFilterOn(), 
+                                                                  this.getKfIterations(), 
+                                                                  true, this.getPid());
+                
+                if(seeds!=null) {
+                    banks.add(RecoBankWriter.fillSeedBank(event, seeds, this.getSeedBank()));
+                    banks.add(RecoBankWriter.fillSeedClusBank(event, seeds, this.getSeedClusBank()));
+                }
+                if(tracks!=null) {
+                    banks.add(RecoBankWriter.fillTrackBank(event, tracks, this.getTrackBank()));
+    //                banks.add(RecoBankWriter.fillTrackCovMatBank(event, tracks, this.getCovMat()));
+                    banks.add(RecoBankWriter.fillTrajectoryBank(event, tracks, this.getTrajectoryBank()));
+                    banks.add(RecoBankWriter.fillKFTrajectoryBank(event, tracks, this.getKFTrajectoryBank()));
+                }
+            }
+        }
         banks.add(RecoBankWriter.fillSVTHitBank(event, hits.get(0), this.getSvtHitBank()));
         banks.add(RecoBankWriter.fillBMTHitBank(event, hits.get(1), this.getBmtHitBank()));
-        
+        banks.add(RecoBankWriter.fillSVTClusterBank(event, clusters.get(0), this.getSvtClusterBank()));
+        banks.add(RecoBankWriter.fillBMTClusterBank(event, clusters.get(1), this.getBmtClusterBank()));
+        banks.add(RecoBankWriter.fillSVTCrossBank(event, crosses.get(0), this.getSvtCrossBank()));
+        banks.add(RecoBankWriter.fillBMTCrossBank(event, crosses.get(1), this.getBmtCrossBank()));
+
         event.appendBanks(banks.toArray(new DataBank[0]));
             
         
@@ -399,18 +481,104 @@ public class CVTHitEngine extends ReconstructionEngine {
         this.svtHitBank = bstHitBank;
     }
 
+    public void setSvtClusterBank(String bstClusterBank) {
+        this.svtClusterBank = bstClusterBank;
+    }
+
+    public void setSvtCrossBank(String bstCrossBank) {
+        this.svtCrossBank = bstCrossBank;
+    }
+
     public void setBmtHitBank(String bmtHitBank) {
         this.bmtHitBank = bmtHitBank;
     }
 
+    public void setBmtClusterBank(String bmtClusterBank) {
+        this.bmtClusterBank = bmtClusterBank;
+    }
+
+    public void setBmtCrossBank(String bmtCrossBank) {
+        this.bmtCrossBank = bmtCrossBank;
+    }
+
+    public void setSeedBank(String cvtSeedBank) {
+        this.cvtSeedBank = cvtSeedBank;
+    }
+    
+    public void setSeedClusBank(String cvtSeedClusBank) {
+        this.cvtSeedClusBank = cvtSeedClusBank;
+    }
+
+    public void setTrackBank(String cvtTrackBank) {
+        this.cvtTrackBank = cvtTrackBank;
+    }
+
+    public void setUTrackBank(String cvtTrack0Bank) {
+        this.cvtUTrackBank = cvtTrack0Bank;
+    }
+
+    public void setTrajectoryBank(String cvtTrajectoryBank) {
+        this.cvtTrajectoryBank = cvtTrajectoryBank;
+    }
+
+    public void setCovMatBank(String cvtTrackCovMat) {
+        this.cvtCovMatBank = cvtTrackCovMat;
+    }
+    
+    public void setKFTrajectoryBank(String cvtKFTrajectoryBank) {
+        this.cvtKFTrajectoryBank = cvtKFTrajectoryBank;
+    }
+    
     public String getSvtHitBank() {
         return svtHitBank;
+    }
+
+    public String getSvtClusterBank() {
+        return svtClusterBank;
+    }
+
+    public String getSvtCrossBank() {
+        return svtCrossBank;
     }
 
     public String getBmtHitBank() {
         return bmtHitBank;
     }
 
+    public String getBmtClusterBank() {
+        return bmtClusterBank;
+    }
+
+    public String getBmtCrossBank() {
+        return bmtCrossBank;
+    }
+
+    public String getSeedBank() {
+        return cvtSeedBank;
+    }
+    
+    public String getSeedClusBank() {
+        return cvtSeedClusBank;
+    }
+    public String getTrackBank() {
+        return cvtTrackBank;
+    }
+
+    public String getUTrackBank() {
+        return cvtUTrackBank;
+    }
+
+    public String getTrajectoryBank() {
+        return cvtTrajectoryBank;
+    }
+
+    public String getKFTrajectoryBank() {
+        return cvtKFTrajectoryBank;
+    }
+
+    public String getCovMat() {
+        return cvtCovMatBank;
+    }
     
     public void printConfiguration() {            
         
@@ -444,7 +612,4 @@ public class CVTHitEngine extends ReconstructionEngine {
         
         
     }
-
-    
-
 }

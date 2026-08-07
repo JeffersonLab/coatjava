@@ -34,7 +34,8 @@ public class Hit implements Comparable<Hit> {
     public boolean newClustering = false;
     public int MCstatus = -1;
     public boolean isCorrupted;
-
+    public byte denoiseStatus = 0;
+        
     // constructor
     public Hit(DetectorType detector, BMTType type, int sector, int layer, Strip strip) {
         this._Detector = detector;     // 0 = SVT, 1 = BMT
@@ -136,6 +137,36 @@ public class Hit implements Comparable<Hit> {
         return (this._Layer + 1) % 2 + 1;
     }
 
+    
+    public void setDenoiseStatus(byte status){
+        this.denoiseStatus = status;
+    }
+
+    public byte getDenoiseStatus(){
+        return denoiseStatus;
+    }
+       
+    public boolean isNoiseInAllPresentSections() {
+        if(denoiseStatus == 0) return false;
+        
+        boolean[] isPresent = new boolean[3]; // if present in any of three sections
+        boolean[] isNoise = new boolean[3];
+        
+        for (int section = 1; section <= 3; section++) {
+            isPresent[section - 1] = (denoiseStatus & (1 << (section + 2))) != 0;
+
+            isNoise[section - 1] = isPresent[section - 1] && (denoiseStatus & (1 << (section - 1))) != 0;
+        }
+        
+        for (int i = 0; i < 3; i++) {
+            if (isPresent[i] && !isNoise[i]) {
+                return false;
+            }
+        }
+        return true;
+    }
+    
+    
     /**
      *
      * @param arg

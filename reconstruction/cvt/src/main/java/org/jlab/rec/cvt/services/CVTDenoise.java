@@ -37,6 +37,8 @@ import org.jlab.clas.swimtools.Swim;
 import org.jlab.rec.cvt.Constants;
 import org.jlab.service.ai.PredictorPool;
 import org.jlab.utils.groups.IndexedTable;
+import org.jlab.rec.cvt.hit.Hit;
+import org.jlab.rec.cvt.bmt.BMTType;
 
 /* -----------------------------------------------
    Input class
@@ -100,13 +102,13 @@ class CVTTranslator implements Translator<CVTInput, float[][]> {
 /* -----------------------------------------------
    Hit class
    ----------------------------------------------- */
-class Hit {
+class LocalHit {
     int layer; // 1 to 6 for SVT, and 7 to 12 for BMT
     int sector;
     int strip;
     int index; // Index of hits in a strip, in case that there are multiple hits in a strip
     
-    public Hit(int layer, int sector, int strip, int index) {
+    public LocalHit(int layer, int sector, int strip, int index) {
         this.layer = layer;
         this.sector = sector;
         this.strip = strip;
@@ -133,25 +135,16 @@ class Hit {
 /* -----------------------------------------------
    Denoise engine
    ----------------------------------------------- */
-public class CVTDenoiseEngine extends ReconstructionEngine {
+public class CVTDenoise {
     private static final int NSECTIONS = 3; // Detectors are separted into 3 sections, and a seperate model for each section
     private static final int NLAYERS = 12; // Layers from 1 to 12
-    private static final int MAX_HITS = 450; // Maximum of hits for each layer
+    private static final int MAX_HITS = 450; // Maximum of hits for each section
     private static final int NFEATURES = 9; // Number of features for input of models
-    
-    // Inputs are from BST and BMT hit banks    
-    final static String BST_BANK = "BST::Hits";
-    final static String BMT_BANK = "BMT::Hits";
-    
-    // Model files and thresholds for the three models; They could be set in yaml files
-    final static String CONF_MODEL_FILES[] = {"modelFile1", "modelFile2", "modelFile3"};
-    final static String CONF_THRESHOLDS[] = {"threshold1", "threshold2", "threshold3"};         
+        
+    // Model files and thresholds for the three models; They could be set in yaml files     
     String[] modelFiles = {"classifier_torchscript_sector1_noCSWeight_weightInTraining.pt", "classifier_torchscript_sector2_noCSWeight_weightInTraining.pt", "classifier_torchscript_sector3_noCSWeight_weightInTraining.pt"};
     float[] thresholds = {0.1f, 0.1f, 0.1f}; // To be determined
-    
-    // Number of threshold for predictor pools    
-    final static String CONF_THREADS = "threads";    
-    
+        
     // For each feature of each layer, minimum and maximum for scaling features
     private float[][] minVals = new float[NFEATURES][NLAYERS];
     private float[][] maxVals = new float[NFEATURES][NLAYERS];  
@@ -160,17 +153,13 @@ public class CVTDenoiseEngine extends ReconstructionEngine {
     private ZooModel<CVTInput, float[][]>[] model;
     private PredictorPool[] predictors;       
     
-    public CVTDenoiseEngine() {
-        super("CVTDenoiseEngine","Tongtong","1.0");
+    public CVTDenoise(String[] modelFiles, float[] thresholds) {
+        this.modelFiles = modelFiles;
+        this.thresholds = thresholds;
+        init();
     }
-
-    @Override
-    public void detectorChanged(int run){}
     
-    @Override
-    public boolean init() {
-        this.initConstantsTables();
-        
+    private boolean init() {        
         criterias = new Criteria[NSECTIONS];
         model = new ZooModel[NSECTIONS];
         predictors = new PredictorPool[NSECTIONS];             
@@ -184,10 +173,6 @@ public class CVTDenoiseEngine extends ReconstructionEngine {
         
         // Load models and set predictor pools
         for(int i = 0; i < NSECTIONS; i++){
-            if (getEngineConfigString(CONF_THRESHOLDS[i]) != null)
-                thresholds[i] = Float.parseFloat(getEngineConfigString(CONF_THRESHOLDS[i]));
-            if (getEngineConfigString(CONF_MODEL_FILES[i]) != null)
-                modelFiles[i] = getEngineConfigString(CONF_MODEL_FILES[i]);
             
             try {
                 String modelPath = ClasUtilsFile.getResourceDir("CLAS12DIR", "etc/data/nnet/cvtdn/" + modelFiles[i]);
@@ -202,11 +187,9 @@ public class CVTDenoiseEngine extends ReconstructionEngine {
                     .build();
 
                 model[i] = criterias[i].loadModel();
-
-                int threads = Integer.parseInt(getEngineConfigString(CONF_THREADS,"16"));
-                predictors[i] = new PredictorPool(threads, model[i]);
+                predictors[i] = new PredictorPool(16, model[i]);
             } catch (NullPointerException | MalformedModelException | IOException | ModelNotFoundException ex) {
-                Logger.getLogger(CVTDenoiseEngine.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(CVTEngine.class.getName()).log(Level.SEVERE, null, ex);
                 return false;
             }
         } 
@@ -214,42 +197,31 @@ public class CVTDenoiseEngine extends ReconstructionEngine {
         return true;
     }
     
-    @Override
-    public boolean processDataEventUser(DataEvent event) {
+    public void predict(List<ArrayList<Hit>> cvtHits) {
+        List<Hit> bst_hits = cvtHits.get(0);
+        List<Hit> bmt_hits = cvtHits.get(1);
         
-        Swim swimmer = new Swim();
-        
-        int run = this.getRun(event); 
-        
-        IndexedTable svtLorentz         = this.getConstantsManager().getConstants(run, "/calibration/svt/lorentz_angle");
-        IndexedTable bmtVoltage         = this.getConstantsManager().getConstants(run, "/calibration/mvt/bmt_voltage");
-        
-        Geometry.getInstance().initialize(this.getConstantsManager().getVariation(), run, svtLorentz, bmtVoltage);        
-        
-        if (!event.hasBank(BST_BANK)) return true;
-        if (!event.hasBank(BMT_BANK)) return true;
-
-        DataBank bst_bank = event.getBank(BST_BANK);
-        DataBank bmt_bank = event.getBank(BMT_BANK);
+        if (bst_hits.isEmpty() && bmt_hits.isEmpty()) return;
         
         float[][][] x = new float[NSECTIONS][MAX_HITS][NFEATURES];
         float[][] mask = new float[NSECTIONS][MAX_HITS];        
 
         int[] nHits = {0, 0, 0};
         
-        Map<Integer, Hit>[] maps = new HashMap[NSECTIONS];
+        Map<Integer, LocalHit>[] maps = new HashMap[NSECTIONS];
         for (int i = 0; i < NSECTIONS; i++) {
            maps[i] = new HashMap<>();
         }
         
         // Read BST bank and set input for models
         int[][][] nHitsLayerSectorStrip_BST = new int[6][18][256]; // Number of hits in a strip
-        for(int i = 0; i < bst_bank.rows(); i++){
-            int sector = bst_bank.getByte("sector", i);
-            int layer = bst_bank.getByte("layer", i);
-            int strip = bst_bank.getShort("strip",i);
+        for(int i = 0; i < bst_hits.size(); i++){
+            Hit hit = bst_hits.get(i);
+            int sector = hit.getSector();
+            int layer = hit.getLayer();
+            int strip = hit.getStrip().getStrip();
             
-            Hit hit = new Hit(layer, sector, strip, nHitsLayerSectorStrip_BST[layer-1][sector-1][strip-1]++);
+            LocalHit localHit = new LocalHit(layer, sector, strip, nHitsLayerSectorStrip_BST[layer-1][sector-1][strip-1]++);
             
             Line3D line = Geometry.getInstance().getSVT().getStrip(layer, sector, strip);                             
             float[] features = {strip, (float)(line.origin().x()/10.), (float)(line.end().x()/10.), (float)(line.origin().y()/10.), 
@@ -270,34 +242,34 @@ public class CVTDenoiseEngine extends ReconstructionEngine {
 
                 mask[section - 1][nHits[section - 1]] = 1.0f;
 
-                maps[section - 1].put(nHits[section - 1], hit);
+                maps[section - 1].put(nHits[section - 1], localHit);
 
                 nHits[section - 1]++;
                 if(nHits[section - 1] == MAX_HITS) {
-                    Logger.getLogger(CVTDenoiseEngine.class.getName()).log(Level.SEVERE, "Number of hits is over maximum limit!");
-                    return true;
+                    Logger.getLogger(CVTEngine.class.getName()).log(Level.SEVERE, "Number of hits is over maximum limit!");
+                    return;
                 }
             } 
         }
         
         // Read BMT bank and set input for models
         int[][][] nHitsLayerSectorStrip_BMT = new int[6][3][1152]; // Number of hits in a strip
-        for(int i = 0; i < bmt_bank.rows(); i++){
-            int sector = bmt_bank.getByte("sector", i);
-            int layer = bmt_bank.getByte("layer", i);
-            int strip = bmt_bank.getShort("strip",i);
+        for(int i = 0; i < bmt_hits.size(); i++){
+            Hit hit = bmt_hits.get(i);
+            int sector = hit.getSector();
+            int layer = hit.getLayer();
+            int strip = hit.getStrip().getStrip();
             
-            Hit hit = new Hit(layer+6, sector, strip, nHitsLayerSectorStrip_BMT[layer-1][sector-1][strip-1]++);
+            LocalHit localHit = new LocalHit(layer+6, sector, strip, nHitsLayerSectorStrip_BMT[layer-1][sector-1][strip-1]++);
             
-            Point3D originPoint, endPoint;                
-            int region = (layer + 1) / 2; // Get region number for a BMT layer; layers 1, 4, 6 for BMT-C layers, and layers 2, 3, 5 for BMT-Z
-            if(layer == 2 || layer ==3 || layer == 5) {
-                Line3D line = Geometry.getInstance().getBMT().getLCZstrip(region, sector, strip, swimmer);
+            Point3D originPoint, endPoint;                            
+            if(hit.getType() == BMTType.Z) {
+                Line3D line = hit.getStrip().getLine();
                 originPoint = line.origin();
                 endPoint = line.origin();
             }
             else {
-                Arc3D arcLine = Geometry.getInstance().getBMT().getCstrip(region, sector, strip);
+                Arc3D arcLine = hit.getStrip().getArc();
                 originPoint = arcLine.origin();
                 endPoint = arcLine.end();
             }
@@ -321,12 +293,12 @@ public class CVTDenoiseEngine extends ReconstructionEngine {
 
                 mask[section - 1][nHits[section - 1]] = 1.0f;
 
-                maps[section - 1].put(nHits[section - 1], hit);
+                maps[section - 1].put(nHits[section - 1], localHit);
 
                 nHits[section - 1]++;
                 if(nHits[section - 1] == MAX_HITS) {
-                    Logger.getLogger(CVTDenoiseEngine.class.getName()).log(Level.SEVERE, "Number of hits is over maximum limit!");
-                    return true;
+                    Logger.getLogger(CVTEngine.class.getName()).log(Level.SEVERE, "Number of hits is over maximum limit!");
+                    return;
                 }
             }             
         }        
@@ -366,7 +338,7 @@ public class CVTDenoiseEngine extends ReconstructionEngine {
                 try{
                     float[][] preds = predictor.predict(input);
                     for(int i = 0; i < nHits[s]; i++){                                                
-                        Hit hit = maps[s].get(i);
+                        LocalHit hit = maps[s].get(i);
                         statuses[hit.getLayer()-1][hit.getSector()-1][hit.getStrip() - 1][hit.getIndex()] |= (byte) (1 << (s+3));  
                         if(preds[i][0] < thresholds[s]) statuses[hit.getLayer()-1][hit.getSector()-1][hit.getStrip() - 1][hit.getIndex()] |= (byte) (1 << s);                      
                     }
@@ -379,14 +351,8 @@ public class CVTDenoiseEngine extends ReconstructionEngine {
             }
         }
         
-        // Update BST and BMT banks to record predictions
-        updateBanks(bst_bank, bmt_bank, statuses);
-        event.removeBank(BST_BANK);
-        event.appendBank(bst_bank);
-        event.removeBank(BMT_BANK);
-        event.appendBank(bmt_bank);        
-                
-        return true;
+        // Update BST and BMT hits to record predictions
+        updateHits(bst_hits, bmt_hits, statuses);      
     }
 
     //  Scaling per layer
@@ -464,54 +430,30 @@ public class CVTDenoiseEngine extends ReconstructionEngine {
         return sectionList;
     }
     
-    // -------- Update BST & BMT banks --------
-    private void updateBanks(DataBank bst_bank, DataBank bmt_bank, byte[][][][] statuses) {
+    // -------- Update BST & BMT hits --------
+    private void updateHits(List<Hit> bst_hits, List<Hit> bmt_hits, byte[][][][] statuses) {
         int[][][] nHitsLayerSectorStrip_BST = new int[6][18][256]; // Number of hits in a strip
-        for (int row=0; row<bst_bank.rows(); row++) {
-            int sector = bst_bank.getByte("sector", row);
-            int layer = bst_bank.getByte("layer", row);
-            int strip = bst_bank.getShort("strip", row);
+        for (int i=0; i<bst_hits.size(); i++) {
+            Hit hit = bst_hits.get(i);
+            int sector = hit.getSector();
+            int layer = hit.getLayer();
+            int strip = hit.getStrip().getStrip();
             
             byte status = statuses[layer-1][sector-1][strip-1][nHitsLayerSectorStrip_BST[layer-1][sector-1][strip-1]];            
-            nHitsLayerSectorStrip_BST[layer-1][sector-1][strip-1]++;
-            
-            bst_bank.setByte("ai", row, status);
+            hit.setDenoiseStatus(status);
+            nHitsLayerSectorStrip_BST[layer-1][sector-1][strip-1]++;                        
         }
         
         int[][][] nHitsLayerSectorStrip_BMT = new int[6][3][1152]; // Number of hits in a strip
-        for (int row=0; row<bmt_bank.rows(); row++) {
-            int sector = bmt_bank.getByte("sector", row);
-            int layer = bmt_bank.getByte("layer", row);
-            int strip = bmt_bank.getShort("strip", row);
+        for (int i=0; i<bmt_hits.size(); i++) {
+            Hit hit = bmt_hits.get(i);
+            int sector = hit.getSector();
+            int layer = hit.getLayer();
+            int strip = hit.getStrip().getStrip();
             
             byte status = statuses[layer+5][sector-1][strip-1][nHitsLayerSectorStrip_BMT[layer-1][sector-1][strip-1]]; // For BMT, Layer from 1 to 6 in bank, while layer from 7 to 12 in model
+            hit.setDenoiseStatus(status);
             nHitsLayerSectorStrip_BMT[layer-1][sector-1][strip-1]++;
-            
-            bmt_bank.setByte("ai", row, status);
         }
-    }
-    
-    private int getRun(DataEvent event) {
-    
-        if (event.hasBank("RUN::config") == false) {
-            System.err.println("RUN CONDITIONS NOT READ!");
-            return 0;
-        }
-
-        DataBank bank = event.getBank("RUN::config");
-        int run = bank.getInt("run", 0);  
-        if(Constants.getInstance().seedingDebugMode) {
-            System.out.println("EVENT "+bank.getInt("event", 0));
-        }
-        return run;
-    }
-    
-    private void initConstantsTables() {
-        String[] tables = new String[]{
-            "/calibration/svt/lorentz_angle",
-            "/calibration/mvt/bmt_voltage",
-        };
-        requireConstants(Arrays.asList(tables));
-        this.getConstantsManager().setVariation("default");
-    }        
+    }           
 }
