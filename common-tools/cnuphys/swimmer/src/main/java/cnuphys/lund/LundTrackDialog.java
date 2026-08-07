@@ -26,7 +26,7 @@ import javax.swing.border.Border;
 import javax.swing.border.TitledBorder;
 
 import cnuphys.CLAS12Swim.CLAS12SwimResult;
-import cnuphys.CLAS12Swim.CommonsMathCLAS12Swimmer;
+import cnuphys.CLAS12Swim.CLAS12Swimmer;
 import cnuphys.CLAS12Swim.ICLAS12Swimmer;
 import cnuphys.swim.SwimTrajectory;
 import cnuphys.swim.Swimming;
@@ -287,7 +287,7 @@ public class LundTrackDialog extends JDialog {
 	 * algorithm, and swimmer implementation.
 	 */
 	private void doCommonSwim() {
-		ICLAS12Swimmer swimmer = new CommonsMathCLAS12Swimmer();
+		ICLAS12Swimmer swimmer = new CLAS12Swimmer();
 		
 		CLAS12SwimResult result = null;
 		LundId lid = _lundComboBox.getSelectedId();
