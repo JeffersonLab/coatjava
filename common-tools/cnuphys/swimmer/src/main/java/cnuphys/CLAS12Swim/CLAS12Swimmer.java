@@ -60,15 +60,6 @@ public final class CLAS12Swimmer implements ICLAS12Swimmer {
     private double maxStepSize = Double.POSITIVE_INFINITY;
     
 
-    /**
-     * If true, tune tolerances to target a modest "miss" scale rather than over-solving.
-     * <p>
-     * For boundary-hit swims (Z/Plane/etc.), this mode uses an event convergence and
-     * absolute position tolerance on the order of {@code 1e-5 cm} by default.
-     * </p>
-     */
-    private boolean legacyComparable = false;
-
     private final FieldProbe probe;
 
     /**
@@ -97,24 +88,10 @@ public final class CLAS12Swimmer implements ICLAS12Swimmer {
 
 
     /**
-     * Enable/disable the "legacy comparable" tuning mode.
-     *
-     * @param legacyComparable true to enable comparable tuning (less over-solving)
-     */
-    public void setLegacyComparable(boolean legacyComparable) {
-        this.legacyComparable = legacyComparable;
-    }
-
-    /**
      * Swim to a fixed target z (cm), stopping when the trajectory reaches {@code zTarget}
      * (event detection) or when the path length {@code sMax} is reached.
      *
      * <p><b>Units:</b> positions in cm, momentum in GeV/c, angles in degrees, path length in cm.</p>
-     *
-     * <p>
-     * When {@code legacyComparable} is {@code true}, this method intentionally avoids  over-solving 
-     * and targets a modest z-miss scale (~1e-5 cm) for speed comparisons.
-     * </p>
      */
     @Override
     public CLAS12SwimResult swimZ(int q,
@@ -126,7 +103,7 @@ public final class CLAS12Swimmer implements ICLAS12Swimmer {
         final CLAS12Values ivals = new CLAS12Values(q, xo, yo, zo, p, theta, phi);
         final CLAS12ZListener listener = new CLAS12ZListener(ivals, zTarget, accuracy, sMax);
 
-        // Momentum guard (match CLAS12Swimmer behavior)
+        // Momentum guard
         if (p < minMomentum) {
             listener.setStatus(CLAS12Swimmer.BELOW_MIN_MOMENTUM);
             return new CLAS12SwimResult(listener);
@@ -142,17 +119,14 @@ public final class CLAS12Swimmer implements ICLAS12Swimmer {
         final double[] y = ivals.getU().clone();
         final SwimEquations ode = new SwimEquations(q, p, probe);
 
-        // ------------------------------------------------------------------
-        // legacyComparable tuning (restored without extra class fields)
-        // ------------------------------------------------------------------
-        final double targetMiss = legacyComparable ? 1.0e-5 : accuracy;      // cm
-        final double successTol = legacyComparable ? targetMiss : accuracy;  // cm
+        final double targetMiss = accuracy; // cm
+        final double successTol = accuracy; // cm
 
         // Commons Math requires per-component tolerances. Interpret the provided "tolerance" knob
-        // as a position absolute tolerance in cm when not in legacyComparable mode.
-        final double absPos = legacyComparable ? 1.0e-5 : Math.max(1.0e-12, tolerance); // cm
-        final double absDir = legacyComparable ? 1.0e-5 : 1.0e-10;                      // dimensionless
-        final double rel    = legacyComparable ? 1.0e-9 : 1.0e-12;
+        // as a position absolute tolerance in cm.
+        final double absPos = Math.max(1.0e-12, tolerance); // cm
+        final double absDir = 1.0e-10; // dimensionless
+        final double rel = 1.0e-12;
 
         final double[] absTol = new double[] { absPos, absPos, absPos, absDir, absDir, absDir };
         final double[] relTol = new double[] { rel, rel, rel, rel, rel, rel };
@@ -245,7 +219,7 @@ public final class CLAS12Swimmer implements ICLAS12Swimmer {
         final CLAS12Values ivals = new CLAS12Values(q, xo, yo, zo, p, theta, phi);
         final CLAS12Listener listener = new CLAS12Listener(ivals, sMax);
 
-        // Momentum guard (match CLAS12Swimmer behavior)
+        // Momentum guard
         if (p < minMomentum) {
             listener.setStatus(CLAS12Swimmer.BELOW_MIN_MOMENTUM);
             return new CLAS12SwimResult(listener);
@@ -264,9 +238,9 @@ public final class CLAS12Swimmer implements ICLAS12Swimmer {
         final FirstOrderDifferentialEquations ode = new SwimEquations(q, p, probe);
 
         // Per-component tolerances
-        final double absPos = legacyComparable ? 1.0e-5 : Math.max(1.0e-12, tolerance); // cm
-        final double absDir = legacyComparable ? 1.0e-5 : 1.0e-10;                      // dimensionless
-        final double rel    = legacyComparable ? 1.0e-9 : 1.0e-12;
+        final double absPos = Math.max(1.0e-12, tolerance); // cm
+        final double absDir = 1.0e-10; // dimensionless
+        final double rel = 1.0e-12;
 
         final double[] absTol = new double[] { absPos, absPos, absPos, absDir, absDir, absDir };
         final double[] relTol = new double[] { rel, rel, rel, rel, rel, rel };
@@ -350,13 +324,12 @@ public final class CLAS12Swimmer implements ICLAS12Swimmer {
         final double[] y = ivals.getU().clone();
         final SwimEquations ode = new SwimEquations(q, p, probe);
 
-        // legacyComparable tuning (same philosophy as swimZ/swimPlane)
-        final double targetMiss = legacyComparable ? 1.0e-5 : accuracy;
-        final double successTol = legacyComparable ? targetMiss : accuracy;
+        final double targetMiss = accuracy;
+        final double successTol = accuracy;
 
-        final double absPos = legacyComparable ? 1.0e-5 : Math.max(1.0e-12, tolerance);
-        final double absDir = legacyComparable ? 1.0e-5 : 1.0e-10;
-        final double rel    = legacyComparable ? 1.0e-9 : 1.0e-12;
+        final double absPos = Math.max(1.0e-12, tolerance);
+        final double absDir = 1.0e-10;
+        final double rel = 1.0e-12;
 
         final double[] absTol = { absPos, absPos, absPos, absDir, absDir, absDir };
         final double[] relTol = { rel, rel, rel, rel, rel, rel };
@@ -501,18 +474,11 @@ public final class CLAS12Swimmer implements ICLAS12Swimmer {
         final double[] y = ivals.getU().clone();
         final SwimEquations ode = new SwimEquations(q, p, probe);
 
-        // ------------------------------------------------------------
-        // legacyComparable tuning (same philosophy as swimZ)
-        // ------------------------------------------------------------
-        final double targetMiss = legacyComparable ? 1.0e-5 : accuracy;
-        final double successTol = legacyComparable ? targetMiss : accuracy;
-
-        final double absPos = legacyComparable
-                ? 1.0e-5
-                : Math.max(1.0e-12, tolerance);
-
-        final double absDir = legacyComparable ? 1.0e-5 : 1.0e-10;
-        final double rel    = legacyComparable ? 1.0e-9 : 1.0e-12;
+        final double targetMiss = accuracy;
+        final double successTol = accuracy;
+        final double absPos = Math.max(1.0e-12, tolerance);
+        final double absDir = 1.0e-10;
+        final double rel = 1.0e-12;
 
         final double[] absTol = {
                 absPos, absPos, absPos,
@@ -610,8 +576,8 @@ public final class CLAS12Swimmer implements ICLAS12Swimmer {
     /**
      * Swim to a fixed target z (cm) in a given CLAS12 sector using the RotatedComposite field.
      * <p>
-     * This mirrors {@link CLAS12Swimmer#sectorSwimZ(...)} in spirit: it is only valid when the
-     * active probe is a {@link RotatedCompositeProbe}. If not, it prints an error and returns {@code null}.
+     * This operation is only valid when the active probe is a
+     * {@link RotatedCompositeProbe}. If not, it prints an error and returns {@code null}.
      * </p>
      */
     @Override
@@ -621,7 +587,7 @@ public final class CLAS12Swimmer implements ICLAS12Swimmer {
                                        double zTarget, double accuracy,
                                        double sMax, double h, double tolerance) {
 
-        // Must use rotated field (match CLAS12Swimmer behavior)
+        // Must use the rotated field.
         if (!(probe instanceof RotatedCompositeProbe)) {
             System.err.println("sectorSwimZ only valid with RotatedCompositeProbe.");
             return null;
@@ -645,16 +611,11 @@ public final class CLAS12Swimmer implements ICLAS12Swimmer {
         final SectorSwimEquations ode =
                 new SectorSwimEquations(sector, q, p, probe);
 
-        // --- Same tuning logic as working swimZ ---
-        final double targetMiss = legacyComparable ? 1.0e-5 : accuracy;
-        final double successTol = legacyComparable ? targetMiss : accuracy;
-
-        final double absPos = legacyComparable
-                ? 1.0e-5
-                : Math.max(1.0e-12, tolerance);
-
-        final double absDir = legacyComparable ? 1.0e-5 : 1.0e-10;
-        final double rel    = legacyComparable ? 1.0e-9 : 1.0e-12;
+        final double targetMiss = accuracy;
+        final double successTol = accuracy;
+        final double absPos = Math.max(1.0e-12, tolerance);
+        final double absDir = 1.0e-10;
+        final double rel = 1.0e-12;
 
         final double[] absTol = { absPos, absPos, absPos, absDir, absDir, absDir };
         final double[] relTol = { rel, rel, rel, rel, rel, rel };
@@ -737,7 +698,7 @@ public final class CLAS12Swimmer implements ICLAS12Swimmer {
         final CLAS12Values ivals = new CLAS12Values(q, xo, yo, zo, p, theta, phi);
         final CLAS12RhoListener listener = new CLAS12RhoListener(ivals, rhoTarget, accuracy, sMax);
 
-        // Momentum guard (match CLAS12Swimmer behavior)
+        // Momentum guard
         if (p < minMomentum) {
             listener.setStatus(CLAS12Swimmer.BELOW_MIN_MOMENTUM);
             return new CLAS12SwimResult(listener);
@@ -755,11 +716,10 @@ public final class CLAS12Swimmer implements ICLAS12Swimmer {
 
         final FirstOrderDifferentialEquations ode = new SwimEquations(q, p, probe);
 
-        // Tuning
-        final double targetMiss = legacyComparable ? 1e-5 : accuracy;
-        final double absPos = legacyComparable ? 1e-5 : Math.max(1e-12, tolerance);
-        final double absDir = legacyComparable ? 1e-5 : 1e-10;
-        final double rel    = legacyComparable ? 1e-9 : 1e-12;
+        final double targetMiss = accuracy;
+        final double absPos = Math.max(1e-12, tolerance);
+        final double absDir = 1e-10;
+        final double rel = 1e-12;
 
         final double[] absTol = new double[] { absPos, absPos, absPos, absDir, absDir, absDir };
         final double[] relTol = new double[] { rel, rel, rel, rel, rel, rel };
@@ -833,7 +793,7 @@ public final class CLAS12Swimmer implements ICLAS12Swimmer {
 
         // Decide final status
         final double rhoFinal = Math.hypot(listener.getU()[0], listener.getU()[1]);
-        if (hit.hit && Math.abs(rhoFinal - rhoTarget) <= (legacyComparable ? targetMiss : accuracy)) {
+        if (hit.hit && Math.abs(rhoFinal - rhoTarget) <= targetMiss) {
             listener.setStatus(CLAS12Swimmer.SWIM_SUCCESS);
         } else {
             listener.setStatus(CLAS12Swimmer.SWIM_TARGET_MISSED);
