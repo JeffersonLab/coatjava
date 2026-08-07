@@ -26,7 +26,6 @@ import javax.swing.border.Border;
 import javax.swing.border.TitledBorder;
 
 import cnuphys.CLAS12Swim.CLAS12SwimResult;
-import cnuphys.CLAS12Swim.CLAS12Swimmer;
 import cnuphys.CLAS12Swim.CommonsMathCLAS12Swimmer;
 import cnuphys.CLAS12Swim.ICLAS12Swimmer;
 import cnuphys.swim.SwimTrajectory;
@@ -52,22 +51,9 @@ public class LundTrackDialog extends JDialog {
 		FIXEDRHO
 	}
 	
-	/**
-	 * Enum defining the available swimmer implementations.
-	 */
-	public enum SWIMMER_TYPE {
-		/** The default CLAS12 swimmer implementation. */
-		CLAS12, 
-		/** An implementation based on Apache Commons Math. */
-		COMMONS_MATH
-	}
-
 	/** The currently selected swimming algorithm. */
 	private SWIM_ALGORITHM _algorithm = SWIM_ALGORITHM.STANDARD;
 	
-	/** The currently selected swimmer implementation. */
-	private SWIMMER_TYPE _swimmerType = SWIMMER_TYPE.CLAS12;
-
 	/** Response code for cancelation. */
 	private static final int CANCEL_RESPONSE = 1;
 
@@ -116,12 +102,6 @@ public class LundTrackDialog extends JDialog {
 	/** Radio button for Fixed Rho algorithm selection. */
 	private JRadioButton _fixedRhoRB;
 	
-	/** Radio button for CLAS12 swimmer selection. */
-	private JRadioButton _clas12SwimmerRB;
-	
-	/** Radio button for Commons Math swimmer selection. */
-	private JRadioButton _commonsMathSwimmerRB;
-
 	/** Text field for the target radial value in Fixed Rho. */
 	private JTextField _fixedRho;
 	
@@ -282,9 +262,6 @@ public class LundTrackDialog extends JDialog {
 		box.add(vertexPanel());
 
 		box.add(Box.createVerticalStrut(6));
-		box.add(swimmerSelectionPanel());
-
-		box.add(Box.createVerticalStrut(6));
 		box.add(cutoffPanel());
 
 		_swimButton = new JButton("Swim");
@@ -306,58 +283,11 @@ public class LundTrackDialog extends JDialog {
 	}
 
 	/**
-	 * Creates the subpanel for choosing between different swimmer implementations.
-	 * @return A JPanel containing the swimmer selection radio buttons.
-	 */
-	private JPanel swimmerSelectionPanel() {
-		ButtonGroup bg = new ButtonGroup();
-		
-		ActionListener al = new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				if (_clas12SwimmerRB.isSelected()) {
-					_swimmerType = SWIMMER_TYPE.CLAS12;
-				} else {
-					_swimmerType = SWIMMER_TYPE.COMMONS_MATH;
-				}
-			}
-		};
-
-		_clas12SwimmerRB = new JRadioButton("CLAS12 Swimmer");
-		_commonsMathSwimmerRB = new JRadioButton("Commons Math Swimmer");
-		
-		_clas12SwimmerRB.setSelected(_swimmerType == SWIMMER_TYPE.CLAS12);
-		_commonsMathSwimmerRB.setSelected(_swimmerType == SWIMMER_TYPE.COMMONS_MATH);
-
-		_clas12SwimmerRB.addActionListener(al);
-		_commonsMathSwimmerRB.addActionListener(al);
-
-		bg.add(_clas12SwimmerRB);
-		bg.add(_commonsMathSwimmerRB);
-
-		JPanel spanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
-		spanel.add(_clas12SwimmerRB);
-		spanel.add(_commonsMathSwimmerRB);
-
-		JPanel panel = new JPanel();
-		panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-		panel.add(spanel);
-		panel.setBorder(new CommonBorder("Swimmer Selection"));
-		return panel;
-	}
-
-	/**
 	 * Executes the swimming process using the configured particle, kinematics, 
 	 * algorithm, and swimmer implementation.
 	 */
 	private void doCommonSwim() {
-		ICLAS12Swimmer swimmer;
-		if (_swimmerType == SWIMMER_TYPE.COMMONS_MATH) {
-			swimmer = new CommonsMathCLAS12Swimmer();
-			((CommonsMathCLAS12Swimmer) swimmer).setLegacyComparable(true);
-		} else {
-			swimmer = new CLAS12Swimmer();
-		}
+		ICLAS12Swimmer swimmer = new CommonsMathCLAS12Swimmer();
 		
 		CLAS12SwimResult result = null;
 		LundId lid = _lundComboBox.getSelectedId();
