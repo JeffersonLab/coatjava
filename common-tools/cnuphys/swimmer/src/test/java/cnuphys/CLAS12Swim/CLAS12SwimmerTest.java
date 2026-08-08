@@ -57,4 +57,29 @@ public class CLAS12SwimmerTest {
 		assertEquals(CLAS12Swimmer.BELOW_MIN_MOMENTUM, result.getStatus());
 		assertEquals("BELOW_MIN_MOMENTUM", result.statusString());
 	}
+
+	@Test
+	public void fixedStepSwimUsesRequestedStepSize() {
+		CLAS12Swimmer swimmer = new CLAS12Swimmer(new ZeroProbe());
+
+		CLAS12SwimResult result = swimmer.swimFixed(1, 0.0, 0.0, 0.0, 1.0, 90.0, 0.0,
+				10.0, 2.0);
+
+		assertTrue(result.statusString(), result.isSuccess());
+		assertEquals(10.0, result.getPathLength(), POSITION_TOLERANCE);
+		assertEquals(10.0, result.getFinalU()[0], POSITION_TOLERANCE);
+		assertEquals(6, result.getNStep());
+	}
+
+	@Test
+	public void planeArrayOverloadDelegatesToPlaneSwim() {
+		CLAS12Swimmer swimmer = new CLAS12Swimmer(new ZeroProbe());
+
+		CLAS12SwimResult result = swimmer.swimPlane(1, 0.0, 0.0, 0.0, 1.0, 60.0, 0.0,
+				new double[] {0.0, 0.0, 1.0}, new double[] {0.0, 0.0, 25.0},
+				1.0e-7, 100.0, 0.01, 1.0e-9);
+
+		assertTrue(result.statusString(), result.isSuccess());
+		assertEquals(25.0, result.getFinalU()[2], POSITION_TOLERANCE);
+	}
 }

@@ -12,6 +12,7 @@ import org.apache.commons.math3.ode.FirstOrderDifferentialEquations;
 import org.apache.commons.math3.ode.events.EventHandler;
 import org.apache.commons.math3.ode.sampling.StepHandler;
 import org.apache.commons.math3.ode.sampling.StepInterpolator;
+import org.apache.commons.math3.ode.nonstiff.ClassicalRungeKuttaIntegrator;
 import org.apache.commons.math3.ode.nonstiff.DormandPrince54Integrator;
 
 /**
@@ -287,7 +288,47 @@ public final class CLAS12Swimmer implements ICLAS12Swimmer {
     @Override
     public CLAS12SwimResult swimFixed(int q, double xo, double yo, double zo, double p, double theta, double phi,
                                       double sMax, double h) {
-        throw new UnsupportedOperationException("Not implemented yet (Commons Math swimmer)");
+        if (h <= 0.0) {
+            throw new IllegalArgumentException("Fixed step size must be positive");
+        }
+
+        final CLAS12Values ivals = new CLAS12Values(q, xo, yo, zo, p, theta, phi);
+        final CLAS12Listener listener = new CLAS12Listener(ivals, sMax);
+
+        if (p < minMomentum) {
+            listener.setStatus(CLAS12Swimmer.BELOW_MIN_MOMENTUM);
+            return new CLAS12SwimResult(listener);
+        }
+
+        if (q == 0 && listener.canMakeStraightLine()) {
+            listener.straightLine();
+            return new CLAS12SwimResult(listener);
+        }
+
+        final double[] y = ivals.getU().clone();
+        final FirstOrderDifferentialEquations ode = new SwimEquations(q, p, probe);
+        final ClassicalRungeKuttaIntegrator integrator = new ClassicalRungeKuttaIntegrator(h);
+
+        integrator.addStepHandler(new StepHandler() {
+            @Override
+            public void init(double s0, double[] y0, double sEnd) {
+                // listener reset already recorded the initial point
+            }
+
+            @Override
+            public void handleStep(StepInterpolator interpolator, boolean isLast) {
+                listener.accept(interpolator.getCurrentTime(), interpolator.getInterpolatedState().clone());
+            }
+        });
+
+        try {
+            integrator.integrate(ode, 0.0, y, sMax, y);
+            listener.setStatus(CLAS12Swimmer.SWIM_SUCCESS);
+        } catch (Exception ex) {
+            listener.setStatus(CLAS12Swimmer.SWIM_TARGET_MISSED);
+        }
+
+        return new CLAS12SwimResult(listener);
     }
 
     @Override
@@ -428,14 +469,15 @@ public final class CLAS12Swimmer implements ICLAS12Swimmer {
     public CLAS12SwimResult swimPlane(int q, double xo, double yo, double zo, double p, double theta, double phi,
                                       double nx, double ny, double nz, double px, double py, double pz,
                                       double accuracy, double sMax, double h, double tolerance) {
-        throw new UnsupportedOperationException("Not implemented yet (Commons Math swimmer)");
+        return swimPlane(q, xo, yo, zo, p, theta, phi, new Plane(nx, ny, nz, px, py, pz), accuracy, sMax, h,
+                tolerance);
     }
 
     @Override
     public CLAS12SwimResult swimPlane(int q, double xo, double yo, double zo, double p, double theta, double phi,
                                       double[] norm, double[] point, double accuracy, double sMax, double h,
                                       double tolerance) {
-        throw new UnsupportedOperationException("Not implemented yet (Commons Math swimmer)");
+        return swimPlane(q, xo, yo, zo, p, theta, phi, new Plane(norm, point), accuracy, sMax, h, tolerance);
     }
 
     /**
