@@ -13,6 +13,10 @@
       <version>14.1.2-SNAPSHOT</version>
     </parent>
 
+    <properties>
+      <skipTests>false</skipTests>
+    </properties>
+
     <dependencies>
       <dependency>
         <groupId>cnuphys</groupId>
@@ -24,6 +28,17 @@
         <groupId>cnuphys</groupId>
         <artifactId>splot</artifactId>
         <version>14.1.2-SNAPSHOT</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.commons</groupId>
+        <artifactId>commons-math3</artifactId>
+      </dependency>
+
+      <dependency>
+        <groupId>junit</groupId>
+        <artifactId>junit</artifactId>
+        <scope>test</scope>
       </dependency>
 
     </dependencies>
