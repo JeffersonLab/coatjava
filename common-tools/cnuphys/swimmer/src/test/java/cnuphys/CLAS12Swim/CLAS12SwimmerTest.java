@@ -7,6 +7,7 @@ import static org.junit.Assert.assertTrue;
 import org.junit.Test;
 
 import cnuphys.magfield.ZeroProbe;
+import cnuphys.CLAS12Swim.geometry.Sphere;
 
 public class CLAS12SwimmerTest {
 
@@ -81,5 +82,40 @@ public class CLAS12SwimmerTest {
 
 		assertTrue(result.statusString(), result.isSuccess());
 		assertEquals(25.0, result.getFinalU()[2], POSITION_TOLERANCE);
+	}
+
+	@Test
+	public void sphereSwimStopsAtSurface() {
+		CLAS12Swimmer swimmer = new CLAS12Swimmer(new ZeroProbe());
+		CLAS12SwimResult result = swimmer.swimSphere(1, 0.0, 0.0, 0.0, 1.0, 90.0, 0.0,
+				new Sphere(25.0), 1.0e-7, 100.0, 0.01, 1.0e-9);
+
+		assertTrue(result.statusString(), result.isSuccess());
+		assertEquals(25.0, result.getFinalU()[0], POSITION_TOLERANCE);
+		assertEquals(25.0, result.getPathLength(), POSITION_TOLERANCE);
+	}
+
+	@Test
+	public void zLineSwimFindsClosestApproach() {
+		CLAS12Swimmer swimmer = new CLAS12Swimmer(new ZeroProbe());
+		CLAS12SwimResult result = swimmer.swimZLine(1, 12.0, 7.0, 0.0, 1.0, 90.0, 180.0,
+				2.0, 3.0, 1.0e-7, 100.0, 0.01, 1.0e-9);
+
+		assertTrue(result.statusString(), result.isSuccess());
+		assertEquals(2.0, result.getFinalU()[0], POSITION_TOLERANCE);
+		assertEquals(7.0, result.getFinalU()[1], POSITION_TOLERANCE);
+		assertEquals(10.0, result.getPathLength(), POSITION_TOLERANCE);
+	}
+
+	@Test
+	public void beamlineSwimFindsClosestApproach() {
+		CLAS12Swimmer swimmer = new CLAS12Swimmer(new ZeroProbe());
+		CLAS12SwimResult result = swimmer.swimBeamline(1, 10.0, 5.0, 0.0, 1.0, 90.0, 180.0,
+				1.0e-7, 100.0, 0.01, 1.0e-9);
+
+		assertTrue(result.statusString(), result.isSuccess());
+		assertEquals(0.0, result.getFinalU()[0], POSITION_TOLERANCE);
+		assertEquals(5.0, result.getFinalU()[1], POSITION_TOLERANCE);
+		assertEquals(10.0, result.getPathLength(), POSITION_TOLERANCE);
 	}
 }

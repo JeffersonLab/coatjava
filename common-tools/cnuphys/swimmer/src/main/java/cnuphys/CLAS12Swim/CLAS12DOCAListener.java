@@ -31,6 +31,7 @@ public abstract class CLAS12DOCAListener extends CLAS12Listener {
 	 */
 	@Override
 	public void reset() {
+		super.reset();
 		_currentDOCA = Double.POSITIVE_INFINITY;
 	}
 

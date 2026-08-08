@@ -455,14 +455,50 @@ public final class CLAS12Swimmer implements ICLAS12Swimmer {
     public CLAS12SwimResult swimSphere(int q, double xo, double yo, double zo, double p, double theta, double phi,
                                        double[] center, double r, double accuracy, double sMax, double h,
                                        double tolerance) {
-        throw new UnsupportedOperationException("Not implemented yet (Commons Math swimmer)");
+        return swimSphere(q, xo, yo, zo, p, theta, phi, new Sphere(center, r), accuracy, sMax, h, tolerance);
     }
 
     @Override
     public CLAS12SwimResult swimSphere(int q, double xo, double yo, double zo, double p, double theta, double phi,
                                        Sphere targetSphere, double accuracy, double sMax, double h,
                                        double tolerance) {
-        throw new UnsupportedOperationException("Not implemented yet (Commons Math swimmer)");
+        final CLAS12Values ivals = new CLAS12Values(q, xo, yo, zo, p, theta, phi);
+        final CLAS12SphereListener listener = new CLAS12SphereListener(ivals, targetSphere, accuracy, sMax);
+
+        if (p < minMomentum) {
+            listener.setStatus(BELOW_MIN_MOMENTUM);
+            return new CLAS12SwimResult(listener);
+        }
+
+        final double[] y = ivals.getU().clone();
+        final SwimEquations ode = new SwimEquations(q, p, probe);
+        final DormandPrince54Integrator integrator = createAdaptiveIntegrator(h, tolerance);
+        final HitFlag hit = new HitFlag();
+
+        integrator.addStepHandler(recordSteps(listener));
+        integrator.addEventHandler(new EventHandler() {
+            @Override public void init(double s0, double[] y0, double sEnd) { }
+            @Override public double g(double s, double[] state) {
+                return targetSphere.signedDistance(state[0], state[1], state[2]);
+            }
+            @Override public Action eventOccurred(double s, double[] state, boolean increasing) {
+                hit.hit = true;
+                return Action.STOP;
+            }
+            @Override public void resetState(double s, double[] state) { }
+        }, Math.max(0.5, initialStep(h)), Math.max(1.0e-12, accuracy), 200);
+
+        try {
+            double sFinal = integrator.integrate(ode, 0.0, y, sMax, y);
+            listener.accept(sFinal, y.clone());
+        } catch (Exception ex) {
+            listener.setStatus(SWIM_TARGET_MISSED);
+            return new CLAS12SwimResult(listener);
+        }
+
+        listener.setStatus(hit.hit && targetSphere.distance(y[0], y[1], y[2]) <= accuracy
+                ? SWIM_SUCCESS : SWIM_TARGET_MISSED);
+        return new CLAS12SwimResult(listener);
     }
 
     @Override
@@ -847,18 +883,86 @@ public final class CLAS12Swimmer implements ICLAS12Swimmer {
     @Override
     public CLAS12SwimResult swimZLine(int q, double xo, double yo, double zo, double p, double theta, double phi,
                                       double xb, double yb, double accuracy, double sMax, double h, double tolerance) {
-        throw new UnsupportedOperationException("Not implemented yet (Commons Math swimmer)");
+        CLAS12Values ivals = new CLAS12Values(q, xo, yo, zo, p, theta, phi);
+        return swimToClosestApproach(ivals, new CLAS12ZLineListener(ivals, xb, yb, accuracy, sMax),
+                xb, yb, accuracy, sMax, h, tolerance);
     }
 
     @Override
     public CLAS12SwimResult swimBeamline(int q, double xo, double yo, double zo, double p, double theta, double phi,
                                          double accuracy, double sMax, double h, double tolerance) {
-        throw new UnsupportedOperationException("Not implemented yet (Commons Math swimmer)");
+        CLAS12Values ivals = new CLAS12Values(q, xo, yo, zo, p, theta, phi);
+        return swimToClosestApproach(ivals, new CLAS12BeamlineListener(ivals, accuracy, sMax),
+                0.0, 0.0, accuracy, sMax, h, tolerance);
     }
 
     // -------------------------------------------------------------------------
     // Internal helpers
     // -------------------------------------------------------------------------
+
+    private CLAS12SwimResult swimToClosestApproach(CLAS12Values ivals, CLAS12DOCAListener listener,
+                                                    double xb, double yb, double accuracy, double sMax,
+                                                    double h, double tolerance) {
+        if (ivals.p < minMomentum) {
+            listener.setStatus(BELOW_MIN_MOMENTUM);
+            return new CLAS12SwimResult(listener);
+        }
+
+        final double[] y = ivals.getU().clone();
+        if ((y[0] - xb) * y[3] + (y[1] - yb) * y[4] >= 0.0) {
+            listener.setStatus(SWIM_SUCCESS);
+            return new CLAS12SwimResult(listener);
+        }
+
+        final DormandPrince54Integrator integrator = createAdaptiveIntegrator(h, tolerance);
+        final HitFlag hit = new HitFlag();
+        integrator.addStepHandler(recordSteps(listener));
+        integrator.addEventHandler(new EventHandler() {
+            @Override public void init(double s0, double[] y0, double sEnd) { }
+            @Override public double g(double s, double[] state) {
+                return (state[0] - xb) * state[3] + (state[1] - yb) * state[4];
+            }
+            @Override public Action eventOccurred(double s, double[] state, boolean increasing) {
+                hit.hit = true;
+                return Action.STOP;
+            }
+            @Override public void resetState(double s, double[] state) { }
+        }, Math.max(0.5, initialStep(h)), Math.max(1.0e-12, accuracy), 200);
+
+        try {
+            double sFinal = integrator.integrate(new SwimEquations(ivals.q, ivals.p, probe), 0.0, y, sMax, y);
+            listener.accept(sFinal, y.clone());
+        } catch (Exception ex) {
+            listener.setStatus(SWIM_TARGET_MISSED);
+            return new CLAS12SwimResult(listener);
+        }
+
+        listener.setStatus(hit.hit ? SWIM_SUCCESS : SWIM_TARGET_MISSED);
+        return new CLAS12SwimResult(listener);
+    }
+
+    private DormandPrince54Integrator createAdaptiveIntegrator(double h, double tolerance) {
+        double absPos = Math.max(1.0e-12, tolerance);
+        double[] absTol = {absPos, absPos, absPos, 1.0e-10, 1.0e-10, 1.0e-10};
+        double[] relTol = {1.0e-12, 1.0e-12, 1.0e-12, 1.0e-12, 1.0e-12, 1.0e-12};
+        DormandPrince54Integrator integrator = new DormandPrince54Integrator(
+                Math.max(minStepSize, 1.0e-12), Math.max(maxStepSize, minStepSize), absTol, relTol);
+        integrator.setInitialStepSize(initialStep(h));
+        return integrator;
+    }
+
+    private double initialStep(double h) {
+        return Math.max(minStepSize, Math.min(Math.abs(h), maxStepSize));
+    }
+
+    private static StepHandler recordSteps(final CLAS12Listener listener) {
+        return new StepHandler() {
+            @Override public void init(double s0, double[] y0, double sEnd) { }
+            @Override public void handleStep(StepInterpolator interpolator, boolean isLast) {
+                listener.accept(interpolator.getCurrentTime(), interpolator.getInterpolatedState().clone());
+            }
+        };
+    }
 
     /**
      * ODE system for Cartesian CLAS12 swimming.
