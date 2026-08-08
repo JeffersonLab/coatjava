@@ -282,6 +282,22 @@
               </rules>
             </configuration>
           </execution>
+          <execution>
+            <id>enforce-dependency-convergence</id>
+            <goals>
+              <goal>enforce</goal>
+            </goals>
+            <configuration>
+              <rules>
+                <dependencyConvergence>
+                  <excludes>
+                    <!-- excluding conflicts that may be tricky to resolve -->
+                    <exclude>com.google.protobuf:protobuf-java</exclude> <!-- `org.jlab.ccdbrcdb:ccdbrcdb` use v3, but `org.jlab.coda.xmsg` uses v2 -->
+                  </excludes>
+                </dependencyConvergence>
+              </rules>
+            </configuration>
+          </execution>
         </executions>
       </plugin>
 
@@ -383,31 +399,6 @@
                 <ignoredUnusedDeclaredDependency>ai.djl.pytorch:pytorch-native-cpu</ignoredUnusedDeclaredDependency>
                 <ignoredUnusedDeclaredDependency>ai.djl.pytorch:pytorch-jni</ignoredUnusedDeclaredDependency>
               </ignoredUnusedDeclaredDependencies>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-
-      <!-- dependency convergence -->
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-enforcer-plugin</artifactId>
-        <version>3.6.2</version>
-        <executions>
-          <execution>
-            <id>enforce-dependency-convergence</id>
-            <goals>
-              <goal>enforce</goal>
-            </goals>
-            <configuration>
-              <rules>
-                <dependencyConvergence>
-                  <excludes>
-                    <!-- excluding conflicts that may be tricky to resolve -->
-                    <exclude>com.google.protobuf:protobuf-java</exclude> <!-- `org.jlab.ccdbrcdb:ccdbrcdb` use v3, but `org.jlab.coda.xmsg` uses v2 -->
-                  </excludes>
-                </dependencyConvergence>
-              </rules>
             </configuration>
           </execution>
         </executions>
