@@ -172,7 +172,7 @@ jobs:
       - name: untar build
         run: tar xzvf coatjava.tar.gz
       - name: spotbugs
-        run: ./build-coatjava.sh --spotbugs --nomaps --no-progress
+        run: ./build-coatjava.sh --spotbugs --no-maps --no-progress
 
   test_decoder:
     needs: [ build, download_test_data ]
