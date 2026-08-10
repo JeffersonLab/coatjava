@@ -108,7 +108,11 @@ do
 done
 
 echo "---------------------- ARGUMENTS ----------------------"
-print_arg() { printf "  %30s = %s\n" "$1" "$2"; }
+print_arg() {
+  printf "  %30s = " "$1"
+  shift
+  echo "$@"
+}
 print_arg "cleanBuild" "$cleanBuild"
 print_arg "runSpotBugs" "$runSpotBugs"
 print_arg "runUnitTests" "$runUnitTests"
@@ -176,7 +180,7 @@ fi
 
 
 ################################################################################
-# download field maps, NN models, etc.
+# download auxiliary files
 ################################################################################
 
 # check if a command exists
