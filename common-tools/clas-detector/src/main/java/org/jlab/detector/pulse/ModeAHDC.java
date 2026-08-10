@@ -26,7 +26,7 @@ public class ModeAHDC extends HipoExtractor  {
     
     //Saturation threshold should be 4095 (2^12-1)
     //But in practice waveforms saturate below it
-    private final short ADC_LIMIT = 3500;
+    private final short ADC_LIMIT = 3600;
     //number of consecutive samples exceeding threshold to consider a saturation plateau
     private final int consecutiveSaturatingSamples = 3;
     //Sampling time in ns
@@ -113,8 +113,11 @@ public class ModeAHDC extends HipoExtractor  {
      * @param type an int that is the new wf type to be applied
      */
     public void assignValidType(int type, AHDCPulse p){
-        //We only assign a new type if a more restrictive type was not defined before
-        if(type>p.wftype) p.wftype = (short) type;
+        // if a signal has already been classified as type 1 (saturated), do nothing
+        if (p.wftype != 1) {
+            //We only assign a new type if a more restrictive type was not defined before
+            if(type>p.wftype) p.wftype = (short) type;
+        }   
     }
     
     /**
@@ -186,17 +189,37 @@ public class ModeAHDC extends HipoExtractor  {
         
         //Define the pulse time as the peak time
         p.time = (p.binMax + p.time_ZS)*this.samplingTime;
-        //If there are 2*npts+1 points around the peak
-        //(if the peak is not at an edge of the window)
-        //Then the peak ADC value is revisited to be the average of these
-        //TO DO: just use the adcmax???
-        int npts = 1;
-        if (p.adcMax == 0) { assignValidType(5, p);} // classification before the fit
-        if ((p.binMax - npts >= 0) && (p.binMax + npts <= p.numberOfBins - 1)){
-            p.adcMax = 0;
-            for (int bin = p.binMax - npts; bin <= p.binMax + npts; bin++) p.adcMax += p.samples[bin];
-            p.adcMax = p.adcMax/(2*npts+1);
+
+        // Compute adcMax
+        if (p.adcMax == 0) { 
+            assignValidType(5, p);
+            return 0;
+        } // classification before the fit
+
+        if (p.wftype == 1) { // special case of saturated signals
+            float slope_max = 0;
+            for (int bin = 0; bin < p.binMax; bin++) {
+                float slope = (p.samples[bin+1] - p.samples[bin])/samplingTime;
+                if (slope > slope_max) {
+                    slope_max = slope;
+                }
+            }
+            // empirical formula
+            p.adcMax = -28.753520f + 191.791679f*slope_max;
+
+        } else {
+            //If there are 2*npts+1 points around the peak
+            //(if the peak is not at an edge of the window)
+            //Then the peak ADC value is revisited to be the average of these
+            //TO DO: just use the adcmax???
+            int npts = 1;
+            if ((p.binMax - npts >= 0) && (p.binMax + npts <= p.numberOfBins - 1)){
+                p.adcMax = 0;
+                for (int bin = p.binMax - npts; bin <= p.binMax + npts; bin++) p.adcMax += p.samples[bin];
+                p.adcMax = p.adcMax/(2*npts+1);
+            }
         }
+        
         
         return 0;
     }
@@ -215,9 +238,11 @@ public class ModeAHDC extends HipoExtractor  {
         p.leadingEdgeTime = -9999;
         p.trailingEdgeTime = -9999;
         p.timeOverThreshold = -9999;
+
+        if (p.binMax < 0) return 0;
         
         //Set the CFA threshold
-        float threshold = this.amplitudeFractionCFA*p.adcMax;
+        float threshold = Math.min(this.amplitudeFractionCFA*p.adcMax, p.samples[p.binMax]);
         
         //Crossing the threshold before the peak
         int binRise = -99;
