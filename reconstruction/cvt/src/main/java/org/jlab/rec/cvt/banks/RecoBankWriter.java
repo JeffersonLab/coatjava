@@ -57,7 +57,15 @@ public class RecoBankWriter {
             bank.setShort("trkID", i, (short) hitlist.get(i).getAssociatedTrackID());
             bank.setByte("status", i, (byte) hitlist.get(i).getStrip().getStatus());  
             
-            bank.setByte("ai", i, hitlist.get(i).getDenoiseStatus());                        
+            if(bank.getDescriptor().hasEntry("ai")){
+                bank.setByte("ai", i, hitlist.get(i).getDenoiseStatus()); 
+                if(hitlist.get(i).getDenoiseProbality().size() == 1)
+                    bank.setFloat("probability1", i,  (float) hitlist.get(i).getDenoiseProbality().get(0));
+                else if(hitlist.get(i).getDenoiseProbality().size() == 2){
+                    bank.setFloat("probability1", i,  (float) hitlist.get(i).getDenoiseProbality().get(0));
+                    bank.setFloat("probability2", i,  (float) hitlist.get(i).getDenoiseProbality().get(1));
+                }
+            }
         }
         //bank.show();
         return bank;
@@ -211,7 +219,11 @@ public class RecoBankWriter {
             bank.setShort("trkID", i, (short) hitlist.get(i).getAssociatedTrackID());
             bank.setByte("status", i, (byte) hitlist.get(i).getStrip().getStatus()); 
             
-            bank.setByte("ai", i, hitlist.get(i).getDenoiseStatus());
+            if(bank.getDescriptor().hasEntry("ai")){
+                bank.setByte("ai", i, hitlist.get(i).getDenoiseStatus());
+                if(hitlist.get(i).getDenoiseProbality().size() == 1)
+                    bank.setFloat("probability", i,  (float) hitlist.get(i).getDenoiseProbality().get(0));
+            }
         }
         
         return bank;

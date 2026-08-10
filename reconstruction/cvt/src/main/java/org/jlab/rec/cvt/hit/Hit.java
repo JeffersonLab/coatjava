@@ -1,5 +1,8 @@
 package org.jlab.rec.cvt.hit;
 
+import java.util.List;
+import java.util.ArrayList;
+
 import org.jlab.detector.base.DetectorType;
 import org.jlab.geom.prim.Line3D;
 import org.jlab.geom.prim.Point3D;
@@ -35,6 +38,7 @@ public class Hit implements Comparable<Hit> {
     public int MCstatus = -1;
     public boolean isCorrupted;
     public byte denoiseStatus = 0;
+    public List<Float> denoiseProbality = new ArrayList();
         
     // constructor
     public Hit(DetectorType detector, BMTType type, int sector, int layer, Strip strip) {
@@ -145,6 +149,14 @@ public class Hit implements Comparable<Hit> {
     public byte getDenoiseStatus(){
         return denoiseStatus;
     }
+    
+    public void setDenoiseProbality(List<Float> probality){
+        this.denoiseProbality = probality;
+    }
+
+    public List<Float> getDenoiseProbality(){
+        return denoiseProbality;
+    }            
        
     public boolean isNoiseInAllPresentSections() {
         if(denoiseStatus == 0) return false;

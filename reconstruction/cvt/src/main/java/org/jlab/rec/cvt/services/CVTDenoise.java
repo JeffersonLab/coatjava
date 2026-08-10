@@ -329,7 +329,10 @@ public class CVTDenoise {
         // Hit status is encoded in a single byte:
         // bits [0–2] : noise flags for sections 1–3 (1 = noise, 0 = signal)
         // bits [3–5] : hit presence for sections 1–3 (1 = hit present, 0 = no hit)
-        byte[][][][] statuses = new byte[NLAYERS][18][1152][maxIndex+1];        
+        byte[][][][] statuses = new byte[NLAYERS][18][1152][maxIndex+1]; 
+        // Probalities for each hits
+        List<Float>[][][][] probabilities = new ArrayList[NLAYERS][18][1152][maxIndex + 1];
+        
         for(int s = 0; s < NSECTIONS; s++){
             CVTInput input = new CVTInput(x[s],mask[s]);
             try{
@@ -339,6 +342,14 @@ public class CVTDenoise {
                     float[][] preds = predictor.predict(input);
                     for(int i = 0; i < nHits[s]; i++){                                                
                         LocalHit hit = maps[s].get(i);
+                        
+                        List<Float> probabilityList = probabilities[hit.getLayer() - 1][hit.getSector() - 1][hit.getStrip() - 1][hit.getIndex()];
+                        if (probabilityList == null) {
+                            probabilityList = new ArrayList<>();
+                            probabilities[hit.getLayer() - 1][hit.getSector() - 1][hit.getStrip() - 1][hit.getIndex()] = probabilityList;
+                        }                        
+                        probabilityList.add(preds[i][0]);
+                        
                         statuses[hit.getLayer()-1][hit.getSector()-1][hit.getStrip() - 1][hit.getIndex()] |= (byte) (1 << (s+3));  
                         if(preds[i][0] < thresholds[s]) statuses[hit.getLayer()-1][hit.getSector()-1][hit.getStrip() - 1][hit.getIndex()] |= (byte) (1 << s);                      
                     }
@@ -352,7 +363,7 @@ public class CVTDenoise {
         }
         
         // Update BST and BMT hits to record predictions
-        updateHits(bst_hits, bmt_hits, statuses);      
+        updateHits(bst_hits, bmt_hits, probabilities, statuses);      
     }
 
     //  Scaling per layer
@@ -431,7 +442,7 @@ public class CVTDenoise {
     }
     
     // -------- Update BST & BMT hits --------
-    private void updateHits(List<Hit> bst_hits, List<Hit> bmt_hits, byte[][][][] statuses) {
+    private void updateHits(List<Hit> bst_hits, List<Hit> bmt_hits, List<Float>[][][][] probabilities, byte[][][][] statuses) {
         int[][][] nHitsLayerSectorStrip_BST = new int[6][18][256]; // Number of hits in a strip
         for (int i=0; i<bst_hits.size(); i++) {
             Hit hit = bst_hits.get(i);
@@ -441,6 +452,10 @@ public class CVTDenoise {
             
             byte status = statuses[layer-1][sector-1][strip-1][nHitsLayerSectorStrip_BST[layer-1][sector-1][strip-1]];            
             hit.setDenoiseStatus(status);
+            
+            List<Float> probality = probabilities[layer-1][sector-1][strip-1][nHitsLayerSectorStrip_BST[layer-1][sector-1][strip-1]];
+            hit.setDenoiseProbality(probality);
+            
             nHitsLayerSectorStrip_BST[layer-1][sector-1][strip-1]++;                        
         }
         
@@ -453,6 +468,10 @@ public class CVTDenoise {
             
             byte status = statuses[layer+5][sector-1][strip-1][nHitsLayerSectorStrip_BMT[layer-1][sector-1][strip-1]]; // For BMT, Layer from 1 to 6 in bank, while layer from 7 to 12 in model
             hit.setDenoiseStatus(status);
+            
+            List<Float> probality = probabilities[layer+5][sector-1][strip-1][nHitsLayerSectorStrip_BMT[layer-1][sector-1][strip-1]];
+            hit.setDenoiseProbality(probality);
+            
             nHitsLayerSectorStrip_BMT[layer-1][sector-1][strip-1]++;
         }
     }           

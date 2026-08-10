@@ -100,18 +100,18 @@ public class CVTEngine extends ReconstructionEngine {
     
     public CVTEngine(String name) {
         super(name, "ziegler", "6.0");
-        if(useDenoise) denoise = new CVTDenoise(modelFiles, thresholds);
+        
     }
 
     public CVTEngine() {
         super("CVTEngine", "ziegler", "6.0");
-        if(useDenoise) denoise = new CVTDenoise(modelFiles, thresholds);
     }
 
     
     @Override
     public boolean init() {        
-        this.loadConfiguration();
+        this.loadConfiguration();      
+        if(useDenoise) denoise = new CVTDenoise(modelFiles, thresholds);
         Constants.getInstance().initialize(this.getName(),
                                            isCosmics,
                                            svtOnly,
@@ -311,7 +311,7 @@ public class CVTEngine extends ReconstructionEngine {
         
         List<ArrayList<Hit>>         hits = reco.readHits(event, svtStatus, bmtStatus, bmtTime, 
                                                             bmtStripVoltage, bmtStripThreshold,
-                                                            adcStatus);
+                                                            adcStatus);       
         if(useDenoise) denoise.predict(hits);
 
         List<ArrayList<Cluster>> clusters = reco.findClusters();
@@ -472,8 +472,9 @@ public class CVTEngine extends ReconstructionEngine {
         if (this.getEngineConfigString("z0cut")!=null)
             this.z0cut = Double.valueOf(this.getEngineConfigString("z0cut"));
         
-        if (this.getEngineConfigString("USE_DENOISE")!=null)
-            this.useDenoise = Boolean.valueOf(this.getEngineConfigString("USE_DENOISE"));
+        if (this.getEngineConfigString(USE_DENOISE)!=null){
+            this.useDenoise = Boolean.valueOf(this.getEngineConfigString(USE_DENOISE));
+        }
         
         for(int i = 0; i < 3; i++){
             if (this.getEngineConfigString(CONF_THRESHOLDS[i]) != null)
