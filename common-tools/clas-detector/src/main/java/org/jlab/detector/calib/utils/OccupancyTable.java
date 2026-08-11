@@ -11,37 +11,64 @@ import org.jlab.utils.groups.IndexedTable;
  */
 public class OccupancyTable {
 
-    String bankName;
+    public static final String[] INDEX_NAMES = {"sector","layer","component","order"};
+
+    private final int indexCount;
+
     private IndexedTable table;
     
-    public OccupancyTable(String bank, int indexCount) {
-        bankName = bank;
-        table = new IndexedTable(indexCount, new String[]{"nhits/I"});
+    public OccupancyTable(int indexCount) {
+        if (indexCount != 3 && indexCount != 4) throw new RuntimeException();
+        this.indexCount = indexCount;
+        table = new IndexedTable(indexCount, new String[]{"nhits/D"});
     }
 
-    public void add(int nhits, int... index) {
+    public void reset() {
+        table = new IndexedTable(indexCount, new String[]{"nhits/D"});
+    }
+
+    public void add(double weight, int... index) {
         if (!table.hasEntry(index)) {
             table.addEntry(index);
+            table.setDoubleValue(0.0, "nhits", index);
         }
-        table.setIntValue(nhits, "nhits", index);
+        table.setDoubleValue(table.getDoubleValue("nhits",index) + weight, "nhits", index);
     }
 
-    public void update(DataEvent e) {
+    public void add(int... index) {
+        add(1, index);
+    }
+
+    public void add(DataBank b) {
+        final int rows = b.rows();
+        for (int i=0; i<rows; i++) {
+            if (indexCount == 3)
+                add(b.getByte(INDEX_NAMES[0],i), b.getByte(INDEX_NAMES[1],i), b.getByte(INDEX_NAMES[2],i));
+            else if (indexCount == 4)
+                add(b.getByte(INDEX_NAMES[0],i), b.getByte(INDEX_NAMES[1],i), b.getByte(INDEX_NAMES[2],i), b.getByte(INDEX_NAMES[3],i));
+        }
+    }
+
+    private void update(DataBank b) {
+        int i = 0;
+        Map<Long,Integer> m = table.getList().getMap();
+        for (Map.Entry<Long,Integer> entry : m.entrySet()) {
+            b.setInt("sector", i, IndexedTable.DEFAULT_GENERATOR.getIndex(entry.getKey(), 0));
+            b.setInt("layer", i, IndexedTable.DEFAULT_GENERATOR.getIndex(entry.getKey(), 1));
+            b.setInt("component", i, IndexedTable.DEFAULT_GENERATOR.getIndex(entry.getKey(), 2));
+            if (indexCount == 4)
+                b.setInt("order", i, IndexedTable.DEFAULT_GENERATOR.getIndex(entry.getKey(), 3));
+            b.setInt("nhits", i, entry.getValue());
+            i++;
+        }
+    }
+
+    public void update(DataEvent e, String bankName) {
         DataBank b = e.getBank(bankName);
         if (b != null) e.removeBank(bankName);
         b = e.createBank(bankName, table.getRowCount());
-        Map<Long,Integer> m = table.getList().getMap();
-        int i = 0;
-        for (Map.Entry<Long,Integer> entry : m.entrySet()) {
-            long hash = entry.getKey();
-            int sector = IndexedTable.DEFAULT_GENERATOR.getIndex(hash, 0);
-            int layer = IndexedTable.DEFAULT_GENERATOR.getIndex(hash, 1);
-            int component = IndexedTable.DEFAULT_GENERATOR.getIndex(hash, 2);
-            b.setInt("sector", i, sector);
-            b.setInt("sector", i, layer);
-            b.setInt("sector", i, component);
-            b.setInt("nhits", i++, entry.getValue());
-        }
+        update(b);
         e.appendBank(b);
     }
+
 }
