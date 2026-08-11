@@ -20,7 +20,7 @@ public class OccupancyTable {
     public OccupancyTable(int indexCount) {
         if (indexCount != 3 && indexCount != 4) throw new RuntimeException();
         this.indexCount = indexCount;
-        table = new IndexedTable(indexCount, new String[]{"nhits/D"});
+        reset();
     }
 
     public void reset() {
@@ -49,7 +49,7 @@ public class OccupancyTable {
         }
     }
 
-    private void update(DataBank b) {
+    public void update(DataBank b) {
         int i = 0;
         Map<Long,Integer> m = table.getList().getMap();
         for (Map.Entry<Long,Integer> entry : m.entrySet()) {
