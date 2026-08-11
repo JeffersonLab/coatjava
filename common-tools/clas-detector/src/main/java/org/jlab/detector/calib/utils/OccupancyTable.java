@@ -11,20 +11,18 @@ import org.jlab.utils.groups.IndexedTable;
  */
 public class OccupancyTable {
 
-    public static final String[] INDEX_NAMES = {"sector","layer","component","order"};
-
-    private final int indexCount;
-
+    private String[] indexNames;
     private IndexedTable table;
     
-    public OccupancyTable(int indexCount) {
-        if (indexCount != 3 && indexCount != 4) throw new RuntimeException();
-        this.indexCount = indexCount;
-        reset();
+    public OccupancyTable(String... index) {
+        if (index.length != 3 && index.length != 4)
+            throw new IllegalArgumentException("Invalid index length: "+index.length);
+        indexNames = index;
+        table = new IndexedTable(indexNames.length, new String[]{"nhits/D"});
     }
 
     public void reset() {
-        table = new IndexedTable(indexCount, new String[]{"nhits/D"});
+        table = new IndexedTable(indexNames.length, new String[]{"nhits/D"});
     }
 
     public void add(double weight, int... index) {
@@ -42,10 +40,8 @@ public class OccupancyTable {
     public void add(DataBank b) {
         final int rows = b.rows();
         for (int i=0; i<rows; i++) {
-            if (indexCount == 3)
-                add(b.getByte(INDEX_NAMES[0],i), b.getByte(INDEX_NAMES[1],i), b.getByte(INDEX_NAMES[2],i));
-            else if (indexCount == 4)
-                add(b.getByte(INDEX_NAMES[0],i), b.getByte(INDEX_NAMES[1],i), b.getByte(INDEX_NAMES[2],i), b.getByte(INDEX_NAMES[3],i));
+            if (indexNames.length == 3) add(b.getByte(0, i), b.getByte(1,i), b.getByte(2,i));
+            else add(b.getByte(0, i), b.getByte(1,i), b.getByte(2,i), b.getByte(3,i));
         }
     }
 
@@ -56,8 +52,7 @@ public class OccupancyTable {
             b.setInt("sector", i, IndexedTable.DEFAULT_GENERATOR.getIndex(entry.getKey(), 0));
             b.setInt("layer", i, IndexedTable.DEFAULT_GENERATOR.getIndex(entry.getKey(), 1));
             b.setInt("component", i, IndexedTable.DEFAULT_GENERATOR.getIndex(entry.getKey(), 2));
-            if (indexCount == 4)
-                b.setInt("order", i, IndexedTable.DEFAULT_GENERATOR.getIndex(entry.getKey(), 3));
+            if (indexNames.length == 4) b.setInt("order", i, IndexedTable.DEFAULT_GENERATOR.getIndex(entry.getKey(), 3));
             b.setInt("nhits", i, entry.getValue());
             i++;
         }
