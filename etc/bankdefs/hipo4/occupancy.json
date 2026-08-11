@@ -1,0 +1,14 @@
+[
+    {
+        "name": "DC::occ",
+        "group": 20600,
+        "item": 20,
+        "info": "Event Header Bank",
+        "entries": [
+            { "name":"sector"    , "type":"B", "info":"sector"},
+            { "name":"layer"     , "type":"B", "info":"layer"},
+            { "name":"component" , "type":"S", "info":"component"},
+            { "name":"hits"      , "type":"S", "info":"number of hits"}
+        ]
+    }
+]
