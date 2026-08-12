@@ -20,32 +20,28 @@ public abstract class OccupancyTable {
     }
 
     public static class DC extends OccupancyTable {
-        public DC() { super("DC::occ","sector","layer"); }
+        public DC() { super("DC::occ","sector","layer","component"); }
         @Override
         public void add(DataEvent e) {
             DataBank b = e.getBank("DC::tot");
-            if (b != null) {
-                final int rows = b.rows();
-                for (int i=0; i<rows; i++) {
-                    add(b.getByte(0, i), b.getByte(1,i));
-                }
-            }
+            if (b == null) b = e.getBank("DC::tdc");
+            if (b == null) return;
+            final int rows = b.rows();
+            for (int i=0; i<rows; i++)
+                add(b.getByte(0, i), b.getByte(1,i), b.getByte(2,i));
         }
     }
 
-    protected String bankName;
     protected String[] valueNames = {"occ/I"};
     protected String[] indexNames;
     protected IndexedTable table;
 
     public OccupancyTable(String bank, String... index) {
-        bankName = bank;
         indexNames = index;
         table = new IndexedTable(indexNames.length, valueNames);
     }
 
     public OccupancyTable(String bank) {
-        bankName = bank;
         indexNames = new String[]{"sector","layer","component"};
         table = new IndexedTable(indexNames.length, valueNames);
     }
@@ -108,6 +104,13 @@ public abstract class OccupancyTable {
             b.setInt(indexNames.length, i, m.get(hash).getValue(0).intValue());
             i++;
         }
+    }
+
+    public final void update(DataEvent e, String bank) {
+        DataBank b = e.createBank(bank, getRows());
+        if (e.hasBank(bank)) e.removeBank(bank);
+        update(b);
+        e.appendBank(b);
     }
 
     /**
