@@ -345,10 +345,9 @@ public class IndexedList<T> {
          * @return 
          */
         public int[] getIndices(long hashcode, int nindices) {
-            int[] ret = new int[nindices];
-            for (int i=0; i<nindices; i++)
-                ret[i] = getIndex(hashcode, i);
-            return ret;
+            int[] indices = new int[nindices];
+            for (int i=0; i<nindices; i++) indices[i] = i;
+            return getIndices(hashcode, indices);
         }
 
         /**
