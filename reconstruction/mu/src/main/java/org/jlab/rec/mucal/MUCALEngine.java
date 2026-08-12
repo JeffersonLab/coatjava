@@ -127,8 +127,6 @@ public class MUCALEngine extends ReconstructionEngine {
             DataEvent event = (DataEvent) reader.getNextEvent();
             cal.processDataEvent(event);
 
-            DetectorEvent detectorEvent = DetectorData.readDetectorEvent(event);
-            PhysicsEvent            gen = detectorEvent.getGeneratedEvent();
             if(event.hasBank("MUCAL::clusters")) {
                 DataBank bank = event.getBank("MUCAL::clusters");
                 int nrows = bank.rows();
@@ -140,11 +138,11 @@ public class MUCALEngine extends ReconstructionEngine {
 ///                        h5.fill(bank.getFloat("time",i)-124.25);  // 124.25 offet for MC data
                     h5.fill(bank.getFloat("time", i));
                     h6.fill(cluster.x(), cluster.y());
-                    if(gen.countGenerated() != 0){
-                       h2.fill(bank.getFloat("energy",i)-gen.getGeneratedParticle(0).vector().p());
-                       h3.fill(Math.toDegrees(cluster.theta()-gen.getGeneratedParticle(0).theta()));
-                       h4.fill(Math.toDegrees(cluster.phi()-gen.getGeneratedParticle(0).phi()));
-                    }
+            //        if(gen.countGenerated() != 0){
+            //           h2.fill(bank.getFloat("energy",i)-gen.getGeneratedParticle(0).vector().p());
+            //           h3.fill(Math.toDegrees(cluster.theta()-gen.getGeneratedParticle(0).theta()));
+            //           h4.fill(Math.toDegrees(cluster.phi()-gen.getGeneratedParticle(0).phi()));
+            //        }
                 }
             }
         }
