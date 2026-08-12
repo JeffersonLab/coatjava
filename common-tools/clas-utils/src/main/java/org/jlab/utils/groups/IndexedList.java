@@ -334,8 +334,20 @@ public class IndexedList<T> {
         public int[] getIndices(long hashcode, int... indices) {
             int[] ret = new int[indices.length];
             for (int i=0; i<ret.length; i++)
-                ret[i] = getIndex(hashcode, i);
+                ret[i] = getIndex(hashcode, indices[i]);
             return ret;
+        }
+
+        /**
+         * Retrieves an array of the indices.
+         * @param hashcode
+         * @param nindices
+         * @return 
+         */
+        public int[] getIndices(long hashcode, int nindices) {
+            int[] indices = new int[nindices];
+            for (int i=0; i<nindices; i++) indices[i] = i;
+            return getIndices(hashcode, indices);
         }
 
         /**
