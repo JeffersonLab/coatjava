@@ -58,9 +58,7 @@ public abstract class OccupancyTable {
     public final IndexedTable getOccupancy(int events) {
         IndexedTable t = new IndexedTable(indexNames.length, new String[]{"occ/F"});
         for (long hash : ((Map<Long,IndexedEntry>)table.getList().getMap()).keySet()) {
-            t.addEntry(IndexedTable.DEFAULT_GENERATOR.getIndex(hash, 0),
-                       IndexedTable.DEFAULT_GENERATOR.getIndex(hash, 1),
-                       IndexedTable.DEFAULT_GENERATOR.getIndex(hash, 2));
+            t.addEntry(IndexedTable.DEFAULT_GENERATOR.getIndices(hash, indexNames.length));
             t.setDoubleValueByHash(((double)table.getIntValueByHash(0, hash))/events, 0, hash);
         }
         return t;
@@ -102,11 +100,11 @@ public abstract class OccupancyTable {
         int i = 0;
         Map<Long,IndexedEntry> m = table.getList().getMap();
         for (long hash : m.keySet()) {
-            b.setByte(0, i, (byte)IndexedTable.DEFAULT_GENERATOR.getIndex(hash, 0));
-            b.setByte(1, i, (byte)IndexedTable.DEFAULT_GENERATOR.getIndex(hash, 1));
-            b.setShort(2, i, (short)IndexedTable.DEFAULT_GENERATOR.getIndex(hash, 2));
-            if (indexNames.length == 4)
-                b.setByte(3, i, (byte)IndexedTable.DEFAULT_GENERATOR.getIndex(hash, 3));
+            int[] indices = IndexedTable.DEFAULT_GENERATOR.getIndices(hash, indexNames.length);
+            b.setByte(0, i, (byte)indices[0]);
+            b.setByte(1, i, (byte)indices[1]);
+            b.setShort(2, i, (short)indices[2]);
+            if (indexNames.length == 4) b.setByte(3, i, (byte)indices[3]);
             b.setInt(indexNames.length, i, m.get(hash).getValue(0).intValue());
             i++;
         }
