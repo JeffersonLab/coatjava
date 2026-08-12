@@ -2,93 +2,119 @@ package org.jlab.detector.calib.utils;
 
 import java.util.Map;
 import org.jlab.io.base.DataBank;
+import org.jlab.io.base.DataEvent;
 import org.jlab.utils.groups.IndexedTable;
+import org.jlab.utils.groups.IndexedTable.IndexedEntry;
 
-/**
- * Utility class for storing occupancy/multiplicity in an IndexedTable and
- * writing it to an occupancy bank with format (index... weight [*])
- * 
- * @author baltzell
- */
-public class OccupancyTable {
+public abstract class OccupancyTable {
 
-    private String[] indexNames;
-    private IndexedTable table;
+    public static void main(String[] args) {
+        DC d = new DC();
+        d.add(1,1,1);
+        d.add(1,2,1);
+        d.add(1,3,1);
+        d.add(1,3,1);
+        IndexedTable o = d.getOccupancy(10);
+        o.show();
+        o.getList().show();
+    }
 
-    public OccupancyTable(String... index) {
-        if (index.length != 3 && index.length != 4)
-            throw new IllegalArgumentException("Invalid index length: "+index.length);
+    public static class DC extends OccupancyTable {
+        public DC() { super("DC::occ","sector","layer"); }
+        @Override
+        public void add(DataEvent e) {
+            DataBank b = e.getBank("DC::tot");
+            if (b != null) {
+                final int rows = b.rows();
+                for (int i=0; i<rows; i++) {
+                    add(b.getByte(0, i), b.getByte(1,i));
+                }
+            }
+        }
+    }
+
+    protected String bankName;
+    protected String[] valueNames = {"occ/I"};
+    protected String[] indexNames;
+    protected IndexedTable table;
+
+    public OccupancyTable(String bank, String... index) {
+        bankName = bank;
         indexNames = index;
-        table = new IndexedTable(indexNames.length, new String[]{"occ/D"});
+        table = new IndexedTable(indexNames.length, valueNames);
+    }
+
+    public OccupancyTable(String bank) {
+        bankName = bank;
+        indexNames = new String[]{"sector","layer","component"};
+        table = new IndexedTable(indexNames.length, valueNames);
     }
 
     /**
-     * Reset the occupancy table.
+     * Get the occupancy table.
+     * @param events number of events that have been added
+     * @return 
      */
-    public void reset() {
-        table = new IndexedTable(indexNames.length, new String[]{"occ/D"});
+    public final IndexedTable getOccupancy(int events) {
+        IndexedTable t = new IndexedTable(indexNames.length, new String[]{"occ/F"});
+        for (long hash : ((Map<Long,IndexedEntry>)table.getList().getMap()).keySet()) {
+            t.addEntry(IndexedTable.DEFAULT_GENERATOR.getIndex(hash, 0),
+                       IndexedTable.DEFAULT_GENERATOR.getIndex(hash, 1),
+                       IndexedTable.DEFAULT_GENERATOR.getIndex(hash, 2));
+            t.setDoubleValueByHash(((double)table.getIntValueByHash(0, hash))/events, 0, hash);
+        }
+        return t;
     }
 
     /**
-     * Fill occupancy, user-defined weight.
-     * @param weight
+     * Reset occupancy table.
+     */
+    public final void reset() {
+        table = new IndexedTable(indexNames.length, valueNames);
+    }
+
+    /**
+     * Fill occupancy table.
      * @param index 
      */
-    public void add(double weight, int... index) {
+    public final void add(int... index) {
         final long hash = IndexedTable.DEFAULT_GENERATOR.hashCode(index);
-        if (!table.hasEntry(index)) {
+        if (!table.hasEntryByHash(hash)) {
             table.addEntry(index);
-            table.setDoubleValueByHash(0.0, indexNames.length, hash);
+            table.setIntValueByHash(0, 0, hash);
         }
-        table.setDoubleValueByHash(weight + table.getDoubleValueByHash(indexNames.length, hash), indexNames.length, hash);
+        table.setIntValueByHash(table.getIntValueByHash(0, hash) + 1, 0, hash);
     }
 
     /**
-     * Fill occupancy, unity weight.
-     * @param index 
-     */
-    public void add(int... index) {
-        add(1, index);
-    }
-
-    /**
-     * Fill occupancy from hits bank, one per bank row.
-     * Note, bank index data types are hard-coded here! 
-     * @param b hit bank
-     */
-    public void add(DataBank b) {
-        final int rows = b.rows();
-        for (int i=0; i<rows; i++) {
-            if (indexNames.length == 3)
-                add(b.getByte(0, i), b.getByte(1,i), b.getShort(2,i));
-            else
-                add(b.getByte(0, i), b.getByte(1,i), b.getShort(2,i), b.getByte(3,i));
-        }
-    }
-
-    /**
-     * Get the number of rows for the occupancy bank.
+     * Get number of rows for the occupancy bank.
      * @return rows 
      */
-    public int getRows() {
+    public final int getRows() {
         return table.getRowCount();
     }
-   
+
     /**
-     * Update an occupancy bank.
+     * Update an occupancy bank, assuming 3/4-index s/l/c[/o].
      * @param b occupancy bank
      */
-    public void update(DataBank b) {
+    public final void update(DataBank b) {
         int i = 0;
-        Map<Long,Integer> m = table.getList().getMap();
-        for (Map.Entry<Long,Integer> entry : m.entrySet()) {
-            b.setInt(0, i, IndexedTable.DEFAULT_GENERATOR.getIndex(entry.getKey(), 0));
-            b.setInt(1, i, IndexedTable.DEFAULT_GENERATOR.getIndex(entry.getKey(), 1));
-            b.setInt(2, i, IndexedTable.DEFAULT_GENERATOR.getIndex(entry.getKey(), 2));
+        Map<Long,IndexedEntry> m = table.getList().getMap();
+        for (long hash : m.keySet()) {
+            b.setByte(0, i, (byte)IndexedTable.DEFAULT_GENERATOR.getIndex(hash, 0));
+            b.setByte(1, i, (byte)IndexedTable.DEFAULT_GENERATOR.getIndex(hash, 1));
+            b.setShort(2, i, (short)IndexedTable.DEFAULT_GENERATOR.getIndex(hash, 2));
             if (indexNames.length == 4)
-                b.setInt(3, i, IndexedTable.DEFAULT_GENERATOR.getIndex(entry.getKey(), 3));
-            b.setInt(indexNames.length, i, entry.getValue());
+                b.setByte(3, i, (byte)IndexedTable.DEFAULT_GENERATOR.getIndex(hash, 3));
+            b.setInt(indexNames.length, i, m.get(hash).getValue(0).intValue());
             i++;
         }
     }
+
+    /**
+     * Fill occupancy from hits bank.
+     * @param e
+     */
+    protected abstract void add(DataEvent e);
 }
