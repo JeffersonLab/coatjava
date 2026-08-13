@@ -157,12 +157,12 @@ public class OccupancyTable {
     }
 
     /**
-     * Modify the user-provided occupancy bank with normalized occupancies. 
+     * Create an occupancy bank.
      * @param events
      * @return 
      */
     public Bank create(long events) {
-        Bank b = new Bank(occBank.getSchema());
+        Bank b = new Bank(occBank.getSchema(), getRows());
         int row = 0;
         for (long hash : ((Map<Long,IndexedEntry>)table.getList().getMap()).keySet()) {
             int[] idx = IndexedTable.DEFAULT_GENERATOR.getIndices(hash, indices.length);
