@@ -86,13 +86,12 @@ public class Clas12Writer extends HipoToHipoWriter {
     }
 
     private void processOccupancy(Event event) {
-        occupancyEvents++;
         for (int i=0; i<occupancyBanks.length; i++) {
             event.read(occupancyBanks[i]);
             event.remove(occupancyBanks[i].getSchema());
             occupancyTables[i].fill(occupancyBanks[i], true);
         }
-        if (occupancyEvents % 1000 == 0) {
+        if (occupancyEvents++ % 1000 == 0) {
             for (int i=0; i<occupancyBanks.length; i++) {
                 occupancyTables[i].create(occupancyEvents, occupancyBanks[i]);
                 event.write(occupancyBanks[i]);

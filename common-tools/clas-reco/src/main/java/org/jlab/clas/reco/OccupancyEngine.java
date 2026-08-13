@@ -18,9 +18,8 @@ public class OccupancyEngine extends ReconstructionEngine {
 
     @Override
     public boolean processDataEventUser(DataEvent event) {
-        for (int i=0; i<tables.length; i++)
-            tables[i].fill(event, banks[i], false);
         for (int i=0; i<tables.length; i++) {
+            tables[i].fill(event, banks[i], false);
             event.appendBank(tables[i].create(event, banks[i]));
             tables[i].reset();
         }

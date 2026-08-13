@@ -11,28 +11,27 @@ public abstract class OccupancyTable {
 
     public static class DC extends OccupancyTable {
         public DC() { super(); }
-        public void add(DataEvent e) {
+        /*public void fill(DataEvent e) {
             DataBank b = e.getBank("DC::tot");
             if (b == null) b = e.getBank("DC::tdc");
             if (b == null) return;
             final int rows = b.rows();
             for (int i=0; i<rows; i++)
                 fill(b.getByte(0, i), b.getByte(1,i), b.getByte(2,i));
-        }
+        }*/
     }
 
     protected String[] valueNames = {"occ/F"};
-    protected String[] indexNames;
+    protected String[] indexNames = {"sector","layer","component"};
     protected IndexedTable table;
 
     public OccupancyTable(String... index) {
         indexNames = index;
-        table = new IndexedTable(indexNames.length, valueNames);
+        reset();
     }
 
     public OccupancyTable() {
-        indexNames = new String[]{"sector","layer","component"};
-        table = new IndexedTable(indexNames.length, valueNames);
+        reset();
     }
 
     /**
@@ -66,47 +65,47 @@ public abstract class OccupancyTable {
 
     /**
      * 
-     * @param b 
+     * @param bank 
      * @param weighted 
      */
-    public void fill(DataBank b, boolean weighted) {
-        final int rows = b.rows();
+    public void fill(DataBank bank, boolean weighted) {
+        final int rows = bank.rows();
         int[] indices = new int[indexNames.length];
         for (int i=0; i<rows; i++) {
             for (int j=0; j<indexNames.length; j++) {
-                if (j==2) indices[j] = b.getShort(j,i);
-                else indices[j] = b.getByte(j,i);
+                if (j==2) indices[j] = bank.getShort(j,i);
+                else indices[j] = bank.getByte(j,i);
             }
-            if (weighted) fill(b.getFloat(indexNames.length,i), indices);
+            if (weighted) fill(bank.getFloat(indexNames.length,i), indices);
             else fill(indices);
         }
     }
 
     /**
      * 
-     * @param e
+     * @param event
      * @param bank
      * @param weighted 
      */
-    public void fill(DataEvent e, String bank, boolean weighted) {
-        DataBank b = e.getBank(bank);
+    public void fill(DataEvent event, String bank, boolean weighted) {
+        DataBank b = event.getBank(bank);
         if (b != null) fill(b, weighted);
     }
 
     /**
      * 
-     * @param b 
+     * @param bank 
      * @param weighted 
      */
-    public final void fill(Bank b, boolean weighted) {
-        int rows = b.getRows();
+    public final void fill(Bank bank, boolean weighted) {
+        int rows = bank.getRows();
         int[] indices = new int[indexNames.length];
         for (int i=0; i<rows; i++) {
             for (int j=0; j<indexNames.length; j++) {
-                if (j==2) indices[j] = b.getShort(j,i);
-                else indices[j] = b.getByte(j,i);
+                if (j==2) indices[j] = bank.getShort(j,i);
+                else indices[j] = bank.getByte(j,i);
             }
-            if (weighted) fill(b.getFloat(indexNames.length,i), indices);
+            if (weighted) fill(bank.getFloat(indexNames.length,i), indices);
             else fill(indices);
         }
     }
@@ -119,6 +118,12 @@ public abstract class OccupancyTable {
         return table.getRowCount();
     }
 
+    /**
+     * Create an occupancy bank of the given name.
+     * @param event
+     * @param bank
+     * @return 
+     */
     public final DataBank create(DataEvent event, String bank) {
         DataBank b = event.createBank(bank, getRows());
         int i = 0;
@@ -156,11 +161,11 @@ public abstract class OccupancyTable {
 
     /**
      * Get the occupancy table.
-     * @param events number of events that have been added
+     * @param events
      * @return 
      */
     public final IndexedTable create(long events) {
-        IndexedTable t = new IndexedTable(indexNames.length, new String[]{"occ/F"});
+        IndexedTable t = new IndexedTable(indexNames.length, valueNames);
         for (long hash : ((Map<Long,IndexedEntry>)table.getList().getMap()).keySet()) {
             t.addEntry(IndexedTable.DEFAULT_GENERATOR.getIndices(hash, indexNames.length));
             t.setDoubleValueByHash((table.getDoubleValueByHash(0, hash))/events, 0, hash);
