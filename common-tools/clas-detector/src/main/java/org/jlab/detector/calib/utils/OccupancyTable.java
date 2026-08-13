@@ -9,6 +9,11 @@ import org.jlab.jnp.hipo4.data.SchemaFactory;
 import org.jlab.utils.groups.IndexedTable;
 import org.jlab.utils.groups.IndexedTable.IndexedEntry;
 
+/**
+ * Occupancy bookkeeper with I/O helpers assuming "indexed" banks.
+ *
+ * @author baltzell 
+ */
 public class OccupancyTable {
 
     protected Bank hitBank;
