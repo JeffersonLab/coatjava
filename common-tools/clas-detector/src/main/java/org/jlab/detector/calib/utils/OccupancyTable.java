@@ -31,14 +31,6 @@ public class OccupancyTable {
         reset();
     }
 
-    public Bank getHitBank() {
-        return hitBank;
-    }
-
-    public Bank getOccupancyBank() {
-        return occBank;
-    }
-
     /**
      * Reset occupancy table.
      */
@@ -99,7 +91,7 @@ public class OccupancyTable {
     }
 
     /**
-     * Fill occupancy table from a bank. 
+     * Fill occupancy table from a user-defined bank. 
      * @param bank 
      * @param weighted 
      */
@@ -126,41 +118,30 @@ public class OccupancyTable {
     }
 
     /**
-     * Fill occupancy table from a bank. 
+     * Fill occupancy table from a user-defined bank, unweighted. 
      * @param bank 
-     * @param weighted 
      */
-    public void fill(DataBank bank, boolean weighted) {
-        final int rows = bank.rows();
-        int[] idx = new int[indices.length];
-        for (int i=0; i<rows; i++) {
-            for (int j=0; j<indices.length; j++) {
-                if (j==2) idx[j] = bank.getShort(j,i);
-                else idx[j] = bank.getByte(j,i);
+    public void fill(DataBank bank) {
+        if (bank != null) {
+            final int rows = bank.rows();
+            int[] idx = new int[indices.length];
+            for (int i=0; i<rows; i++) {
+                for (int j=0; j<indices.length; j++) {
+                    if (j==2) idx[j] = bank.getShort(j,i);
+                    else idx[j] = bank.getByte(j,i);
+                }
+                fill(idx);
             }
-            if (weighted) fill(bank.getFloat(indices.length,i), idx);
-            else fill(idx);
         }
     }
 
     /**
-     * Fill occupancy table from an event. 
-     * @param event
-     * @param bank
-     * @param weighted 
-     */
-    public void fill(DataEvent event, String bank, boolean weighted) {
-        DataBank b = event.getBank(bank);
-        if (b != null) fill(b, weighted);
-    }
-
-    /**
      * Create an occupancy bank.
+     * @param events
      * @param event
-     * @param weighted
      * @return 
      */
-    public final DataBank create(DataEvent event, boolean weighted) {
+    public final DataBank create(long events, DataEvent event) {
         DataBank b = event.createBank(occBank.getSchema().getName(), getRows());
         int i = 0;
         Map<Long,IndexedEntry> m = table.getList().getMap();
@@ -170,8 +151,7 @@ public class OccupancyTable {
                 if (j == 2) b.setShort(j, i, (short)idx[j]);
                 else b.setByte(j, i, (byte)idx[j]);
             }
-            if (weighted) b.setFloat(indices.length, i, m.get(hash).getValue(0).intValue());
-            else b.setFloat(indices.length, i, m.get(hash).getValue(0).intValue());
+            b.setFloat(indices.length, i, ((float)m.get(hash).getValue(0).intValue())/events);
             i++;
         }
         return b;
