@@ -85,6 +85,22 @@ public class Clas12Writer extends HipoToHipoWriter {
         }
     }
 
+    private void processOccupancy(Event event) {
+        occupancyEvents++;
+        for (int i=0; i<occupancyBanks.length; i++) {
+            event.read(occupancyBanks[i]);
+            occupancyTables[i].fill(occupancyBanks[i], true);
+        }
+        if (occupancyEvents % 1000 == 0) {
+            for (int i=0; i<occupancyBanks.length; i++) {
+                occupancyTables[i].create(occupancyEvents, occupancyBanks[i]);
+                event.write(occupancyBanks[i]);
+                occupancyTables[i].reset();
+            }
+            occupancyEvents = 0;
+        }
+    }
+
     @Override
     protected void writeEvent(Object event) throws EventWriterException {
         scalers.add((Event)event);
@@ -95,18 +111,7 @@ public class Clas12Writer extends HipoToHipoWriter {
             int evno = runConfig.getInt("event",0);
             if (unix > 0 && evno > 0) eventUnix.put(evno, unix);
         }
-        occupancyEvents++;
-        for (int i=0; i<occupancyBanks.length; i++) {
-            ((Event)event).read(occupancyBanks[i]);
-            occupancyTables[i].fill(occupancyBanks[i], true);
-        }
-        if (occupancyEvents % 1000 == 0) {
-            for (int i=0; i<occupancyBanks.length; i++) {
-                occupancyTables[i].update(occupancyEvents, occupancyBanks[i]);
-                occupancyTables[i].reset();
-            }
-            occupancyEvents = 0;
-        }
+        processOccupancy((Event)event);
         helicities.add(HelicityState.createFromFadcBank(helicityAdc, runConfig, conman));
         Event t = CLASDecoder4.createTaggedEvent((Event)event, runConfig, tag1banks);
         if (!t.isEmpty()) writer.addEvent(t, 1);

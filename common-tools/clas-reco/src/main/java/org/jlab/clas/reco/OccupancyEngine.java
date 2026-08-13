@@ -13,7 +13,7 @@ public class OccupancyEngine extends ReconstructionEngine {
     String[] banks = {"DC::occ"};
     
     public OccupancyEngine() {
-        super("OccE", "baltzell", "0.1");
+        super("Occupancy", "baltzell", "0.1");
     }
 
     @Override
