@@ -136,11 +136,11 @@ public abstract class OccupancyTable {
     }
 
     /**
-     * 
+     * Modify the user-provided occupancy bank. 
      * @param events
      * @param b
      */
-    public final void create(int events, Bank b) {
+    public final void create(long events, Bank b) {
         b.setRows(getRows());
         int row = 0;
         for (long hash : ((Map<Long,IndexedEntry>)table.getList().getMap()).keySet()) {
@@ -159,7 +159,7 @@ public abstract class OccupancyTable {
      * @param events number of events that have been added
      * @return 
      */
-    public final IndexedTable create(int events) {
+    public final IndexedTable create(long events) {
         IndexedTable t = new IndexedTable(indexNames.length, new String[]{"occ/F"});
         for (long hash : ((Map<Long,IndexedEntry>)table.getList().getMap()).keySet()) {
             t.addEntry(IndexedTable.DEFAULT_GENERATOR.getIndices(hash, indexNames.length));

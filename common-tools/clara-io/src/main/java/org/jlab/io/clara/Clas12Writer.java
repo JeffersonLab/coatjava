@@ -36,7 +36,7 @@ public class Clas12Writer extends HipoToHipoWriter {
 
     static final String[] TAG1BANKS = {"RUN::scaler","HEL::scaler","RAW::scaler","RAW::epics","HEL::flip","COAT::config"};
 
-    int occupancyEvents;
+    long occupancyEvents;
     OccupancyTable[] occupancyTables;
     Bank[] occupancyBanks;
     Bank[] tag1banks;
@@ -89,6 +89,7 @@ public class Clas12Writer extends HipoToHipoWriter {
         occupancyEvents++;
         for (int i=0; i<occupancyBanks.length; i++) {
             event.read(occupancyBanks[i]);
+            event.remove(occupancyBanks[i].getSchema());
             occupancyTables[i].fill(occupancyBanks[i], true);
         }
         if (occupancyEvents % 1000 == 0) {
