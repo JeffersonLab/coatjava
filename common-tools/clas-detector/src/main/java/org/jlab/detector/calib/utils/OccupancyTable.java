@@ -13,10 +13,9 @@ public class OccupancyTable {
 
     protected Bank hitBank;
     protected Bank occBank;
-
+    protected IndexedTable table;
     protected String[] valueNames = {"occ/F"};
     protected int[] indices = {0,1,2};
-    protected IndexedTable table;
 
     public OccupancyTable(SchemaFactory schema, String hits, String occupancy, int... index) {
         indices = index;
