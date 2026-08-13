@@ -8,7 +8,7 @@
             { "name":"sector"    , "type":"B", "info":"sector"},
             { "name":"layer"     , "type":"B", "info":"layer"},
             { "name":"component" , "type":"S", "info":"component"},
-            { "name":"hits"      , "type":"I", "info":"number of hits"}
+            { "name":"hits"      , "type":"F", "info":"number of hits"}
         ]
     }
 ]

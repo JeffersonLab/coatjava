@@ -8,20 +8,8 @@ import org.jlab.utils.groups.IndexedTable.IndexedEntry;
 
 public abstract class OccupancyTable {
 
-    public static void main(String[] args) {
-        DC d = new DC();
-        d.add(1,1,1);
-        d.add(1,2,1);
-        d.add(1,3,1);
-        d.add(1,3,1);
-        IndexedTable o = d.getOccupancy(10);
-        o.show();
-        o.getList().show();
-    }
-
     public static class DC extends OccupancyTable {
-        public DC() { super("DC::occ","sector","layer","component"); }
-        @Override
+        public DC() { super(); }
         public void add(DataEvent e) {
             DataBank b = e.getBank("DC::tot");
             if (b == null) b = e.getBank("DC::tdc");
@@ -32,16 +20,16 @@ public abstract class OccupancyTable {
         }
     }
 
-    protected String[] valueNames = {"occ/I"};
+    protected String[] valueNames = {"occ/F"};
     protected String[] indexNames;
     protected IndexedTable table;
 
-    public OccupancyTable(String bank, String... index) {
+    public OccupancyTable(String... index) {
         indexNames = index;
         table = new IndexedTable(indexNames.length, valueNames);
     }
 
-    public OccupancyTable(String bank) {
+    public OccupancyTable() {
         indexNames = new String[]{"sector","layer","component"};
         table = new IndexedTable(indexNames.length, valueNames);
     }
@@ -55,7 +43,7 @@ public abstract class OccupancyTable {
         IndexedTable t = new IndexedTable(indexNames.length, new String[]{"occ/F"});
         for (long hash : ((Map<Long,IndexedEntry>)table.getList().getMap()).keySet()) {
             t.addEntry(IndexedTable.DEFAULT_GENERATOR.getIndices(hash, indexNames.length));
-            t.setDoubleValueByHash(((double)table.getIntValueByHash(0, hash))/events, 0, hash);
+            t.setDoubleValueByHash((table.getDoubleValueByHash(0, hash))/events, 0, hash);
         }
         return t;
     }
@@ -77,7 +65,7 @@ public abstract class OccupancyTable {
             table.addEntry(index);
             table.setIntValueByHash(0, 0, hash);
         }
-        table.setIntValueByHash(table.getIntValueByHash(0, hash) + 1, 0, hash);
+        table.setDoubleValueByHash(table.getDoubleValueByHash(0, hash) + 1, 0, hash);
     }
 
     /**
@@ -90,32 +78,31 @@ public abstract class OccupancyTable {
 
     /**
      * Update an occupancy bank, assuming 3/4-index s/l/c[/o].
-     * @param b occupancy bank
+     * @param bank occupancy bank
      */
-    public final void update(DataBank b) {
+    public final void update(DataBank bank) {
         int i = 0;
         Map<Long,IndexedEntry> m = table.getList().getMap();
         for (long hash : m.keySet()) {
             int[] indices = IndexedTable.DEFAULT_GENERATOR.getIndices(hash, indexNames.length);
-            b.setByte(0, i, (byte)indices[0]);
-            b.setByte(1, i, (byte)indices[1]);
-            b.setShort(2, i, (short)indices[2]);
-            if (indexNames.length == 4) b.setByte(3, i, (byte)indices[3]);
-            b.setInt(indexNames.length, i, m.get(hash).getValue(0).intValue());
+            bank.setByte(0, i, (byte)indices[0]);
+            bank.setByte(1, i, (byte)indices[1]);
+            bank.setShort(2, i, (short)indices[2]);
+            if (indexNames.length == 4) bank.setByte(3, i, (byte)indices[3]);
+            bank.setFloat(indexNames.length, i, m.get(hash).getValue(0).intValue());
             i++;
         }
     }
 
-    public final void update(DataEvent e, String bank) {
-        DataBank b = e.createBank(bank, getRows());
-        if (e.hasBank(bank)) e.removeBank(bank);
-        update(b);
-        e.appendBank(b);
-    }
-
     /**
-     * Fill occupancy from hits bank.
-     * @param e
+     * Create occupancy bank, assuming 3/4-indexing, and add it to the event. 
+     * @param event
+     * @param bank 
      */
-    protected abstract void add(DataEvent e);
+    public final void update(DataEvent event, String bank) {
+        DataBank b = event.createBank(bank, getRows());
+        if (event.hasBank(bank)) event.removeBank(bank);
+        update(b);
+        event.appendBank(b);
+    }
 }
