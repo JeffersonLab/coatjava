@@ -8,6 +8,7 @@ import java.util.TreeSet;
 import org.jlab.analysis.postprocess.Processor;
 import org.jlab.clara.std.services.EventWriterException;
 import org.jlab.detector.calib.utils.ConstantsManager;
+import org.jlab.detector.calib.utils.OccupancyTable;
 import org.jlab.detector.decode.CLASDecoder4;
 import org.jlab.detector.helicity.HelicitySequence;
 import org.jlab.detector.helicity.HelicitySequenceDelayed;
@@ -35,6 +36,9 @@ public class Clas12Writer extends HipoToHipoWriter {
 
     static final String[] TAG1BANKS = {"RUN::scaler","HEL::scaler","RAW::scaler","RAW::epics","HEL::flip","COAT::config"};
 
+    int events;
+    OccupancyTable[] occupancyTables;
+    Bank[] occupancyBanks;
     Bank[] tag1banks;
     Bank runConfig;
     Bank helicityAdc;
@@ -46,6 +50,7 @@ public class Clas12Writer extends HipoToHipoWriter {
     boolean postprocess;
 
     private void init(JSONObject opts) {
+        events = 0;
         fullSchema = new SchemaFactory();
         fullSchema.initFromDirectory(FileUtils.getEnvironmentPath("CLAS12DIR","etc/bankdefs/hipo4"));
         runConfig = new Bank(fullSchema.getSchema("RUN::config"));
@@ -61,6 +66,10 @@ public class Clas12Writer extends HipoToHipoWriter {
         tag1banks = new Bank[TAG1BANKS.length];
         for (int i=0; i<tag1banks.length; ++i)
             tag1banks[i] = new Bank(fullSchema.getSchema(TAG1BANKS[i]));
+        occupancyBanks = new Bank[1];
+        occupancyBanks[0] = new Bank(fullSchema.getSchema("DC::occ"));
+        occupancyTables = new OccupancyTable[1];
+        occupancyTables[0] = new OccupancyTable.DC();
     }
 
     @Override
@@ -86,16 +95,34 @@ public class Clas12Writer extends HipoToHipoWriter {
             int evno = runConfig.getInt("event",0);
             if (unix > 0 && evno > 0) eventUnix.put(evno, unix);
         }
+        for (int i=0; i<occupancyBanks.length; i++) {
+            ((Event)event).read(occupancyBanks[i]);
+            occupancyTables[i].fill(occupancyBanks[i], true);
+        }
         helicities.add(HelicityState.createFromFadcBank(helicityAdc, runConfig, conman));
         Event t = CLASDecoder4.createTaggedEvent((Event)event, runConfig, tag1banks);
         if (!t.isEmpty()) writer.addEvent(t, 1);
         super.writeEvent(event);
+        events++;
+    }
+
+    private Event getOccupancyEvent() {
+        Event e = new Event();
+        for (int i=0; i<occupancyTables.length; i++) {
+            occupancyTables[i].update(events, occupancyBanks[i]);
+            e.write(occupancyBanks[i]);
+            occupancyTables[i].reset();
+        }
+        return e;
     }
 
     @Override
     protected void closeWriter() {
         HelicitySequence.writeFlips(fullSchema, writer, helicities);
         writer.addEvent(getUnixEvent(runConfig),1);
+        Event occupancy = getOccupancyEvent();
+        if (!occupancy.isEmpty()) writer.addEvent(occupancy, 3);
+        events = 0;
         super.closeWriter();
         if (postprocess) postprocess();
         // keep the latest helicity/scaler reading for the next file:
