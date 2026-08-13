@@ -38,7 +38,6 @@ public class Clas12Writer extends HipoToHipoWriter {
 
     long occupancyEvents;
     OccupancyTable[] occupancyTables;
-    Bank[] occupancyBanks;
     Bank[] tag1banks;
     Bank runConfig;
     Bank helicityAdc;
@@ -46,17 +45,17 @@ public class Clas12Writer extends HipoToHipoWriter {
     TreeMap<Integer,Integer> eventUnix;
     TreeSet<HelicityState> helicities;
     DaqScalersSequence scalers;
-    SchemaFactory fullSchema;
+    SchemaFactory schema;
     boolean postprocess;
 
     private void init(JSONObject opts) {
         occupancyEvents = 0;
-        fullSchema = new SchemaFactory();
-        fullSchema.initFromDirectory(FileUtils.getEnvironmentPath("CLAS12DIR","etc/bankdefs/hipo4"));
-        runConfig = new Bank(fullSchema.getSchema("RUN::config"));
-        helicityAdc = new Bank(fullSchema.getSchema("HEL::adc"));
+        schema = new SchemaFactory();
+        schema.initFromDirectory(FileUtils.getEnvironmentPath("CLAS12DIR","etc/bankdefs/hipo4"));
+        runConfig = new Bank(schema.getSchema("RUN::config"));
+        helicityAdc = new Bank(schema.getSchema("HEL::adc"));
         helicities = new TreeSet<>();
-        scalers = new DaqScalersSequence(fullSchema);
+        scalers = new DaqScalersSequence(schema);
         conman = new ConstantsManager();
         eventUnix = new TreeMap<>();
         conman.init("/runcontrol/hwp","/runcontrol/helicity");
@@ -65,11 +64,8 @@ public class Clas12Writer extends HipoToHipoWriter {
         if (opts.has("timestamp")) conman.setTimeStamp(opts.getString("timestamp"));
         tag1banks = new Bank[TAG1BANKS.length];
         for (int i=0; i<tag1banks.length; ++i)
-            tag1banks[i] = new Bank(fullSchema.getSchema(TAG1BANKS[i]));
-        occupancyBanks = new Bank[1];
-        occupancyBanks[0] = new Bank(fullSchema.getSchema("DC::occ"));
-        occupancyTables = new OccupancyTable[1];
-        occupancyTables[0] = new OccupancyTable.DC();
+            tag1banks[i] = new Bank(schema.getSchema(TAG1BANKS[i]));
+        occupancyTables = new OccupancyTable[]{new OccupancyTable(schema,"DC::tot","DC::occ")};
     }
 
     @Override
@@ -86,16 +82,13 @@ public class Clas12Writer extends HipoToHipoWriter {
     }
 
     private void processOccupancy(Event event) {
-        for (int i=0; i<occupancyBanks.length; i++) {
-            event.read(occupancyBanks[i]);
-            event.remove(occupancyBanks[i].getSchema());
-            occupancyTables[i].fill(occupancyBanks[i], true);
-        }
+        for (OccupancyTable t : occupancyTables)
+            t.fill(event);
         if (occupancyEvents++ % 1000 == 0) {
-            for (int i=0; i<occupancyBanks.length; i++) {
-                occupancyTables[i].create(occupancyEvents, occupancyBanks[i]);
-                event.write(occupancyBanks[i]);
-                occupancyTables[i].reset();
+            for (OccupancyTable t : occupancyTables) {
+                Bank b = t.create(occupancyEvents);
+                if (b.getRows() > 0) event.write(b);
+                t.reset();
             }
             occupancyEvents = 0;
         }
@@ -120,7 +113,7 @@ public class Clas12Writer extends HipoToHipoWriter {
 
     @Override
     protected void closeWriter() {
-        HelicitySequence.writeFlips(fullSchema, writer, helicities);
+        HelicitySequence.writeFlips(schema, writer, helicities);
         writer.addEvent(getUnixEvent(runConfig),1);
         super.closeWriter();
         if (postprocess) postprocess();
@@ -153,7 +146,7 @@ public class Clas12Writer extends HipoToHipoWriter {
      * @return 
      */
     private Event getUnixEvent(Bank config) {
-        Bank unix = new Bank(fullSchema.getSchema("RUN::unix"));
+        Bank unix = new Bank(schema.getSchema("RUN::unix"));
         unix.setRows(eventUnix.size());
         int row = 0;
         for (int evno : eventUnix.keySet()) {
@@ -174,7 +167,7 @@ public class Clas12Writer extends HipoToHipoWriter {
         int d = conman.getConstants(getRunNumber(), "/runcontrol/helicity").getIntValue("delay",0,0,0);
         HelicitySequenceDelayed helicity = new HelicitySequenceDelayed(d);
         helicity.addStream(helicities);
-        Processor p = new Processor(List.of(filename), fullSchema, helicity, scalers);
+        Processor p = new Processor(List.of(filename), schema, helicity, scalers);
         HipoReader r = new HipoReader();
         r.open(filename);
         Event e = new Event();
