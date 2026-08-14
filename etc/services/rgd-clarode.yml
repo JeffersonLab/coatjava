@@ -83,3 +83,5 @@ services:
     name: VTX
   - class: org.jlab.calibration.service.CalibBanksEngine
     name: CALIB
+  - class: org.jlab.calibration.service.OccupanceEngine
+    name: OCC

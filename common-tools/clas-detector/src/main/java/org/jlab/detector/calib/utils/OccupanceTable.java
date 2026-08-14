@@ -14,7 +14,7 @@ import org.jlab.utils.groups.IndexedTable.IndexedEntry;
  *
  * @author baltzell 
  */
-public class OccupancyTable {
+public class OccupanceTable {
 
     protected Bank hitBank;
     protected Bank occBank;
@@ -22,14 +22,14 @@ public class OccupancyTable {
     protected String[] valueNames = {"occ/F"};
     protected int[] indices = {0,1,2};
 
-    public OccupancyTable(SchemaFactory schema, String hits, String occupancy, int... index) {
+    public OccupanceTable(SchemaFactory schema, String hits, String occupancy, int... index) {
         indices = index;
         hitBank = schema.getBank(hits);
         occBank = schema.getBank(occupancy);
         reset();
     }
 
-    public OccupancyTable(SchemaFactory schema, String hits, String occupancy) {
+    public OccupanceTable(SchemaFactory schema, String hits, String occupancy) {
         hitBank = schema.getBank(hits);
         occBank = schema.getBank(occupancy);
         reset();
@@ -140,6 +140,14 @@ public class OccupancyTable {
     }
 
     /**
+     * Fill occupancy table from the hit bank, unweighted.
+     * @param event
+     */
+    public void fill(DataEvent event) {
+        fill(event.getBank(hitBank.getSchema().getName()));
+    }
+
+    /**
      * Create an occupancy bank.
      * @param events
      * @param event
@@ -181,30 +189,55 @@ public class OccupancyTable {
         return b;
     }
 
-    public static final class OccupancyProcessor {
+    public static final class OccupanceDriver {
         int events=0,prescale;
-        OccupancyTable[] tables;
-        public OccupancyProcessor(SchemaFactory schema, int prescale) {
+        OccupanceTable[] tables;
+        public OccupanceDriver(SchemaFactory schema, int prescale) {
             this.prescale = prescale;
-            tables = new OccupancyTable[]{
-                new OccupancyTable(schema,"DC::tot","DC::occ"),
-                new OccupancyTable(schema,"ECAL::adc","ECAL::adc:occ"),
-                new OccupancyTable(schema,"ECAL::tdc","ECAL::tdc:occ"),
-                new OccupancyTable(schema,"FTOF::adc","FTOF::adc:occ"),
-                new OccupancyTable(schema,"FTOF::tdc","FTOF::tdc:occ"),
+            tables = new OccupanceTable[]{
+                new OccupanceTable(schema,"DC::tot","DC::occ"),
+                new OccupanceTable(schema,"ECAL::adc","ECAL::aocc"),
+                new OccupanceTable(schema,"ECAL::tdc","ECAL::tocc"),
+                new OccupanceTable(schema,"FTOF::adc","FTOF::aocc"),
+                new OccupanceTable(schema,"FTOF::tdc","FTOF::tocc"),
+                new OccupanceTable(schema,"CTOF::adc","CTOF::aocc"),
+                new OccupanceTable(schema,"CTOF::tdc","CTOF::tocc"),
+                new OccupanceTable(schema,"HTCC::adc","HTCC::aocc"),
+                new OccupanceTable(schema,"HTCC::tdc","HTCC::tocc"),
+                new OccupanceTable(schema,"LTCC::adc","LTCC::aocc"),
+                new OccupanceTable(schema,"LTCC::tdc","LTCC::tocc"),
+                new OccupanceTable(schema,"SVT::adc","SVT::occ"),
+                new OccupanceTable(schema,"BMT::adc","BMT::occ"),
+                new OccupanceTable(schema,"FTC::adc","FTC::occ"),
+                new OccupanceTable(schema,"FTH::adc","FTH::occ"),
+                new OccupanceTable(schema,"FTT::adc","FTT::occ"),
+                new OccupanceTable(schema,"RICH::tdc","RICH::occ"),
+                new OccupanceTable(schema,"BAND::tdc","BAND::occ"),
             };
         }
         public void process(Event event) {
-            for (OccupancyTable t : tables)
-                t.fill(event);
+            for (OccupanceTable t : tables) t.fill(event);
             if (events++ % prescale == 0) {
-                for (OccupancyTable t : tables) {
-                    Bank b = t.create(events);
-                    if (b.getRows() > 0) event.write(b);
+                for (OccupanceTable t : tables) {
+                    if (t.getRows() > 0) event.write(t.create(events));
                     t.reset();
                 }
                 events = 0;
             }
+        }
+        public void process(DataEvent event) {
+            for (OccupanceTable t : tables) t.fill(event);
+            if (events++ % prescale == 0) {
+                for (OccupanceTable t : tables) {
+                    if (t.getRows() > 0) event.appendBank(t.create(events, event));
+                    t.reset();
+                }
+                events = 0;
+            }
+        }
+        public void reset() {
+            for (OccupanceTable t : tables) t.reset();
+            events = 0;
         }
     }
 

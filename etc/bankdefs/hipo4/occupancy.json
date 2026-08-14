@@ -1,9 +1,213 @@
 [
     {
         "name": "DC::occ",
-        "group": 20600,
+        "group": 500,
+        "item": 10,
+        "info": "Occupancy Bank",
+        "entries": [
+            { "name":"sector"    , "type":"B", "info":"sector"},
+            { "name":"layer"     , "type":"B", "info":"layer"},
+            { "name":"component" , "type":"S", "info":"component"},
+            { "name":"hits"      , "type":"F", "info":"number of hits"}
+        ]
+    },
+    {
+        "name": "ECAL::tocc",
+        "group": 500,
+        "item": 11,
+        "info": "Occupancy Bank",
+        "entries": [
+            { "name":"sector"    , "type":"B", "info":"sector"},
+            { "name":"layer"     , "type":"B", "info":"layer"},
+            { "name":"component" , "type":"S", "info":"component"},
+            { "name":"hits"      , "type":"F", "info":"number of hits"}
+        ]
+    },
+    {
+        "name": "ECAL::aocc",
+        "group": 500,
+        "item": 12,
+        "info": "Occupancy Bank",
+        "entries": [
+            { "name":"sector"    , "type":"B", "info":"sector"},
+            { "name":"layer"     , "type":"B", "info":"layer"},
+            { "name":"component" , "type":"S", "info":"component"},
+            { "name":"hits"      , "type":"F", "info":"number of hits"}
+        ]
+    },
+    {
+        "name": "FTOF:tocc",
+        "group": 500,
+        "item": 13,
+        "info": "Occupancy Bank",
+        "entries": [
+            { "name":"sector"    , "type":"B", "info":"sector"},
+            { "name":"layer"     , "type":"B", "info":"layer"},
+            { "name":"component" , "type":"S", "info":"component"},
+            { "name":"hits"      , "type":"F", "info":"number of hits"}
+        ]
+    },
+    {
+        "name": "FTOF::aocc",
+        "group": 500,
+        "item": 14,
+        "info": "Occupancy Bank",
+        "entries": [
+            { "name":"sector"    , "type":"B", "info":"sector"},
+            { "name":"layer"     , "type":"B", "info":"layer"},
+            { "name":"component" , "type":"S", "info":"component"},
+            { "name":"hits"      , "type":"F", "info":"number of hits"}
+        ]
+    },
+    {
+        "name": "CTOF::tocc",
+        "group": 500,
+        "item": 15,
+        "info": "Occupancy Bank",
+        "entries": [
+            { "name":"sector"    , "type":"B", "info":"sector"},
+            { "name":"layer"     , "type":"B", "info":"layer"},
+            { "name":"component" , "type":"S", "info":"component"},
+            { "name":"hits"      , "type":"F", "info":"number of hits"}
+        ]
+    },
+    {
+        "name": "CTOF::aocc",
+        "group": 500,
+        "item": 16,
+        "info": "Occupancy Bank",
+        "entries": [
+            { "name":"sector"    , "type":"B", "info":"sector"},
+            { "name":"layer"     , "type":"B", "info":"layer"},
+            { "name":"component" , "type":"S", "info":"component"},
+            { "name":"hits"      , "type":"F", "info":"number of hits"}
+        ]
+    },
+    {
+        "name": "HTCC::aocc",
+        "group": 500,
+        "item": 17,
+        "info": "Occupancy Bank",
+        "entries": [
+            { "name":"sector"    , "type":"B", "info":"sector"},
+            { "name":"layer"     , "type":"B", "info":"layer"},
+            { "name":"component" , "type":"S", "info":"component"},
+            { "name":"hits"      , "type":"F", "info":"number of hits"}
+        ]
+    },
+    {
+        "name": "HTCC::tocc",
+        "group": 500,
+        "item": 18,
+        "info": "Occupancy Bank",
+        "entries": [
+            { "name":"sector"    , "type":"B", "info":"sector"},
+            { "name":"layer"     , "type":"B", "info":"layer"},
+            { "name":"component" , "type":"S", "info":"component"},
+            { "name":"hits"      , "type":"F", "info":"number of hits"}
+        ]
+    },
+    {
+        "name": "LTCC::aocc",
+        "group": 500,
+        "item": 19,
+        "info": "Occupancy Bank",
+        "entries": [
+            { "name":"sector"    , "type":"B", "info":"sector"},
+            { "name":"layer"     , "type":"B", "info":"layer"},
+            { "name":"component" , "type":"S", "info":"component"},
+            { "name":"hits"      , "type":"F", "info":"number of hits"}
+        ]
+    },
+    {
+        "name": "LTCC::tocc",
+        "group": 500,
         "item": 20,
-        "info": "Event Header Bank",
+        "info": "Occupancy Bank",
+        "entries": [
+            { "name":"sector"    , "type":"B", "info":"sector"},
+            { "name":"layer"     , "type":"B", "info":"layer"},
+            { "name":"component" , "type":"S", "info":"component"},
+            { "name":"hits"      , "type":"F", "info":"number of hits"}
+        ]
+    },
+    {
+        "name": "SVT::occ",
+        "group": 500,
+        "item": 21,
+        "info": "Occupancy Bank",
+        "entries": [
+            { "name":"sector"    , "type":"B", "info":"sector"},
+            { "name":"layer"     , "type":"B", "info":"layer"},
+            { "name":"component" , "type":"S", "info":"component"},
+            { "name":"hits"      , "type":"F", "info":"number of hits"}
+        ]
+    },
+    {
+        "name": "BMT::occ",
+        "group": 500,
+        "item": 22,
+        "info": "Occupancy Bank",
+        "entries": [
+            { "name":"sector"    , "type":"B", "info":"sector"},
+            { "name":"layer"     , "type":"B", "info":"layer"},
+            { "name":"component" , "type":"S", "info":"component"},
+            { "name":"hits"      , "type":"F", "info":"number of hits"}
+        ]
+    },
+    {
+        "name": "FTC::occ",
+        "group": 500,
+        "item": 23,
+        "info": "Occupancy Bank",
+        "entries": [
+            { "name":"sector"    , "type":"B", "info":"sector"},
+            { "name":"layer"     , "type":"B", "info":"layer"},
+            { "name":"component" , "type":"S", "info":"component"},
+            { "name":"hits"      , "type":"F", "info":"number of hits"}
+        ]
+    },
+    {
+        "name": "FTH::occ",
+        "group": 500,
+        "item": 24,
+        "info": "Occupancy Bank",
+        "entries": [
+            { "name":"sector"    , "type":"B", "info":"sector"},
+            { "name":"layer"     , "type":"B", "info":"layer"},
+            { "name":"component" , "type":"S", "info":"component"},
+            { "name":"hits"      , "type":"F", "info":"number of hits"}
+        ]
+    },
+    {
+        "name": "FTT::occ",
+        "group": 500,
+        "item": 25,
+        "info": "Occupancy Bank",
+        "entries": [
+            { "name":"sector"    , "type":"B", "info":"sector"},
+            { "name":"layer"     , "type":"B", "info":"layer"},
+            { "name":"component" , "type":"S", "info":"component"},
+            { "name":"hits"      , "type":"F", "info":"number of hits"}
+        ]
+    },
+    {
+        "name": "RICH::occ",
+        "group": 500,
+        "item": 26,
+        "info": "Occupancy Bank",
+        "entries": [
+            { "name":"sector"    , "type":"B", "info":"sector"},
+            { "name":"layer"     , "type":"B", "info":"layer"},
+            { "name":"component" , "type":"S", "info":"component"},
+            { "name":"hits"      , "type":"F", "info":"number of hits"}
+        ]
+    },
+    {
+        "name": "BAND::occ",
+        "group": 500,
+        "item": 27,
+        "info": "Occupancy Bank",
         "entries": [
             { "name":"sector"    , "type":"B", "info":"sector"},
             { "name":"layer"     , "type":"B", "info":"layer"},
