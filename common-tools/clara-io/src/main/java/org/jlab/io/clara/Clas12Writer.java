@@ -42,16 +42,16 @@ public class Clas12Writer extends HipoToHipoWriter {
     TreeMap<Integer,Integer> eventUnix;
     TreeSet<HelicityState> helicities;
     DaqScalersSequence scalers;
-    SchemaFactory schema;
+    SchemaFactory fullSchema;
     boolean postprocess;
 
     private void init(JSONObject opts) {
-        schema = new SchemaFactory();
-        schema.initFromDirectory(FileUtils.getEnvironmentPath("CLAS12DIR","etc/bankdefs/hipo4"));
-        runConfig = new Bank(schema.getSchema("RUN::config"));
-        helicityAdc = new Bank(schema.getSchema("HEL::adc"));
+        fullSchema = new SchemaFactory();
+        fullSchema.initFromDirectory(FileUtils.getEnvironmentPath("CLAS12DIR","etc/bankdefs/hipo4"));
+        runConfig = new Bank(fullSchema.getSchema("RUN::config"));
+        helicityAdc = new Bank(fullSchema.getSchema("HEL::adc"));
         helicities = new TreeSet<>();
-        scalers = new DaqScalersSequence(schema);
+        scalers = new DaqScalersSequence(fullSchema);
         conman = new ConstantsManager();
         eventUnix = new TreeMap<>();
         conman.init("/runcontrol/hwp","/runcontrol/helicity");
@@ -60,7 +60,7 @@ public class Clas12Writer extends HipoToHipoWriter {
         if (opts.has("timestamp")) conman.setTimeStamp(opts.getString("timestamp"));
         tag1banks = new Bank[TAG1BANKS.length];
         for (int i=0; i<tag1banks.length; ++i)
-            tag1banks[i] = new Bank(schema.getSchema(TAG1BANKS[i]));
+            tag1banks[i] = new Bank(fullSchema.getSchema(TAG1BANKS[i]));
     }
 
     @Override
@@ -78,24 +78,23 @@ public class Clas12Writer extends HipoToHipoWriter {
 
     @Override
     protected void writeEvent(Object event) throws EventWriterException {
-        Event e = (Event)event;
-        scalers.add(e);
-        e.read(runConfig);
-        e.read(helicityAdc);
+        scalers.add((Event)event);
+        ((Event)event).read(runConfig);
+        ((Event)event).read(helicityAdc);
         if (runConfig.getRows() > 0) {
             int unix = runConfig.getInt("unixtime",0);
             int evno = runConfig.getInt("event",0);
             if (unix > 0 && evno > 0) eventUnix.put(evno, unix);
         }
         helicities.add(HelicityState.createFromFadcBank(helicityAdc, runConfig, conman));
-        Event t = CLASDecoder4.createTaggedEvent(e, runConfig, tag1banks);
+        Event t = CLASDecoder4.createTaggedEvent((Event)event, runConfig, tag1banks);
         if (!t.isEmpty()) writer.addEvent(t, 1);
         super.writeEvent(event);
     }
 
     @Override
     protected void closeWriter() {
-        HelicitySequence.writeFlips(schema, writer, helicities);
+        HelicitySequence.writeFlips(fullSchema, writer, helicities);
         writer.addEvent(getUnixEvent(runConfig),1);
         super.closeWriter();
         if (postprocess) postprocess();
@@ -128,7 +127,7 @@ public class Clas12Writer extends HipoToHipoWriter {
      * @return 
      */
     private Event getUnixEvent(Bank config) {
-        Bank unix = new Bank(schema.getSchema("RUN::unix"));
+        Bank unix = new Bank(fullSchema.getSchema("RUN::unix"));
         unix.setRows(eventUnix.size());
         int row = 0;
         for (int evno : eventUnix.keySet()) {
@@ -149,7 +148,7 @@ public class Clas12Writer extends HipoToHipoWriter {
         int d = conman.getConstants(getRunNumber(), "/runcontrol/helicity").getIntValue("delay",0,0,0);
         HelicitySequenceDelayed helicity = new HelicitySequenceDelayed(d);
         helicity.addStream(helicities);
-        Processor p = new Processor(List.of(filename), schema, helicity, scalers);
+        Processor p = new Processor(List.of(filename), fullSchema, helicity, scalers);
         HipoReader r = new HipoReader();
         r.open(filename);
         Event e = new Event();
