@@ -36,8 +36,6 @@ public class Clas12Writer extends HipoToHipoWriter {
 
     static final String[] TAG1BANKS = {"RUN::scaler","HEL::scaler","RAW::scaler","RAW::epics","HEL::flip","COAT::config"};
 
-    long occupancyEvents;
-    OccupancyTable[] occupancyTables;
     Bank[] tag1banks;
     Bank runConfig;
     Bank helicityAdc;
@@ -46,10 +44,10 @@ public class Clas12Writer extends HipoToHipoWriter {
     TreeSet<HelicityState> helicities;
     DaqScalersSequence scalers;
     SchemaFactory schema;
+    OccupancyTable.Processor occupancy;
     boolean postprocess;
 
     private void init(JSONObject opts) {
-        occupancyEvents = 0;
         schema = new SchemaFactory();
         schema.initFromDirectory(FileUtils.getEnvironmentPath("CLAS12DIR","etc/bankdefs/hipo4"));
         runConfig = new Bank(schema.getSchema("RUN::config"));
@@ -65,7 +63,7 @@ public class Clas12Writer extends HipoToHipoWriter {
         tag1banks = new Bank[TAG1BANKS.length];
         for (int i=0; i<tag1banks.length; ++i)
             tag1banks[i] = new Bank(schema.getSchema(TAG1BANKS[i]));
-        occupancyTables = new OccupancyTable[]{new OccupancyTable(schema,"DC::tot","DC::occ")};
+        occupancy = new OccupancyTable.Processor(schema, opts.optInt("occupancyPrescale",100));
     }
 
     @Override
@@ -81,32 +79,20 @@ public class Clas12Writer extends HipoToHipoWriter {
         }
     }
 
-    private void processOccupancy(Event event) {
-        for (OccupancyTable t : occupancyTables)
-            t.fill(event);
-        if (occupancyEvents++ % 1000 == 0) {
-            for (OccupancyTable t : occupancyTables) {
-                Bank b = t.create(occupancyEvents);
-                if (b.getRows() > 0) event.write(b);
-                t.reset();
-            }
-            occupancyEvents = 0;
-        }
-    }
-
     @Override
     protected void writeEvent(Object event) throws EventWriterException {
-        scalers.add((Event)event);
-        ((Event)event).read(runConfig);
-        ((Event)event).read(helicityAdc);
+        Event e = (Event)event;
+        scalers.add(e);
+        e.read(runConfig);
+        e.read(helicityAdc);
         if (runConfig.getRows() > 0) {
             int unix = runConfig.getInt("unixtime",0);
             int evno = runConfig.getInt("event",0);
             if (unix > 0 && evno > 0) eventUnix.put(evno, unix);
         }
-        processOccupancy((Event)event);
+        occupancy.process(e);
         helicities.add(HelicityState.createFromFadcBank(helicityAdc, runConfig, conman));
-        Event t = CLASDecoder4.createTaggedEvent((Event)event, runConfig, tag1banks);
+        Event t = CLASDecoder4.createTaggedEvent(e, runConfig, tag1banks);
         if (!t.isEmpty()) writer.addEvent(t, 1);
         super.writeEvent(event);
     }

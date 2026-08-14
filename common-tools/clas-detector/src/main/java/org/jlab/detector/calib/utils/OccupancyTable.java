@@ -10,7 +10,7 @@ import org.jlab.utils.groups.IndexedTable;
 import org.jlab.utils.groups.IndexedTable.IndexedEntry;
 
 /**
- * Occupancy bookkeeper with I/O helpers assuming "indexed" banks.
+ * Occupancy bookkeeper based on IndexedTable with I/O helpers for indexed banks.
  *
  * @author baltzell 
  */
@@ -179,6 +179,30 @@ public class OccupancyTable {
             row++;
         }
         return b;
+    }
+
+    
+    public static final class Processor {
+        int events=0,prescale;
+        OccupancyTable[] tables;
+        public Processor(SchemaFactory schema, int prescale) {
+            this.prescale = prescale;
+            tables = new OccupancyTable[]{
+                new OccupancyTable(schema,"DC::tot","DC::occ")
+            };
+        }
+        public void process(Event event) {
+            for (OccupancyTable t : tables)
+                t.fill(event);
+            if (events++ % prescale == 0) {
+                for (OccupancyTable t : tables) {
+                    Bank b = t.create(events);
+                    if (b.getRows() > 0) event.write(b);
+                    t.reset();
+                }
+                events = 0;
+            }
+        }
     }
 
 }
