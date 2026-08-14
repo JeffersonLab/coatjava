@@ -43,11 +43,15 @@ for filename in os.listdir("./"):
             print('Invalid JSON:  '+filename)
             sys.exit(1)
         # loop over banks in the json file
+        banknames = []
         for bank in datastore:
             bankname = bank['name']
             file = open(workdirectory + singledirectory + bankname + ".json", 'w')
             file.write(json.dumps([bank], sort_keys=True, indent=4))
             file.close
+            banknames.append(bankname)
+        create(filename[:-5]+"/", set(banknames))
+
 print("Single json files saved in " + workdirectory + singledirectory)
 
 # these should *always* be kept:
@@ -109,11 +113,13 @@ level3 = list(dst)
 level3.extend(["DC::tdc", "DC::tot", "ECAL::adc", "ECAL::clusters", "FTOF::tdc", "FTOF::adc", "HitBasedTrkg::HBClusters", "HitBasedTrkg::HBTracks", "HTCC::adc", "RF::adc", "RF::tdc", "RUN::rf", "TimeBasedTrkg::TBClusters", "TimeBasedTrkg::TBTracks"])
 
 import glob
+
 rgl = glob.glob('./singles/full/ALERT*.json')
 rgl.extend(glob.glob('./singles/full/AHDC*.json'))
 rgl.extend(glob.glob('./singles/full/ATOF*.json'))
 rgl = [os.path.basename(x)[:-5] for x in rgl]
 rgl.remove('AHDC::wf')
+
 calib.extend(rgl)
 mon.extend(rgl)
 dst.extend(rgl)
