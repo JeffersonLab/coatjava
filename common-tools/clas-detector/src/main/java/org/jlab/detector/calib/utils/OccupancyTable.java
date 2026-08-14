@@ -181,7 +181,6 @@ public class OccupancyTable {
         return b;
     }
 
-    
     public static final class OccupancyProcessor {
         int events=0,prescale;
         OccupancyTable[] tables;
