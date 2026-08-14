@@ -187,7 +187,11 @@ public class OccupancyTable {
         public OccupancyProcessor(SchemaFactory schema, int prescale) {
             this.prescale = prescale;
             tables = new OccupancyTable[]{
-                new OccupancyTable(schema,"DC::tot","DC::occ")
+                new OccupancyTable(schema,"DC::tot","DC::occ"),
+                new OccupancyTable(schema,"ECAL::adc","ECAL::adc:occ"),
+                new OccupancyTable(schema,"ECAL::tdc","ECAL::tdc:occ"),
+                new OccupancyTable(schema,"FTOF::adc","FTOF::adc:occ"),
+                new OccupancyTable(schema,"FTOF::tdc","FTOF::tdc:occ"),
             };
         }
         public void process(Event event) {
