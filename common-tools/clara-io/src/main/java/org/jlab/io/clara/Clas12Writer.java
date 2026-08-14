@@ -8,7 +8,7 @@ import java.util.TreeSet;
 import org.jlab.analysis.postprocess.Processor;
 import org.jlab.clara.std.services.EventWriterException;
 import org.jlab.detector.calib.utils.ConstantsManager;
-import org.jlab.detector.calib.utils.OccupancyTable;
+import org.jlab.detector.calib.utils.OccupancyTable.OccupancyProcessor;
 import org.jlab.detector.decode.CLASDecoder4;
 import org.jlab.detector.helicity.HelicitySequence;
 import org.jlab.detector.helicity.HelicitySequenceDelayed;
@@ -44,7 +44,7 @@ public class Clas12Writer extends HipoToHipoWriter {
     TreeSet<HelicityState> helicities;
     DaqScalersSequence scalers;
     SchemaFactory schema;
-    OccupancyTable.Processor occupancy;
+    OccupancyProcessor occupancy;
     boolean postprocess;
 
     private void init(JSONObject opts) {
@@ -63,7 +63,7 @@ public class Clas12Writer extends HipoToHipoWriter {
         tag1banks = new Bank[TAG1BANKS.length];
         for (int i=0; i<tag1banks.length; ++i)
             tag1banks[i] = new Bank(schema.getSchema(TAG1BANKS[i]));
-        occupancy = new OccupancyTable.Processor(schema, opts.optInt("occupancyPrescale",100));
+        occupancy = new OccupancyProcessor(schema, opts.optInt("occupancyPrescale",100));
     }
 
     @Override

@@ -182,10 +182,10 @@ public class OccupancyTable {
     }
 
     
-    public static final class Processor {
+    public static final class OccupancyProcessor {
         int events=0,prescale;
         OccupancyTable[] tables;
-        public Processor(SchemaFactory schema, int prescale) {
+        public OccupancyProcessor(SchemaFactory schema, int prescale) {
             this.prescale = prescale;
             tables = new OccupancyTable[]{
                 new OccupancyTable(schema,"DC::tot","DC::occ")
