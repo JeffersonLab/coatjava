@@ -78,9 +78,6 @@ public class OccupanceTable {
      * @param index 
      */
     public final void fill(float weight, int... index) {
-        System.err.println(index[0]);
-        System.err.println(index[1]);
-        System.err.println(index[2]);
         final long hash = IndexedTable.DEFAULT_GENERATOR.hashCode(index);
         if (!table.hasEntryByHash(hash)) {
             table.addEntry(index);
@@ -157,7 +154,6 @@ public class OccupanceTable {
      * @return 
      */
     public final DataBank create(long events, DataEvent event) {
-        System.err.println(occBank.getSchema().getName());
         DataBank b = event.createBank(occBank.getSchema().getName(), getRows());
         int i = 0;
         Map<Long,IndexedEntry> m = table.getList().getMap();
