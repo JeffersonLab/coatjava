@@ -78,9 +78,8 @@ public class OccupanceTable {
      * @param index 
      */
     public final void fill(float weight, int... index) {
-        for (int i=0; i<index.length; i++) {
+        for (int i=0; i<index.length; i++)
             if (index[i] < 0) return;
-        }
         final long hash = IndexedTable.DEFAULT_GENERATOR.hashCode(index);
         if (!table.hasEntryByHash(hash)) {
             table.addEntry(index);
