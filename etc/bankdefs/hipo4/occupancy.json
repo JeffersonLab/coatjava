@@ -36,7 +36,7 @@
         ]
     },
     {
-        "name": "FTOF:tocc",
+        "name": "FTOF::tocc",
         "group": 500,
         "item": 13,
         "info": "Occupancy Bank",
