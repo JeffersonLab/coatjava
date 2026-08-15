@@ -98,6 +98,51 @@ public class RawDataBank extends RawBank {
         return dataBank.getFloat(varName, indexList.get(index));
     }
 
+    /**
+     * @param index filtered index to retrieve
+     * @return value for the filtered index
+     */
+    @Override
+    public int getByte(int column, int index ){
+        return dataBank.getByte(column, indexList.get(index));
+    }
+
+    /**
+     * @param index filtered index to retrieve
+     * @return value for the filtered index
+     */
+    @Override
+    public int getShort(int column, int index ){
+        return dataBank.getShort(column, indexList.get(index));
+    }
+
+    /**
+     * @param index filtered index to retrieve
+     * @return value for the filtered index
+     */
+    @Override
+    public int getInt(int column, int index ){
+        return dataBank.getInt(column, indexList.get(index));
+    }
+
+    /**
+     * @param index filtered index to retrieve
+     * @return value for the filtered index
+     */
+    @Override
+    public long getLong(int column, int index ){
+        return dataBank.getLong(column, indexList.get(index));
+    }
+
+    /**
+     * @param index filtered index to retrieve
+     * @return value for the filtered index
+     */
+    @Override
+    public float getFloat(int column, int index ){
+        return dataBank.getFloat(column, indexList.get(index));
+    }
+
     public static void main(String[] args){
 
         RawDataBank ftof = new RawDataBank("FTOF::adc");
