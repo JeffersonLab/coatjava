@@ -167,6 +167,10 @@ public class IndexedTable extends DefaultTableModel {
         this.entries.getItemByHash(hash).setValue(column, value);
     }
 
+    public void setDoubleValueByHash(Double value, int column, long hash) {
+        this.entries.getItemByHash(hash).setValue(column, value);
+    }
+
     public int getIntValueByHash(int index, long hash) {
         return entries.getItemByHash(hash).getValue(index).intValue();
     }
