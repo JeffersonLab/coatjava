@@ -2,7 +2,7 @@
 
 ## Documentation
 
-| | |
+| Table of Contents | |
 | --- | --- |
 | [**API Documentation**](javadoc/index.html) | Documentation for classes and methods |
 | [**HIPO Banks**](banks.md) | Bank descriptions |
