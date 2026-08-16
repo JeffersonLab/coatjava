@@ -63,7 +63,7 @@ public class OccupanceTable {
         final long hash = IndexedTable.DEFAULT_GENERATOR.hashCode(index);
         if (!table.hasEntryByHash(hash)) {
             table.addEntry(index);
-            table.setIntValueByHash(0, 0, hash);
+            table.setDoubleValueByHash(0.0d, 0, hash);
         }
         table.setDoubleValueByHash(table.getDoubleValueByHash(0, hash) + weight, 0, hash);
     }
@@ -146,7 +146,7 @@ public class OccupanceTable {
     }
 
     /**
-     * Get an occupancy bank normalized by number of events.
+     * Get an occupancy bank, normalized by number of events.
      * @param events
      * @return 
      */
@@ -195,15 +195,6 @@ public class OccupanceTable {
                 new OccupanceTable(schema,"BAND::tdc","BAND::occ"),
             };
         }
-        synchronized public void write(DataEvent event) {
-            if (++events % prescale == 0) {
-                for (OccupanceTable t : tables) {
-                    if (t.table.getRowCount() > 0) event.appendBank(t.create(events, event));
-                    t.reset();
-                }
-                events = 0;
-            }
-        }
         public void process(DataEvent event) {
             for (OccupanceTable t : tables) t.fill(event);
             write(event);
@@ -211,6 +202,15 @@ public class OccupanceTable {
         public void reset() {
             for (OccupanceTable t : tables) t.reset();
             events = 0;
+        }
+        synchronized void write(DataEvent event) {
+            if (++events % prescale == 0) {
+                for (OccupanceTable t : tables) {
+                    if (t.table.getRowCount() > 0) event.appendBank(t.create(events, event));
+                    t.reset();
+                }
+                events = 0;
+            }
         }
     }
 
