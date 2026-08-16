@@ -198,6 +198,7 @@ public class OccupanceTable {
             this.prescale = prescale;
             tables = new OccupanceTable[]{
                 new OccupanceTable(schema,"DC::tot","DC::occ"),
+                new OccupanceTable(schema,"DC::tdc","DC::occ"),
                 new OccupanceTable(schema,"ECAL::adc","ECAL::aocc"),
                 new OccupanceTable(schema,"ECAL::tdc","ECAL::tocc"),
                 new OccupanceTable(schema,"FTOF::adc","FTOF::aocc"),
@@ -217,11 +218,10 @@ public class OccupanceTable {
                 new OccupanceTable(schema,"BAND::tdc","BAND::occ"),
             };
         }
-        public void process(Event event) {
-            for (OccupanceTable t : tables) t.fill(event);
-            if (events++ % prescale == 0) {
+        synchronized public void write(DataEvent event) {
+            if (++events % prescale == 0) {
                 for (OccupanceTable t : tables) {
-                    if (t.getRows() > 0) event.write(t.create(events));
+                    if (t.getRows() > 0) event.appendBank(t.create(events, event));
                     t.reset();
                 }
                 events = 0;
@@ -229,13 +229,7 @@ public class OccupanceTable {
         }
         public void process(DataEvent event) {
             for (OccupanceTable t : tables) t.fill(event);
-            if (events++ % prescale == 0) {
-                for (OccupanceTable t : tables) {
-                    if (t.getRows() > 0) event.appendBank(t.create(events, event));
-                    t.reset();
-                }
-                events = 0;
-            }
+            write(event);
         }
         public void reset() {
             for (OccupanceTable t : tables) t.reset();
