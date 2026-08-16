@@ -373,7 +373,9 @@ jobs:
       - name: install zensical dependencies
         run: python -m pip install -r docs/zensical/requirements.txt
       - name: generate zensical
-        run: docs/zensical/generate.sh pages
+        run: |
+          docs/zensical/generate.sh zensical_out
+          mv zensical_out/site pages
       ### jacoco
       - name: download jacoco report artifact
         uses: actions/download-artifact@v8
