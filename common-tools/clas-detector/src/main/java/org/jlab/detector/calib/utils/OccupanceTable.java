@@ -21,25 +21,25 @@ public class OccupanceTable {
     Bank occBank;
 
     /**
-     * A 3-index table.
+     * A 3-index table, e.g., sector/layer/component.
      * @param schema
-     * @param hits name of the hits bank
+     * @param hitsBank name of the hits bank
      */
-    public OccupanceTable(SchemaFactory schema, String hits) {
-        hitBank = schema.getBank(hits);
-        occBank = schema.getBank("OCC::"+hits);
+    public OccupanceTable(SchemaFactory schema, String hitsBank) {
+        hitBank = schema.getBank(hitsBank);
+        occBank = schema.getBank("OCC::"+hitsBank);
         table = new IndexedTable(3, new String[]{"occ/F"});
     }
 
     /**
-     * A N-index table.
+     * An N-index table.
      * @param schema
-     * @param hits name of the hits bank
+     * @param hitsBank name of the hits bank
      * @param indexCount number of inidices in the hits bank
      */
-    public OccupanceTable(SchemaFactory schema, String hits, int indexCount) {
-        hitBank = schema.getBank(hits);
-        occBank = schema.getBank("OCC::"+hits);
+    public OccupanceTable(SchemaFactory schema, String hitsBank, int indexCount) {
+        hitBank = schema.getBank(hitsBank);
+        occBank = schema.getBank("OCC::"+hitsBank);
         table = new IndexedTable(indexCount, new String[]{"occ/F"});
     }
 
