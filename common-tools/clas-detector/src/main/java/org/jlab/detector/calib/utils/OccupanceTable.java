@@ -1,6 +1,9 @@
 package org.jlab.detector.calib.utils;
 
 import java.util.Map;
+import org.jlab.detector.banks.RawBank;
+import org.jlab.detector.banks.RawBank.OrderGroups;
+import org.jlab.detector.banks.RawDataBank;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 import org.jlab.jnp.hipo4.data.Bank;
@@ -17,29 +20,32 @@ import org.jlab.utils.groups.IndexedTable.IndexedEntry;
 public class OccupanceTable {
 
     IndexedTable table;
-    Bank hitBank;
+    RawBank hitBank;
+    RawDataBank hitDataBank;
     Bank occBank;
 
     /**
      * A 3-index table, e.g., sector/layer/component.
      * @param schema
-     * @param hitsBank name of the hits bank
+     * @param hitBank name of the hit bank
      */
-    public OccupanceTable(SchemaFactory schema, String hitsBank) {
-        hitBank = schema.getBank(hitsBank);
-        occBank = schema.getBank("OCC::"+hitsBank);
+    public OccupanceTable(SchemaFactory schema, String hitBank) {
+        this.hitBank = new RawBank(schema.getSchema(hitBank), 1000, OrderGroups.NOMINAL);
+        hitDataBank = new RawDataBank(hitBank, 1000, OrderGroups.NOMINAL);
+        occBank = schema.getBank("OCC::"+hitBank);
         table = new IndexedTable(3, new String[]{"occ/F"});
     }
 
     /**
      * An N-index table.
      * @param schema
-     * @param hitsBank name of the hits bank
-     * @param indexCount number of inidices in the hits bank
+     * @param hitBank name of the hit bank
+     * @param indexCount number of inidices in the hit bank
      */
-    public OccupanceTable(SchemaFactory schema, String hitsBank, int indexCount) {
-        hitBank = schema.getBank(hitsBank);
-        occBank = schema.getBank("OCC::"+hitsBank);
+    public OccupanceTable(SchemaFactory schema, String hitBank, int indexCount) {
+        this.hitBank = new RawBank(schema.getSchema(hitBank), 1000, OrderGroups.NOMINAL);
+        hitDataBank = new RawDataBank(hitBank, 1000, OrderGroups.NOMINAL);
+        occBank = schema.getBank("OCC::"+hitBank);
         table = new IndexedTable(indexCount, new String[]{"occ/F"});
     }
 
@@ -84,7 +90,7 @@ public class OccupanceTable {
      * @param bank 
      * @param weighted 
      */
-    public void fill(Bank bank, boolean weighted) {
+    public void fill(RawBank bank, boolean weighted) {
         int rows = bank.getRows();
         int[] idx = new int[table.getList().getIndexSize()];
         for (int i=0; i<rows; i++) {
@@ -102,7 +108,7 @@ public class OccupanceTable {
      * @param bank 
      * @param weighted 
      */
-    public void fill(DataBank bank, boolean weighted) {
+    public void fill(RawDataBank bank, boolean weighted) {
         if (bank != null) {
             final int rows = bank.rows();
             int[] idx = new int[table.getList().getIndexSize()];
@@ -122,7 +128,7 @@ public class OccupanceTable {
      * @param event
      */
     public void fill(Event event) {
-        event.read(hitBank);
+        hitBank.read(event);
         fill(hitBank, false);
     }
 
@@ -131,7 +137,8 @@ public class OccupanceTable {
      * @param event
      */
     public void fill(DataEvent event) {
-        fill(event.getBank(hitBank.getSchema().getName()), false);
+        hitDataBank.read(event);
+        fill(hitDataBank, false);
     }
 
     /**
