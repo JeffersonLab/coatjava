@@ -150,7 +150,7 @@ public class OccupanceTable {
      * @param events
      * @return 
      */
-    public Bank create(long events) {
+    public final Bank create(long events) {
         Bank b = new Bank(occBank.getSchema(), table.getRowCount());
         int row = 0;
         for (long hash : ((Map<Long,IndexedEntry>)table.getList().getMap()).keySet()) {
