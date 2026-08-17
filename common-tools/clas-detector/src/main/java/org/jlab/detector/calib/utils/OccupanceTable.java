@@ -20,15 +20,15 @@ public class OccupanceTable {
     Bank hitBank;
     Bank occBank;
 
-    public OccupanceTable(SchemaFactory schema, String hits, String occupancy) {
+    public OccupanceTable(SchemaFactory schema, String hits) {
         hitBank = schema.getBank(hits);
-        occBank = schema.getBank(occupancy);
+        occBank = schema.getBank("OCC::"+hits);
         table = new IndexedTable(3, new String[]{"occ/F"});
     }
 
-    public OccupanceTable(SchemaFactory schema, String hits, String occupancy, int indexCount) {
+    public OccupanceTable(SchemaFactory schema, String hits, int indexCount) {
         hitBank = schema.getBank(hits);
-        occBank = schema.getBank(occupancy);
+        occBank = schema.getBank("OCC::"+hits);
         table = new IndexedTable(indexCount, new String[]{"occ/F"});
     }
 
@@ -174,25 +174,26 @@ public class OccupanceTable {
         public OccupanceDriver(SchemaFactory schema, int prescale) {
             this.prescale = prescale;
             tables = new OccupanceTable[]{
-                new OccupanceTable(schema,"DC::tot","DC::occ"),
-                new OccupanceTable(schema,"DC::tdc","DC::occ"),
-                new OccupanceTable(schema,"ECAL::adc","ECAL::aocc"),
-                new OccupanceTable(schema,"ECAL::tdc","ECAL::tocc"),
-                new OccupanceTable(schema,"FTOF::adc","FTOF::aocc"),
-                new OccupanceTable(schema,"FTOF::tdc","FTOF::tocc"),
-                new OccupanceTable(schema,"CTOF::adc","CTOF::aocc"),
-                new OccupanceTable(schema,"CTOF::tdc","CTOF::tocc"),
-                new OccupanceTable(schema,"HTCC::adc","HTCC::aocc"),
-                new OccupanceTable(schema,"HTCC::tdc","HTCC::tocc"),
-                new OccupanceTable(schema,"LTCC::adc","LTCC::aocc"),
-                new OccupanceTable(schema,"LTCC::tdc","LTCC::tocc"),
-                new OccupanceTable(schema,"SVT::adc","SVT::occ"),
-                new OccupanceTable(schema,"BMT::adc","BMT::occ"),
-                new OccupanceTable(schema,"FTC::adc","FTC::occ"),
-                new OccupanceTable(schema,"FTH::adc","FTH::occ"),
-                new OccupanceTable(schema,"FTT::adc","FTT::occ"),
-                new OccupanceTable(schema,"RICH::tdc","RICH::occ"),
-                new OccupanceTable(schema,"BAND::tdc","BAND::occ"),
+                new OccupanceTable(schema,"DC::tot"),
+                new OccupanceTable(schema,"DC::tdc"),
+                new OccupanceTable(schema,"ECAL::adc"),
+                new OccupanceTable(schema,"ECAL::tdc"),
+                new OccupanceTable(schema,"FTOF::adc"),
+                new OccupanceTable(schema,"FTOF::tdc"),
+                new OccupanceTable(schema,"CTOF::adc"),
+                new OccupanceTable(schema,"CTOF::tdc"),
+                new OccupanceTable(schema,"HTCC::adc"),
+                new OccupanceTable(schema,"HTCC::tdc"),
+                new OccupanceTable(schema,"LTCC::adc"),
+                new OccupanceTable(schema,"LTCC::tdc"),
+                new OccupanceTable(schema,"SVT::adc"),
+                new OccupanceTable(schema,"BMT::adc"),
+                new OccupanceTable(schema,"FTC::adc"),
+                new OccupanceTable(schema,"FTH::adc"),
+                new OccupanceTable(schema,"FTT::adc"),
+                new OccupanceTable(schema,"RICH::tdc"),
+                new OccupanceTable(schema,"BAND::adc"),
+                new OccupanceTable(schema,"BAND::tdc"),
             };
         }
         public void process(DataEvent event) {
