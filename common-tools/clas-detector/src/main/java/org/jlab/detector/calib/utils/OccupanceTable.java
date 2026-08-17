@@ -20,12 +20,23 @@ public class OccupanceTable {
     Bank hitBank;
     Bank occBank;
 
+    /**
+     * A 3-index table.
+     * @param schema
+     * @param hits name of the hits bank
+     */
     public OccupanceTable(SchemaFactory schema, String hits) {
         hitBank = schema.getBank(hits);
         occBank = schema.getBank("OCC::"+hits);
         table = new IndexedTable(3, new String[]{"occ/F"});
     }
 
+    /**
+     * A N-index table.
+     * @param schema
+     * @param hits name of the hits bank
+     * @param indexCount number of inidices in the hits bank
+     */
     public OccupanceTable(SchemaFactory schema, String hits, int indexCount) {
         hitBank = schema.getBank(hits);
         occBank = schema.getBank("OCC::"+hits);
@@ -33,7 +44,7 @@ public class OccupanceTable {
     }
 
     /**
-     * Reset the occupancy table.
+     * Zero the occupancy table.
      */
     public final void reset() {
         table = new IndexedTable(table.getList().getIndexSize(), new String[]{"occ/F"});
@@ -173,7 +184,7 @@ public class OccupanceTable {
         OccupanceTable[] tables;
         public OccupanceDriver(SchemaFactory schema, int prescale) {
             this.prescale = prescale;
-            tables = new OccupanceTable[]{
+            tables = new OccupanceTable[] {
                 new OccupanceTable(schema,"DC::tot"),
                 new OccupanceTable(schema,"DC::tdc"),
                 new OccupanceTable(schema,"ECAL::adc"),
@@ -186,7 +197,7 @@ public class OccupanceTable {
                 new OccupanceTable(schema,"HTCC::tdc"),
                 new OccupanceTable(schema,"LTCC::adc"),
                 new OccupanceTable(schema,"LTCC::tdc"),
-                new OccupanceTable(schema,"SVT::adc"),
+                new OccupanceTable(schema,"BST::adc"),
                 new OccupanceTable(schema,"BMT::adc"),
                 new OccupanceTable(schema,"FTC::adc"),
                 new OccupanceTable(schema,"FTH::adc"),
