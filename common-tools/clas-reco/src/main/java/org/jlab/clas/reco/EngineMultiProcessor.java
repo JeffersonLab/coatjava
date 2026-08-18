@@ -3,9 +3,8 @@ package org.jlab.clas.reco;
 import java.util.ArrayList;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.logging.Logger;
+import org.json.JSONObject;
 import org.jlab.coda.jevio.EvioException;
 import org.jlab.io.base.DataEvent;
 import org.jlab.io.base.DataSource;
@@ -14,7 +13,6 @@ import org.jlab.io.hipo.HipoDataSource;
 import org.jlab.io.hipo.HipoDataSync;
 import org.jlab.utils.ClaraYaml;
 import org.jlab.utils.options.OptionParser;
-import org.json.JSONObject;
 
 /**
  *
@@ -24,8 +22,9 @@ public class EngineMultiProcessor extends EngineProcessor {
 
     DataSource reader;
     HipoDataSync writer;
-    ThreadPoolExecutor executor;
+    CompletableFuture readerThread;
 
+    int threads = 4;
     int maxEvents = 0;
     int skipEvents = 0;
     int readEvents = 0;
@@ -36,14 +35,12 @@ public class EngineMultiProcessor extends EngineProcessor {
 
     public EngineMultiProcessor(int threads) {
         super();
-        executor = (ThreadPoolExecutor)Executors.newFixedThreadPool(threads + 2);
     }
 
     public EngineMultiProcessor(int threads, int events, int skip) {
         super();
         this.maxEvents = events;
         this.skipEvents = skip;
-        executor = (ThreadPoolExecutor)Executors.newFixedThreadPool(threads + 2);
     }
 
     void open() {
@@ -56,7 +53,7 @@ public class EngineMultiProcessor extends EngineProcessor {
     void read() throws InterruptedException, EvioException {
         while (maxEvents < 1 || readEvents < maxEvents) {
             if (reader != null && reader.hasEvent()) {
-                if (readQueue.size() > 10*executor.getMaximumPoolSize()) {
+                if (readQueue.size() > 10*threads) {
                     Thread.sleep(100);
                     continue;
                 }
@@ -70,19 +67,32 @@ public class EngineMultiProcessor extends EngineProcessor {
         }
     }
 
-    void process() {
-        while (!readQueue.isEmpty()) {
-            DataEvent event = readQueue.poll();
-            procQueue.offer(event);
-            processEvent(event);
-            writeQueue.offer(event);
-            procQueue.remove(event);
+    void process() throws InterruptedException {
+        while (true) {
+            if (readQueue.isEmpty()) {
+                if (readerThread.isDone()) break;
+                Thread.sleep(100);
+            }
+            else {
+                DataEvent event = readQueue.poll();
+                procQueue.offer(event);
+                processEvent(event);
+                writeQueue.offer(event);
+                procQueue.remove(event);
+            }
         }
     }
 
     void write() throws InterruptedException {
         while (true) {
-            if (writeQueue.isEmpty()) Thread.sleep(100);
+            if (writeQueue.isEmpty()) {
+                if (readerThread.isDone()) {
+                    if (readQueue.isEmpty() && procQueue.isEmpty()) {
+                        break;
+                    }
+                }
+                Thread.sleep(100);
+            }
             else writer.writeEvent(writeQueue.poll());
         }
     }
@@ -96,35 +106,34 @@ public class EngineMultiProcessor extends EngineProcessor {
         writer.open(output);
 
         // start reader thread:
-        CompletableFuture.supplyAsync(() -> {
+        readerThread = CompletableFuture.supplyAsync(() -> {
             try { read(); } catch (InterruptedException | EvioException ex) {}
             return true;
-        }, executor);
-        
+        });
+
         // start writer thread:
-        CompletableFuture.supplyAsync(() -> {
+        CompletableFuture writerThread = CompletableFuture.supplyAsync(() -> {
             try { write(); } catch (InterruptedException ex) {}
             return true;
-        }, executor);
+        });
 
         // prime the queue:
-        while (readQueue.size() < executor.getMaximumPoolSize()) {}
+        while (readQueue.size() < threads) {}
 
         // start processor threads:
-        for (int i=0; i<executor.getMaximumPoolSize(); i++) {
+        for (int i=0; i<threads; i++) {
             CompletableFuture.supplyAsync(() -> {
-                process();
+                try { process(); } catch (InterruptedException ex) {}
                 return true;
-            }, executor);
+            });
         }
 
-        // wait for queues to be empty:
-        while (!readQueue.isEmpty() || !writeQueue.isEmpty() || !procQueue.isEmpty()) {
-            try { Thread.sleep(1000); } catch (InterruptedException ex) {}
+        // wait for finish:
+        while (!writerThread.isDone()) {
+            try { Thread.sleep(100); } catch (InterruptedException ex) {}
         }
 
         // close shop:
-        executor.shutdownNow();
         writer.close();
         reader.close();
     }
