@@ -18,25 +18,17 @@ import ai.djl.translate.TranslateException;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.jlab.clas.reco.ReconstructionEngine;
-import org.jlab.io.base.DataBank;
-import org.jlab.io.base.DataEvent;
 import org.jlab.utils.system.ClasUtilsFile;
 import org.jlab.geom.prim.Line3D;
 import org.jlab.geom.prim.Arc3D;
 import org.jlab.geom.prim.Point3D;
-import org.jlab.rec.cvt.Geometry;
-import org.jlab.clas.swimtools.Swim;
-import org.jlab.rec.cvt.Constants;
 import org.jlab.service.ai.PredictorPool;
-import org.jlab.utils.groups.IndexedTable;
 import org.jlab.rec.cvt.hit.Hit;
 import org.jlab.rec.cvt.bmt.BMTType;
 
@@ -220,10 +212,10 @@ public class CVTDenoise {
             int sector = hit.getSector();
             int layer = hit.getLayer();
             int strip = hit.getStrip().getStrip();
-            
+                        
             LocalHit localHit = new LocalHit(layer, sector, strip, nHitsLayerSectorStrip_BST[layer-1][sector-1][strip-1]++);
             
-            Line3D line = Geometry.getInstance().getSVT().getStrip(layer, sector, strip);                             
+            Line3D line = hit.getStrip().getLine();
             float[] features = {strip, (float)(line.origin().x()/10.), (float)(line.end().x()/10.), (float)(line.origin().y()/10.), 
                 (float)(line.end().y()/10.), (float)(line.origin().z()/10.), (float)(line.end().z()/10.), sector, layer}; // unit conversion from mm to cm for end points               
 
