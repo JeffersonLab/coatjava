@@ -22,13 +22,14 @@ import org.json.JSONObject;
  */
 public class EngineMultiProcessor extends EngineProcessor {
 
+    DataSource reader;
+    HipoDataSync writer;
+    ThreadPoolExecutor executor;
+
     int maxEvents = 0;
     int skipEvents = 0;
     int readEvents = 0;
     ArrayList<String> inputs = new ArrayList<>();
-    DataSource reader;
-    HipoDataSync writer;
-    ThreadPoolExecutor executor;
     ConcurrentLinkedQueue<DataEvent> readQueue = new ConcurrentLinkedQueue<>();
     ConcurrentLinkedQueue<DataEvent> writeQueue = new ConcurrentLinkedQueue<>();
     ConcurrentLinkedQueue<DataEvent> procQueue = new ConcurrentLinkedQueue<>();
@@ -45,34 +46,27 @@ public class EngineMultiProcessor extends EngineProcessor {
         executor = (ThreadPoolExecutor)Executors.newFixedThreadPool(threads + 2);
     }
 
-    void open(String output, String... input) {
-        for (int i=0; i<input.length; i++) inputs.add(input[i]);
-        writer = new HipoDataSync();
-        writer.setCompressionType(2);
-        writer.open(output);
-        open(inputs.remove(0));
-    }
-
-    void open(String input) {
-        if (input.endsWith(".hipo")) reader = new HipoDataSource();
+    void open() {
+        if (inputs.get(0).endsWith(".hipo")) reader = new HipoDataSource();
         else reader = new EvioSource();
-        reader.open(input);
+        reader.open(inputs.remove(0));
         updateDictionary((HipoDataSource)reader, writer);
     }
 
     void read() throws InterruptedException, EvioException {
-        while (true) {
-            if (readEvents > 0 && maxEvents > readEvents) break;
-            if (reader.hasEvent()) {
-                if (readQueue.size() > 10*executor.getMaximumPoolSize()) Thread.sleep(100);
-                else {
-                    readEvents++;
-                    DataEvent event = reader.getNextEvent();
-                    if (skipEvents < 0 || readEvents > skipEvents) readQueue.offer(event);
+        while (maxEvents < 1 || readEvents <= maxEvents) {
+            if (reader != null && reader.hasEvent()) {
+                if (readQueue.size() > 10*executor.getMaximumPoolSize()) {
+                    Thread.sleep(100);
+                    continue;
                 }
+                DataEvent event = reader.getNextEvent();
+                readEvents++;
+                if (skipEvents < 1 || readEvents > skipEvents)
+                    readQueue.offer(event);
             }
             else if (inputs.isEmpty()) break;
-            else open(inputs.remove(0));
+            else open();
         }
     }
 
@@ -81,8 +75,8 @@ public class EngineMultiProcessor extends EngineProcessor {
             DataEvent event = readQueue.poll();
             procQueue.offer(event);
             processEvent(event);
-            procQueue.remove(event);
             writeQueue.offer(event);
+            procQueue.remove(event);
         }
     }
 
@@ -96,7 +90,10 @@ public class EngineMultiProcessor extends EngineProcessor {
     public void processFiles(String output, String... input) {
 
         // create new reader and writer:
-        open(output, input);
+        for (int i=0; i<input.length; i++) inputs.add(input[i]);
+        writer = new HipoDataSync();
+        writer.setCompressionType(2);
+        writer.open(output);
 
         // start reader thread:
         CompletableFuture.supplyAsync(() -> {
