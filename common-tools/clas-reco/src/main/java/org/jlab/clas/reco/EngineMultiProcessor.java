@@ -26,6 +26,7 @@ public class EngineMultiProcessor {
     HipoDataSync writer;
     ConcurrentLinkedQueue<DataEvent> readQueue;
     ConcurrentLinkedQueue<DataEvent> writeQueue;
+    ConcurrentLinkedQueue<DataEvent> procQueue;
     EngineProcessor engines;
     ExecutorService executor;
 
@@ -34,18 +35,21 @@ public class EngineMultiProcessor {
         engines = new EngineProcessor();
         readQueue = new ConcurrentLinkedQueue<>();
         writeQueue = new ConcurrentLinkedQueue<>();
+        procQueue = new ConcurrentLinkedQueue<>();
         executor = Executors.newFixedThreadPool(threads);
     }
     void read() throws InterruptedException {
         while (reader.hasEvent()) {
-            if (readQueue.size() > 10*threads) Thread.sleep(1000);
+            if (readQueue.size() > 10*threads) Thread.sleep(100);
             else readQueue.offer(reader.getNextEvent());
         }
     }
     void process() {
         while (!readQueue.isEmpty()) {
             DataEvent event = readQueue.poll();
+            procQueue.offer(event);
             engines.processEvent(event);
+            procQueue.remove(event);
             writeQueue.offer(event);
         }
     }
@@ -79,7 +83,7 @@ public class EngineMultiProcessor {
                 return true;
             }, executor);
         }
-        while (!readQueue.isEmpty() || !writeQueue.isEmpty()) {
+        while (!readQueue.isEmpty() || !writeQueue.isEmpty() || !procQueue.isEmpty()) {
             try { Thread.sleep(1000); } catch (InterruptedException ex) {}
         }
         executor.shutdownNow();
