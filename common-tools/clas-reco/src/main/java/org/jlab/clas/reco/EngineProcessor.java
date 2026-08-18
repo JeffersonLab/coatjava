@@ -17,8 +17,13 @@ import org.jlab.utils.options.OptionParser;
 import org.jlab.clara.engine.EngineData;
 import org.jlab.clara.engine.EngineDataType;
 import java.util.Arrays;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import org.jlab.coda.jevio.EvioException;
 import org.jlab.detector.decode.CLASDecoder4;
+import org.jlab.io.base.DataSource;
 import org.jlab.io.evio.EvioDataEvent;
 import org.jlab.io.evio.EvioSource;
 import org.jlab.io.hipo.HipoDataEvent;
@@ -380,6 +385,7 @@ public class EngineProcessor {
         parser.addOption("-c","0","use default configuration [0 - no, 1 - yes/default, 2 - all services] ");
         parser.addOption("-s","-1","number of events to skip");
         parser.addOption("-n","-1","number of events to process");
+        parser.addOption("-t","1","number of threads");
         parser.addOption("-y","0","yaml file");
         parser.addOption("-u","true","update dictionary from writer ? ");
         parser.addOption("-S",null,"schema directory");
@@ -396,7 +402,7 @@ public class EngineProcessor {
         String  inputFile = parser.getOption("-i").stringValue();
         String outputFile = parser.getOption("-o").stringValue();
 
-        EngineProcessor proc = new EngineProcessor();
+        EngineMultiProcessor proc = new EngineMultiProcessor(parser.getOption("-t").intValue());
 
         int config  = parser.getOption("-c").intValue();
         int nskip   = parser.getOption("-s").intValue();
@@ -451,7 +457,80 @@ public class EngineProcessor {
                 parser.getOption("-R").intValue()!=0);
         }
 
-        proc.processFile(inputFile,outputFile,nskip,nevents);
+        proc.open(inputFile,outputFile,nskip,nevents);
+        //proc.processFile(inputFile,outputFile,nskip,nevents);
     }
 
+    public static class EngineMultiProcessor extends EngineProcessor {
+
+        int threads;
+        DataSource reader;
+        HipoDataSync writer;
+        ConcurrentLinkedQueue<DataEvent> readQueue = new ConcurrentLinkedQueue<>();
+        ConcurrentLinkedQueue<DataEvent> writeQueue = new ConcurrentLinkedQueue<>();
+        ConcurrentLinkedQueue<DataEvent> procQueue = new ConcurrentLinkedQueue<>();
+        ExecutorService executor;
+
+        public EngineMultiProcessor(int threads) {
+            super();
+            this.threads = threads;
+            executor = Executors.newFixedThreadPool(threads);
+        }
+
+        public void open(String input, String output, int events, int skip) {
+            writer = new HipoDataSync();
+            writer.setCompressionType(2);
+            if (input.endsWith(".hipo")) reader = new HipoDataSource();
+            else reader = new EvioSource();
+            reader.open(input);
+            writer.open(output);
+            updateDictionary((HipoDataSource)reader, writer);
+            CompletableFuture.supplyAsync(() -> {
+                try { read(); } catch (InterruptedException ex) {}
+                return true;
+            }, executor);
+            CompletableFuture.supplyAsync(() -> {
+                try { write(); } catch (InterruptedException ex) {}
+                return true;
+            }, executor);
+            try { Thread.sleep(5000); } catch (InterruptedException ex) {}
+            for (int i=0; i<threads; i++) {
+                CompletableFuture.supplyAsync(() -> {
+                    process();
+                    return true;
+                }, executor);
+            }
+            while (!readQueue.isEmpty() || !writeQueue.isEmpty() || !procQueue.isEmpty()) {
+                try { Thread.sleep(1000); } catch (InterruptedException ex) {}
+            }
+            executor.shutdownNow();
+            writer.close();
+            reader.close();
+        }
+        
+        void read() throws InterruptedException {
+            while (reader.hasEvent()) {
+                if (readQueue.size() > 10*threads) Thread.sleep(100);
+                else readQueue.offer(reader.getNextEvent());
+            }
+        }
+
+        void process() {
+            while (!readQueue.isEmpty()) {
+                DataEvent event = readQueue.poll();
+                procQueue.offer(event);
+                processEvent(event);
+                procQueue.remove(event);
+                writeQueue.offer(event);
+            }
+        }
+
+        void write() throws InterruptedException {
+            while (true) {
+                if (!writeQueue.isEmpty())
+                    writer.writeEvent(writeQueue.poll());
+                else Thread.sleep(1000);
+            }
+        }
+    }
 }
