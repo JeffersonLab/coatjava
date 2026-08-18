@@ -1,8 +1,8 @@
 package org.jlab.clas.reco;
 
-import java.util.LinkedList;
 import java.util.logging.Logger;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import org.json.JSONObject;
@@ -23,15 +23,36 @@ public class EngineMultiProcessor {
     int threads;
     DataSource reader;
     HipoDataSync writer;
-    LinkedList<DataEvent> queue;
+    ConcurrentLinkedQueue<DataEvent> readQueue;
+    ConcurrentLinkedQueue<DataEvent> writeQueue;
     EngineProcessor engines;
     ExecutorService executor;
 
     public EngineMultiProcessor(int threads) {
         this.threads = threads;
         engines = new EngineProcessor();
-        queue = new LinkedList<>();
+        readQueue = new ConcurrentLinkedQueue<>();
+        writeQueue = new ConcurrentLinkedQueue<>();
         executor = Executors.newFixedThreadPool(threads);
+    }
+    void read() throws InterruptedException {
+        while (reader.hasEvent()) {
+            if (readQueue.size() > 10*threads) Thread.sleep(1000);
+            else readQueue.offer(reader.getNextEvent());
+        }
+    }
+    void process() {
+        while (!readQueue.isEmpty()) {
+            DataEvent event = readQueue.poll();
+            engines.processEvent(event);
+            writeQueue.offer(event);
+        }
+    }
+    void write() throws InterruptedException {
+        while (true) {
+            if (!writeQueue.isEmpty()) writer.writeEvent(writeQueue.poll());
+            else Thread.sleep(1000);
+        }
     }
 
     public void open(String input, String output, int events, int skip) {
@@ -42,27 +63,21 @@ public class EngineMultiProcessor {
         reader.open(input);
         writer.open(output);
         engines.updateDictionary((HipoDataSource)reader, writer);
-        while (queue.size() < threads && reader.hasEvent())
-            queue.offer(reader.getNextEvent());
-        for (int i=0; i<queue.size(); i++) callback(null);
-    }
-
-    public void spawn(DataEvent event) {
         CompletableFuture.supplyAsync(() -> {
-            engines.processEvent(event);
-            return event;
-        }, executor).thenRun(() -> callback(event));
-    }
-
-    public synchronized void callback(DataEvent event) {
-        if (event != null) writer.writeEvent(event);
-        if (reader.hasEvent()) queue.offer(reader.getNextEvent());
-        else if (queue.isEmpty()) {
-            executor.shutdown();
-            writer.close();
-            reader.close();
-        }
-        if (!queue.isEmpty()) spawn(queue.poll());
+            try { read(); } catch (InterruptedException ex) {}
+            return true;
+        }, executor);
+        CompletableFuture.supplyAsync(() -> {
+            try { write(); } catch (InterruptedException ex) {}
+            return true;
+        }, executor);
+        try { Thread.sleep(1000); } catch (InterruptedException ex) {}
+        System.err.println("DOGGIES");
+        process();
+        System.err.println("KITTIES");
+        executor.shutdownNow();
+        writer.close();
+        reader.close();
     }
 
     public static void main(String[] args) {
