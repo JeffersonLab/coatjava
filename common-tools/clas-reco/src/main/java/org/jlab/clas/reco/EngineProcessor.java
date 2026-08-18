@@ -38,10 +38,11 @@ public class EngineProcessor {
     
     private final Map<String,ReconstructionEngine>  processorEngines = new LinkedHashMap<>();
     private static final Logger LOGGER = Logger.getLogger(EngineProcessor.class.getPackage().getName());
-    private boolean updateDictionary = true;
     private SchemaFactory banksToKeep = null;
     private final List<String> schemaExempt = Arrays.asList("RUN::config","DC::tdc");
 
+    protected boolean updateDictionary = true;
+    
     private CLASDecoder4 decoder = new CLASDecoder4();
 
     public EngineProcessor(){}
@@ -55,7 +56,7 @@ public class EngineProcessor {
         return null;
     }
 
-    private void setBackgroundFiles(String filenames) {
+    protected void setBackgroundFiles(String filenames) {
         if (findEngine(ENGINE_CLASS_BG) == null) {
             LOGGER.info("Adding BackgroundEngine for -B option.");
             addEngine("BG",ENGINE_CLASS_BG);
@@ -64,7 +65,7 @@ public class EngineProcessor {
         findEngine(ENGINE_CLASS_BG).init();
     }
 
-    private void setPreloadFiles(String filenames, boolean restream, boolean rebuild) {
+    protected void setPreloadFiles(String filenames, boolean restream, boolean rebuild) {
         if (findEngine(ENGINE_CLASS_PP) == null) {
             LOGGER.info("Adding PostprocEngine for -P option.");
             addEngine("BG",ENGINE_CLASS_PP);
@@ -75,7 +76,7 @@ public class EngineProcessor {
         findEngine(ENGINE_CLASS_PP).init();
     }
 
-    private void updateDictionary(HipoDataSource source, HipoDataSync sync){
+    protected void updateDictionary(HipoDataSource source, HipoDataSync sync){
         SchemaFactory fsync = sync.getWriter().getSchemaFactory();
         SchemaFactory fsrc  = source.getReader().getSchemaFactory();
         List<String> schemaList = fsync.getSchemaKeys();
@@ -90,7 +91,7 @@ public class EngineProcessor {
         }
     }
 
-    private void setBanksToKeep(String schemaDirectory) {
+    protected void setBanksToKeep(String schemaDirectory) {
         if (!Files.isDirectory((new File(schemaDirectory)).toPath())) {
             LOGGER.log(Level.SEVERE, "Invalid schema directory, aborting:  "+schemaDirectory);
             System.exit(1);
