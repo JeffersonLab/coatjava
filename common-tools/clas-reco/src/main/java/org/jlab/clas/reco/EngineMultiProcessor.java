@@ -1,6 +1,6 @@
 package org.jlab.clas.reco;
 
-import java.util.List;
+import java.util.ArrayList;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executors;
@@ -25,7 +25,7 @@ public class EngineMultiProcessor extends EngineProcessor {
     int maxEvents = 0;
     int skipEvents = 0;
     int readEvents = 0;
-    List<String> inputs;
+    ArrayList<String> inputs = new ArrayList<>();
     DataSource reader;
     HipoDataSync writer;
     ThreadPoolExecutor executor;
@@ -56,10 +56,10 @@ public class EngineMultiProcessor extends EngineProcessor {
     void open(String input) {
         if (input.endsWith(".hipo")) reader = new HipoDataSource();
         else reader = new EvioSource();
-        reader.open(inputs.remove(0));
+        reader.open(input);
         updateDictionary((HipoDataSource)reader, writer);
     }
-    
+
     void read() throws InterruptedException, EvioException {
         while (true) {
             if (readEvents > 0 && maxEvents > readEvents) break;
@@ -206,9 +206,7 @@ public class EngineMultiProcessor extends EngineProcessor {
                 parser.getOption("-R").intValue()!=0);
         }
 
-        proc.processFile(parser.getOption("-i").stringValue(),
-                         parser.getOption("-o").stringValue(),
-                         parser.getOption("-n").intValue(),
-                         parser.getOption("-s").intValue());
+        proc.processFiles(parser.getOption("-o").stringValue(),
+                          parser.getOption("-i").stringValue());
     }
 }
