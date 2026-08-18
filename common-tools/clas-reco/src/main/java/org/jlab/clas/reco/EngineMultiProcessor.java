@@ -24,7 +24,7 @@ public class EngineMultiProcessor extends EngineProcessor {
     HipoDataSync writer;
     CompletableFuture readerThread;
 
-    int threads = 4;
+    int threads;
     int maxEvents = 0;
     int skipEvents = 0;
     int readEvents = 0;
@@ -35,10 +35,12 @@ public class EngineMultiProcessor extends EngineProcessor {
 
     public EngineMultiProcessor(int threads) {
         super();
+        this.threads = threads;
     }
 
     public EngineMultiProcessor(int threads, int events, int skip) {
         super();
+        this.threads = threads;
         this.maxEvents = events;
         this.skipEvents = skip;
     }
@@ -88,6 +90,7 @@ public class EngineMultiProcessor extends EngineProcessor {
             if (writeQueue.isEmpty()) {
                 if (readerThread.isDone()) {
                     if (readQueue.isEmpty() && procQueue.isEmpty()) {
+                        writer.close();
                         break;
                     }
                 }
@@ -97,7 +100,7 @@ public class EngineMultiProcessor extends EngineProcessor {
         }
     }
 
-    public void processFiles(String output, String... input) {
+    public void process(String output, String... input) {
 
         // create new reader and writer:
         for (int i=0; i<input.length; i++) inputs.add(input[i]);
@@ -132,10 +135,6 @@ public class EngineMultiProcessor extends EngineProcessor {
         while (!writerThread.isDone()) {
             try { Thread.sleep(100); } catch (InterruptedException ex) {}
         }
-
-        // close shop:
-        writer.close();
-        reader.close();
     }
 
     public static void main(String[] args) {
@@ -158,7 +157,8 @@ public class EngineMultiProcessor extends EngineProcessor {
         parser.parse(args);
         parser.syncLogLevel(Logger.getLogger(EngineProcessor.class.getPackage().getName()));
 
-        EngineMultiProcessor proc = new EngineMultiProcessor(parser.getOption("-t").intValue());
+        EngineMultiProcessor proc = new EngineMultiProcessor(parser.getOption("-t").intValue(),
+            parser.getOption("-n").intValue(), parser.getOption("-s").intValue());
 
         if (parser.getOption("-u").stringValue().contains("false")) {
             proc.updateDictionary = false;
@@ -212,7 +212,6 @@ public class EngineMultiProcessor extends EngineProcessor {
                 parser.getOption("-R").intValue()!=0);
         }
 
-        proc.processFiles(parser.getOption("-o").stringValue(),
-                          parser.getOption("-i").stringValue());
+        proc.process(parser.getOption("-o").stringValue(), parser.getOption("-i").stringValue());
     }
 }
