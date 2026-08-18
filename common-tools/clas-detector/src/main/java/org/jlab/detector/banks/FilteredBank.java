@@ -136,6 +136,51 @@ public class FilteredBank {
     }
 
     /**
+     * @param column
+     * @param index filtered index to retrieve
+     * @return value for the filtered index
+     */
+    public int getByte(int column, int index ){
+        return bank.getByte(column, indexList.get(index));
+    }
+
+    /**
+     * @param column
+     * @param index filtered index to retrieve
+     * @return value for the filtered index
+     */
+    public int getShort(int column, int index ){
+        return bank.getShort(column, indexList.get(index));
+    }
+
+    /**
+     * @param column
+     * @param index filtered index to retrieve
+     * @return value for the filtered index
+     */
+    public int getInt(int column, int index ){
+        return bank.getInt(column, indexList.get(index));
+    }
+
+    /**
+     * @param column
+     * @param index filtered index to retrieve
+     * @return value for the filtered index
+     */
+    public long getLong(int column, int index ){
+        return bank.getLong(column, indexList.get(index));
+    }
+
+    /**
+     * @param column
+     * @param index filtered index to retrieve
+     * @return value for the filtered index
+     */
+    public float getFloat(int column , int index ){
+        return bank.getFloat(column, indexList.get(index));
+    }
+
+    /**
      * @param index filtered index to retrieve
      * @return true bank row index corresponding to the filtered index
      */
