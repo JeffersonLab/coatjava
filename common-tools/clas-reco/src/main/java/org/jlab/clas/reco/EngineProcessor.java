@@ -116,12 +116,13 @@ public class EngineProcessor {
     public void initDefault(){
 
         String[] names = new String[]{
-            "MAGFIELDS",
+            "DECO","MAGFIELDS",
             "DCCR","DCHB","FTOFHB","EC","HTCC","EBHB",
             "DCTB","FTOFTB","EBTB","VTX"
         };
 
         String[] services = new String[]{
+            "org.jlab.clas.reco.DecoderEngine",
             "org.jlab.clas.swimtools.MagFieldsEngine",
             "org.jlab.service.dc.DCHBClustering",
             "org.jlab.service.dc.DCHBPostClusterConv",
@@ -142,7 +143,7 @@ public class EngineProcessor {
     public void initAll(){
 
         String[] names = new String[]{
-            "MAGFIELDS",
+            "DECO","MAGFIELDS",
             "FTCAL", "FTHODO", "FTTRK", "FTEB",
             "URWT", "DCCR", "DCHB","FTOFHB","EC","RASTER",
             "CVTFP","CTOF","CND","BAND",
@@ -152,6 +153,7 @@ public class EngineProcessor {
         };
 
         String[] services = new String[]{
+            "org.jlab.clas.reco.DecoderEngine",
             "org.jlab.clas.swimtools.MagFieldsEngine",
             "org.jlab.rec.ft.cal.FTCALEngine",
             "org.jlab.rec.ft.hodo.FTHODOEngine",
