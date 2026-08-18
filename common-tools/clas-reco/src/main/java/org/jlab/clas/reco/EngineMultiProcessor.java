@@ -38,7 +38,7 @@ public class EngineMultiProcessor extends EngineProcessor {
         super();
         executor = (ThreadPoolExecutor)Executors.newFixedThreadPool(threads + 2);
     }
-    
+
     public EngineMultiProcessor(int threads, int events, int skip) {
         super();
         this.maxEvents = events;
@@ -54,7 +54,7 @@ public class EngineMultiProcessor extends EngineProcessor {
     }
 
     void read() throws InterruptedException, EvioException {
-        while (maxEvents < 1 || readEvents <= maxEvents) {
+        while (maxEvents < 1 || readEvents < maxEvents) {
             if (reader != null && reader.hasEvent()) {
                 if (readQueue.size() > 10*executor.getMaximumPoolSize()) {
                     Thread.sleep(100);
@@ -128,7 +128,7 @@ public class EngineMultiProcessor extends EngineProcessor {
         writer.close();
         reader.close();
     }
-    
+
     public static void main(String[] args) {
 
         OptionParser parser = new OptionParser("recon-util");
