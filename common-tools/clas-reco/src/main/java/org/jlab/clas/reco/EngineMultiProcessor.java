@@ -5,7 +5,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
 import org.json.JSONObject;
 import org.jlab.io.base.DataEvent;
 import org.jlab.io.base.DataSource;
@@ -24,42 +23,17 @@ public class EngineMultiProcessor {
     int threads;
     DataSource reader;
     HipoDataSync writer;
-    ConcurrentLinkedQueue<DataEvent> readQueue;
-    ConcurrentLinkedQueue<DataEvent> writeQueue;
-    ConcurrentLinkedQueue<DataEvent> procQueue;
-    EngineProcessor engines;
+    ConcurrentLinkedQueue<DataEvent> readQueue = new ConcurrentLinkedQueue<>();
+    ConcurrentLinkedQueue<DataEvent> writeQueue = new ConcurrentLinkedQueue<>();
+    ConcurrentLinkedQueue<DataEvent> procQueue = new ConcurrentLinkedQueue<>();
+    EngineProcessor engines = new EngineProcessor();
     ExecutorService executor;
 
     public EngineMultiProcessor(int threads) {
         this.threads = threads;
-        engines = new EngineProcessor();
-        readQueue = new ConcurrentLinkedQueue<>();
-        writeQueue = new ConcurrentLinkedQueue<>();
-        procQueue = new ConcurrentLinkedQueue<>();
         executor = Executors.newFixedThreadPool(threads);
     }
-    void read() throws InterruptedException {
-        while (reader.hasEvent()) {
-            if (readQueue.size() > 10*threads) Thread.sleep(100);
-            else readQueue.offer(reader.getNextEvent());
-        }
-    }
-    void process() {
-        while (!readQueue.isEmpty()) {
-            DataEvent event = readQueue.poll();
-            procQueue.offer(event);
-            engines.processEvent(event);
-            procQueue.remove(event);
-            writeQueue.offer(event);
-        }
-    }
-    void write() throws InterruptedException {
-        while (true) {
-            if (!writeQueue.isEmpty())
-                writer.writeEvent(writeQueue.poll());
-            else Thread.sleep(1000);
-        }
-    }
+
     public void open(String input, String output, int events, int skip) {
         writer = new HipoDataSync();
         writer.setCompressionType(2);
@@ -77,7 +51,7 @@ public class EngineMultiProcessor {
             return true;
         }, executor);
         try { Thread.sleep(5000); } catch (InterruptedException ex) {}
-        for (int i=0; i<threads; i++){
+        for (int i=0; i<threads; i++) {
             CompletableFuture.supplyAsync(() -> {
                 process();
                 return true;
@@ -89,6 +63,31 @@ public class EngineMultiProcessor {
         executor.shutdownNow();
         writer.close();
         reader.close();
+    }
+
+    void read() throws InterruptedException {
+        while (reader.hasEvent()) {
+            if (readQueue.size() > 10*threads) Thread.sleep(100);
+            else readQueue.offer(reader.getNextEvent());
+        }
+    }
+
+    void process() {
+        while (!readQueue.isEmpty()) {
+            DataEvent event = readQueue.poll();
+            procQueue.offer(event);
+            engines.processEvent(event);
+            procQueue.remove(event);
+            writeQueue.offer(event);
+        }
+    }
+
+    void write() throws InterruptedException {
+        while (true) {
+            if (!writeQueue.isEmpty())
+                writer.writeEvent(writeQueue.poll());
+            else Thread.sleep(1000);
+        }
     }
 
     public static void main(String[] args) {
