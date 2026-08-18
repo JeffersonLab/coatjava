@@ -457,8 +457,7 @@ public class EngineProcessor {
                 parser.getOption("-R").intValue()!=0);
         }
 
-        proc.open(inputFile,outputFile,nskip,nevents);
-        //proc.processFile(inputFile,outputFile,nskip,nevents);
+        proc.processFile(inputFile,outputFile,nskip,nevents);
     }
 
     public static class EngineMultiProcessor extends EngineProcessor {
@@ -477,7 +476,8 @@ public class EngineProcessor {
             executor = Executors.newFixedThreadPool(threads);
         }
 
-        public void open(String input, String output, int events, int skip) {
+        @Override
+        public void processFile(String input, String output, int events, int skip) {
             writer = new HipoDataSync();
             writer.setCompressionType(2);
             if (input.endsWith(".hipo")) reader = new HipoDataSource();
