@@ -5,6 +5,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
 import org.json.JSONObject;
 import org.jlab.io.base.DataEvent;
 import org.jlab.io.base.DataSource;
@@ -50,11 +51,11 @@ public class EngineMultiProcessor {
     }
     void write() throws InterruptedException {
         while (true) {
-            if (!writeQueue.isEmpty()) writer.writeEvent(writeQueue.poll());
+            if (!writeQueue.isEmpty())
+                writer.writeEvent(writeQueue.poll());
             else Thread.sleep(1000);
         }
     }
-
     public void open(String input, String output, int events, int skip) {
         writer = new HipoDataSync();
         writer.setCompressionType(2);
@@ -71,10 +72,16 @@ public class EngineMultiProcessor {
             try { write(); } catch (InterruptedException ex) {}
             return true;
         }, executor);
-        try { Thread.sleep(1000); } catch (InterruptedException ex) {}
-        System.err.println("DOGGIES");
-        process();
-        System.err.println("KITTIES");
+        try { Thread.sleep(5000); } catch (InterruptedException ex) {}
+        for (int i=0; i<threads; i++){
+            CompletableFuture.supplyAsync(() -> {
+                process();
+                return true;
+            }, executor);
+        }
+        while (!readQueue.isEmpty() || !writeQueue.isEmpty()) {
+            try { Thread.sleep(1000); } catch (InterruptedException ex) {}
+        }
         executor.shutdownNow();
         writer.close();
         reader.close();
