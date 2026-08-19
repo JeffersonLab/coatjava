@@ -12,6 +12,7 @@ import org.jlab.io.evio.EvioSource;
 import org.jlab.io.hipo.HipoDataSource;
 import org.jlab.io.hipo.HipoDataSync;
 import org.jlab.utils.ClaraYaml;
+import org.jlab.utils.benchmark.ProgressPrintout;
 import org.jlab.utils.options.OptionParser;
 
 /**
@@ -29,6 +30,7 @@ public class EngineMultiProcessor extends EngineProcessor {
     int skipEvents = 0;
     int readEvents = 0;
     ArrayList<String> inputs = new ArrayList<>();
+    ProgressPrintout progress = new ProgressPrintout();
     ConcurrentLinkedQueue<DataEvent> readQueue = new ConcurrentLinkedQueue<>();
     ConcurrentLinkedQueue<DataEvent> writeQueue = new ConcurrentLinkedQueue<>();
     ConcurrentLinkedQueue<DataEvent> procQueue = new ConcurrentLinkedQueue<>();
@@ -90,13 +92,17 @@ public class EngineMultiProcessor extends EngineProcessor {
             if (writeQueue.isEmpty()) {
                 if (readerThread.isDone()) {
                     if (readQueue.isEmpty() && procQueue.isEmpty()) {
+                        progress.showStatus();
                         writer.close();
                         break;
                     }
                 }
                 Thread.sleep(100);
             }
-            else writer.writeEvent(writeQueue.poll());
+            else {
+                writer.writeEvent(writeQueue.poll());
+                progress.updateStatus();
+            }
         }
     }
 
