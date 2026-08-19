@@ -102,7 +102,7 @@ public class EngineMultiProcessor extends EngineProcessor {
 
     public void process(String output, String... input) {
 
-        // create new reader and writer:
+        // add inputs and create writer:
         for (int i=0; i<input.length; i++) inputs.add(input[i]);
         writer = new HipoDataSync();
         writer.setCompressionType(2);
@@ -119,9 +119,6 @@ public class EngineMultiProcessor extends EngineProcessor {
             try { write(); } catch (InterruptedException ex) {}
             return true;
         });
-
-        // prime the queue:
-        while (readQueue.size() < threads) {}
 
         // start processor threads:
         for (int i=0; i<threads; i++) {
