@@ -5,7 +5,6 @@ import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.stream.Collectors;
-import org.jlab.coda.jevio.EvioException;
 import org.jlab.io.base.DataEvent;
 import org.jlab.io.base.DataSource;
 import org.jlab.io.evio.EvioSource;
@@ -19,22 +18,6 @@ import org.jlab.utils.options.OptionParser;
  * @author baltzell
  */
 public class EngineMultiProcessor extends EngineProcessor {
-
-    DataSource reader;
-    HipoDataSync writer;
-    CompletableFuture readerThread;
-    CompletableFuture writerThread;
-    ArrayList<CompletableFuture> procThreads = new ArrayList<>();
-
-    int threads;
-    int maxEvents = 0;
-    int skipEvents = 0;
-    int readEvents = 0;
-    ArrayList<String> inputs = new ArrayList<>();
-    ProgressPrintout progress = new ProgressPrintout();
-    ConcurrentLinkedQueue<DataEvent> readQueue = new ConcurrentLinkedQueue<>();
-    ConcurrentLinkedQueue<DataEvent> writeQueue = new ConcurrentLinkedQueue<>();
-    ConcurrentLinkedQueue<DataEvent> procQueue = new ConcurrentLinkedQueue<>();
 
     public EngineMultiProcessor(int threads) {
         super();
@@ -55,18 +38,54 @@ public class EngineMultiProcessor extends EngineProcessor {
         skipEvents = parser.getOption("-s").intValue();
     }
 
-    void read(String... input) throws InterruptedException, EvioException {
+    public static void main(String[] args) {
+        OptionParser parser = EngineProcessor.parser();
+        parser.addOption("-t","4","number of threads");
+        parser.parse(args);
+        EngineMultiProcessor proc = new EngineMultiProcessor(parser);
+        proc.process(parser.getOption("-o").stringValue(), parser.getOption("-i").stringValue());
+    }
+
+    public void process(String output, String... input) {
+        readerThread = CompletableFuture.runAsync(() -> { read(input); });
+        writerThread = CompletableFuture.runAsync(() -> { write(output); });
+        for (int i=0; i<threads; i++)
+            procThreads.add(CompletableFuture.runAsync(() -> { process(); }));
+        while (!writerThread.isDone())
+            try { Thread.sleep(100); } catch (InterruptedException ex) {}
+    }
+
+    DataSource reader;
+    HipoDataSync writer;
+    CompletableFuture readerThread;
+    CompletableFuture writerThread;
+
+    int threads;
+    int maxEvents = 0;
+    int skipEvents = 0;
+    int readEvents = 0;
+
+    ArrayList<CompletableFuture> procThreads = new ArrayList<>();
+    ArrayList<String> inputs = new ArrayList<>();
+    ProgressPrintout progress = new ProgressPrintout();
+    ConcurrentLinkedQueue<DataEvent> readQueue = new ConcurrentLinkedQueue<>();
+    ConcurrentLinkedQueue<DataEvent> writeQueue = new ConcurrentLinkedQueue<>();
+    ConcurrentLinkedQueue<DataEvent> procQueue = new ConcurrentLinkedQueue<>();
+
+    void read(String... input) {
         inputs.addAll(Arrays.asList(input));
         while (maxEvents < 1 || readEvents < maxEvents) {
             if (reader != null && reader.hasEvent()) {
                 if (readQueue.size() > 100*threads) {
-                    Thread.sleep(100);
-                    continue;
+                    try { Thread.sleep(100); }
+                    catch (InterruptedException ex) {}
                 }
-                DataEvent event = reader.getNextEvent();
-                readEvents++;
-                if (skipEvents < 1 || readEvents > skipEvents)
-                    readQueue.offer(event);
+                else {
+                    DataEvent event = reader.getNextEvent();
+                    readEvents++;
+                    if (skipEvents < 1 || readEvents > skipEvents)
+                        readQueue.offer(event);
+                }
             }
             else if (inputs.isEmpty()) break;
             else {
@@ -78,7 +97,7 @@ public class EngineMultiProcessor extends EngineProcessor {
         }
     }
 
-    void write(String output) throws InterruptedException {
+    void write(String output) {
         writer = new HipoDataSync();
         writer.setCompressionType(2);
         writer.open(output);
@@ -91,7 +110,8 @@ public class EngineMultiProcessor extends EngineProcessor {
                         break;
                     }
                 }
-                Thread.sleep(100);
+                try { Thread.sleep(100); }
+                catch (InterruptedException ex) {}
             }
             else {
                 writer.writeEvent(writeQueue.poll());
@@ -100,12 +120,13 @@ public class EngineMultiProcessor extends EngineProcessor {
         }
     }
 
-    void process() throws InterruptedException {
+    void process() {
         while (true) {
             if (readQueue.isEmpty()) {
                 if (readerThread.isDone())
                     if (readQueue.isEmpty()) break;
-                Thread.sleep(100);
+                try { Thread.sleep(100); }
+                catch (InterruptedException ex) {}
             }
             else {
                 DataEvent event = readQueue.poll();
@@ -115,38 +136,5 @@ public class EngineMultiProcessor extends EngineProcessor {
                 procQueue.remove(event);
             }
         }
-    }
-
-    public void process(String output, String... input) {
-        // start reader thread:
-        readerThread = CompletableFuture.supplyAsync(() -> {
-            try { read(input); } catch (InterruptedException | EvioException ex) {}
-            return true;
-        });
-        // start writer thread:
-        writerThread = CompletableFuture.supplyAsync(() -> {
-            try { write(output); } catch (InterruptedException ex) {}
-            return true;
-        });
-        // start processor threads:
-        for (int i=0; i<threads; i++) {
-            procThreads.add(CompletableFuture.supplyAsync(() -> {
-                try { process(); } catch (InterruptedException ex) {}
-                return true;
-            }));
-        }
-        // wait for finish:
-        while (!writerThread.isDone()) {
-            try { Thread.sleep(100); } catch (InterruptedException ex) {}
-        }
-    }
-
-    public static void main(String[] args) {
-        OptionParser parser = EngineProcessor.parser();
-        parser.addOption("-t","4","number of threads");
-        parser.parse(args);
-
-        EngineMultiProcessor proc = new EngineMultiProcessor(parser);
-        proc.process(parser.getOption("-o").stringValue(), parser.getOption("-i").stringValue());
     }
 }
