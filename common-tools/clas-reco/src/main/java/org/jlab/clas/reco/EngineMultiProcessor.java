@@ -1,17 +1,15 @@
 package org.jlab.clas.reco;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.logging.Logger;
-import org.json.JSONObject;
 import org.jlab.coda.jevio.EvioException;
 import org.jlab.io.base.DataEvent;
 import org.jlab.io.base.DataSource;
 import org.jlab.io.evio.EvioSource;
 import org.jlab.io.hipo.HipoDataSource;
 import org.jlab.io.hipo.HipoDataSync;
-import org.jlab.utils.ClaraYaml;
 import org.jlab.utils.benchmark.ProgressPrintout;
 import org.jlab.utils.options.OptionParser;
 
@@ -35,6 +33,13 @@ public class EngineMultiProcessor extends EngineProcessor {
     ConcurrentLinkedQueue<DataEvent> writeQueue = new ConcurrentLinkedQueue<>();
     ConcurrentLinkedQueue<DataEvent> procQueue = new ConcurrentLinkedQueue<>();
 
+    public EngineMultiProcessor(OptionParser parser) {
+        super(parser);
+        threads = parser.getOption("-t").intValue();
+        maxEvents = parser.getOption("-n").intValue();
+        skipEvents = parser.getOption("-s").intValue();
+    }
+
     public EngineMultiProcessor(int threads) {
         super();
         this.threads = threads;
@@ -47,7 +52,8 @@ public class EngineMultiProcessor extends EngineProcessor {
         this.skipEvents = skip;
     }
 
-    void read() throws InterruptedException, EvioException {
+    void read(String... input) throws InterruptedException, EvioException {
+        inputs.addAll(Arrays.asList(input));
         while (maxEvents < 1 || readEvents < maxEvents) {
             if (reader != null && reader.hasEvent()) {
                 if (readQueue.size() > 10*threads) {
@@ -69,7 +75,10 @@ public class EngineMultiProcessor extends EngineProcessor {
         }
     }
 
-    void write() throws InterruptedException {
+    void write(String output) throws InterruptedException {
+        writer = new HipoDataSync();
+        writer.setCompressionType(2);
+        writer.open(output);
         while (true) {
             if (writeQueue.isEmpty()) {
                 if (readerThread.isDone()) {
@@ -105,25 +114,16 @@ public class EngineMultiProcessor extends EngineProcessor {
     }
 
     public void process(String output, String... input) {
-
-        // add inputs and create writer:
-        for (int i=0; i<input.length; i++) inputs.add(input[i]);
-        writer = new HipoDataSync();
-        writer.setCompressionType(2);
-        writer.open(output);
-
         // start reader thread:
         readerThread = CompletableFuture.supplyAsync(() -> {
-            try { read(); } catch (InterruptedException | EvioException ex) {}
+            try { read(input); } catch (InterruptedException | EvioException ex) {}
             return true;
         });
-
         // start writer thread:
         CompletableFuture writerThread = CompletableFuture.supplyAsync(() -> {
-            try { write(); } catch (InterruptedException ex) {}
+            try { write(output); } catch (InterruptedException ex) {}
             return true;
         });
-
         // start processor threads:
         for (int i=0; i<threads; i++) {
             CompletableFuture.supplyAsync(() -> {
@@ -131,7 +131,6 @@ public class EngineMultiProcessor extends EngineProcessor {
                 return true;
             });
         }
-
         // wait for finish:
         while (!writerThread.isDone()) {
             try { Thread.sleep(100); } catch (InterruptedException ex) {}
@@ -139,80 +138,11 @@ public class EngineMultiProcessor extends EngineProcessor {
     }
 
     public static void main(String[] args) {
-
-        OptionParser parser = new OptionParser("recon-util");
-        parser.addRequired("-o","output.hipo");
-        parser.addRequired("-i","input.evio/hipo");
-        parser.addOption("-c","0","use default configuration [0 - no, 1 - yes/default, 2 - all services] ");
-        parser.addOption("-s","-1","number of events to skip");
-        parser.addOption("-n","-1","number of events to process");
-        parser.addOption("-t","1","number of threads");
-        parser.addOption("-y","0","yaml file");
-        parser.addOption("-u","true","update dictionary from writer ? ");
-        parser.addOption("-S",null,"schema directory");
-        parser.addOption("-B",null,"background file");
-        parser.addOption("-P",null,"preload file for post-processing");
-        parser.addOption("-R","0","rebuild scalers");
-        parser.addOption("-H","0","restream helicity");
-        parser.setRequiresInputList(false);
+        OptionParser parser = EngineProcessor.parser();
+        parser.addOption("-t","4","number of threads");
         parser.parse(args);
-        parser.syncLogLevel(Logger.getLogger(EngineProcessor.class.getPackage().getName()));
 
-        EngineMultiProcessor proc = new EngineMultiProcessor(parser.getOption("-t").intValue(),
-            parser.getOption("-n").intValue(), parser.getOption("-s").intValue());
-
-        if (parser.getOption("-u").stringValue().contains("false")) {
-            proc.updateDictionary = false;
-        }
-
-        // services from YAML:
-        if (!parser.getOption("-y").stringValue().equals("0")) {
-            ClaraYaml yaml = new ClaraYaml(parser.getOption("-y").stringValue());
-            if (yaml.schemaDirectory() != null) {
-                proc.setBanksToKeep(yaml.schemaDirectory());
-            }
-            for (JSONObject service : yaml.services()) {
-                JSONObject cfg = yaml.filter(service.getString("name"));
-                if (cfg.length() > 0) {
-                    proc.addEngine(service.getString("name"),service.getString("class"),cfg.toString());
-                } else {
-                    proc.addEngine(service.getString("name"),service.getString("class"));
-                }
-            }
-        }
-        // services from builtin configurations:
-        else if (parser.getOption("-c").intValue() > 0){
-            if(parser.getOption("-c").intValue() > 2){
-                proc.initCaloDebug();
-            } else if(parser.getOption("-c").intValue() == 2){
-                proc.initAll();
-            } else {
-                proc.initDefault();
-            }
-        }
-        // user-defined services:
-        else {
-            for(String engine : parser.getInputList()){
-                System.out.println("Adding reconstruction engine " + engine);
-                proc.addEngine(engine);
-            }
-        }
-
-        // command-line schema overrides YAML:
-        if (parser.getOption("-S").stringValue() != null)
-            proc.setBanksToKeep(parser.getOption("-S").stringValue());
-
-        // command-line filename for background merging overrides YAML:
-        if (parser.getOption("-B").stringValue() != null)
-            proc.setBackgroundFiles(parser.getOption("-B").stringValue());
-        
-        // command-line filename for post-processing overrides YAML:
-        if (parser.getOption("-P").stringValue() != null) {
-            proc.setPreloadFiles(parser.getOption("-P").stringValue(),
-                parser.getOption("-H").intValue()!=0,
-                parser.getOption("-R").intValue()!=0);
-        }
-
+        EngineMultiProcessor proc = new EngineMultiProcessor(parser);
         proc.process(parser.getOption("-o").stringValue(), parser.getOption("-i").stringValue());
     }
 }

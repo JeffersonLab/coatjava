@@ -49,6 +49,10 @@ public class EngineProcessor {
     
     public EngineProcessor(){}
 
+    public EngineProcessor(OptionParser parser) {
+        init(parser);
+    }
+
     private ReconstructionEngine findEngine(String clazz) {
         for (String k : processorEngines.keySet()) {
             if (processorEngines.get(k).getClass().getName().equals(clazz)) {
@@ -56,6 +60,21 @@ public class EngineProcessor {
             }
         }
         return null;
+    }
+
+    protected void parseYaml(String filename) {
+        ClaraYaml yaml = new ClaraYaml(filename);
+        if (yaml.schemaDirectory() != null) {
+            setBanksToKeep(yaml.schemaDirectory());
+        }
+        for (JSONObject service : yaml.services()) {
+            JSONObject cfg = yaml.filter(service.getString("name"));
+            if (cfg.length() > 0) {
+                addEngine(service.getString("name"),service.getString("class"),cfg.toString());
+            } else {
+                addEngine(service.getString("name"),service.getString("class"));
+            }
+        }
     }
 
     protected void setBackgroundFiles(String filenames) {
@@ -270,7 +289,7 @@ public class EngineProcessor {
     /**
      * Initialize all the engines in the chain.
      */
-    public void init(){
+    public final void init(){
         System.out.println("\n\n\n ");
         for(Map.Entry<String,ReconstructionEngine> entry : this.processorEngines.entrySet()){
             System.out.println(String.format("   >>>>>> (*) initializing : %8s : %s",entry.getKey(),
@@ -376,11 +395,16 @@ public class EngineProcessor {
         }
     }
 
-    public static void main(String[] args){
+    protected final void init(int config) {
+        if (config > 2) initCaloDebug();
+        else if(config == 2) initAll();
+        else initDefault();
+    }
+
+    protected static OptionParser parser() {
         OptionParser parser = new OptionParser("recon-util");
         parser.addRequired("-o","output.hipo");
         parser.addRequired("-i","input.evio/hipo");
-        parser.setRequiresInputList(false);
         parser.addOption("-c","0","use default configuration [0 - no, 1 - yes/default, 2 - all services] ");
         parser.addOption("-s","-1","number of events to skip");
         parser.addOption("-n","-1","number of events to process");
@@ -391,71 +415,58 @@ public class EngineProcessor {
         parser.addOption("-P",null,"preload file for post-processing");
         parser.addOption("-R","0","rebuild scalers");
         parser.addOption("-H","0","restream helicity");
+        parser.setRequiresInputList(false);
+        return parser;
+    }
 
-        parser.parse(args);
+    protected final void init(OptionParser parser) {
         parser.syncLogLevel(LOGGER);
+        if (parser.getOption("-u").stringValue().contains("false"))
+            updateDictionary = false;
 
-        List<String> services = parser.getInputList();
-
-        String  inputFile = parser.getOption("-i").stringValue();
-        String outputFile = parser.getOption("-o").stringValue();
-
-        EngineProcessor proc = new EngineProcessor();
-
-        int config  = parser.getOption("-c").intValue();
-        int nskip   = parser.getOption("-s").intValue();
-        int nevents = parser.getOption("-n").intValue();
-        String yamlFileName = parser.getOption("-y").stringValue();
-
-        String update = parser.getOption("-u").stringValue();
-        if(update.contains("false")==true) proc.updateDictionary = false;
-
-        if(!yamlFileName.equals("0")) {
-            ClaraYaml yaml = new ClaraYaml(yamlFileName);
-            if (yaml.schemaDirectory() != null) {
-                proc.setBanksToKeep(yaml.schemaDirectory());
-            }
-            for (JSONObject service : yaml.services()) {
-                JSONObject cfg = yaml.filter(service.getString("name"));
-                if (cfg.length() > 0) {
-                    proc.addEngine(service.getString("name"),service.getString("class"),cfg.toString());
-                } else {
-                    proc.addEngine(service.getString("name"),service.getString("class"));
-                }
-            }
+        // read services and schema from YAML:
+        if (!parser.getOption("-y").stringValue().equals("0")) {
+            parseYaml(parser.getOption("-y").stringValue());
         }
-        else if (config>0){
-            if(config>2){
-                proc.initCaloDebug();
-            } else if(config==2){
-                proc.initAll();
-            } else {
-                proc.initDefault();
-            }
+        // builtin configuration:
+        else if (parser.getOption("-c").intValue() > 0) {
+            init(parser.getOption("-c").intValue());
         }
+        // user-defined services:
         else {
-            for(String engine : services){
+            for(String engine : parser.getInputList()) {
                 System.out.println("Adding reconstruction engine " + engine);
-                proc.addEngine(engine);
+                addEngine(engine);
             }
         }
 
         // command-line schema overrides YAML:
         if (parser.getOption("-S").stringValue() != null)
-            proc.setBanksToKeep(parser.getOption("-S").stringValue());
+            setBanksToKeep(parser.getOption("-S").stringValue());
 
         // command-line filename for background merging overrides YAML:
         if (parser.getOption("-B").stringValue() != null)
-            proc.setBackgroundFiles(parser.getOption("-B").stringValue());
+            setBackgroundFiles(parser.getOption("-B").stringValue());
         
         // command-line filename for post-processing overrides YAML:
         if (parser.getOption("-P").stringValue() != null) {
-            proc.setPreloadFiles(parser.getOption("-P").stringValue(),
+            setPreloadFiles(parser.getOption("-P").stringValue(),
                 parser.getOption("-H").intValue()!=0,
                 parser.getOption("-R").intValue()!=0);
         }
+    }
 
-        proc.processFile(inputFile,outputFile,nskip,nevents);
+    public static void main(String[] args) {
+        
+        OptionParser parser = EngineProcessor.parser();
+        parser.parse(args);
+
+        EngineProcessor proc = new EngineProcessor(parser);
+
+        proc.processFile(parser.getOption("-i").stringValue(),
+                         parser.getOption("-o").stringValue(),
+                         parser.getOption("-s").intValue(),
+                         parser.getOption("-n").intValue());
     }
 
 }
