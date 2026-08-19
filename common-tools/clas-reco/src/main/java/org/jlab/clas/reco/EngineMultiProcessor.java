@@ -47,13 +47,6 @@ public class EngineMultiProcessor extends EngineProcessor {
         this.skipEvents = skip;
     }
 
-    void open() {
-        if (inputs.get(0).endsWith(".hipo")) reader = new HipoDataSource();
-        else reader = new EvioSource();
-        reader.open(inputs.remove(0));
-        updateDictionary((HipoDataSource)reader, writer);
-    }
-
     void read() throws InterruptedException, EvioException {
         while (maxEvents < 1 || readEvents < maxEvents) {
             if (reader != null && reader.hasEvent()) {
@@ -67,22 +60,11 @@ public class EngineMultiProcessor extends EngineProcessor {
                     readQueue.offer(event);
             }
             else if (inputs.isEmpty()) break;
-            else open();
-        }
-    }
-
-    void process() throws InterruptedException {
-        while (true) {
-            if (readQueue.isEmpty()) {
-                if (readerThread.isDone()) break;
-                Thread.sleep(100);
-            }
             else {
-                DataEvent event = readQueue.poll();
-                procQueue.offer(event);
-                processEvent(event);
-                writeQueue.offer(event);
-                procQueue.remove(event);
+                if (inputs.get(0).endsWith(".hipo")) reader = new HipoDataSource();
+                else reader = new EvioSource();
+                reader.open(inputs.remove(0));
+                updateDictionary((HipoDataSource)reader, writer);
             }
         }
     }
@@ -102,6 +84,22 @@ public class EngineMultiProcessor extends EngineProcessor {
             else {
                 writer.writeEvent(writeQueue.poll());
                 progress.updateStatus();
+            }
+        }
+    }
+
+    void process() throws InterruptedException {
+        while (true) {
+            if (readQueue.isEmpty()) {
+                if (readerThread.isDone()) break;
+                Thread.sleep(100);
+            }
+            else {
+                DataEvent event = readQueue.poll();
+                procQueue.offer(event);
+                processEvent(event);
+                writeQueue.offer(event);
+                procQueue.remove(event);
             }
         }
     }
