@@ -17,8 +17,9 @@ import org.jlab.utils.options.OptionParser;
 import org.jlab.clara.engine.EngineData;
 import org.jlab.clara.engine.EngineDataType;
 import java.util.Arrays;
+import org.jlab.clas.reco.DecoderEngine.DecoderPool;
 import org.jlab.coda.jevio.EvioException;
-import org.jlab.detector.decode.CLASDecoder4;
+import org.jlab.detector.decode.CLASDecoder;
 import org.jlab.io.evio.EvioDataEvent;
 import org.jlab.io.evio.EvioSource;
 import org.jlab.io.hipo.HipoDataEvent;
@@ -42,8 +43,8 @@ public class EngineProcessor {
     private final List<String> schemaExempt = Arrays.asList("RUN::config","DC::tdc");
 
     protected boolean updateDictionary = true;
-    
-    protected CLASDecoder4 decoder = new CLASDecoder4();
+   
+	protected DecoderPool decoders = new DecoderPool(64,"default",null);
 
     int eventsRead = 0;
     
@@ -135,13 +136,12 @@ public class EngineProcessor {
     public void initDefault(){
 
         String[] names = new String[]{
-            "DECO","MAGFIELDS",
+            "MAGFIELDS",
             "DCCR","DCHB","FTOFHB","EC","HTCC","EBHB",
             "DCTB","FTOFTB","EBTB","VTX"
         };
 
         String[] services = new String[]{
-            "org.jlab.clas.reco.DecoderEngine",
             "org.jlab.clas.swimtools.MagFieldsEngine",
             "org.jlab.service.dc.DCHBClustering",
             "org.jlab.service.dc.DCHBPostClusterConv",
@@ -162,7 +162,7 @@ public class EngineProcessor {
     public void initAll(){
 
         String[] names = new String[]{
-            "DECO","MAGFIELDS",
+            "MAGFIELDS",
             "FTCAL", "FTHODO", "FTTRK", "FTEB",
             "URWT", "DCCR", "DCHB","FTOFHB","EC","RASTER",
             "CVTFP","CTOF","CND","BAND",
@@ -172,7 +172,6 @@ public class EngineProcessor {
         };
 
         String[] services = new String[]{
-            "org.jlab.clas.reco.DecoderEngine",
             "org.jlab.clas.swimtools.MagFieldsEngine",
             "org.jlab.rec.ft.cal.FTCALEngine",
             "org.jlab.rec.ft.hodo.FTHODOEngine",
@@ -211,7 +210,7 @@ public class EngineProcessor {
         }
     }
 
-     public void initCaloDebug(){
+    public void initCaloDebug(){
 
         String[] names = new String[]{
             "EC","EB"
@@ -303,7 +302,16 @@ public class EngineProcessor {
      * process a single event through the chain.
      * @param event
      */
-    public void processEvent(DataEvent event){
+    public DataEvent processEvent(DataEvent event) {
+		if (event instanceof EvioDataEvent evio) {
+			try {
+				CLASDecoder d = decoders.take();
+				Event hipo = d.getDecodedEvent(evio, -1, ++eventsRead, null, null);
+				event = new HipoDataEvent(hipo, d.getSchemaFactory());
+				decoders.put(d);
+			}
+			catch (InterruptedException ex) { ex.printStackTrace(); return null; }
+		}
         for(Map.Entry<String,ReconstructionEngine> engine : this.processorEngines.entrySet()){
             try {
                 engine.getValue().processDataEvent(event);
@@ -312,6 +320,7 @@ public class EngineProcessor {
                 e.printStackTrace();
             }
         }
+		return event;
     }
 
     public void processFile(String file, String output){
@@ -320,8 +329,10 @@ public class EngineProcessor {
 
     public void processEvent(DataEvent event, HipoDataSync writer) {
         processEvent(event);
-        removeBanks(event);
-        writer.writeEvent(event);
+		if (event instanceof HipoDataEvent) {
+			removeBanks(event);
+			writer.writeEvent(event);
+		}
     }
 
     public void processFile(HipoDataSource reader, HipoDataSync writer, int skipEvents, int maxEvents) {
@@ -347,9 +358,7 @@ public class EngineProcessor {
                 ByteBuffer bb = reader.getEventBuffer(eventsRead, true);
                 if (skipEvents <= 0 || eventsRead > skipEvents) {
                     EvioDataEvent evio = new EvioDataEvent(bb.array(), ByteOrder.LITTLE_ENDIAN);
-                    Event hipo = decoder.getDecodedEvent(evio, -1, eventsRead, null, null);
-                    HipoDataEvent hipo2 = new HipoDataEvent(hipo, decoder.getSchemaFactory());
-                    processEvent(hipo2, writer);
+                    processEvent(evio, writer);
                 }
                 if (maxEvents > 0 && eventsRead > maxEvents+skipEvents) break;
             } catch (EvioException ex) {
