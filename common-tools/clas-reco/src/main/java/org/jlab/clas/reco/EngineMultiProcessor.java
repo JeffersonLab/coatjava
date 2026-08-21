@@ -75,7 +75,6 @@ public class EngineMultiProcessor extends EngineProcessor {
     ConcurrentLinkedQueue<ByteBuffer> evioQueue = new ConcurrentLinkedQueue<>();
     ConcurrentLinkedQueue<DataEvent> hipoQueue = new ConcurrentLinkedQueue<>();
     ConcurrentLinkedQueue<DataEvent> writeQueue = new ConcurrentLinkedQueue<>();
-    ConcurrentLinkedQueue<Object> procQueue = new ConcurrentLinkedQueue<>();
     
     void read(String... input) {
         inputs.addAll(Arrays.asList(input));
@@ -145,18 +144,14 @@ public class EngineMultiProcessor extends EngineProcessor {
             }
             else if (!evioQueue.isEmpty()) {
                 ByteBuffer bb = evioQueue.poll();
-                procQueue.offer(bb);
                 DataEvent event = new EvioDataEvent(bb.array(), ByteOrder.LITTLE_ENDIAN);
                 processEvent(event);
                 writeQueue.offer(event);
-                procQueue.remove(bb);
 			}
 			else if (!hipoQueue.isEmpty()){
                 DataEvent event = hipoQueue.poll();
-				procQueue.offer(event);
                 processEvent(event);
                 writeQueue.offer(event);
-                procQueue.remove(event);
 			}
         }
     }
