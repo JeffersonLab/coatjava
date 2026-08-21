@@ -1,20 +1,20 @@
 package org.jlab.detector.decode;
 
-import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  *
  * @author baltzell
  */
 public class CLASDecoderPool {
-    
-    ArrayBlockingQueue<CLASDecoder> pool;
+   
+    ConcurrentLinkedQueue<CLASDecoder> pool;
 
     int sharedConstantsManagers = 64;
 
     public CLASDecoderPool(int size, String variation, String timestamp) {
 
-        pool = new ArrayBlockingQueue<>(size);
+        pool = new ConcurrentLinkedQueue<>();
         
         CLASDecoder d0 = null;
         
@@ -35,11 +35,11 @@ public class CLASDecoderPool {
     }
 
     public CLASDecoder take() throws InterruptedException {
-        return pool.take();
+        return pool.poll();
     }
 
     public void put(CLASDecoder decoder) throws InterruptedException {
-        pool.put(decoder);
+        pool.offer(decoder);
     }
 
 }
