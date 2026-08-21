@@ -142,17 +142,16 @@ public class EngineMultiProcessor extends EngineProcessor {
                 try { Thread.sleep(100); }
                 catch (InterruptedException ex) {}
             }
-            else if (!evioQueue.isEmpty()) {
-                ByteBuffer bb = evioQueue.poll();
-                DataEvent event = new EvioDataEvent(bb.array(), ByteOrder.LITTLE_ENDIAN);
+            else {
+                DataEvent event;
+                if (!evioQueue.isEmpty())
+                    event = new EvioDataEvent(evioQueue.poll().array(), ByteOrder.LITTLE_ENDIAN);
+                else if (!hipoQueue.isEmpty())
+                    event = hipoQueue.poll();
+                else continue;
                 processEvent(event);
                 writeQueue.offer(event);
-			}
-			else if (!hipoQueue.isEmpty()){
-                DataEvent event = hipoQueue.poll();
-                processEvent(event);
-                writeQueue.offer(event);
-			}
+            }
         }
     }
 }
