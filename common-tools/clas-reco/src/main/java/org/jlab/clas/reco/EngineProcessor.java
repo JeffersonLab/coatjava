@@ -371,7 +371,7 @@ public class EngineProcessor {
         }
     }
 
-    public static void main(String[] args){
+    protected static OptionParser getParser() {
         OptionParser parser = new OptionParser("recon-util");
         parser.addRequired("-o","output.hipo");
         parser.addRequired("-i","input.evio/hipo");
@@ -386,7 +386,12 @@ public class EngineProcessor {
         parser.addOption("-P",null,"preload file for post-processing");
         parser.addOption("-R","0","rebuild scalers");
         parser.addOption("-H","0","restream helicity");
+        return parser;
+    }
 
+    public static void main(String[] args){
+
+        OptionParser parser = EngineProcessor.getParser();
         parser.parse(args);
         parser.syncLogLevel(LOGGER);
 
