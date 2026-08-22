@@ -79,7 +79,7 @@ public class Benchmark {
             String margins = new String(asterix);
             s.append(margins);
             s.append("\n");
-            s.append("*     BENCHMARK  RESULTS \n");
+            s.append("*     Benchmark  Results \n");
             s.append(margins);
             s.append("\n");
             for (BenchmarkTimer b : timers) {
