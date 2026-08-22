@@ -16,7 +16,6 @@ import org.jlab.io.evio.EvioSource;
 import org.jlab.io.hipo.HipoDataEvent;
 import org.jlab.io.hipo.HipoDataSource;
 import org.jlab.io.hipo.HipoDataSync;
-import org.jlab.jnp.hipo4.data.Event;
 import org.jlab.utils.benchmark.Benchmark;
 import org.jlab.utils.benchmark.ProgressPrintout;
 import org.jlab.utils.options.OptionParser;
@@ -126,14 +125,14 @@ public class EngineMultiProcessor extends EngineProcessor {
         }
     }
 
-    EvioDataEvent decode(ByteBuffer bytes) {
+    EvioDataEvent process(ByteBuffer bytes) {
         Benchmark.getInstance().resume("EVIO");
         EvioDataEvent e = new EvioDataEvent(bytes.array(), ByteOrder.LITTLE_ENDIAN);
         Benchmark.getInstance().pause("EVIO");
         return e;
     }
 
-    HipoDataEvent decode(EvioDataEvent event) {
+    HipoDataEvent process(EvioDataEvent event) {
         Benchmark.getInstance().resume("DECO");
         HipoDataEvent e;
         try {
@@ -146,6 +145,15 @@ public class EngineMultiProcessor extends EngineProcessor {
         return e;
     }
 
+    void process(HipoDataEvent event) {
+        for (Map.Entry<String,ReconstructionEngine> engine : this.processorEngines.entrySet()) {
+            Benchmark.getInstance().resume(engine.getValue().getName());
+            try { engine.getValue().processDataEvent(event); }
+            catch (Exception ex) { ex.printStackTrace(); }
+            Benchmark.getInstance().pause(engine.getValue().getName());
+        }
+    }
+
     void process(int thread) {
         while (true) {
             if (evioQueue.isEmpty() && hipoQueue.isEmpty()) {
@@ -156,21 +164,10 @@ public class EngineMultiProcessor extends EngineProcessor {
             }
             else {
                 DataEvent event;
-                if (!evioQueue.isEmpty()) {
-                    event = decode(decode(evioQueue.poll()));
-                }
-                else if (!hipoQueue.isEmpty()) {
-                    event = hipoQueue.poll();
-                }
-                else {
-                    continue;
-                }
-                for (Map.Entry<String,ReconstructionEngine> engine : this.processorEngines.entrySet()) {
-                    Benchmark.getInstance().resume(engine.getValue().getName());
-                    try { engine.getValue().processDataEvent(event); }
-                    catch (Exception ex) { ex.printStackTrace(); }
-                    Benchmark.getInstance().pause(engine.getValue().getName());
-                }
+                if (!evioQueue.isEmpty()) event = process(process(evioQueue.poll()));
+                else if (!hipoQueue.isEmpty()) event = hipoQueue.poll();
+                else continue;
+                process((HipoDataEvent)event);
                 writeQueue.offer(event);
             }
         }
