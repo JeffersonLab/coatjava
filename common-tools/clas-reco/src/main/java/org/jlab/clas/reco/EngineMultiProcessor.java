@@ -136,15 +136,15 @@ public class EngineMultiProcessor extends EngineProcessor {
             else {
                 DataEvent event;
                 if (!evioQueue.isEmpty()) {
-                    Benchmark.getInstance().resume("evio");
+                    Benchmark.getInstance().resume("EVIO");
                     event = new EvioDataEvent(evioQueue.poll().array(), ByteOrder.LITTLE_ENDIAN);
-                    Benchmark.getInstance().pause("evio");
+                    Benchmark.getInstance().pause("EVIO");
                     try { 
-                        Benchmark.getInstance().resume("deco");
+                        Benchmark.getInstance().resume("DECO");
                         CLASDecoder d = decoders.take();
                         event = d.getDecodedDataEvent((EvioDataEvent)event);
                         decoders.put(d);
-                        Benchmark.getInstance().pause("deco");
+                        Benchmark.getInstance().pause("DECO");
                     }
                     catch (InterruptedException ex) {}
                 }
