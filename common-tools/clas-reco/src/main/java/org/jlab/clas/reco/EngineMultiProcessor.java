@@ -61,8 +61,9 @@ public class EngineMultiProcessor extends EngineProcessor {
             final int j = i;
             procThreads.offer(CompletableFuture.runAsync(() -> { process(j); }));
         }
-        while (!writerThread.isDone())
+        while (!writerThread.isDone()) {
             try { Thread.sleep(100); } catch (InterruptedException ex) {}
+        }
     }
     
     DataSource reader;
@@ -124,7 +125,27 @@ public class EngineMultiProcessor extends EngineProcessor {
             }
         }
     }
-    
+
+    EvioDataEvent decode(ByteBuffer bytes) {
+        Benchmark.getInstance().resume("EVIO");
+        EvioDataEvent e = new EvioDataEvent(bytes.array(), ByteOrder.LITTLE_ENDIAN);
+        Benchmark.getInstance().pause("EVIO");
+        return e;
+    }
+
+    HipoDataEvent decode(EvioDataEvent event) {
+        Benchmark.getInstance().resume("DECO");
+        HipoDataEvent e;
+        try {
+            CLASDecoder d = decoders.take();
+            e = d.getDecodedDataEvent(event);
+            decoders.put(d);
+        }
+        catch (InterruptedException ex) { e = null; }
+        Benchmark.getInstance().pause("DECO");
+        return e;
+    }
+
     void process(int thread) {
         while (true) {
             if (evioQueue.isEmpty() && hipoQueue.isEmpty()) {
@@ -136,21 +157,14 @@ public class EngineMultiProcessor extends EngineProcessor {
             else {
                 DataEvent event;
                 if (!evioQueue.isEmpty()) {
-                    Benchmark.getInstance().resume("EVIO");
-                    event = new EvioDataEvent(evioQueue.poll().array(), ByteOrder.LITTLE_ENDIAN);
-                    Benchmark.getInstance().pause("EVIO");
-                    try { 
-                        Benchmark.getInstance().resume("DECO");
-                        CLASDecoder d = decoders.take();
-                        event = d.getDecodedDataEvent((EvioDataEvent)event);
-                        decoders.put(d);
-                        Benchmark.getInstance().pause("DECO");
-                    }
-                    catch (InterruptedException ex) {}
+                    event = decode(decode(evioQueue.poll()));
                 }
-                else if (!hipoQueue.isEmpty())
+                else if (!hipoQueue.isEmpty()) {
                     event = hipoQueue.poll();
-                else continue;
+                }
+                else {
+                    continue;
+                }
                 for (Map.Entry<String,ReconstructionEngine> engine : this.processorEngines.entrySet()) {
                     Benchmark.getInstance().resume(engine.getValue().getName());
                     try { engine.getValue().processDataEvent(event); }
@@ -161,12 +175,11 @@ public class EngineMultiProcessor extends EngineProcessor {
             }
         }
     }
-    
+   
     void write(String output) {
         writer = new HipoDataSync();
         writer.setCompressionType(2);
         writer.open(output);
-        boolean benching = false;
         while (true) {
             if (writeQueue.isEmpty()) {
                 for (CompletableFuture f : procThreads)
@@ -175,8 +188,8 @@ public class EngineMultiProcessor extends EngineProcessor {
                     if (writeQueue.isEmpty()) {
                         writer.close();
                         System.out.println(Benchmark.getInstance());
-                        System.out.println(String.format("EngineMultiProcessor:  Read=%d  Write=%d  Diff=%d",
-                                readEvents,writeEvents,readEvents-writeEvents));
+                        System.out.println(String.format("recon-mutil:::::  Read/Write/Diff = %d/%d/%d",
+                            readEvents, writeEvents, readEvents-writeEvents));
                         break;
                     }
                 }
@@ -184,18 +197,18 @@ public class EngineMultiProcessor extends EngineProcessor {
                 catch (InterruptedException ex) {}
             }
             else {
-                Benchmark.getInstance().resume("write");
-                writer.writeEvent(writeQueue.poll());
-                if (writeEvents > 100) {
-                    if (!benching) {
-                        benching = true;
-                        Benchmark.getInstance().printTimer(10);
-                    }
-                    progress.updateStatus();
-                }
-                writeEvents++;
-                Benchmark.getInstance().pause("write");
+                write(writeQueue.poll());
             }
         }
     }
+
+    void write(DataEvent event) {
+        Benchmark.getInstance().resume("write");
+        writer.writeEvent(writeQueue.poll());
+        if (writeEvents > 100) progress.updateStatus();
+        if (writeEvents == 101) Benchmark.getInstance().printTimer(10);
+        writeEvents++;
+        Benchmark.getInstance().pause("write");
+    }
+
 }
