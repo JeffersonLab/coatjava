@@ -37,7 +37,7 @@ public class EngineProcessor {
     public static final String ENGINE_CLASS_BG = "org.jlab.service.bg.BackgroundEngine";
     public static final String ENGINE_CLASS_PP = "org.jlab.service.postproc.PostprocEngine";
     
-    private final Map<String,ReconstructionEngine>  processorEngines = new LinkedHashMap<>();
+    protected final Map<String,ReconstructionEngine>  processorEngines = new LinkedHashMap<>();
     private static final Logger LOGGER = Logger.getLogger(EngineProcessor.class.getPackage().getName());
     private SchemaFactory banksToKeep = null;
     private final List<String> schemaExempt = Arrays.asList("RUN::config","DC::tdc");
@@ -247,7 +247,7 @@ public class EngineProcessor {
         Class c;
         try {
             c = Class.forName(clazz);
-            if( ReconstructionEngine.class.isAssignableFrom(c)==true){
+            if (ReconstructionEngine.class.isAssignableFrom(c)==true) {
                 ReconstructionEngine engine = (ReconstructionEngine) c.newInstance();
                 if(jsonConf != null && !jsonConf.equals("null")) {
                     EngineData input = new EngineData();
@@ -258,10 +258,14 @@ public class EngineProcessor {
                     engine.init();
                 }
                 this.processorEngines.put(name == null ? engine.getName() : name, engine);
-            } else {
-                LOGGER.log(Level.SEVERE, ">>>> ERROR: class is not a reconstruction engine : {0}", clazz);
             }
+            else if (clazz.endsWith("DecoderEngine")) {
 
+            }
+            else {
+                LOGGER.log(clazz.endsWith("DecoderEngine") ? Level.INFO : Level.SEVERE,
+                        ">>>> class is not a reconstruction engine : {0}", clazz);
+            }
         } catch (ClassNotFoundException | InstantiationException | IllegalAccessException ex) {
             LOGGER.log(Level.SEVERE, null, ex);
         }

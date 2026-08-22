@@ -4,6 +4,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import org.jlab.coda.jevio.EvioException;
@@ -141,8 +142,7 @@ public class EngineMultiProcessor extends EngineProcessor {
                     try { 
                         Benchmark.getInstance().resume("deco");
                         CLASDecoder d = decoders.take();
-                        Event hipo = d.getDecodedEvent((EvioDataEvent)event, -1, ++eventsRead, null, null);
-                        event = new HipoDataEvent(hipo, d.getSchemaFactory());
+                        event = d.getDecodedDataEvent((EvioDataEvent)event);
                         decoders.put(d);
                         Benchmark.getInstance().pause("deco");
                     }
@@ -151,10 +151,13 @@ public class EngineMultiProcessor extends EngineProcessor {
                 else if (!hipoQueue.isEmpty())
                     event = hipoQueue.poll();
                 else continue;
-                Benchmark.getInstance().resume("proc");
-                processEvent(event);
+                for (Map.Entry<String,ReconstructionEngine> engine : this.processorEngines.entrySet()) {
+                    Benchmark.getInstance().resume(engine.getValue().getName());
+                    try { engine.getValue().processDataEvent(event); }
+                    catch (Exception ex) { ex.printStackTrace(); }
+                    Benchmark.getInstance().pause(engine.getValue().getName());
+                }
                 writeQueue.offer(event);
-                Benchmark.getInstance().pause("proc");
             }
         }
     }
@@ -170,8 +173,8 @@ public class EngineMultiProcessor extends EngineProcessor {
                     if (f.isDone()) procThreads.remove(f);
                 if (procThreads.isEmpty()) {
                     if (writeQueue.isEmpty()) {
-                        progress.showStatus();
                         writer.close();
+                        System.out.println(Benchmark.getInstance());
                         System.out.println(String.format("EngineMultiProcessor:  Read=%d  Write=%d  Diff=%d",
                                 readEvents,writeEvents,readEvents-writeEvents));
                         break;
