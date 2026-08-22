@@ -60,9 +60,8 @@ public class EngineMultiProcessor extends EngineProcessor {
             final int j = i;
             procThreads.offer(CompletableFuture.runAsync(() -> { process(j); }));
         }
-        while (!writerThread.isDone()) {
+        while (!writerThread.isDone())
             try { Thread.sleep(100); } catch (InterruptedException ex) {}
-        }
     }
     
     DataSource reader;
@@ -78,6 +77,7 @@ public class EngineMultiProcessor extends EngineProcessor {
     int writeEvents = 0;
    
     ArrayList<String> inputs = new ArrayList<>();
+
     ConcurrentLinkedQueue<CompletableFuture> procThreads = new ConcurrentLinkedQueue();
     ConcurrentLinkedQueue<ByteBuffer> evioQueue = new ConcurrentLinkedQueue<>();
     ConcurrentLinkedQueue<DataEvent> hipoQueue = new ConcurrentLinkedQueue<>();
@@ -193,9 +193,7 @@ public class EngineMultiProcessor extends EngineProcessor {
                 try { Thread.sleep(100); }
                 catch (InterruptedException ex) {}
             }
-            else {
-                write(writeQueue.poll());
-            }
+            else write(writeQueue.poll());
         }
     }
 
