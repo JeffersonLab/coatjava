@@ -55,6 +55,21 @@ public class EngineProcessor {
         return null;
     }
 
+    public void parseYaml(String filename) {
+        ClaraYaml yaml = new ClaraYaml(filename);
+        if (yaml.schemaDirectory() != null) {
+            setBanksToKeep(yaml.schemaDirectory());
+        }
+        for (JSONObject service : yaml.services()) {
+            JSONObject cfg = yaml.filter(service.getString("name"));
+            if (cfg.length() > 0) {
+                addEngine(service.getString("name"),service.getString("class"),cfg.toString());
+            } else {
+                addEngine(service.getString("name"),service.getString("class"));
+            }
+        }
+    }
+
     private void setBackgroundFiles(String filenames) {
         if (findEngine(ENGINE_CLASS_BG) == null) {
             LOGGER.info("Adding BackgroundEngine for -B option.");
@@ -411,18 +426,7 @@ public class EngineProcessor {
         if(update.contains("false")==true) proc.updateDictionary = false;
 
         if(!yamlFileName.equals("0")) {
-            ClaraYaml yaml = new ClaraYaml(yamlFileName);
-            if (yaml.schemaDirectory() != null) {
-                proc.setBanksToKeep(yaml.schemaDirectory());
-            }
-            for (JSONObject service : yaml.services()) {
-                JSONObject cfg = yaml.filter(service.getString("name"));
-                if (cfg.length() > 0) {
-                    proc.addEngine(service.getString("name"),service.getString("class"),cfg.toString());
-                } else {
-                    proc.addEngine(service.getString("name"),service.getString("class"));
-                }
-            }
+            proc.parseYaml(yamlFileName);
         }
         else if (config>0){
             if(config>2){
