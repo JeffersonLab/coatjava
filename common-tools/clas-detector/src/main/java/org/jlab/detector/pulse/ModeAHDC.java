@@ -196,28 +196,16 @@ public class ModeAHDC extends HipoExtractor  {
             return 0;
         } // classification before the fit
 
-        if (p.wftype == 1) { // special case of saturated signals
-            float slope_max = 0;
-            for (int bin = 0; bin < p.binMax; bin++) {
-                float slope = (p.samples[bin+1] - p.samples[bin])/samplingTime;
-                if (slope > slope_max) {
-                    slope_max = slope;
-                }
-            }
-            // empirical formula
-            p.adcMax = -28.753520f + 191.791679f*slope_max;
 
-        } else {
-            //If there are 2*npts+1 points around the peak
-            //(if the peak is not at an edge of the window)
-            //Then the peak ADC value is revisited to be the average of these
-            //TO DO: just use the adcmax???
-            int npts = 1;
-            if ((p.binMax - npts >= 0) && (p.binMax + npts <= p.numberOfBins - 1)){
-                p.adcMax = 0;
-                for (int bin = p.binMax - npts; bin <= p.binMax + npts; bin++) p.adcMax += p.samples[bin];
-                p.adcMax = p.adcMax/(2*npts+1);
-            }
+        //If there are 2*npts+1 points around the peak
+        //(if the peak is not at an edge of the window)
+        //Then the peak ADC value is revisited to be the average of these
+        //TO DO: just use the adcmax???
+        int npts = 1;
+        if ((p.binMax - npts >= 0) && (p.binMax + npts <= p.numberOfBins - 1)){
+            p.adcMax = 0;
+            for (int bin = p.binMax - npts; bin <= p.binMax + npts; bin++) p.adcMax += p.samples[bin];
+            p.adcMax = p.adcMax/(2*npts+1);
         }
         
         
@@ -240,64 +228,99 @@ public class ModeAHDC extends HipoExtractor  {
         p.timeOverThreshold = -9999;
 
         if (p.binMax < 0) return 0;
-        
-        //Set the CFA threshold
-        float threshold = Math.min(this.amplitudeFractionCFA*p.adcMax, p.samples[p.binMax]);
-        
-        //Crossing the threshold before the peak
-        int binRise = -99;
-        for (int bin = 0; bin < p.binMax - 1; bin++){
-            if (p.samples[bin] < threshold && p.samples[bin+1] >= threshold)
-                binRise = bin; //Here we keep only the last time the signal crosses the threshold
+
+        // update adcMax for saturated signals
+        float slope_max = 0;
+        int bin_slope_max = -1;
+        if (p.wftype == 1) {
+            for (int bin = 0; bin < p.binMax; bin++) {
+                float slope = (p.samples[bin+1] - p.samples[bin])/samplingTime;
+                if (slope > slope_max) {
+                    slope_max = slope;
+                    bin_slope_max = bin;
+                }
+            }
+            // update adcMax: empirical formula
+            p.adcMax = -16.371574f + 191.277306f*slope_max;
         }
-        //If the waveform does not cross the ths before the peak
-        //it was early or remant from a previous event and we cannot define a leading time
-        //we set the time at zero
-        if(binRise==-99) {
-            this.assignValidType(5, p);
-            p.leadingEdgeTime = (0 + p.time_ZS)*this.samplingTime;
-        }
-        else
-        {
+
+        // threshold
+        float threshold = this.amplitudeFractionCFA*p.adcMax;
+
+        if (threshold < ADC_LIMIT) {
+
+            //Crossing the threshold before the peak
+            int binRise = -99;
             float slopeRise = 0;
-            //linear interpolation
-            //threshold = leadingtime*(ADC1-ADC0)+ADC0
-            if (binRise + 1 <= p.numberOfBins-1)
-                slopeRise = p.samples[binRise+1] - p.samples[binRise];
-            float fittedBinRise = (slopeRise == 0) ? binRise : binRise + (threshold - p.samples[binRise])/slopeRise;
-            p.leadingEdgeTime = (fittedBinRise + p.time_ZS)*this.samplingTime;
-        }
-        
-        //Crossing the threshold back down after the peak
-        int binFall = -99;
-        for (int bin = p.binMax; bin < p.numberOfBins-1; bin++){
-            if (p.samples[bin] > threshold
-                && p.samples[bin+1] <= threshold
-                && p.samples[bin]>0
-                && p.samples[bin+1]>0){
-                binFall = bin+1;
-                break; //We keep only the first time the signal crosses back the threshold
+            for (int bin = 0; bin < p.binMax - 1; bin++){
+                if (p.samples[bin] < threshold && p.samples[bin+1] >= threshold && p.samples[bin+1] < ADC_LIMIT) {
+                    binRise = bin; //Here we keep only the last time the signal crosses the threshold
+                    slopeRise = p.samples[binRise+1] - p.samples[binRise];
+                } 
+                else if (bin > 0 && p.samples[bin] < threshold && p.samples[bin+1] >= threshold) { // we enter here if p.samples[bin+1] >= ADC_LIMIT; in that scenario, the slope is underestimated
+                    binRise = bin;
+                    slopeRise = p.samples[binRise] - p.samples[binRise-1]; // we extrapolate using the previous slope
+                }
+            }
+            //If the waveform does not cross the ths before the peak
+            //it was early or remant from a previous event and we cannot define a leading time
+            //we set the time at zero
+            if(binRise==-99) {
+                this.assignValidType(5, p);
+                p.leadingEdgeTime = (0 + p.time_ZS)*this.samplingTime;
+            }
+            else
+            {
+                //linear interpolation
+                //threshold = leadingtime*(ADC1-ADC0)+ADC0
+                float fittedBinRise = (slopeRise == 0) ? binRise : binRise + (threshold - p.samples[binRise])/slopeRise;
+                p.leadingEdgeTime = (fittedBinRise + p.time_ZS)*this.samplingTime;
+            }
+            
+            //Crossing the threshold back down after the peak
+            int binFall = -99;
+            for (int bin = p.binMax; bin < p.numberOfBins-1; bin++){
+                if (p.samples[bin] > threshold
+                    && p.samples[bin+1] <= threshold
+                    && p.samples[bin]>0
+                    && p.samples[bin+1]>0){
+                    binFall = bin+1;
+                    break; //We keep only the first time the signal crosses back the threshold
+                }
+            }
+            //If the waveform does not cross the ths again
+            //it was late and falling edge cannot be defined
+            //the time correspond to the end of the signal
+            if(binFall==-99) {
+                this.assignValidType(2, p);
+                p.trailingEdgeTime = (p.effectiveNumberOfBins -1 + p.time_ZS)*this.samplingTime;
+            }
+            else
+            {
+                float slopeFall = 0;
+                if (binFall - 1 >= 0)
+                    slopeFall = p.samples[binFall] - p.samples[binFall-1];
+                float fittedBinFall = (slopeFall == 0) ? binFall : binFall-1 + (threshold - p.samples[binFall-1])/slopeFall;
+                p.trailingEdgeTime = (fittedBinFall + p.time_ZS)*this.samplingTime;
+            }
+            
+            p.timeOverThreshold = p.trailingEdgeTime - p.leadingEdgeTime;
+            //if ((this.pulse.timeOverThreshold < 300) || (this.pulse.timeOverThreshold > 750)) this.assignValidType(4); // bad tot
+            if (p.timeOverThreshold < 300) this.assignValidType(4, p); // tot too small
+        } 
+        else { // there are necessary type 1, so we use the slope_max
+            if (p.wftype == 1) {
+                // extraplote the leading edge of the signal using the slope: caution, slope_max is in ADC/ns
+                float extrapolatedTime = (threshold-p.samples[bin_slope_max])/slope_max + samplingTime*bin_slope_max;
+                p.leadingEdgeTime = extrapolatedTime + p.time_ZS*samplingTime;
+                p.timeOverThreshold = p.effectiveNumberOfBins*samplingTime - extrapolatedTime;
+            } else { // unexpected behavior
+                p.leadingEdgeTime = 0;
+                p.timeOverThreshold = 0;
             }
         }
-        //If the waveform does not cross the ths again
-        //it was late and falling edge cannot be defined
-        //the time correspond to the end of the signal
-        if(binFall==-99) {
-            this.assignValidType(2, p);
-            p.trailingEdgeTime = (p.effectiveNumberOfBins -1 + p.time_ZS)*this.samplingTime;
-        }
-        else
-        {
-            float slopeFall = 0;
-            if (binFall - 1 >= 0)
-                slopeFall = p.samples[binFall] - p.samples[binFall-1];
-            float fittedBinFall = (slopeFall == 0) ? binFall : binFall-1 + (threshold - p.samples[binFall-1])/slopeFall;
-            p.trailingEdgeTime = (fittedBinFall + p.time_ZS)*this.samplingTime;
-        }
         
-        p.timeOverThreshold = p.trailingEdgeTime - p.leadingEdgeTime;
-        //if ((this.pulse.timeOverThreshold < 300) || (this.pulse.timeOverThreshold > 750)) this.assignValidType(4); // bad tot
-        if (p.timeOverThreshold < 300) this.assignValidType(4, p); // tot too small
+        
         
         return 0;
     }
