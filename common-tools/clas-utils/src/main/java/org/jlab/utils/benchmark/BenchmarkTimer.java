@@ -58,7 +58,7 @@ public class BenchmarkTimer {
     public String toString() {
         double timePerCall = 0.0;
         if (numberOfCalls != 0) timePerCall = getMiliseconds() / numberOfCalls;
-        return String.format("TIMER (%-12s) : N Calls %12d,  Total Time  = %12.2f sec,  Unit Time = %12.3f msec",
+        return String.format("%-15s : #Calls %12d, Total = %12.2f sec, Unit = %12.3f msec",
             getName(), numberOfCalls, getSeconds(), timePerCall);
     }
 }
