@@ -21,7 +21,7 @@ public class OccupanceEngine extends ReconstructionEngine {
     @Override
     public boolean init() {
         occupancy = new OccupanceDriver(getSchemaFactory(),
-            Integer.parseInt(getEngineConfigString("prescale","100")));
+            Integer.parseInt(getEngineConfigString("occupancyPrescale","100")));
         return true;
     }
 
