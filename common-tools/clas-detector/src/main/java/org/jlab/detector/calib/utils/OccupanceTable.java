@@ -1,16 +1,12 @@
 package org.jlab.detector.calib.utils;
 
 import java.util.Map;
-import org.jlab.detector.banks.RawBank;
-import org.jlab.detector.banks.RawBank.OrderGroups;
-import org.jlab.detector.banks.RawDataBank;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
-import org.jlab.jnp.hipo4.data.Bank;
-import org.jlab.jnp.hipo4.data.Event;
-import org.jlab.jnp.hipo4.data.SchemaFactory;
 import org.jlab.utils.groups.IndexedTable;
 import org.jlab.utils.groups.IndexedTable.IndexedEntry;
+import org.jlab.detector.banks.RawDataBank;
+import org.jlab.detector.banks.RawBank.OrderGroups;
 
 /**
  * Occupancy bookkeeper based on IndexedTable, with I/O helpers for indexed banks.
@@ -19,33 +15,28 @@ import org.jlab.utils.groups.IndexedTable.IndexedEntry;
  */
 public class OccupanceTable {
 
+    String hitBank;
+    String occBank;
     IndexedTable table;
-    RawBank hitBank;
-    RawDataBank hitDataBank;
-    Bank occBank;
 
     /**
      * A 3-index table, e.g., sector/layer/component.
-     * @param schema
      * @param hitBank name of the hit bank
      */
-    public OccupanceTable(SchemaFactory schema, String hitBank) {
-        this.hitBank = new RawBank(schema.getSchema(hitBank), 1000, OrderGroups.NOMINAL);
-        hitDataBank = new RawDataBank(hitBank, 1000, OrderGroups.NOMINAL);
-        occBank = schema.getBank("OCC::"+hitBank);
+    public OccupanceTable(String hitBank) {
+        this.hitBank = hitBank;
+        occBank = "OCC::" + hitBank;
         table = new IndexedTable(3, new String[]{"occ/F"});
     }
 
     /**
      * An N-index table.
-     * @param schema
      * @param hitBank name of the hit bank
      * @param indexCount number of inidices in the hit bank
      */
-    public OccupanceTable(SchemaFactory schema, String hitBank, int indexCount) {
-        this.hitBank = new RawBank(schema.getSchema(hitBank), 1000, OrderGroups.NOMINAL);
-        hitDataBank = new RawDataBank(hitBank, 1000, OrderGroups.NOMINAL);
-        occBank = schema.getBank("OCC::"+hitBank);
+    public OccupanceTable(String hitBank, int indexCount) {
+        this.hitBank = hitBank;
+        occBank = "OCC::" + hitBank;
         table = new IndexedTable(indexCount, new String[]{"occ/F"});
     }
 
@@ -70,12 +61,16 @@ public class OccupanceTable {
         return t;
     }
 
+    public final IndexedTable getTable() {
+        return table;
+    }
+
     /**
      * Fill the occupancy table.
      * @param weight
      * @param index 
      */
-    public final void fill(float weight, int... index) {
+    public synchronized final void fill(float weight, int... index) {
         for (int i=0; i<index.length; i++) if (index[i] < 0) return;
         final long hash = IndexedTable.DEFAULT_GENERATOR.hashCode(index);
         if (!table.hasEntryByHash(hash)) {
@@ -84,25 +79,7 @@ public class OccupanceTable {
         }
         table.setDoubleValueByHash(table.getDoubleValueByHash(0, hash) + weight, 0, hash);
     }
-
-    /**
-     * Fill occupancy table from a user-defined bank. 
-     * @param bank 
-     * @param weighted 
-     */
-    public void fill(RawBank bank, boolean weighted) {
-        int rows = bank.getRows();
-        int[] idx = new int[table.getList().getIndexSize()];
-        for (int i=0; i<rows; i++) {
-            for (int j=0; j<table.getList().getIndexSize(); j++) {
-                if (j==2) idx[j] = bank.getShort(j,i);
-                else idx[j] = bank.getByte(j,i);
-            }
-            if (weighted) fill(bank.getFloat(table.getList().getIndexSize(),i), idx);
-            else fill(1.0f, idx);
-        }
-    }
-
+    
     /**
      * Fill occupancy table from a user-defined bank. 
      * @param bank 
@@ -127,18 +104,10 @@ public class OccupanceTable {
      * Fill occupancy table from the hit bank, unweighted.
      * @param event
      */
-    public void fill(Event event) {
-        hitBank.read(event);
-        fill(hitBank, false);
-    }
-
-    /**
-     * Fill occupancy table from the hit bank, unweighted.
-     * @param event
-     */
     public void fill(DataEvent event) {
-        hitDataBank.read(event);
-        fill(hitDataBank, false);
+        RawDataBank b = new RawDataBank(hitBank, 1000, OrderGroups.NOMINAL);
+        b.read(event);
+        fill(b, false);
     }
 
     /**
@@ -147,8 +116,8 @@ public class OccupanceTable {
      * @param event
      * @return 
      */
-    public final DataBank create(long events, DataEvent event) {
-        DataBank b = event.createBank(occBank.getSchema().getName(), table.getRowCount());
+    public DataBank create(long events, DataEvent event) {
+        DataBank b = event.createBank(occBank, table.getRowCount());
         int i = 0;
         Map<Long,IndexedEntry> m = table.getList().getMap();
         for (long hash : m.keySet()) {
@@ -162,75 +131,4 @@ public class OccupanceTable {
         }
         return b;
     }
-
-    /**
-     * Get an occupancy bank, normalized by number of events.
-     * @param events
-     * @return 
-     */
-    public final Bank create(long events) {
-        Bank b = new Bank(occBank.getSchema(), table.getRowCount());
-        int row = 0;
-        for (long hash : ((Map<Long,IndexedEntry>)table.getList().getMap()).keySet()) {
-            int[] idx = IndexedTable.DEFAULT_GENERATOR.getIndices(hash, table.getList().getIndexSize());
-            for (int j=0; j<table.getList().getIndexSize(); j++){
-                if (j == 2) b.putShort(j, row, (short)idx[j]);
-                else b.putByte(j, row, (byte)idx[j]);
-            }
-            b.putFloat(table.getList().getIndexSize(), row, (float)table.getDoubleValueByHash(0, hash)/events);
-            row++;
-        }
-        return b;
-    }
-
-    /**
-     * Utility for processing a bunch of occupancies.
-     */
-    public static final class OccupanceDriver {
-        int events=0,prescale;
-        OccupanceTable[] tables;
-        public OccupanceDriver(SchemaFactory schema, int prescale) {
-            this.prescale = prescale;
-            tables = new OccupanceTable[] {
-                new OccupanceTable(schema,"DC::tot"),
-                new OccupanceTable(schema,"DC::tdc"),
-                new OccupanceTable(schema,"ECAL::adc"),
-                new OccupanceTable(schema,"ECAL::tdc"),
-                new OccupanceTable(schema,"FTOF::adc"),
-                new OccupanceTable(schema,"FTOF::tdc"),
-                new OccupanceTable(schema,"CTOF::adc"),
-                new OccupanceTable(schema,"CTOF::tdc"),
-                new OccupanceTable(schema,"HTCC::adc"),
-                new OccupanceTable(schema,"HTCC::tdc"),
-                new OccupanceTable(schema,"LTCC::adc"),
-                new OccupanceTable(schema,"LTCC::tdc"),
-                new OccupanceTable(schema,"BST::adc"),
-                new OccupanceTable(schema,"BMT::adc"),
-                new OccupanceTable(schema,"FTCAL::adc"),
-                new OccupanceTable(schema,"FTHODO::adc"),
-                new OccupanceTable(schema,"FTTRK::adc"),
-                new OccupanceTable(schema,"RICH::tdc"),
-                new OccupanceTable(schema,"BAND::adc"),
-                new OccupanceTable(schema,"BAND::tdc"),
-            };
-        }
-        public void process(DataEvent event) {
-            for (OccupanceTable t : tables) t.fill(event);
-            write(event);
-        }
-        public void reset() {
-            for (OccupanceTable t : tables) t.reset();
-            events = 0;
-        }
-        synchronized void write(DataEvent event) {
-            if (++events % prescale == 0) {
-                for (OccupanceTable t : tables) {
-                    if (t.table.getRowCount() > 0) event.appendBank(t.create(events, event));
-                    t.reset();
-                }
-                events = 0;
-            }
-        }
-    }
-
 }
