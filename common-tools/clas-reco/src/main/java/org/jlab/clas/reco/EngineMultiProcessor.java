@@ -75,9 +75,9 @@ public class EngineMultiProcessor extends EngineProcessor {
     int skipEvents = 0;
     int readEvents = 0;
     int writeEvents = 0;
-   
+    
     ArrayList<String> inputs = new ArrayList<>();
-
+    
     ConcurrentLinkedQueue<CompletableFuture> procThreads = new ConcurrentLinkedQueue();
     ConcurrentLinkedQueue<ByteBuffer> evioQueue = new ConcurrentLinkedQueue<>();
     ConcurrentLinkedQueue<DataEvent> hipoQueue = new ConcurrentLinkedQueue<>();
@@ -124,14 +124,14 @@ public class EngineMultiProcessor extends EngineProcessor {
             }
         }
     }
-
+    
     EvioDataEvent process(ByteBuffer bytes) {
         Benchmark.getInstance().resume("EVIO");
         EvioDataEvent e = new EvioDataEvent(bytes.array(), ByteOrder.LITTLE_ENDIAN);
         Benchmark.getInstance().pause("EVIO");
         return e;
     }
-
+    
     HipoDataEvent process(EvioDataEvent event) {
         Benchmark.getInstance().resume("DECO");
         HipoDataEvent e;
@@ -144,7 +144,7 @@ public class EngineMultiProcessor extends EngineProcessor {
         Benchmark.getInstance().pause("DECO");
         return e;
     }
-
+    
     void process(HipoDataEvent event) {
         for (Map.Entry<String,ReconstructionEngine> engine : this.processorEngines.entrySet()) {
             Benchmark.getInstance().resume(engine.getValue().getName());
@@ -153,7 +153,7 @@ public class EngineMultiProcessor extends EngineProcessor {
             Benchmark.getInstance().pause(engine.getValue().getName());
         }
     }
-
+    
     void process(int thread) {
         while (true) {
             if (evioQueue.isEmpty() && hipoQueue.isEmpty()) {
@@ -172,7 +172,7 @@ public class EngineMultiProcessor extends EngineProcessor {
             }
         }
     }
-   
+    
     void write(String output) {
         writer = new HipoDataSync();
         writer.setCompressionType(2);
@@ -186,7 +186,7 @@ public class EngineMultiProcessor extends EngineProcessor {
                         writer.close();
                         System.out.println(Benchmark.getInstance());
                         System.out.println(String.format("recon-mutil:::::  Read/Write/Diff = %d/%d/%d",
-                            readEvents, writeEvents, readEvents-writeEvents));
+                                readEvents, writeEvents, readEvents-writeEvents));
                         break;
                     }
                 }
@@ -196,7 +196,7 @@ public class EngineMultiProcessor extends EngineProcessor {
             else write(writeQueue.poll());
         }
     }
-
+    
     void write(DataEvent event) {
         Benchmark.getInstance().resume("write");
         writer.writeEvent(writeQueue.poll());
@@ -205,5 +205,5 @@ public class EngineMultiProcessor extends EngineProcessor {
         writeEvents++;
         Benchmark.getInstance().pause("write");
     }
-
+    
 }

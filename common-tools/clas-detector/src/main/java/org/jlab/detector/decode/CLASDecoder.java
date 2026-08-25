@@ -800,5 +800,4 @@ public class CLASDecoder {
     public HipoDataEvent getDecodedDataEvent(EvioDataEvent rawEvent) {
         return new HipoDataEvent(getDecodedEvent(rawEvent), schemaFactory);
     }
-
 }
