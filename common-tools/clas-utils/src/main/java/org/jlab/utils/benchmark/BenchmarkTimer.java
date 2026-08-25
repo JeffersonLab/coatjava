@@ -1,17 +1,57 @@
 package org.jlab.utils.benchmark;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+
 /**
  *
  * @author gavalian
  */
 public class BenchmarkTimer {
 
+    public static class BenchmarkMultiTimer extends BenchmarkTimer {
+        HashMap<Integer,Long> timeAtResume = new HashMap<>();
+        HashMap<Integer,Boolean> isPaused = new HashMap<>();
+        public BenchmarkMultiTimer(String name) { super(name); }
+        public void resume(int thread) {
+            if (!isPaused.containsKey(thread) || isPaused.get(thread)) {
+                timeAtResume.put(thread, System.nanoTime());
+                isPaused.put(thread, false);
+            }
+        }
+        public void pause(int thread) {
+            if (!isPaused.get(thread)) {
+                numberOfCalls.incrementAndGet();
+                totalTime.addAndGet(System.nanoTime() - timeAtResume.get(thread));
+                isPaused.put(thread, true);
+            }
+        }
+        @Override
+        public void reset(){
+            super.reset();
+            timeAtResume.clear();
+            isPaused.clear();
+        }
+    }
+
+    public static class BenchmarkTimerTotal extends BenchmarkMultiTimer {
+        ArrayList<BenchmarkTimer> benchmarks = new ArrayList<>();
+        public BenchmarkTimerTotal(String name) { super(name); }
+        public void add(BenchmarkTimer b) {
+            benchmarks.add(b);
+            totalTime.addAndGet(b.totalTime.get());
+            numberOfCalls.addAndGet(b.numberOfCalls.get());
+        }
+    }
+
     private String timerName = "generic";
     private long timeAtResume = 0;
     private Boolean isPaused = true;
 
-    protected int numberOfCalls = 0;
-    protected long totalTime = 0;
+    AtomicInteger numberOfCalls = new AtomicInteger(0);
+    AtomicLong totalTime = new AtomicLong(0);
 
     public BenchmarkTimer() {}
 
@@ -32,33 +72,32 @@ public class BenchmarkTimer {
     
     public void pause(){
         if(isPaused==false){
-            long timeAtPause = System.nanoTime();
-            totalTime += (timeAtPause - timeAtResume);
-            numberOfCalls++;
+            totalTime.addAndGet(System.nanoTime() - timeAtResume);
+            numberOfCalls.incrementAndGet();
             isPaused = true;
         }
     }
 
     public void reset(){
-        totalTime = 0;
+        totalTime.set(0);
+        numberOfCalls.set(0);
         timeAtResume = 0;
-        numberOfCalls = 0;
         isPaused = true;
     }
     
     public double getMiliseconds(){
-        return totalTime/(1.0e6);
+        return totalTime.get() / 1.0e6;
     }
     
     public double getSeconds(){
-        return totalTime/(1.0e9);
+        return totalTime.get() / 1.0e9;
     }
     
     @Override
     public String toString() {
         double timePerCall = 0.0;
-        if (numberOfCalls != 0) timePerCall = getMiliseconds() / numberOfCalls;
+        if (numberOfCalls.get() != 0) timePerCall = getMiliseconds() / numberOfCalls.get();
         return String.format("%-15s : #Calls %12d, Total = %12.2f sec, Unit = %12.3f msec",
-            getName(), numberOfCalls, getSeconds(), timePerCall);
+            getName(), numberOfCalls.get(), getSeconds(), timePerCall);
     }
 }
