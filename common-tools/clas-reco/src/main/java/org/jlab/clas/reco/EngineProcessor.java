@@ -425,31 +425,20 @@ public class EngineProcessor {
         return parser;
     }
 
-    public static void main(String[] args){
+    void init(OptionParser parser) {
 
-        OptionParser parser = EngineProcessor.getParser();
-        parser.parse(args);
         parser.syncLogLevel(LOGGER);
+
         if (parser.getOption("-u").stringValue().contains("false"))
             updateDictionary = false;
 
-        List<String> services = parser.getInputList();
-
-        String  inputFile = parser.getOption("-i").stringValue();
-        String outputFile = parser.getOption("-o").stringValue();
-
-        EngineProcessor proc = new EngineProcessor();
-
-        int config  = parser.getOption("-c").intValue();
-        int nskip   = parser.getOption("-s").intValue();
-        int nevents = parser.getOption("-n").intValue();
         String yamlFileName = parser.getOption("-y").stringValue();
 
         String update = parser.getOption("-u").stringValue();
-        if(update.contains("false")==true) proc.updateDictionary = false;
+        if(update.contains("false")==true) updateDictionary = false;
 
         if(!yamlFileName.equals("0")) {
-            proc.parseYaml(yamlFileName);
+            parseYaml(yamlFileName);
         }
         // builtin configuration:
         else if (parser.getOption("-c").intValue() > 0) {
@@ -477,11 +466,12 @@ public class EngineProcessor {
                 parser.getOption("-H").intValue()!=0,
                 parser.getOption("-R").intValue()!=0);
         }
+        
     }
 
     public static void main(String[] args) {
         
-        OptionParser parser = EngineProcessor.parser();
+        OptionParser parser = EngineProcessor.getParser();
         parser.parse(args);
 
         EngineProcessor proc = new EngineProcessor(parser);

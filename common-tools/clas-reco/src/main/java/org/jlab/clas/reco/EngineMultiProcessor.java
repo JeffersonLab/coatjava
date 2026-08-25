@@ -46,7 +46,7 @@ public class EngineMultiProcessor extends EngineProcessor {
     }
     
     public static void main(String[] args) {
-        OptionParser parser = EngineProcessor.parser();
+        OptionParser parser = EngineProcessor.getParser();
         parser.addOption("-t","4","number of threads");
         parser.parse(args);
         EngineMultiProcessor proc = new EngineMultiProcessor(parser);
@@ -114,8 +114,8 @@ public class EngineMultiProcessor extends EngineProcessor {
                 else reader = new EvioSource();
                 reader.open(inputs.remove(0));
                 maxEvents = maxEventsUser;
-                if (reader instanceof HipoDataSource)
-                    updateDictionary((HipoDataSource)reader, writer);
+                if (reader instanceof HipoDataSource hipo)
+                    updateDictionary(hipo, writer);
                 else {
                     int n = ((EvioSource)reader).getEventCount();
                     maxEvents = maxEventsUser < n ? maxEventsUser : n;
