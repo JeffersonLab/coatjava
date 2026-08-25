@@ -6,6 +6,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
+import org.jlab.utils.benchmark.BenchmarkTimer.BenchmarkMultiTimer;
+import org.jlab.utils.benchmark.BenchmarkTimer.BenchmarkTimerTotal;
 
 /**
  *
@@ -14,7 +16,7 @@ import java.util.TimerTask;
 public class Benchmark {
     
     private static final Benchmark benchmarkInstance = new Benchmark();
-    private final Map<String,BenchmarkTimer> timerStore = new LinkedHashMap<>();
+    private final Map<String,BenchmarkMultiTimer> timerStore = new LinkedHashMap<>();
     private Timer updateTimer = null;
     
     private Benchmark() {}
@@ -39,22 +41,35 @@ public class Benchmark {
     
     public void addTimer(String name){
         if (!timerStore.containsKey(name))
-            timerStore.put(name, new BenchmarkTimer(name));
+            timerStore.put(name, new BenchmarkMultiTimer(name));
         else
             System.err.println("[Benchmark] -----> error. timer with name ("+ name + ") already exists");
     }
     
     public void pause(String name){
         if (!timerStore.containsKey(name))
-            timerStore.put(name, new BenchmarkTimer(name));
+            timerStore.put(name, new BenchmarkMultiTimer(name));
         else
             timerStore.get(name).pause();
     }
     
     public void resume(String name){
         if (!timerStore.containsKey(name))
-            timerStore.put(name, new BenchmarkTimer(name));
+            timerStore.put(name, new BenchmarkMultiTimer(name));
         timerStore.get(name).resume();
+    }
+    
+    public void pause(int thread, String name){
+        if (!timerStore.containsKey(name))
+            timerStore.put(name, new BenchmarkMultiTimer(name));
+        else
+            timerStore.get(name).pause(thread);
+    }
+    
+    public void resume(int thread, String name){
+        if (!timerStore.containsKey(name))
+            timerStore.put(name, new BenchmarkMultiTimer(name));
+        timerStore.get(name).resume(thread);
     }
     
     public BenchmarkTimer getTimer(String name){
@@ -71,7 +86,7 @@ public class Benchmark {
     @Override
     public String toString(){
         StringBuilder s = new StringBuilder();
-        Collection<BenchmarkTimer> timers = timerStore.values();
+        Collection<BenchmarkMultiTimer> timers = timerStore.values();
         if (!timers.isEmpty()) {
             int len = timers.iterator().next().toString().length();
             char[] asterix = new char[len+8];
