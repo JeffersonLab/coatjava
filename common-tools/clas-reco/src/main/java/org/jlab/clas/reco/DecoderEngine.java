@@ -4,14 +4,13 @@ import java.util.Set;
 import java.util.HashSet;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
 import org.jlab.clara.base.ClaraUtil;
 import org.jlab.clara.engine.Engine;
 import org.jlab.clara.engine.EngineData;
 import org.jlab.clara.engine.EngineDataType;
 import org.jlab.clara.engine.EngineStatus;
 import org.jlab.detector.decode.CLASDecoder;
+import org.jlab.detector.decode.CLASDecoderPool;
 import org.jlab.io.evio.EvioDataEvent;
 import org.jlab.io.hipo.HipoDataEvent;
 import org.jlab.jnp.hipo4.data.SchemaFactory;
@@ -28,8 +27,7 @@ public class DecoderEngine implements Engine {
         Clas12Types.EVIO,Clas12Types.HIPO,EngineDataType.JSON,EngineDataType.STRING);
 
     SchemaFactory schema;
-    BlockingQueue<CLASDecoder> pool;
-    int constantsShared = 64;
+    CLASDecoderPool pool;
 
     public DecoderEngine() {
         schema = new SchemaFactory();
@@ -58,21 +56,9 @@ public class DecoderEngine implements Engine {
     @Override
     public EngineData configure(EngineData ed) {
         JSONObject json = new JSONObject(ed.getData());
-        pool = new ArrayBlockingQueue<>(POOL_SIZE);
-        CLASDecoder d0 = null;
-        for (int i=0; i<POOL_SIZE; i++) {
-            CLASDecoder d;
-            if (i % constantsShared == 0) {
-                d0 = new CLASDecoder();
-                if (json.has("variation")) d0.setVariation(json.getString("variation"));
-                if (json.has("timestamp")) d0.setVariation(json.getString("timestamp"));
-                d = d0;
-            }
-            else {
-                d = new CLASDecoder(d0);
-            }
-            pool.add(d);
-        }
+        pool = new CLASDecoderPool(POOL_SIZE,
+                json.optString("variation","default"),
+                json.optString("timestamp",null));
         return ed;
     }
 
