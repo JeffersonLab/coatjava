@@ -63,7 +63,7 @@ public class EngineProcessor {
         return null;
     }
 
-    protected void parseYaml(String filename) {
+    public void parseYaml(String filename) {
         ClaraYaml yaml = new ClaraYaml(filename);
         if (yaml.schemaDirectory() != null) {
             setBanksToKeep(yaml.schemaDirectory());
@@ -78,7 +78,7 @@ public class EngineProcessor {
         }
     }
 
-    protected void setBackgroundFiles(String filenames) {
+    private void setBackgroundFiles(String filenames) {
         if (findEngine(ENGINE_CLASS_BG) == null) {
             LOGGER.info("Adding BackgroundEngine for -B option.");
             addEngine("BG",ENGINE_CLASS_BG);
@@ -408,13 +408,7 @@ public class EngineProcessor {
         }
     }
 
-    protected final void init(int config) {
-        if (config > 2) initCaloDebug();
-        else if(config == 2) initAll();
-        else initDefault();
-    }
-
-    protected static OptionParser parser() {
+    protected static OptionParser getParser() {
         OptionParser parser = new OptionParser("recon-util");
         parser.addRequired("-o","output.hipo");
         parser.addRequired("-i","input.evio/hipo");
@@ -428,18 +422,34 @@ public class EngineProcessor {
         parser.addOption("-P",null,"preload file for post-processing");
         parser.addOption("-R","0","rebuild scalers");
         parser.addOption("-H","0","restream helicity");
-        parser.setRequiresInputList(false);
         return parser;
     }
 
-    protected final void init(OptionParser parser) {
+    public static void main(String[] args){
+
+        OptionParser parser = EngineProcessor.getParser();
+        parser.parse(args);
         parser.syncLogLevel(LOGGER);
         if (parser.getOption("-u").stringValue().contains("false"))
             updateDictionary = false;
 
-        // read services and schema from YAML:
-        if (!parser.getOption("-y").stringValue().equals("0")) {
-            parseYaml(parser.getOption("-y").stringValue());
+        List<String> services = parser.getInputList();
+
+        String  inputFile = parser.getOption("-i").stringValue();
+        String outputFile = parser.getOption("-o").stringValue();
+
+        EngineProcessor proc = new EngineProcessor();
+
+        int config  = parser.getOption("-c").intValue();
+        int nskip   = parser.getOption("-s").intValue();
+        int nevents = parser.getOption("-n").intValue();
+        String yamlFileName = parser.getOption("-y").stringValue();
+
+        String update = parser.getOption("-u").stringValue();
+        if(update.contains("false")==true) proc.updateDictionary = false;
+
+        if(!yamlFileName.equals("0")) {
+            proc.parseYaml(yamlFileName);
         }
         // builtin configuration:
         else if (parser.getOption("-c").intValue() > 0) {
