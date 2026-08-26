@@ -6,7 +6,6 @@ import org.jlab.io.base.DataEvent;
 import org.jlab.utils.groups.IndexedTable;
 import org.jlab.utils.groups.IndexedTable.IndexedEntry;
 import org.jlab.detector.banks.RawDataBank;
-import org.jlab.detector.banks.RawBank.OrderGroups;
 
 /**
  * Occupancy bookkeeper based on IndexedTable, with I/O helpers for indexed banks.
@@ -40,6 +39,10 @@ public class OccupanceTable {
         table = new IndexedTable(indexCount, new String[]{"occ/F"});
     }
 
+    public String getHitBank() { return hitBank; }
+    public String getOccBank() { return occBank; }
+    public final IndexedTable getTable() { return table; }
+
     /**
      * Zero the occupancy table.
      */
@@ -59,10 +62,6 @@ public class OccupanceTable {
             t.setDoubleValueByHash((table.getDoubleValueByHash(0, hash))/events, 0, hash);
         }
         return t;
-    }
-
-    public final IndexedTable getTable() {
-        return table;
     }
 
     /**
@@ -98,16 +97,6 @@ public class OccupanceTable {
                 else fill(1.0f, idx);
             }
         }
-    }
-
-    /**
-     * Fill occupancy table from the hit bank, unweighted.
-     * @param event
-     */
-    public void fill(DataEvent event) {
-        RawDataBank b = new RawDataBank(hitBank, 1000, OrderGroups.NOMINAL);
-        b.read(event);
-        fill(b, false);
     }
 
     /**

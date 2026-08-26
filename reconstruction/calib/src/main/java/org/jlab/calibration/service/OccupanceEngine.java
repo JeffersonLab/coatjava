@@ -5,6 +5,8 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import org.jlab.io.base.DataEvent;
 import org.jlab.clas.reco.ReconstructionEngine;
+import org.jlab.detector.banks.RawBank.OrderGroups;
+import org.jlab.detector.banks.RawDataBank;
 import org.jlab.detector.calib.utils.OccupanceTable;
 import org.jlab.utils.system.ClasUtilsFile;
 
@@ -22,15 +24,19 @@ public class OccupanceEngine extends ReconstructionEngine {
 
     @Override
     public boolean processDataEventUser(DataEvent event) {
-        for (OccupanceTable t : tables) t.fill(event);
-            if (++events % prescale == 0) {
-                for (OccupanceTable t : tables) {
-                    if (t.getTable().getRowCount() > 0)
-                        event.appendBank(t.create(events, event));
-                    t.reset();
-                }
-                events = 0;
+        for (OccupanceTable t : tables) {
+            RawDataBank b = new RawDataBank(t.getHitBank(), 1000, OrderGroups.NOMINAL);
+            b.read(event);
+            t.fill(b, false);
+        }
+        if (++events % prescale == 0) {
+            for (OccupanceTable t : tables) {
+                if (t.getTable().getRowCount() > 0)
+                    event.appendBank(t.create(events, event));
+                t.reset();
             }
+            events = 0;
+        }
         return true;
     }
 
