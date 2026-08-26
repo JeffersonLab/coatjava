@@ -1,11 +1,17 @@
 package org.jlab.calibration.service;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import org.jlab.io.base.DataEvent;
 import org.jlab.clas.reco.ReconstructionEngine;
 import org.jlab.detector.calib.utils.OccupanceTable;
+import org.jlab.utils.system.ClasUtilsFile;
 
 public class OccupanceEngine extends ReconstructionEngine {
 
+    static final String BANKDIR = ClasUtilsFile.getResourceDir("CLAS12DIR","etc/bankdefs/hipo4/singles/occupancy");
+    
     int events;
     int prescale;
     OccupanceTable[] tables;
@@ -31,34 +37,25 @@ public class OccupanceEngine extends ReconstructionEngine {
     @Override
     public boolean init() {
         prescale = Integer.parseInt(getEngineConfigString("occupancyPrescale","100"));
-        tables = new OccupanceTable[] {
-            new OccupanceTable("DC::tot"),
-            new OccupanceTable("DC::tdc"),
-            new OccupanceTable("ECAL::adc"),
-            new OccupanceTable("ECAL::tdc"),
-            new OccupanceTable("FTOF::adc"),
-            new OccupanceTable("FTOF::tdc"),
-            new OccupanceTable("CTOF::adc"),
-            new OccupanceTable("CTOF::tdc"),
-            new OccupanceTable("HTCC::adc"),
-            new OccupanceTable("HTCC::tdc"),
-            new OccupanceTable("LTCC::adc"),
-            new OccupanceTable("LTCC::tdc"),
-            new OccupanceTable("BST::adc"),
-            new OccupanceTable("BMT::adc"),
-            new OccupanceTable("FTCAL::adc"),
-            new OccupanceTable("FTHODO::adc"),
-            new OccupanceTable("FTTRK::adc"),
-            new OccupanceTable("RICH::tdc"),
-            new OccupanceTable("BAND::adc"),
-            new OccupanceTable("BAND::tdc"),
-        };
+        try  {
+            tables = Files.list(Paths.get(BANKDIR))
+                    .filter(Files::isRegularFile)
+                    .map(p -> p.getFileName().toString())
+                    .map(s -> s.substring(0, s.length()-5))
+                    .map(s -> s.substring(5, s.length()))
+                    .map(OccupanceTable::new)
+                    .toArray(OccupanceTable[]::new);
+        } catch (IOException ex) {
+            System.getLogger(OccupanceEngine.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
+            return false;
+        }
+        
         return true;
     }
 
     @Override
     public void detectorChanged(int runNumber) {
-        for (int i=0; i<tables.length; i++) tables[i].reset();
+        for (OccupanceTable table : tables) table.reset();
         events = 0;
     }
 
