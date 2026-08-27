@@ -3,6 +3,7 @@ package org.jlab.calibration.service;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.jlab.io.base.DataEvent;
 import org.jlab.clas.reco.ReconstructionEngine;
 import org.jlab.detector.banks.RawBank.OrderGroups;
@@ -14,7 +15,7 @@ public class OccupanceEngine extends ReconstructionEngine {
 
     static final String BANKDIR = ClasUtilsFile.getResourceDir("CLAS12DIR","etc/bankdefs/hipo4/singles/occupancy");
     
-    int events;
+    AtomicInteger events;
     int prescale;
     OccupanceTable[] tables;
         
@@ -29,13 +30,14 @@ public class OccupanceEngine extends ReconstructionEngine {
             b.read(event);
             t.fill(b, false);
         }
-        if (++events % prescale == 0) {
+        int n = events.incrementAndGet();
+        if (n % prescale == 0) {
             for (OccupanceTable t : tables) {
                 if (t.getTable().getRowCount() > 0)
-                    event.appendBank(t.create(events, event));
+                    event.appendBank(t.create(n, event));
                 t.reset();
             }
-            events = 0;
+            events.set(0);
         }
         return true;
     }
@@ -62,7 +64,7 @@ public class OccupanceEngine extends ReconstructionEngine {
     @Override
     public void detectorChanged(int runNumber) {
         for (OccupanceTable table : tables) table.reset();
-        events = 0;
+        events.set(0);
     }
 
 }
