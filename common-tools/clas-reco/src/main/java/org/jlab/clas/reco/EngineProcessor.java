@@ -18,11 +18,10 @@ import org.jlab.clara.engine.EngineData;
 import org.jlab.clara.engine.EngineDataType;
 import java.util.Arrays;
 import org.jlab.coda.jevio.EvioException;
-import org.jlab.detector.decode.CLASDecoder4;
+import org.jlab.detector.decode.CLASDecoder;
+import org.jlab.detector.decode.CLASDecoderPool;
 import org.jlab.io.evio.EvioDataEvent;
 import org.jlab.io.evio.EvioSource;
-import org.jlab.io.hipo.HipoDataEvent;
-import org.jlab.jnp.hipo4.data.Event;
 import org.jlab.jnp.hipo4.data.SchemaFactory;
 import org.json.JSONObject;
 import org.jlab.utils.ClaraYaml;
@@ -36,13 +35,13 @@ public class EngineProcessor {
     public static final String ENGINE_CLASS_BG = "org.jlab.service.bg.BackgroundEngine";
     public static final String ENGINE_CLASS_PP = "org.jlab.service.postproc.PostprocEngine";
     
-    private final Map<String,ReconstructionEngine>  processorEngines = new LinkedHashMap<>();
+    protected final Map<String,ReconstructionEngine> processorEngines = new LinkedHashMap<>();
     private static final Logger LOGGER = Logger.getLogger(EngineProcessor.class.getPackage().getName());
     private boolean updateDictionary = true;
     private SchemaFactory banksToKeep = null;
     private final List<String> schemaExempt = Arrays.asList("RUN::config","DC::tdc");
 
-    private CLASDecoder4 decoder = new CLASDecoder4();
+    protected final CLASDecoderPool decoders = new CLASDecoderPool(64,"default",null);
 
     public EngineProcessor(){}
 
@@ -90,7 +89,7 @@ public class EngineProcessor {
         findEngine(ENGINE_CLASS_PP).init();
     }
 
-    private void updateDictionary(HipoDataSource source, HipoDataSync sync){
+    protected void updateDictionary(HipoDataSource source, HipoDataSync sync){
         SchemaFactory fsync = sync.getWriter().getSchemaFactory();
         SchemaFactory fsrc  = source.getReader().getSchemaFactory();
         List<String> schemaList = fsync.getSchemaKeys();
@@ -338,9 +337,13 @@ public class EngineProcessor {
                 ByteBuffer bb = reader.getEventBuffer(eventsRead, true);
                 if (skipEvents <= 0 || eventsRead > skipEvents) {
                     EvioDataEvent evio = new EvioDataEvent(bb.array(), ByteOrder.LITTLE_ENDIAN);
-                    Event hipo = decoder.getDecodedEvent(evio, -1, eventsRead, null, null);
-                    HipoDataEvent hipo2 = new HipoDataEvent(hipo, decoder.getSchemaFactory());
-                    processEvent(hipo2, writer);
+                    try {
+                        CLASDecoder d = decoders.take();
+                        processEvent(d.getDecodedDataEvenet(evio), writer);
+                        decoders.put(d);
+                    } catch (InterruptedException ex) {
+                        System.getLogger(EngineProcessor.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
+                    }
                 }
                 if (maxEvents > 0 && eventsRead > maxEvents+skipEvents) break;
             } catch (EvioException ex) {
