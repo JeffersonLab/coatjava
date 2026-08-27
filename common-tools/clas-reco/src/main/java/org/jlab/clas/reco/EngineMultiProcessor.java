@@ -82,34 +82,22 @@ public class EngineMultiProcessor extends EngineProcessor {
                 // read the next event:
                 else {
                     Benchmark.getInstance().resume("read");
-                    readEvents++;
                     Object o = null;
                     if (reader instanceof EvioSource evio) {
-                        try { o = evio.getEventBuffer(readEvents, true); }
+                        try { o = evio.getEventBuffer(readEvents+1, true); }
                         catch (EvioException ex) { ex.printStackTrace(); }
                     }
                     else o = reader.getNextEvent();
                     if (skipEvents < 1 || readEvents > skipEvents)
-                        if (o != null) readQueue.offer(o);
+                        if (o != null) {
+                            readQueue.offer(o);
+                            readEvents++;
+                        }
                     Benchmark.getInstance().pause("read");
                 }
             }
             else if (inputs.isEmpty()) break;
-            else {
-                // open a new input file:
-                if (inputs.get(0).endsWith(".hipo")) reader = new HipoDataSource();
-                else reader = new EvioSource();
-                reader.open(inputs.remove(0));
-                maxEvents = maxEventsUser;
-                if (reader instanceof HipoDataSource hipo)
-                    updateDictionary(hipo, writer);
-                else {
-                    // override maxEvents for EVIO:
-                    int n = ((EvioSource)reader).getEventCount();
-                    maxEvents = maxEventsUser < n ? maxEventsUser : n;
-                }
-                readEvents = 0;
-            }
+            else open();
         }
     }
 
@@ -122,7 +110,7 @@ public class EngineMultiProcessor extends EngineProcessor {
             Object o = readQueue.poll();
             if (o == null) {
                 if (readerThread.isDone() && readQueue.isEmpty())
-                    break;
+                    if (writeEvents >= readEvents) break;
                 sleep(100);
             }
             else {
@@ -154,10 +142,7 @@ public class EngineMultiProcessor extends EngineProcessor {
             DataEvent e = writeQueue.poll();
             if (e == null) {
                 if (procThreads.isEmpty() && writeQueue.isEmpty()) {
-                    writer.close();
-                    System.out.println(Benchmark.getInstance());
-                    System.out.println(String.format("recon-mutil:::::  Read/Write/Diff = %d/%d/%d",
-                            readEvents, writeEvents, readEvents-writeEvents));
+                    close();
                     break;
                 }
                 sleep(100);
@@ -166,7 +151,6 @@ public class EngineMultiProcessor extends EngineProcessor {
                 Benchmark.getInstance().resume("write");
                 writer.writeEvent(e);
                 if (writeEvents > 100) progress.updateStatus();
-                if (writeEvents == 101) Benchmark.getInstance().printTimer(10);
                 writeEvents++;
                 Benchmark.getInstance().pause("write");
             }
@@ -194,6 +178,28 @@ public class EngineMultiProcessor extends EngineProcessor {
         return hipo;
     }
     
+    void open() {
+        if (inputs.get(0).endsWith(".hipo")) reader = new HipoDataSource();
+        else reader = new EvioSource();
+        reader.open(inputs.remove(0));
+        maxEvents = maxEventsUser;
+        if (reader instanceof HipoDataSource hipo) {
+            updateDictionary(hipo, writer);
+        } else {
+            int n = ((EvioSource)reader).getEventCount();
+            maxEvents = maxEventsUser < n ? maxEventsUser : n;
+        }
+        readEvents = 0;
+        writeEvents = 0;
+    }
+
+    void close() {
+        writer.close();
+        System.out.println(Benchmark.getInstance());
+        System.out.println(String.format("recon-mutil:::::  Read/Write/Diff = %d/%d/%d",
+                readEvents, writeEvents, readEvents-writeEvents));
+    }
+
     void sleep(int milliseconds) {
         try { Thread.sleep(milliseconds); }
         catch (InterruptedException ex) {}
