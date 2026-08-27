@@ -55,7 +55,7 @@ public class EngineMultiProcessor extends EngineProcessor {
      * @param output
      * @param input 
      */
-    public void process(String output, String... input) {
+    public void launch(String output, String... input) {
         readerThread = CompletableFuture.runAsync(() -> { read(input); });
         writerThread = CompletableFuture.runAsync(() -> { write(output); });
         for (int i=0; i<threads; i++) {
@@ -88,11 +88,12 @@ public class EngineMultiProcessor extends EngineProcessor {
                         catch (EvioException ex) { ex.printStackTrace(); }
                     }
                     else o = reader.getNextEvent();
-                    if (skipEvents < 1 || readEvents > skipEvents)
+                    if (skipEvents < 1 || readEvents > skipEvents) {
                         if (o != null) {
                             readQueue.offer(o);
                             readEvents++;
                         }
+                    }
                     Benchmark.getInstance().pause("read");
                 }
             }
@@ -210,6 +211,6 @@ public class EngineMultiProcessor extends EngineProcessor {
         parser.addOption("-t","4","number of threads");
         parser.parse(args);
         EngineMultiProcessor proc = new EngineMultiProcessor(parser);
-        proc.process(parser.getOption("-o").stringValue(), parser.getOption("-i").stringValue());
+        proc.launch(parser.getOption("-o").stringValue(), parser.getOption("-i").stringValue());
     }
 }
