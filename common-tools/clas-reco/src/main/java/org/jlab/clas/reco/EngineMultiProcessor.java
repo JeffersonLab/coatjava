@@ -30,7 +30,6 @@ public class EngineMultiProcessor extends EngineProcessor {
     HipoDataSync writer;
     CompletableFuture readerThread;
     CompletableFuture writerThread;
-    
     ArrayList<String> inputs = new ArrayList<>();
     ProgressPrintout progress = new ProgressPrintout();
     ConcurrentLinkedQueue<CompletableFuture> procThreads = new ConcurrentLinkedQueue();
@@ -120,13 +119,13 @@ public class EngineMultiProcessor extends EngineProcessor {
      */
     void process(int thread) {
         while (true) {
-            if (readQueue.isEmpty()) {
+            Object o = readQueue.poll();
+            if (o == null) {
                 if (readerThread.isDone() && readQueue.isEmpty())
                     break;
                 sleep(100);
             }
             else {
-                Object o = readQueue.poll();
                 DataEvent event;
                 // decode if necessary:
                 if (o instanceof ByteBuffer bb) event = decode(bb);
@@ -152,7 +151,8 @@ public class EngineMultiProcessor extends EngineProcessor {
         writer.setCompressionType(2);
         writer.open(output);
         while (true) {
-            if (writeQueue.isEmpty()) {
+            DataEvent e = writeQueue.poll();
+            if (e == null) {
                 if (procThreads.isEmpty() && writeQueue.isEmpty()) {
                     writer.close();
                     System.out.println(Benchmark.getInstance());
@@ -163,7 +163,6 @@ public class EngineMultiProcessor extends EngineProcessor {
                 sleep(100);
             }
             else {
-                DataEvent e = writeQueue.poll();
                 Benchmark.getInstance().resume("write");
                 writer.writeEvent(e);
                 if (writeEvents > 100) progress.updateStatus();
@@ -207,5 +206,4 @@ public class EngineMultiProcessor extends EngineProcessor {
         EngineMultiProcessor proc = new EngineMultiProcessor(parser);
         proc.process(parser.getOption("-o").stringValue(), parser.getOption("-i").stringValue());
     }
-
 }
