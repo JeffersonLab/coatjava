@@ -39,36 +39,26 @@ public class Benchmark {
             bt.reset(); 
     }
     
-    public void addTimer(String name){
+    public synchronized void addTimer(String name){
         if (!timerStore.containsKey(name))
             timerStore.put(name, new BenchmarkMultiTimer(name));
-        else
-            System.err.println("[Benchmark] -----> error. timer with name ("+ name + ") already exists");
     }
     
     public void pause(String name){
-        if (!timerStore.containsKey(name))
-            timerStore.put(name, new BenchmarkMultiTimer(name));
-        else
-            timerStore.get(name).pause();
+        timerStore.get(name).pause();
     }
     
     public void resume(String name){
-        if (!timerStore.containsKey(name))
-            timerStore.put(name, new BenchmarkMultiTimer(name));
+        if (!timerStore.containsKey(name)) addTimer(name);
         timerStore.get(name).resume();
     }
     
     public void pause(int thread, String name){
-        if (!timerStore.containsKey(name))
-            timerStore.put(name, new BenchmarkMultiTimer(name));
-        else
-            timerStore.get(name).pause(thread);
+        timerStore.get(name).pause(thread);
     }
     
     public void resume(int thread, String name){
-        if (!timerStore.containsKey(name))
-            timerStore.put(name, new BenchmarkMultiTimer(name));
+        if (!timerStore.containsKey(name)) addTimer(name);
         timerStore.get(name).resume(thread);
     }
     
