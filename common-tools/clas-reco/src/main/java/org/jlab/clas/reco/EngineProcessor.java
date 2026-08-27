@@ -397,7 +397,6 @@ public class EngineProcessor {
         OptionParser parser = new OptionParser("recon-util");
         parser.addRequired("-o","output.hipo");
         parser.addRequired("-i","input.evio/hipo");
-        parser.setRequiresInputList(false);
         parser.addOption("-c","0","use default configuration [0 - no, 1 - yes/default, 2 - all services] ");
         parser.addOption("-s","-1","number of events to skip");
         parser.addOption("-n","-1","number of events to process");
@@ -408,6 +407,7 @@ public class EngineProcessor {
         parser.addOption("-P",null,"preload file for post-processing");
         parser.addOption("-R","0","rebuild scalers");
         parser.addOption("-H","0","restream helicity");
+        parser.setRequiresInputList(false);
         return parser;
     }
 
