@@ -252,7 +252,8 @@ public class EngineProcessor {
                 }
                 this.processorEngines.put(name == null ? engine.getName() : name, engine);
             } else {
-                LOGGER.log(Level.SEVERE, ">>>> ERROR: class is not a reconstruction engine : {0}", clazz);
+                LOGGER.log( clazz.contains("DecoderEngine") ? Level.INFO : Level.SEVERE,
+                        "Class is not a reconstruction engine : {0}", clazz);
             }
 
         } catch (ClassNotFoundException | InstantiationException | IllegalAccessException ex) {

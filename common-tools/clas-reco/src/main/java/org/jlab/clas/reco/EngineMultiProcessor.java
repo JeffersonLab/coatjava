@@ -18,6 +18,7 @@ import org.jlab.io.hipo.HipoDataSource;
 import org.jlab.io.hipo.HipoDataSync;
 import org.jlab.utils.benchmark.Benchmark;
 import org.jlab.utils.benchmark.ProgressPrintout;
+import org.jlab.utils.options.OptionParser;
 
 /**
  *
@@ -25,33 +26,16 @@ import org.jlab.utils.benchmark.ProgressPrintout;
  */
 public class EngineMultiProcessor extends EngineProcessor {
     
-    public EngineMultiProcessor(int threads) {
-        super();
-        this.threads = threads;
-    }
-    
-    public EngineMultiProcessor(int threads, int events, int skip) {
-        super();
-        this.threads = threads;
-        this.maxEventsUser = events;
-        this.skipEvents = skip;
-    }
-
-    public void process(String output, String... input) {
-        readerThread = CompletableFuture.runAsync(() -> { read(input); });
-        writerThread = CompletableFuture.runAsync(() -> { write(output); });
-        for (int i=0; i<threads; i++) {
-            final int j = i;
-            procThreads.offer(CompletableFuture.runAsync(() -> { process(j); }));
-        }
-        while (!writerThread.isDone())
-            try { Thread.sleep(100); } catch (InterruptedException ex) {}
-    }
-    
     DataSource reader;
     HipoDataSync writer;
     CompletableFuture readerThread;
     CompletableFuture writerThread;
+    
+    ArrayList<String> inputs = new ArrayList<>();
+    ProgressPrintout progress = new ProgressPrintout();
+    ConcurrentLinkedQueue<CompletableFuture> procThreads = new ConcurrentLinkedQueue();
+    ConcurrentLinkedQueue<Object> readQueue = new ConcurrentLinkedQueue<>();
+    ConcurrentLinkedQueue<DataEvent> writeQueue = new ConcurrentLinkedQueue<>();
     
     int threads;
     int maxEvents = 0;
@@ -60,40 +44,60 @@ public class EngineMultiProcessor extends EngineProcessor {
     int readEvents = 0;
     int writeEvents = 0;
     
-    ArrayList<String> inputs = new ArrayList<>();
+    public EngineMultiProcessor(OptionParser parser) {
+        super(parser);
+        threads = parser.getOption("-t").intValue();
+        maxEventsUser = parser.getOption("-n").intValue();
+        skipEvents = parser.getOption("-s").intValue();
+    }
+   
+    /**
+     * The thread launcher.
+     * @param output
+     * @param input 
+     */
+    public void process(String output, String... input) {
+        readerThread = CompletableFuture.runAsync(() -> { read(input); });
+        writerThread = CompletableFuture.runAsync(() -> { write(output); });
+        for (int i=0; i<threads; i++) {
+            final int j = i;
+            procThreads.offer(CompletableFuture.runAsync(() -> { process(j); }));
+        }
+        while (!writerThread.isDone()) {
+            for (CompletableFuture f : procThreads)
+                if (f.isDone()) procThreads.remove(f);
+            sleep(100);
+        }
+    }
     
-    ConcurrentLinkedQueue<CompletableFuture> procThreads = new ConcurrentLinkedQueue();
-    ConcurrentLinkedQueue<ByteBuffer> evioQueue = new ConcurrentLinkedQueue<>();
-    ConcurrentLinkedQueue<DataEvent> hipoQueue = new ConcurrentLinkedQueue<>();
-    ConcurrentLinkedQueue<DataEvent> writeQueue = new ConcurrentLinkedQueue<>();
-    
-    ProgressPrintout progress = new ProgressPrintout();
-    
+    /**
+     * The reader thread.
+     * @param input input filenames 
+     */
     void read(String... input) {
         inputs.addAll(Arrays.asList(input));
         while (maxEvents < 1 || readEvents < maxEvents) {
             if (reader != null && reader.hasEvent()) {
-                if (evioQueue.size()+hipoQueue.size() > 100*threads) {
-                    try { Thread.sleep(100); }
-                    catch (InterruptedException ex) {}
-                }
+                // sleep instead of overfilling the read queue:
+                if (readQueue.size() > 100*threads) sleep(100);
+                // read the next event:
                 else {
                     Benchmark.getInstance().resume("read");
                     readEvents++;
+                    Object o = null;
                     if (reader instanceof EvioSource evio) {
-                        try { evioQueue.offer(evio.getEventBuffer(readEvents, true)); }
+                        try { o = evio.getEventBuffer(readEvents, true); }
                         catch (EvioException ex) { ex.printStackTrace(); }
                     }
-                    else {
-                        DataEvent event = reader.getNextEvent();
-                        if (skipEvents < 1 || readEvents > skipEvents)
-                            hipoQueue.offer(event);
-                    }
+                    else o = reader.getNextEvent();
+                    if (skipEvents < 1 || readEvents > skipEvents)
+                        if (o != null) readQueue.offer(o);
                     Benchmark.getInstance().pause("read");
                 }
             }
             else if (inputs.isEmpty()) break;
             else {
+                // open a new input file:
                 if (inputs.get(0).endsWith(".hipo")) reader = new HipoDataSource();
                 else reader = new EvioSource();
                 reader.open(inputs.remove(0));
@@ -101,6 +105,7 @@ public class EngineMultiProcessor extends EngineProcessor {
                 if (reader instanceof HipoDataSource hipo)
                     updateDictionary(hipo, writer);
                 else {
+                    // override maxEvents for EVIO:
                     int n = ((EvioSource)reader).getEventCount();
                     maxEvents = maxEventsUser < n ? maxEventsUser : n;
                 }
@@ -108,86 +113,99 @@ public class EngineMultiProcessor extends EngineProcessor {
             }
         }
     }
-    
-    EvioDataEvent process(ByteBuffer bytes) {
-        Benchmark.getInstance().resume("EVIO");
-        EvioDataEvent e = new EvioDataEvent(bytes.array(), ByteOrder.LITTLE_ENDIAN);
-        Benchmark.getInstance().pause("EVIO");
-        return e;
-    }
-    
-    HipoDataEvent process(EvioDataEvent event) {
-        Benchmark.getInstance().resume("DECO");
-        HipoDataEvent e;
-        try {
-            CLASDecoder d = decoders.take();
-            e = d.getDecodedDataEvenet(event);
-            decoders.put(d);
-        }
-        catch (InterruptedException ex) { e = null; }
-        Benchmark.getInstance().pause("DECO");
-        return e;
-    }
-    
-    void process(HipoDataEvent event) {
-        for (Map.Entry<String,ReconstructionEngine> engine : processorEngines.entrySet()) {
-            Benchmark.getInstance().resume(engine.getValue().getName());
-            try { engine.getValue().processDataEvent(event); }
-            catch (Exception ex) { ex.printStackTrace(); }
-            Benchmark.getInstance().pause(engine.getValue().getName());
-        }
-    }
-    
+
+    /**
+     * The event processor thread.
+     * @param thread unique thread number 
+     */
     void process(int thread) {
         while (true) {
-            if (evioQueue.isEmpty() && hipoQueue.isEmpty()) {
-                if (readerThread.isDone())
-                    if (evioQueue.isEmpty() && hipoQueue.isEmpty()) break;
-                try { Thread.sleep(100); }
-                catch (InterruptedException ex) {}
+            if (readQueue.isEmpty()) {
+                if (readerThread.isDone() && readQueue.isEmpty())
+                    break;
+                sleep(100);
             }
             else {
+                Object o = readQueue.poll();
                 DataEvent event;
-                if (!evioQueue.isEmpty()) event = process(process(evioQueue.poll()));
-                else if (!hipoQueue.isEmpty()) event = hipoQueue.poll();
-                else continue;
-                process((HipoDataEvent)event);
+                // decode if necessary:
+                if (o instanceof ByteBuffer bb) event = decode(bb);
+                else event = (HipoDataEvent)o;
+                // run it through the engine chain:
+                for (Map.Entry<String,ReconstructionEngine> engine : processorEngines.entrySet()) {
+                    Benchmark.getInstance().resume(engine.getValue().getName());
+                    try { engine.getValue().processDataEvent(event); }
+                    catch (Exception ex) { ex.printStackTrace(); }
+                    Benchmark.getInstance().pause(engine.getValue().getName());
+                }
                 writeQueue.offer(event);
             }
         }
     }
-    
+   
+    /**
+     * The writer thread.
+     * @param output output filename
+     */
     void write(String output) {
         writer = new HipoDataSync();
         writer.setCompressionType(2);
         writer.open(output);
         while (true) {
             if (writeQueue.isEmpty()) {
-                for (CompletableFuture f : procThreads)
-                    if (f.isDone()) procThreads.remove(f);
-                if (procThreads.isEmpty()) {
-                    if (writeQueue.isEmpty()) {
-                        writer.close();
-                        System.out.println(Benchmark.getInstance());
-                        System.out.println(String.format("recon-mutil:::::  Read/Write/Diff = %d/%d/%d",
-                                readEvents, writeEvents, readEvents-writeEvents));
-                        break;
-                    }
+                if (procThreads.isEmpty() && writeQueue.isEmpty()) {
+                    writer.close();
+                    System.out.println(Benchmark.getInstance());
+                    System.out.println(String.format("recon-mutil:::::  Read/Write/Diff = %d/%d/%d",
+                            readEvents, writeEvents, readEvents-writeEvents));
+                    break;
                 }
-                try { Thread.sleep(100); }
-                catch (InterruptedException ex) {}
+                sleep(100);
             }
-            else write(writeQueue.poll());
+            else {
+                DataEvent e = writeQueue.poll();
+                Benchmark.getInstance().resume("write");
+                writer.writeEvent(e);
+                if (writeEvents > 100) progress.updateStatus();
+                if (writeEvents == 101) Benchmark.getInstance().printTimer(10);
+                writeEvents++;
+                Benchmark.getInstance().pause("write");
+            }
         }
     }
-    
-    void write(DataEvent event) {
-        Benchmark.getInstance().resume("write");
-        writer.writeEvent(writeQueue.poll());
-        if (writeEvents > 100) progress.updateStatus();
-        if (writeEvents == 101) Benchmark.getInstance().printTimer(10);
-        writeEvents++;
-        Benchmark.getInstance().pause("write");
+
+    /**
+     * Decoding.
+     * @param bytes EVIO byte buffer
+     * @return decoded event 
+     */
+    HipoDataEvent decode(ByteBuffer bytes) {
+        Benchmark.getInstance().resume("EVIO");
+        EvioDataEvent evio = new EvioDataEvent(bytes.array(), ByteOrder.LITTLE_ENDIAN);
+        Benchmark.getInstance().pause("EVIO");
+        Benchmark.getInstance().resume("DECO");
+        HipoDataEvent hipo;
+        try {
+            CLASDecoder d = decoders.take();
+            hipo = d.getDecodedDataEvenet(evio);
+            decoders.put(d);
+        }
+        catch (InterruptedException ex) { hipo = null; }
+        Benchmark.getInstance().pause("DECO");
+        return hipo;
     }
     
+    void sleep(int milliseconds) {
+        try { Thread.sleep(milliseconds); }
+        catch (InterruptedException ex) {}
+    }
+
+    public static void main(String[] args) {
+        OptionParser parser = EngineProcessor.getParser();
+        parser.addOption("-t","4","number of threads");
+        parser.parse(args);
+        EngineMultiProcessor proc = new EngineMultiProcessor(parser);
+        proc.process(parser.getOption("-o").stringValue(), parser.getOption("-i").stringValue());
+    }
+
 }
