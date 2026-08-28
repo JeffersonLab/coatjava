@@ -33,13 +33,6 @@ import org.json.JSONObject;
  */
 public class Clas12Writer extends HipoToHipoWriter {
 
-    public static class Poster {
-        TreeMap<Integer,Integer> eventUnix;
-        TreeSet<HelicityState> helicities;
-        DaqScalersSequence scalers;
-        void process(Event e) {}
-    }
-    
     static final String[] TAG1BANKS = {"RUN::scaler","HEL::scaler","RAW::scaler","RAW::epics","HEL::flip","COAT::config"};
 
     Bank[] tag1banks;
