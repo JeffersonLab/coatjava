@@ -138,6 +138,7 @@ public class Uber {
             super("HB","uber","1.0");
             add(new DCDenoiseEngine(),
                 new DCHBClustering(),
+                new DCClsComboEngine(),
                 new DCHBPostClusterConv(),
                 new DCHBTrackingAI("AI"),
                 new BANDEngine(),
