@@ -78,7 +78,7 @@ public class EngineMultiProcessor extends EngineProcessor {
         while (maxEvents < 1 || readEvents < maxEvents) {
             if (reader != null && reader.hasEvent()) {
                 // sleep instead of overfilling the read queue:
-                if (readQueue.size() > 100*threads) sleep(100);
+                if (readQueue.size() > 1000*threads) sleep(100);
                 // read the next event:
                 else {
                     Benchmark.getInstance().resume("read");
