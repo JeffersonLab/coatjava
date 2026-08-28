@@ -2,8 +2,8 @@ package org.jlab.clas.reco;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -30,7 +30,6 @@ public class EngineMultiProcessor extends EngineProcessor {
     HipoDataSync writer;
     CompletableFuture readerThread;
     CompletableFuture writerThread;
-    ArrayList<String> inputs = new ArrayList<>();
     ProgressPrintout progress = new ProgressPrintout();
     ConcurrentLinkedQueue<CompletableFuture> procThreads = new ConcurrentLinkedQueue();
     ConcurrentLinkedQueue<Object> readQueue = new ConcurrentLinkedQueue<>();
@@ -74,11 +73,17 @@ public class EngineMultiProcessor extends EngineProcessor {
      * @param input input filenames 
      */
     void read(String... input) {
-        inputs.addAll(Arrays.asList(input));
+
+        // store the input filenames:
+        List<String> inputs = Arrays.asList(input);
+
         while (maxEvents < 1 || readEvents < maxEvents) {
+
             if (reader != null && reader.hasEvent()) {
+
                 // sleep instead of overfilling the read queue:
                 if (readQueue.size() > 1000*threads) sleep(100);
+
                 // read the next event:
                 else {
                     Benchmark.getInstance().resume("read");
@@ -88,17 +93,20 @@ public class EngineMultiProcessor extends EngineProcessor {
                         catch (EvioException ex) { ex.printStackTrace(); }
                     }
                     else o = reader.getNextEvent();
-                    if (skipEvents < 1 || readEvents > skipEvents) {
-                        if (o != null) {
+                    if (o != null) {
+                        readEvents++;
+                        if (skipEvents < 1 || readEvents > skipEvents)
                             readQueue.offer(o);
-                            readEvents++;
-                        }
                     }
                     Benchmark.getInstance().pause("read");
                 }
             }
+
+            // we're done if there's no more input files:
             else if (inputs.isEmpty()) break;
-            else open();
+
+            // open the next input file:
+            else open(inputs.removeFirst());
         }
     }
 
@@ -179,10 +187,9 @@ public class EngineMultiProcessor extends EngineProcessor {
         return hipo;
     }
     
-    void open() {
-        if (inputs.get(0).endsWith(".hipo")) reader = new HipoDataSource();
-        else reader = new EvioSource();
-        reader.open(inputs.remove(0));
+    void open(String filename) {
+        reader = filename.endsWith(".hipo") ? new HipoDataSource() : new EvioSource();
+        reader.open(filename);
         maxEvents = maxEventsUser;
         if (reader instanceof HipoDataSource hipo) {
             updateDictionary(hipo, writer);
