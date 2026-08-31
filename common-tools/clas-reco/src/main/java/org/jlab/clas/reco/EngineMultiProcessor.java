@@ -2,6 +2,7 @@ package org.jlab.clas.reco;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -75,7 +76,8 @@ public class EngineMultiProcessor extends EngineProcessor {
     void read(String... input) {
 
         // store the input filenames:
-        List<String> inputs = Arrays.asList(input);
+        List<String> inputs = new ArrayList<>();
+        inputs.addAll(Arrays.asList(input));
 
         while (maxEvents < 1 || readEvents < maxEvents) {
 
