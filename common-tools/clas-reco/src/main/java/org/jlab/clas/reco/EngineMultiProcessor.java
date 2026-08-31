@@ -45,7 +45,6 @@ public class EngineMultiProcessor extends EngineProcessor {
     int writeEvents;
     int fileEvents;
     int maxFileEvents;
-
     int maxEventsUser = 0;
     int skipEvents = 0;
     
@@ -97,7 +96,7 @@ public class EngineMultiProcessor extends EngineProcessor {
 
         while (maxEventsUser < 1 || readEvents < maxEventsUser) {
                 
-            if (maxFileEvents > 0 && fileEvents > maxFileEvents) break;
+            if (maxFileEvents > 0 && fileEvents >= maxFileEvents) break;
 
             if (reader != null && reader.hasEvent()) {
 
