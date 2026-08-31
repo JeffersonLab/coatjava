@@ -124,6 +124,7 @@ public class EngineMultiProcessor extends EngineProcessor {
             else open(inputs.removeFirst());
         }
         if (!frame.isEmpty()) readQueue.offer(frame);
+        reader.close();
     }
 
     /**
