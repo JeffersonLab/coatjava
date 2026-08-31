@@ -169,12 +169,7 @@ public class TracksFromTargetRec {
             for(Seed s : ovlrm) {
                 s.setId(s.getId()*-1);
             }
-        }
-        
-        // To match with d0 defition in tracking
-        for(Seed s : seeds) { 
-            s.getHelix().setDCA(-s.getHelix().getDCA());
-        }
+        }        
         
         this.CVTseeds = seeds;
         // Got seeds;
