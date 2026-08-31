@@ -76,8 +76,8 @@ public class EngineMultiProcessor extends EngineProcessor {
                 if (f.isDone()) procThreads.remove(f);
             sleep(100);
             if (readerThread.isDone()) {
-                System.err.println(readQueue.size()+"/"+writeQueue.size()+"/"+procThreads.size()+"/"+writerThread.isDone());
-                System.err.println(writeEvents+"/"+skipEvents+"/"+failEvents+" "+readEvents);
+                System.err.println(readQueue.size()+","+writeQueue.size()+","+procThreads.size()+","+writerThread.isDone());
+                System.err.println(writeEvents+"/"+skipEvents+"/"+failEvents+"/"+readEvents);
             }
         }
     }
