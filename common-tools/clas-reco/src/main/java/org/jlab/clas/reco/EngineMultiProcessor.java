@@ -140,8 +140,10 @@ public class EngineMultiProcessor extends EngineProcessor {
         while (true) {
             List<Object> o = readQueue.poll();
             if (o == null) {
-                if (readerThread.isDone() && readQueue.isEmpty())
+                if (readerThread.isDone() && readQueue.isEmpty()) {
+                    System.err.println(writeEvents+"/"+skipEvents+"/"+failEvents+" "+readEvents);
                     if (writeEvents+skipEvents+failEvents >= readEvents) break;
+                }
                 sleep(100);
             }
             else {
