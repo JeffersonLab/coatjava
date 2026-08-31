@@ -33,7 +33,7 @@ public class EngineMultiProcessor extends EngineProcessor {
     HipoDataSync writer;
     CompletableFuture readerThread;
     CompletableFuture writerThread;
-    ProgressPrintout progress;
+    ProgressPrintout progress = new ProgressPrintout();
     ConcurrentLinkedQueue<CompletableFuture> procThreads = new ConcurrentLinkedQueue();
     ConcurrentLinkedQueue<List<Object>> readQueue = new ConcurrentLinkedQueue<>();
     ConcurrentLinkedQueue<List<DataEvent>> writeQueue = new ConcurrentLinkedQueue<>();
