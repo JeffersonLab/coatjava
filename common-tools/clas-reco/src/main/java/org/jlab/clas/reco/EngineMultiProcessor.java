@@ -26,10 +26,10 @@ import org.jlab.utils.options.OptionParser;
  * @author baltzell
  */
 public class EngineMultiProcessor extends EngineProcessor {
-  
-    static final int READ_QUEUE_SIZE = 100;
-    static final int FRAME_SIZE = 100;
-    
+
+    final int MAX_READ_QUEUE = 100;
+    final int FRAME_SIZE = 100;
+
     DataSource reader;
     HipoDataSync writer;
     CompletableFuture readerThread;
@@ -62,6 +62,9 @@ public class EngineMultiProcessor extends EngineProcessor {
      * @param input 
      */
     public void launch(String output, String... input) {
+        readEvents = 0;
+        writeEvents = 0;
+        failEvents = 0;
         readerThread = CompletableFuture.runAsync(() -> { read(input); });
         writerThread = CompletableFuture.runAsync(() -> { write(output); });
         for (int i=0; i<threads; i++) {
@@ -72,6 +75,10 @@ public class EngineMultiProcessor extends EngineProcessor {
             for (CompletableFuture f : procThreads)
                 if (f.isDone()) procThreads.remove(f);
             sleep(100);
+            if (readerThread.isDone()) {
+                System.err.println(readQueue.size()+"/"+writeQueue.size()+"/"+procThreads.size()+"/"+writerThread.isDone());
+                System.err.println(writeEvents+"/"+skipEvents+"/"+failEvents+" "+readEvents);
+            }
         }
     }
     
@@ -92,30 +99,10 @@ public class EngineMultiProcessor extends EngineProcessor {
             if (reader != null && reader.hasEvent()) {
 
                 // sleep instead of overfilling the read queue:
-                if (readQueue.size() > READ_QUEUE_SIZE*threads) sleep(100);
+                if (readQueue.size() > MAX_READ_QUEUE*threads) sleep(100);
 
                 // read the next event:
-                else {
-                    Benchmark.getInstance().resume("read");
-                    Object o = null;
-                    if (reader instanceof EvioSource evio) {
-                        try { o = evio.getEventBuffer(++evioEvents, true); }
-                        catch (EvioException ex) {
-                            failEvents++;
-                            ex.printStackTrace();
-                        }
-                    }
-                    else o = reader.getNextEvent();
-                    if (o != null && (skipEvents < 1 || readEvents > skipEvents)) {
-                        frame.add(o);
-                        if (frame.size() >= FRAME_SIZE) {
-                            readQueue.offer(frame);
-                            readEvents += frame.size();
-                            frame = new ArrayList<>(FRAME_SIZE);
-                        }
-                    }
-                    Benchmark.getInstance().pause("read");
-                }
+                else frame = read(frame);
             }
 
             // we're done if there's no more input files:
@@ -124,7 +111,10 @@ public class EngineMultiProcessor extends EngineProcessor {
             // open the next input file:
             else open(inputs.removeFirst());
         }
+
+        // leftover, partial frame:
         if (!frame.isEmpty()) {
+            System.err.println("writing partial frame: "+frame.size());
             readQueue.offer(frame);
             readEvents += frame.size();
         }
@@ -141,7 +131,6 @@ public class EngineMultiProcessor extends EngineProcessor {
             List<Object> o = readQueue.poll();
             if (o == null) {
                 if (readerThread.isDone() && readQueue.isEmpty()) {
-                    System.err.println(writeEvents+"/"+skipEvents+"/"+failEvents+" "+readEvents);
                     if (writeEvents+skipEvents+failEvents >= readEvents) break;
                 }
                 sleep(100);
@@ -219,8 +208,42 @@ public class EngineMultiProcessor extends EngineProcessor {
         Benchmark.getInstance().pause("DECO");
         return hipo;
     }
-    
+   
+    /**
+     * Read the next event, add it to the frame, and, if the frame is full,
+     * add the frame to the read queue and return a new, empty frame. 
+     * @frame the frame to fill
+     * @return the modified frame, or a new one if the frame was full
+     */
+    List<Object> read(List<Object> frame) {
+        Benchmark.getInstance().resume("read");
+        Object o = null;
+        if (reader instanceof EvioSource evio) {
+            try { o = evio.getEventBuffer(++evioEvents, true); }
+            catch (EvioException ex) {
+                failEvents++;
+                ex.printStackTrace();
+            }
+        }
+        else o = reader.getNextEvent();
+        if (o != null && (skipEvents < 1 || readEvents > skipEvents)) {
+            frame.add(o);
+            if (frame.size() >= FRAME_SIZE) {
+                readQueue.offer(frame);
+                readEvents += frame.size();
+                frame = new ArrayList<>(FRAME_SIZE);
+            }
+        }
+        Benchmark.getInstance().pause("read");
+        return frame;
+    }
+
+    /**
+     * Open the input file and do some initializations.
+     * @param filename 
+     */
     void open(String filename) {
+        evioEvents = 0;
         reader = filename.endsWith(".hipo") ? new HipoDataSource() : new EvioSource();
         reader.open(filename);
         maxEvents = maxEventsUser;
@@ -230,12 +253,11 @@ public class EngineMultiProcessor extends EngineProcessor {
             int n = ((EvioSource)reader).getEventCount();
             maxEvents = maxEventsUser>0 && maxEventsUser < n ? maxEventsUser : n;
         }
-        readEvents = 0;
-        writeEvents = 0;
-        failEvents = 0;
-        evioEvents = 0;
     }
 
+    /**
+     * Close the output file and print performance info.
+     */
     void close() {
         writer.close();
         System.out.println(Benchmark.getInstance());
