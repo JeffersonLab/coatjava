@@ -26,23 +26,26 @@ import org.jlab.utils.options.OptionParser;
  * @author baltzell
  */
 public class EngineMultiProcessor extends EngineProcessor {
+   
+    static final int FRAME_SIZE = 100;
     
     DataSource reader;
     HipoDataSync writer;
     CompletableFuture readerThread;
     CompletableFuture writerThread;
-    ProgressPrintout progress = new ProgressPrintout();
+    ProgressPrintout progress;
     ConcurrentLinkedQueue<CompletableFuture> procThreads = new ConcurrentLinkedQueue();
     ConcurrentLinkedQueue<List<Object>> readQueue = new ConcurrentLinkedQueue<>();
     ConcurrentLinkedQueue<List<DataEvent>> writeQueue = new ConcurrentLinkedQueue<>();
     
     int threads;
-    int maxEvents = 0;
-    int failEvents = 0;
+    int failEvents;
+    int readEvents;
+    int writeEvents;
+    int maxEvents;
+
     int maxEventsUser = 0;
     int skipEvents = 0;
-    int readEvents = 0;
-    int writeEvents = 0;
     
     public EngineMultiProcessor(OptionParser parser) {
         super(parser);
@@ -80,7 +83,7 @@ public class EngineMultiProcessor extends EngineProcessor {
         List<String> inputs = new ArrayList<>(Arrays.asList(input));
 
         // event buffer:
-        List<Object> frame = new ArrayList<>(100);
+        List<Object> frame = new ArrayList<>(FRAME_SIZE);
 
         while (maxEvents < 1 || readEvents < maxEvents) {
 
@@ -107,9 +110,9 @@ public class EngineMultiProcessor extends EngineProcessor {
                     if (o != null) {
                         if (skipEvents < 1 || readEvents > skipEvents) {
                             frame.add(o);
-                            if (frame.size() >= 100) {
+                            if (frame.size() >= FRAME_SIZE) {
                                 readQueue.offer(frame);
-                                frame = new ArrayList<>(100);
+                                frame = new ArrayList<>(FRAME_SIZE);
                             }
                         }
                     }
@@ -226,6 +229,7 @@ public class EngineMultiProcessor extends EngineProcessor {
         }
         readEvents = 0;
         writeEvents = 0;
+        failEvents = 0;
     }
 
     void close() {
