@@ -76,8 +76,7 @@ public class EngineMultiProcessor extends EngineProcessor {
     void read(String... input) {
 
         // store the input filenames:
-        List<String> inputs = new ArrayList<>();
-        inputs.addAll(Arrays.asList(input));
+        List<String> inputs = new ArrayList<>(Arrays.asList(input));
 
         while (maxEvents < 1 || readEvents < maxEvents) {
 
