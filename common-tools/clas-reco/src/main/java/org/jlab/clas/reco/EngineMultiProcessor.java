@@ -222,10 +222,7 @@ public class EngineMultiProcessor extends EngineProcessor {
             updateDictionary(hipo, writer);
         } else {
             int n = ((EvioSource)reader).getEventCount();
-            maxEvents = maxEventsUser < n ? maxEventsUser : n;
-            System.err.println(maxEventsUser);
-            System.err.println(maxEvents);
-            System.exit(1);
+            maxEvents = maxEventsUser>0 && maxEventsUser < n ? maxEventsUser : n;
         }
         readEvents = 0;
         writeEvents = 0;
