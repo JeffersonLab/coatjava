@@ -94,10 +94,7 @@ public class EngineMultiProcessor extends EngineProcessor {
                     Benchmark.getInstance().resume("read");
                     Object o = null;
                     if (reader instanceof EvioSource evio) {
-                        System.err.println("DOGGIES:  "+readEvents);
-                        System.err.println("DOGGIES:  "+readEvents);
-                        System.err.println("DOGGIES:  "+readEvents);
-                        System.err.println("DOGGIES:  "+readEvents);
+                        System.err.println("DOGGIES:  "+readEvents+"/"+maxEvents);
                         try { o = evio.getEventBuffer(++readEvents, true); }
                         catch (EvioException ex) {
                             failEvents++;
