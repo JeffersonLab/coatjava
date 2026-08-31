@@ -87,7 +87,7 @@ public class EngineMultiProcessor extends EngineProcessor {
         // event buffer:
         List<Object> frame = new ArrayList<>(FRAME_SIZE);
 
-        while (maxEvents < 1 || readEvents < maxEvents) {
+        while (maxEvents < 1 || Math.max(readEvents,evioEvents) < maxEvents) {
 
             if (reader != null && reader.hasEvent()) {
 
