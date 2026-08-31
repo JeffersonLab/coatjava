@@ -76,7 +76,8 @@ public class EngineMultiProcessor extends EngineProcessor {
                 if (f.isDone()) procThreads.remove(f);
             sleep(1000);
             if (readerThread.isDone()) {
-                System.err.println(readQueue.size()+","+writeQueue.size()+","+procThreads.size()+","+writerThread.isDone());
+                System.err.println(readQueue.size()+","+writeQueue.size()+","+procThreads.size());
+                System.err.println(readerThread.isDone()+"|"+writerThread.isDone());
                 System.err.println(writeEvents+"/"+skipEvents+"/"+failEvents+"/"+readEvents);
             }
         }
@@ -103,7 +104,7 @@ public class EngineMultiProcessor extends EngineProcessor {
                 // sleep instead of overfilling the read queue:
                 if (readQueue.size() > MAX_READ_QUEUE*threads) sleep(100);
 
-                // read the next event:
+                // read the next event into the frame:
                 else frame = read(frame);
             }
 
