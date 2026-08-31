@@ -40,18 +40,19 @@ public class EngineMultiProcessor extends EngineProcessor {
     ConcurrentLinkedQueue<List<DataEvent>> writeQueue = new ConcurrentLinkedQueue<>();
     
     int threads;
-    int failEvents;
+    int maxEvents;
+    int skipEvents;
+
     int readEvents;
     int writeEvents;
+    int failEvents;
     int fileEvents;
     int maxFileEvents;
-    int maxEventsUser = 0;
-    int skipEvents = 0;
     
     public EngineMultiProcessor(OptionParser parser) {
         super(parser);
         threads = parser.getOption("-t").intValue();
-        maxEventsUser = parser.getOption("-n").intValue();
+        maxEvents = parser.getOption("-n").intValue();
         skipEvents = parser.getOption("-s").intValue();
     }
    
@@ -75,9 +76,10 @@ public class EngineMultiProcessor extends EngineProcessor {
                 if (f.isDone()) procThreads.remove(f);
             sleep(1000);
             if (readerThread.isDone()) {
+                System.err.println("------------------------------------------");
                 System.err.println(readQueue.size()+","+writeQueue.size()+","+procThreads.size());
-                System.err.println(readerThread.isDone()+"|"+writerThread.isDone());
                 System.err.println(writeEvents+"/"+skipEvents+"/"+failEvents+"/"+readEvents);
+                System.err.println(readerThread.isDone()+"|"+writerThread.isDone());
             }
         }
     }
@@ -94,7 +96,7 @@ public class EngineMultiProcessor extends EngineProcessor {
         // event buffer:
         List<Object> frame = new ArrayList<>(FRAME_SIZE);
 
-        while (maxEventsUser < 1 || readEvents < maxEventsUser) {
+        while (maxEvents < 1 || readEvents < maxEvents) {
                 
             if (maxFileEvents > 0 && fileEvents >= maxFileEvents) break;
 
