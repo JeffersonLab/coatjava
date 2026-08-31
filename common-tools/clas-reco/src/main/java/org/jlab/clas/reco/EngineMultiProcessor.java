@@ -43,8 +43,8 @@ public class EngineMultiProcessor extends EngineProcessor {
     int failEvents;
     int readEvents;
     int writeEvents;
-    int maxEvents;
     int fileEvents;
+    int maxFileEvents;
 
     int maxEventsUser = 0;
     int skipEvents = 0;
@@ -96,7 +96,7 @@ public class EngineMultiProcessor extends EngineProcessor {
 
         while (maxEventsUser < 1 || readEvents < maxEventsUser) {
                 
-            if (maxEvents > 0 && fileEvents < maxEvents) break;
+            if (maxFileEvents > 0 && fileEvents > maxFileEvents) break;
 
             if (reader != null && reader.hasEvent()) {
 
@@ -248,10 +248,10 @@ public class EngineMultiProcessor extends EngineProcessor {
         reader = filename.endsWith(".hipo") ? new HipoDataSource() : new EvioSource();
         reader.open(filename);
         if (reader instanceof HipoDataSource hipo) {
-            maxEvents = 0;
+            maxFileEvents = 0;
             updateDictionary(hipo, writer);
         } else {
-            maxEvents = ((EvioSource)reader).getEventCount();
+            maxFileEvents = ((EvioSource)reader).getEventCount();
         }
     }
 
