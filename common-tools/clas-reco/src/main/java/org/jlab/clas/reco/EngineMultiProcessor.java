@@ -38,6 +38,7 @@ public class EngineMultiProcessor extends EngineProcessor {
     
     int threads;
     int maxEvents = 0;
+    int failEvents = 0;
     int maxEventsUser = 0;
     int skipEvents = 0;
     int readEvents = 0;
@@ -93,12 +94,21 @@ public class EngineMultiProcessor extends EngineProcessor {
                     Benchmark.getInstance().resume("read");
                     Object o = null;
                     if (reader instanceof EvioSource evio) {
-                        try { o = evio.getEventBuffer(readEvents+1, true); }
-                        catch (EvioException ex) { ex.printStackTrace(); }
+                        System.err.println("DOGGIES:  "+readEvents);
+                        System.err.println("DOGGIES:  "+readEvents);
+                        System.err.println("DOGGIES:  "+readEvents);
+                        System.err.println("DOGGIES:  "+readEvents);
+                        try { o = evio.getEventBuffer(++readEvents, true); }
+                        catch (EvioException ex) {
+                            failEvents++;
+                            ex.printStackTrace();
+                        }
                     }
-                    else o = reader.getNextEvent();
-                    if (o != null) {
+                    else {
                         readEvents++;
+                        o = reader.getNextEvent();
+                    }
+                    if (o != null) {
                         if (skipEvents < 1 || readEvents > skipEvents) {
                             frame.add(o);
                             if (frame.size() >= 100) {
@@ -130,7 +140,7 @@ public class EngineMultiProcessor extends EngineProcessor {
             List<Object> o = readQueue.poll();
             if (o == null) {
                 if (readerThread.isDone() && readQueue.isEmpty())
-                    if (writeEvents >= readEvents) break;
+                    if (writeEvents+skipEvents+failEvents >= readEvents) break;
                 sleep(100);
             }
             else {
