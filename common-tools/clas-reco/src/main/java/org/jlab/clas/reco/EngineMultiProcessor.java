@@ -33,8 +33,8 @@ public class EngineMultiProcessor extends EngineProcessor {
     CompletableFuture writerThread;
     ProgressPrintout progress = new ProgressPrintout();
     ConcurrentLinkedQueue<CompletableFuture> procThreads = new ConcurrentLinkedQueue();
-    ConcurrentLinkedQueue<Object> readQueue = new ConcurrentLinkedQueue<>();
-    ConcurrentLinkedQueue<DataEvent> writeQueue = new ConcurrentLinkedQueue<>();
+    ConcurrentLinkedQueue<List<Object>> readQueue = new ConcurrentLinkedQueue<>();
+    ConcurrentLinkedQueue<List<DataEvent>> writeQueue = new ConcurrentLinkedQueue<>();
     
     int threads;
     int maxEvents = 0;
@@ -75,15 +75,18 @@ public class EngineMultiProcessor extends EngineProcessor {
      */
     void read(String... input) {
 
-        // store the input filenames:
+        // convert input filenames to a list:
         List<String> inputs = new ArrayList<>(Arrays.asList(input));
+
+        // event buffer:
+        List<Object> frame = new ArrayList<>(100);
 
         while (maxEvents < 1 || readEvents < maxEvents) {
 
             if (reader != null && reader.hasEvent()) {
 
                 // sleep instead of overfilling the read queue:
-                if (readQueue.size() > 1000*threads) sleep(100);
+                if (readQueue.size() > 100*threads) sleep(100);
 
                 // read the next event:
                 else {
@@ -96,8 +99,13 @@ public class EngineMultiProcessor extends EngineProcessor {
                     else o = reader.getNextEvent();
                     if (o != null) {
                         readEvents++;
-                        if (skipEvents < 1 || readEvents > skipEvents)
-                            readQueue.offer(o);
+                        if (skipEvents < 1 || readEvents > skipEvents) {
+                            frame.add(o);
+                            if (frame.size() >= 100) {
+                                readQueue.offer(frame);
+                                frame = new ArrayList<>(100);
+                            }
+                        }
                     }
                     Benchmark.getInstance().pause("read");
                 }
@@ -109,6 +117,7 @@ public class EngineMultiProcessor extends EngineProcessor {
             // open the next input file:
             else open(inputs.removeFirst());
         }
+        if (!frame.isEmpty()) readQueue.offer(frame);
     }
 
     /**
@@ -116,28 +125,36 @@ public class EngineMultiProcessor extends EngineProcessor {
      * @param thread unique thread number 
      */
     void process(int thread) {
+        List<DataEvent> frame = new ArrayList<>(100);
         while (true) {
-            Object o = readQueue.poll();
+            List<Object> o = readQueue.poll();
             if (o == null) {
                 if (readerThread.isDone() && readQueue.isEmpty())
                     if (writeEvents >= readEvents) break;
                 sleep(100);
             }
             else {
-                DataEvent event;
-                // decode if necessary:
-                if (o instanceof ByteBuffer bb) event = decode(bb);
-                else event = (HipoDataEvent)o;
-                // run it through the engine chain:
-                for (Map.Entry<String,ReconstructionEngine> engine : processorEngines.entrySet()) {
-                    Benchmark.getInstance().resume(engine.getValue().getName());
-                    try { engine.getValue().processDataEvent(event); }
-                    catch (Exception ex) { ex.printStackTrace(); }
-                    Benchmark.getInstance().pause(engine.getValue().getName());
+                for (int i=0; i<o.size(); i++) {
+                    DataEvent event;
+                    // decode if necessary:
+                    if (o.get(i) instanceof ByteBuffer bb) event = decode(bb);
+                    else event = (HipoDataEvent)o.get(i);
+                    // run it through the engine chain:
+                    for (Map.Entry<String,ReconstructionEngine> engine : processorEngines.entrySet()) {
+                        Benchmark.getInstance().resume(engine.getValue().getName());
+                        try { engine.getValue().processDataEvent(event); }
+                        catch (Exception ex) { ex.printStackTrace(); }
+                        Benchmark.getInstance().pause(engine.getValue().getName());
+                    }
+                    frame.add(event);
+                    if (frame.size() >= 100) {
+                        writeQueue.offer(frame);
+                        frame = new ArrayList<>(100);
+                    }
                 }
-                writeQueue.offer(event);
             }
         }
+        if (!frame.isEmpty()) writeQueue.offer(frame);
     }
    
     /**
@@ -149,7 +166,7 @@ public class EngineMultiProcessor extends EngineProcessor {
         writer.setCompressionType(2);
         writer.open(output);
         while (true) {
-            DataEvent e = writeQueue.poll();
+            List<DataEvent> e = writeQueue.poll();
             if (e == null) {
                 if (procThreads.isEmpty() && writeQueue.isEmpty()) {
                     close();
@@ -159,9 +176,11 @@ public class EngineMultiProcessor extends EngineProcessor {
             }
             else {
                 Benchmark.getInstance().resume("write");
-                writer.writeEvent(e);
-                if (writeEvents > 100) progress.updateStatus();
-                writeEvents++;
+                for (int i=0; i<e.size(); i++) {
+                    writer.writeEvent(e.get(i));
+                    if (writeEvents > 100) progress.updateStatus();
+                    writeEvents++;
+                }
                 Benchmark.getInstance().pause("write");
             }
         }
