@@ -223,6 +223,9 @@ public class EngineMultiProcessor extends EngineProcessor {
         } else {
             int n = ((EvioSource)reader).getEventCount();
             maxEvents = maxEventsUser < n ? maxEventsUser : n;
+            System.err.println(maxEventsUser);
+            System.err.println(maxEvents);
+            System.exit(1);
         }
         readEvents = 0;
         writeEvents = 0;
