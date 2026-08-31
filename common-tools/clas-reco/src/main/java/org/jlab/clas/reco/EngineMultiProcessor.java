@@ -77,9 +77,8 @@ public class EngineMultiProcessor extends EngineProcessor {
             sleep(1000);
             if (readerThread.isDone()) {
                 System.err.println("------------------------------------------");
-                System.err.println(readQueue.size()+","+writeQueue.size()+","+procThreads.size());
                 System.err.println(writeEvents+"/"+skipEvents+"/"+failEvents+"/"+readEvents);
-                System.err.println(readerThread.isDone()+"|"+writerThread.isDone());
+                System.err.println(readQueue.size()+","+writeQueue.size()+","+procThreads.size());
             }
         }
     }
@@ -133,7 +132,8 @@ public class EngineMultiProcessor extends EngineProcessor {
         while (true) {
             List<Object> o = readQueue.poll();
             if (o == null) {
-                if (readerThread.isDone() && readQueue.isEmpty()) {
+                if (readerThread.isDone()) {
+                    if (readQueue.isEmpty() && !frame.isEmpty()) writeQueue.offer(frame); 
                     if (writeEvents+skipEvents+failEvents >= readEvents) break;
                 }
                 sleep(100);
