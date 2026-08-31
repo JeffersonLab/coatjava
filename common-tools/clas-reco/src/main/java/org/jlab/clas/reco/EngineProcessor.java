@@ -399,8 +399,8 @@ public class EngineProcessor {
         parser.addRequired("-o","output.hipo");
         parser.addRequired("-i","input.evio/hipo");
         parser.addOption("-c","0","use default configuration [0 - no, 1 - yes/default, 2 - all services] ");
-        parser.addOption("-s","-1","number of events to skip");
-        parser.addOption("-n","-1","number of events to process");
+        parser.addOption("-s","0","number of events to skip");
+        parser.addOption("-n","0","number of events to process");
         parser.addOption("-y","0","yaml file");
         parser.addOption("-u","true","update dictionary from writer ? ");
         parser.addOption("-S",null,"schema directory");
