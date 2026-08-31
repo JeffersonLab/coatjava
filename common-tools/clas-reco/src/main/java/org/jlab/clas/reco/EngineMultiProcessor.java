@@ -26,7 +26,8 @@ import org.jlab.utils.options.OptionParser;
  * @author baltzell
  */
 public class EngineMultiProcessor extends EngineProcessor {
-   
+  
+    static final int READ_QUEUE_SIZE = 100;
     static final int FRAME_SIZE = 100;
     
     DataSource reader;
@@ -90,7 +91,7 @@ public class EngineMultiProcessor extends EngineProcessor {
             if (reader != null && reader.hasEvent()) {
 
                 // sleep instead of overfilling the read queue:
-                if (readQueue.size() > 100*threads) sleep(100);
+                if (readQueue.size() > READ_QUEUE_SIZE*threads) sleep(100);
 
                 // read the next event:
                 else {
