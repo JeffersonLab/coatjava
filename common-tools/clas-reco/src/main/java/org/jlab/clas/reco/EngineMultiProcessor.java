@@ -44,6 +44,7 @@ public class EngineMultiProcessor extends EngineProcessor {
     int readEvents;
     int writeEvents;
     int maxEvents;
+    int evioEvents;
 
     int maxEventsUser = 0;
     int skipEvents = 0;
@@ -98,23 +99,19 @@ public class EngineMultiProcessor extends EngineProcessor {
                     Benchmark.getInstance().resume("read");
                     Object o = null;
                     if (reader instanceof EvioSource evio) {
-                        try { o = evio.getEventBuffer(++readEvents, true); }
+                        try { o = evio.getEventBuffer(++evioEvents, true); }
                         catch (EvioException ex) {
                             failEvents++;
                             ex.printStackTrace();
                         }
                     }
-                    else {
-                        readEvents++;
-                        o = reader.getNextEvent();
-                    }
-                    if (o != null) {
-                        if (skipEvents < 1 || readEvents > skipEvents) {
-                            frame.add(o);
-                            if (frame.size() >= FRAME_SIZE) {
-                                readQueue.offer(frame);
-                                frame = new ArrayList<>(FRAME_SIZE);
-                            }
+                    else o = reader.getNextEvent();
+                    if (o != null && (skipEvents < 1 || readEvents > skipEvents)) {
+                        frame.add(o);
+                        if (frame.size() >= FRAME_SIZE) {
+                            readQueue.offer(frame);
+                            readEvents += frame.size();
+                            frame = new ArrayList<>(FRAME_SIZE);
                         }
                     }
                     Benchmark.getInstance().pause("read");
@@ -127,7 +124,10 @@ public class EngineMultiProcessor extends EngineProcessor {
             // open the next input file:
             else open(inputs.removeFirst());
         }
-        if (!frame.isEmpty()) readQueue.offer(frame);
+        if (!frame.isEmpty()) {
+            readQueue.offer(frame);
+            readEvents += frame.size();
+        }
         reader.close();
     }
 
@@ -192,8 +192,8 @@ public class EngineMultiProcessor extends EngineProcessor {
                 for (int i=0; i<e.size(); i++) {
                     writer.writeEvent(e.get(i));
                     progress.updateStatus();
-                    writeEvents++;
                 }
+                writeEvents += e.size();
                 Benchmark.getInstance().pause("write");
             }
         }
@@ -233,6 +233,7 @@ public class EngineMultiProcessor extends EngineProcessor {
         readEvents = 0;
         writeEvents = 0;
         failEvents = 0;
+        evioEvents = 0;
     }
 
     void close() {
