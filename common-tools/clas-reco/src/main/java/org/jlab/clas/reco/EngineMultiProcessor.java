@@ -44,7 +44,7 @@ public class EngineMultiProcessor extends EngineProcessor {
     int readEvents;
     int writeEvents;
     int maxEvents;
-    int evioEvents;
+    int fileEvents;
 
     int maxEventsUser = 0;
     int skipEvents = 0;
@@ -74,7 +74,7 @@ public class EngineMultiProcessor extends EngineProcessor {
         while (!writerThread.isDone()) {
             for (CompletableFuture f : procThreads)
                 if (f.isDone()) procThreads.remove(f);
-            sleep(100);
+            sleep(1000);
             if (readerThread.isDone()) {
                 System.err.println(readQueue.size()+","+writeQueue.size()+","+procThreads.size()+","+writerThread.isDone());
                 System.err.println(writeEvents+"/"+skipEvents+"/"+failEvents+"/"+readEvents);
@@ -94,7 +94,9 @@ public class EngineMultiProcessor extends EngineProcessor {
         // event buffer:
         List<Object> frame = new ArrayList<>(FRAME_SIZE);
 
-        while (maxEvents < 1 || Math.max(readEvents,evioEvents) < maxEvents) {
+        while (maxEventsUser < 1 || readEvents < maxEventsUser) {
+                
+            if (maxEvents > 0 && fileEvents < maxEvents) break;
 
             if (reader != null && reader.hasEvent()) {
 
@@ -105,18 +107,17 @@ public class EngineMultiProcessor extends EngineProcessor {
                 else frame = read(frame);
             }
 
-            // we're done if there's no more input files:
-            else if (inputs.isEmpty()) break;
-
             // open the next input file:
-            else open(inputs.removeFirst());
+            else if (!inputs.isEmpty()) open(inputs.removeFirst());
+        
+            else break;
         }
 
         // leftover, partial frame:
         if (!frame.isEmpty()) {
             System.err.println("writing partial frame: "+frame.size());
-            readQueue.offer(frame);
             readEvents += frame.size();
+            readQueue.offer(frame);
         }
         reader.close();
     }
@@ -219,7 +220,7 @@ public class EngineMultiProcessor extends EngineProcessor {
         Benchmark.getInstance().resume("read");
         Object o = null;
         if (reader instanceof EvioSource evio) {
-            try { o = evio.getEventBuffer(++evioEvents, true); }
+            try { o = evio.getEventBuffer(++fileEvents, true); }
             catch (EvioException ex) {
                 failEvents++;
                 ex.printStackTrace();
@@ -243,15 +244,14 @@ public class EngineMultiProcessor extends EngineProcessor {
      * @param filename 
      */
     void open(String filename) {
-        evioEvents = 0;
+        fileEvents = 0;
         reader = filename.endsWith(".hipo") ? new HipoDataSource() : new EvioSource();
         reader.open(filename);
-        maxEvents = maxEventsUser;
         if (reader instanceof HipoDataSource hipo) {
+            maxEvents = 0;
             updateDictionary(hipo, writer);
         } else {
-            int n = ((EvioSource)reader).getEventCount();
-            maxEvents = maxEventsUser>0 && maxEventsUser < n ? maxEventsUser : n;
+            maxEvents = ((EvioSource)reader).getEventCount();
         }
     }
 
