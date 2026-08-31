@@ -33,7 +33,7 @@ public class EngineMultiProcessor extends EngineProcessor {
     HipoDataSync writer;
     CompletableFuture readerThread;
     CompletableFuture writerThread;
-    ProgressPrintout progress;
+    ProgressPrintout progress = new ProgressPrintout();
     ConcurrentLinkedQueue<CompletableFuture> procThreads = new ConcurrentLinkedQueue();
     ConcurrentLinkedQueue<List<Object>> readQueue = new ConcurrentLinkedQueue<>();
     ConcurrentLinkedQueue<List<DataEvent>> writeQueue = new ConcurrentLinkedQueue<>();
@@ -188,10 +188,7 @@ public class EngineMultiProcessor extends EngineProcessor {
                 Benchmark.getInstance().resume("write");
                 for (int i=0; i<e.size(); i++) {
                     writer.writeEvent(e.get(i));
-                    if (writeEvents > 100) {
-                        if (progress == null) progress = new ProgressPrintout();
-                        progress.updateStatus();
-                    }
+                    progress.updateStatus();
                     writeEvents++;
                 }
                 Benchmark.getInstance().pause("write");
