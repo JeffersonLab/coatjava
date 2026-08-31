@@ -20,8 +20,8 @@ services:
     name: FTEB
   - class: org.jlab.service.raster.RasterEngine
     name: RASTER
-#  - class: org.jlab.service.ai.DCDenoiseEngine
-#    name: DCDN    
+  - class: org.jlab.service.ai.DCDenoiseEngine
+    name: DCDN    
   - class: org.jlab.service.dc.DCHBClustering
     name: DCCR
   - class: org.jlab.service.ai.DCClsComboEngine
@@ -89,6 +89,8 @@ configuration:
     MAGFIELDS:
       magfieldSolenoidMap: Symm_solenoid_r601_phi1_z1201_13June2018.dat
       magfieldTorusMap: Full_torus_r251_phi181_z251_25Jan2021.dat
+    DCCR:
+      rawBankGroup: "NODENOISE"
     DCHTAI:
       outputBankPrefix: "AI"
     DCTAI:
