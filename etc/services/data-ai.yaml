@@ -20,15 +20,18 @@ services:
     name: FTEB
   - class: org.jlab.service.raster.RasterEngine
     name: RASTER
+# DC denoising    
+  - class: org.jlab.service.ai.DCDenoiseEngine
+    name: DCDN    
 # DC clustering: nominal algoritm, filled the cluster bank for ai and conventional tracking
   - class: org.jlab.service.dc.DCHBClustering
     name: DCCR
 # This is where the AI plugin would go.  THe AI code reads the HB clusters.  
-  - class: org.jlab.service.mltn.MLTDEngine
-    name: MLTD
+  - class: org.jlab.service.ai.DCClsComboEngine
+    name: DCCC
 # DC using clustering on AI hits: NN assisted HB tracking
-  - class: org.jlab.service.dc.DCHBPostClusterAI
-    name: DCHAI
+  - class: org.jlab.service.dc.DCHBTrackingAI
+    name: DCHTAI
   - class: org.jlab.service.ftof.FTOFHBEngine
     name: FTOFHB
   - class: org.jlab.service.ec.ECEngine
@@ -79,9 +82,7 @@ configuration:
     MAGFIELDS:
       magfieldSolenoidMap: Symm_solenoid_r601_phi1_z1201_13June2018.dat
       magfieldTorusMap: Full_torus_r251_phi181_z251_25Jan2021.dat
-    MLTD:
-      run: "6302"
-    DCHAI:
+    DCHTAI:
       outputBankPrefix: "HB"
       
 mime-types:
