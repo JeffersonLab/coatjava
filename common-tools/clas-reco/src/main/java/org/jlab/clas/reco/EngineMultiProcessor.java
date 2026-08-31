@@ -133,7 +133,10 @@ public class EngineMultiProcessor extends EngineProcessor {
             List<Object> o = readQueue.poll();
             if (o == null) {
                 if (readerThread.isDone()) {
-                    if (readQueue.isEmpty() && !frame.isEmpty()) writeQueue.offer(frame); 
+                    if (readQueue.isEmpty() && !frame.isEmpty()) {
+                        writeQueue.offer(frame);
+                        frame = new ArrayList<>(FRAME_SIZE);
+                    } 
                     if (writeEvents+skipEvents+failEvents >= readEvents) break;
                 }
                 sleep(100);
@@ -152,14 +155,13 @@ public class EngineMultiProcessor extends EngineProcessor {
                         Benchmark.getInstance().pause(engine.getValue().getName());
                     }
                     frame.add(event);
-                    if (frame.size() >= 100) {
+                    if (frame.size() >= FRAME_SIZE) {
                         writeQueue.offer(frame);
-                        frame = new ArrayList<>(100);
+                        frame = new ArrayList<>(FRAME_SIZE);
                     }
                 }
             }
         }
-        if (!frame.isEmpty()) writeQueue.offer(frame);
     }
    
     /**
