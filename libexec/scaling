@@ -4,7 +4,6 @@ def cli():
     import os,shutil,argparse
     cli = argparse.ArgumentParser(description='CLARA scaling test')
     cli.add_argument('-y','--yaml',   metavar='YAML',help='path to YAML file',required=True)
-    cli.add_argument('-c','--clara',  metavar='DIR',help='CLARA_HOME path (default=$CLARA_HOME)',default=os.getenv('CLARA_HOME',None))
     cli.add_argument('-t','--threads',metavar='#',help='threads (default=8,16,24,34,44)',default='8,16,24,34,44')
     cli.add_argument('-e','--events', metavar='#',help='events per thread (default=555)',default=555,type=int)
     cli.add_argument('-N','--numa',   metavar='#',help='restrict to a NUMA socket (choices=[0,1])',choices=[0,1])
@@ -13,14 +12,8 @@ def cli():
     cli.add_argument('datafile', help='input EVIO/HIPO data file')
     cfg = cli.parse_args()
     cfg.threads = cfg.threads.split(',')
-    if not cfg.clara:
-        cli.error('cannot find CLARA installation via -c or $CLARA_HOME')
-    elif shutil.which('run-clara'):
-        cfg.run_clara = shutil.which('run-clara')
-    elif os.path.exists(clara_home + '/plugins/clas12/bin/run-clara'):
-        cfg.run_clara = clara_home + '/plugins/clas12/bin/run-clara'
-    else:
-        cli.error('cannot find run-clara in $PATH or $CLARA_HOME')
+    if not shutil.which('recon-mutil'):
+        cli.error('cannot find recon-mutil in $PATH.')
     if cfg.cpus:
         try:
             cfg.cpus = ','.join([str(int(i)) for i in cfg.cpus.split(',')])
@@ -58,15 +51,13 @@ def benchmark(cfg, threads, log):
             cmd.extend(['taskset','-c',','.join(cfg.cpus.split(',')[:threads])])
         else:
             cmd.extend(['taskset','-c',cfg.cpus])
-    # add the run-clara command:
-    cmd.extend([cfg.run_clara,
-            '-c',cfg.clara,
+    # add the recon-mutil command:
+    cmd.extend(['recon-mutil',
             '-n',str(cfg.events*int(threads)),
             '-t',str(threads),
-            '-l',
             '-y',cfg.yaml,
-            '-o',f'tmp-scaling-{threads}',
-            cfg.datafile])
+            '-o',f'tmp-scaling-{threads}.hipo',
+            '-i',cfg.datafile])
     exiting,benchmarks = False,collections.OrderedDict()
     for line in run(cmd):
         cols = line.split()
