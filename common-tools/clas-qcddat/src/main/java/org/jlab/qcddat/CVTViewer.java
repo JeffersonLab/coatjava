@@ -72,6 +72,7 @@ public class CVTViewer extends Application {
     private CheckBox showLoc1;
     private CheckBox showLoc2;
     private CheckBox showLoc3;
+    private CheckBox[] showLayer = new CheckBox[12];
     private CheckBox showSVT;
     private CheckBox showBMTC;
     private CheckBox showBMTZ;
@@ -110,14 +111,16 @@ public class CVTViewer extends Application {
         final double z;
         final DetectorKind kind;
         final int pointloc;
+        final int layer;
         final int mctrue;
 
-        HitPoint(double x, double y, double z, DetectorKind kind, int loc, int mct) {
+        HitPoint(double x, double y, double z, DetectorKind kind, int loc, int layer, int mct) {
             this.x = x;
             this.y = y;
             this.z = z;
             this.kind = kind;
             this.pointloc = loc;
+            this.layer = layer;
             this.mctrue = mct;
         }
     }
@@ -273,7 +276,7 @@ public class CVTViewer extends Application {
         int nOther = 0;
 
         for (HitPoint p : points) {
-            if (!isVisible(p.kind) || !isVisibleLoc(p.pointloc)) {
+            if (!isVisible(p.kind) || !isVisibleLoc(p.pointloc) || !isVisibleLayer(p.layer)) {
                 continue;
             }
 
@@ -407,6 +410,15 @@ public class CVTViewer extends Application {
         showLoc2.setOnAction(e -> renderCachedEvent());
         showLoc3.setOnAction(e -> renderCachedEvent());
 
+        Label layerTitle = new Label("Layer");
+        layerTitle.setStyle("-fx-font-size: 14px; -fx-font-weight: bold;");
+
+        for (int l=0; l<12; l++) {
+            showLayer[l] = new CheckBox(Integer.toString(l+1));
+            showLayer[l].setSelected(true);
+            showLayer[l].setOnAction(e -> renderCachedEvent());
+        }
+
         Label help = new Label(
                 "Mouse drag: rotate\n" +
                 "Scroll / - / +: zoom\n" +
@@ -427,6 +439,10 @@ public class CVTViewer extends Application {
                 showLoc1,
                 showLoc2,
                 showLoc3,
+                new Separator(),
+                layerTitle,
+                showLayer[0], showLayer[1], showLayer[2], showLayer[3], showLayer[4],  showLayer[5],
+                showLayer[6], showLayer[7], showLayer[8], showLayer[9], showLayer[10], showLayer[11],
                 new Separator(),
                 help
         );
@@ -556,6 +572,10 @@ public class CVTViewer extends Application {
         };
     }
 
+    private boolean isVisibleLayer(int layer) {
+        return showLayer[layer-1].isSelected();
+    }
+
     private List<HitPoint> extractAllThreePoints(DataBank bank) {
         List<HitPoint> out = new ArrayList<>();
 
@@ -568,21 +588,21 @@ public class CVTViewer extends Application {
                     bank.getFloat("x1", i),
                     bank.getFloat("y1", i),
                     bank.getFloat("z1", i),
-                    kind, 1, mct
+                    kind, 1, layer, mct
             ));
 
             out.add(new HitPoint(
                     bank.getFloat("x2", i),
                     bank.getFloat("y2", i),
                     bank.getFloat("z2", i),
-                    kind, 2, mct
+                    kind, 2, layer, mct
             ));
 
             out.add(new HitPoint(
                     bank.getFloat("x3", i),
                     bank.getFloat("y3", i),
                     bank.getFloat("z3", i),
-                    kind, 3, mct
+                    kind, 3, layer, mct
             ));
         }
 
