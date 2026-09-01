@@ -90,7 +90,7 @@ public class EngineMultiProcessor extends EngineProcessor {
             sleep(100);
             for (CompletableFuture f : procThreads)
                 if (f.isDone()) procThreads.remove(f);
-            if (threads.length > 1 && writeEvents > 100 && rethreadThread == null)
+            if (rethreadThread == null && threads.length > 1 && writeEvents > 100)
                 rethreadThread = CompletableFuture.runAsync(() -> { rethread(BENCH_SECONDS,threads); });
         }
     }
