@@ -24,6 +24,14 @@
       <url>https://code.jlab.org/api/v4/projects/919/packages/maven</url>
     </repository>
     <repository>
+      <id>clas12-clara-java</id>
+      <url>https://code.jlab.org/api/v4/projects/243/packages/maven</url>
+    </repository>
+    <repository>
+      <id>clas12-xmsg-java</id>
+      <url>https://code.jlab.org/api/v4/projects/959/packages/maven</url>
+    </repository>
+    <repository>
       <id>clas12maven</id>
       <url>https://clasweb.jlab.org/.clas12maven</url>
     </repository>
@@ -135,7 +143,7 @@
       <dependency>
         <groupId>org.jlab.coda</groupId>
         <artifactId>jclara</artifactId>
-        <version>4.3</version>
+        <version>6.0-SNAPSHOT</version>
       </dependency>
 
       <dependency>
