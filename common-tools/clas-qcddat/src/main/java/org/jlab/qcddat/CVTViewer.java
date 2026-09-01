@@ -154,6 +154,10 @@ public class CVTViewer extends Application {
                 nextEvent();
             } else if (e.getCode() == KeyCode.LEFT || e.getCode() == KeyCode.P) {
                 previousEvent();
+            } else if (e.getCode() == KeyCode.PLUS || e.getCode() == KeyCode.ADD || (e.getCode() == KeyCode.EQUALS && e.isShiftDown())) {
+                camera.setTranslateZ(camera.getTranslateZ() + 50);
+            } else if (e.getCode() == KeyCode.MINUS || e.getCode() == KeyCode.SUBTRACT) {
+                camera.setTranslateZ(camera.getTranslateZ() - 50);
             } else if (e.getCode() == KeyCode.R) {
                 resetView();
             }
@@ -405,7 +409,7 @@ public class CVTViewer extends Application {
 
         Label help = new Label(
                 "Mouse drag: rotate\n" +
-                "Scroll: zoom\n" +
+                "Scroll / - / +: zoom\n" +
                 "N / Right arrow: next\n" +
                 "P / Left arrow: previous\n" +
                 "R: reset view"
