@@ -19,7 +19,7 @@ public class ProgressPrintout {
     private double   printoutIntervalSeconds = 10.0;
     private String   printoutLeadingString   = ">>>>> progress : ";
     private Integer  numberOfCalls           = 0;
-    
+   
     public  ProgressPrintout(){
         this.previousPrintoutTime = System.currentTimeMillis();
         this.startPrintoutTime = System.currentTimeMillis();
@@ -33,6 +33,10 @@ public class ProgressPrintout {
     
     public void setInterval(double interval){
         this.printoutIntervalSeconds = interval;
+    }
+
+    public int getNumberOfCalls() {
+        return numberOfCalls;
     }
     
     public String getUpdateString(){
