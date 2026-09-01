@@ -1,5 +1,7 @@
 package org.jlab.clas.tracking.kalmanfilter.straight;
 
+import java.util.ArrayList;
+import java.util.List;
 import org.jlab.clas.swimtools.Swim;
 import org.jlab.clas.tracking.kalmanfilter.AMeasVecs;
 import org.jlab.clas.tracking.kalmanfilter.AMeasVecs.MeasVec;
@@ -25,7 +27,7 @@ public class StateVecs extends AStateVecs {
         
         Point3D ref = new Point3D(vec.x0,vec.y0,vec.z0);
         Vector3D u = new Vector3D(vec.tx, 1, vec.tz).asUnit(); 
-
+        Line3D toPln = new Line3D(ref,u);
         if(mv.k==0) {
             vec.x = vec.x0-vec.y0*vec.tx;
             vec.y = 0;
@@ -34,7 +36,6 @@ public class StateVecs extends AStateVecs {
         }            
         else if(mv.hemisphere!=0) {
             if(mv.surface.plane!=null) {
-                Line3D toPln = new Line3D(ref,u);
                 Point3D inters = new Point3D();
                 int ints = mv.surface.plane.intersection(toPln, inters);
                 vec.x = inters.x()  ;
@@ -43,22 +44,29 @@ public class StateVecs extends AStateVecs {
                 vec.path = inters.distance(ref);
             }
             if(mv.surface.cylinder!=null) {
-                mv.surface.toLocal().apply(ref);
-                mv.surface.toLocal().apply(u);
-                double r = 0.5*(mv.surface.cylinder.baseArc().radius()+mv.surface.cylinder.highArc().radius());
-                double delta = Math.sqrt((ref.x()*u.x()+ref.y()*u.y())*(ref.x()*u.x()+ref.y()*u.y())
-                        -(-r*r+ref.x()*ref.x()+ref.y()*ref.y())*(u.x()*u.x()+u.y()*u.y()));
-                double l = (-(ref.x()*u.x()+ref.y()*u.y())+delta)/(u.x()*u.x()+u.y()*u.y());
-                if(Math.signum(ref.y()+l*u.y())!=mv.hemisphere) {
-                    l = (-(ref.x()*u.x()+ref.y()*u.y())-delta)/(u.x()*u.x()+u.y()*u.y()); 
+                List<Point3D> inters = new ArrayList();
+                int ints = mv.surface.cylinder.intersection(toPln, inters);
+                if(ints<1) { 
+                    if(!mv.surface.passive) {
+                        return false;
+                    } else {
+                        mv.skip=true;
+                        return true;
                     }
-
-                Point3D cylInt = new Point3D(ref.x()+l*u.x(),ref.y()+l*u.y(),ref.z()+l*u.z());
-                mv.surface.toGlobal().apply(cylInt);
-                vec.x = cylInt.x();
-                vec.y = cylInt.y();
-                vec.z = cylInt.z();
-                vec.path = cylInt.distance(ref);
+                } else {
+                    int index =0;
+                    if(ints>1) {//pick the intersection that is closest to the global fit ray intersection
+                        double dh0 = Math.abs(inters.get(0).y()-mv.surface.rayInterc.y());
+                        double dh1 = Math.abs(inters.get(1).y()-mv.surface.rayInterc.y());
+                        if(dh1<dh0)
+                            index=1; //if the second intersection is closest use its index
+                    }
+                    vec.x = inters.get(index).x()  ;
+                    vec.y = inters.get(index).y()  ;
+                    vec.z = inters.get(index).z()  ;
+                    vec.path = inters.get(index).distance(ref);
+                }
+                
             } 
             return true;
         }
@@ -172,7 +180,6 @@ public class StateVecs extends AStateVecs {
         this.trackTrajB.clear();
         this.trackTrajS.clear();
         this.trackTrajT.put(0, new StateVec(initSV));
-        
     }
 
     @Override

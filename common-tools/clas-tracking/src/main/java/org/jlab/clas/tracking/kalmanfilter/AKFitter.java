@@ -24,7 +24,7 @@ public abstract class AKFitter {
 
     // return variables
     public boolean setFitFailed = false;
-    public double  chi2;
+    public double  chi2 = Double.POSITIVE_INFINITY;
     public int     NDF;
     public int     NDF0;
     public int     numIter;

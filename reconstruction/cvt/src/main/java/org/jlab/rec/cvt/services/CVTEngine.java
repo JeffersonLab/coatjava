@@ -192,6 +192,18 @@ public class CVTEngine extends ReconstructionEngine {
         }
         return run;
     }
+    
+    public void getEventNum(DataEvent event) {
+    
+        if (event.hasBank("RUN::config") == false) {
+            System.err.println("RUN CONDITIONS NOT READ!");
+            return ;
+        }
+
+        DataBank bank = event.getBank("RUN::config");
+        System.out.println("EVENT NUMBER "+bank.getInt("event", 0));
+        
+    }
 
     public int getPid() {
         return pid;
@@ -318,7 +330,8 @@ public class CVTEngine extends ReconstructionEngine {
                     banks.add(RecoBankWriter.fillStraightTracksBank(event, tracks, "CVTRec::Cosmics"));
                     banks.add(RecoBankWriter.fillStraightTracksTrajectoryBank(event, tracks, "CVTRec::Trajectory"));
                     banks.add(RecoBankWriter.fillStraightTrackKFTrajectoryBank(event, tracks, "CVTRec::KFTrajectory"));
-                }            
+                    //if(tracks.isEmpty() && seeds!=null && !seeds.isEmpty()) this.getEventNum(event);
+                }       
             } 
             else {
                 double[] xyBeam = CVTReconstruction.getBeamSpot(event, beamPos);

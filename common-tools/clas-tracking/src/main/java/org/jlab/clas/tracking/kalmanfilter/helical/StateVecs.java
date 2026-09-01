@@ -1,5 +1,7 @@
 package org.jlab.clas.tracking.kalmanfilter.helical;
 
+import java.util.ArrayList;
+import java.util.List;
 import org.jlab.clas.swimtools.Swim;
 import org.jlab.clas.tracking.kalmanfilter.AMeasVecs;
 import org.jlab.clas.tracking.kalmanfilter.AMeasVecs.MeasVec;
@@ -7,7 +9,6 @@ import org.jlab.clas.tracking.kalmanfilter.AStateVecs;
 import org.jlab.clas.tracking.kalmanfilter.Surface;
 import org.jlab.clas.tracking.kalmanfilter.Units;
 import org.jlab.clas.tracking.trackrep.Helix;
-import org.jlab.clas.tracking.utilities.MatrixOps;
 import org.jlab.geom.prim.Line3D;
 import org.jlab.geom.prim.Point3D;
 import org.jlab.geom.prim.Vector3D;
@@ -42,9 +43,8 @@ public class StateVecs extends AStateVecs {
 
             Point3D st   = new Point3D(sv.x, sv.y, sv.z); 
             Vector3D stu = new Vector3D(sv.px,sv.py,sv.pz).asUnit();
-            
+            Line3D toPln = new Line3D(st, stu);
             if(mv.surface.plane!=null) {
-                Line3D toPln = new Line3D(st, stu);
                 Point3D inters = new Point3D();
                 int ints = mv.surface.plane.intersection(toPln, inters);
                 sv.x = inters.x();
@@ -53,22 +53,16 @@ public class StateVecs extends AStateVecs {
                 sv.path = inters.distance(st);
             }
             else if(mv.surface.cylinder!=null) {
-                mv.surface.toLocal().apply(st);
-                mv.surface.toLocal().apply(stu);
-                double r = mv.surface.cylinder.baseArc().radius();
-                double delta = Math.sqrt((st.x()*stu.x()+st.y()*stu.y())*(st.x()*stu.x()+st.y()*stu.y())-(-r*r+st.x()*st.x()+st.y()*st.y())*(stu.x()*stu.x()+stu.y()*stu.y()));
-                double l = (-(st.x()*stu.x()+st.y()*stu.y())+delta)/(stu.x()*stu.x()+stu.y()*stu.y());
-                if(Math.signum(st.y()+l*stu.y())!=mv.hemisphere) {
-                    l = (-(st.x()*stu.x()+st.y()*stu.y())-delta)/(stu.x()*stu.x()+stu.y()*stu.y()); 
-                } 
-                Point3D inters = new Point3D(st.x()+l*stu.x(),st.y()+l*stu.y(),st.z()+l*stu.z());
-                mv.surface.toGlobal().apply(inters);
-                // RDV: should switch to use clas-geometry intersection method, not done now to alwys return a value
-                sv.x = inters.x();
-                sv.y = inters.y();
-                sv.z = inters.z();
-                sv.path = inters.distance(st);
-            }
+                List<Point3D> inters = new ArrayList();
+                int ints = mv.surface.cylinder.intersectionRay(toPln, inters);
+                if(ints<1) return false;
+               
+                    sv.x = inters.get(0).x()  ;
+                    sv.y = inters.get(0).y()  ;
+                    sv.z = inters.get(0).z()  ;
+                    sv.path = inters.get(0).distance(st);
+                
+                }
         } else { 
             if(swim==null) { // applicable only to planes parallel to the z -axis
                 Helix helix = sv.getHelix(xref, yref);
