@@ -117,7 +117,7 @@ public class EngineMultiProcessor extends EngineProcessor {
             // open the next input file:
             else if (!inputs.isEmpty()) open(inputs.removeFirst());
 
-            // nothing left to do:
+            // no more events to read:
             else break;
         }
 
