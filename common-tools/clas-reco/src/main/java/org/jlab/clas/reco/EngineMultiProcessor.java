@@ -2,10 +2,8 @@ package org.jlab.clas.reco;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Deque;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -37,7 +35,7 @@ public class EngineMultiProcessor extends EngineProcessor {
 
     CompletableFuture readerThread;
     CompletableFuture writerThread;
-    Deque<CompletableFuture> procThreads = new ArrayDeque();
+    ConcurrentLinkedQueue<CompletableFuture> procThreads = new ConcurrentLinkedQueue();
 
     ConcurrentLinkedQueue<List<Object>> readQueue = new ConcurrentLinkedQueue<>();
     ConcurrentLinkedQueue<List<DataEvent>> writeQueue = new ConcurrentLinkedQueue<>();
@@ -45,7 +43,6 @@ public class EngineMultiProcessor extends EngineProcessor {
     
     ProgressPrintout progress = new ProgressPrintout();
 
-    int threads;
     int maxEvents;
     int skipEvents;
 
@@ -57,29 +54,28 @@ public class EngineMultiProcessor extends EngineProcessor {
     
     public EngineMultiProcessor(OptionParser parser) {
         super(parser);
-        threads = parser.getOption("-t").intValue();
         maxEvents = parser.getOption("-n").intValue();
         skipEvents = parser.getOption("-s").intValue();
     }
 
     public void scaling(String input, int... threads) {
         for (int t : threads) {
-            this.threads = t;
-            launch(String.format("scaling-%d.hipo",t),input);
+            launch(t, String.format("scaling-%d.hipo",t), input);
         }
     }
    
     /**
      * The thread launcher and collector.
+     * @param threads number of threads
      * @param output name of output file to write
      * @param input names of input files to read
      */
-    public void launch(String output, String... input) {
+    public void launch(int threads, String output, String... input) {
         readEvents = 0;
         writeEvents = 0;
         failEvents = 0;
         splitQueue = new ArrayList<>(threads);
-        readerThread = CompletableFuture.runAsync(() -> { read(input); });
+        readerThread = CompletableFuture.runAsync(() -> { read(threads, input); });
         writerThread = CompletableFuture.runAsync(() -> { write(output); });
         for (int i=0; i<threads; i++) {
             final int j = i;
@@ -97,7 +93,7 @@ public class EngineMultiProcessor extends EngineProcessor {
      * The reader thread.
      * @param input input filenames 
      */
-    void read(String... input) {
+    void read(int threads, String... input) {
 
         // convert input filenames to a list:
         List<String> inputs = new ArrayList<>(Arrays.asList(input));
@@ -270,6 +266,8 @@ public class EngineMultiProcessor extends EngineProcessor {
         parser.addOption("-t","4","number of threads");
         parser.parse(args);
         EngineMultiProcessor proc = new EngineMultiProcessor(parser);
-        proc.launch(parser.getOption("-o").stringValue(), parser.getOption("-i").stringValue());
+        proc.launch(parser.getOption("-t").intValue(),
+                    parser.getOption("-o").stringValue(),
+                    parser.getOption("-i").stringValue());
     }
 }
