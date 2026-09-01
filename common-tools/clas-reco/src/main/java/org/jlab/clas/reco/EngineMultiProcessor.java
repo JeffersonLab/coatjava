@@ -2,8 +2,10 @@ package org.jlab.clas.reco;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Deque;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -35,11 +37,11 @@ public class EngineMultiProcessor extends EngineProcessor {
 
     CompletableFuture readerThread;
     CompletableFuture writerThread;
-    ConcurrentLinkedQueue<CompletableFuture> procThreads = new ConcurrentLinkedQueue();
+    Deque<CompletableFuture> procThreads = new ArrayDeque();
 
-    List<ConcurrentLinkedQueue<DataEvent>> splitQueue;
     ConcurrentLinkedQueue<List<Object>> readQueue = new ConcurrentLinkedQueue<>();
     ConcurrentLinkedQueue<List<DataEvent>> writeQueue = new ConcurrentLinkedQueue<>();
+    List<ConcurrentLinkedQueue<DataEvent>> splitQueue;
     
     ProgressPrintout progress = new ProgressPrintout();
 
@@ -112,28 +114,8 @@ public class EngineMultiProcessor extends EngineProcessor {
                 // sleep instead of overfilling the read queue:
                 if (readQueue.size() > QUEUE_SIZE*threads) sleep(1000);
 
-                // read the next event into the frame:
-                else {
-                    Benchmark.getInstance().resume("read");
-                    Object o = null;
-                    if (reader instanceof EvioSource evio) {
-                        try { o = evio.getEventBuffer(++fileEvents, true); }
-                        catch (EvioException ex) {
-                            failEvents++;
-                            ex.printStackTrace();
-                        }
-                    }
-                    else o = reader.getNextEvent();
-                    if (o != null && (skipEvents < 1 || readEvents > skipEvents)) {
-                        frame.add(o);
-                        if (frame.size() >= FRAME_SIZE) {
-                            readQueue.offer(frame);
-                            readEvents += frame.size();
-                            frame = new ArrayList<>(FRAME_SIZE);
-                        }
-                    }
-                    Benchmark.getInstance().pause("read");
-                }
+                // read next event into frame, and fill queue if frame full:
+                else frame = read(frame);
             }
 
             // open the next input file:
@@ -207,7 +189,7 @@ public class EngineMultiProcessor extends EngineProcessor {
                     Benchmark.getInstance().resume("write");
                     writer.writeEvent(e.get(i));
                     for (int j=0; j<threads; j++) 
-                        splitQueue.get(i).offer(e.get(i));
+                        splitQueue.get(j).offer(e.get(i));
                     Benchmark.getInstance().pause("write");
                     progress.updateStatus();
                 }
@@ -246,6 +228,35 @@ public class EngineMultiProcessor extends EngineProcessor {
         } else {
             maxFileEvents = ((EvioSource)reader).getEventCount();
         }
+    }
+
+    /**
+     * Read the next event into the frame, and, if it's full, queue the frame
+     * and make a new one.
+     * @param frame
+     * @return modified frame 
+     */
+    List<Object> read(List<Object> frame) {
+        Benchmark.getInstance().resume("read");
+        Object o = null;
+        if (reader instanceof EvioSource evio) {
+            try { o = evio.getEventBuffer(++fileEvents, true); }
+            catch (EvioException ex) {
+                failEvents++;
+                ex.printStackTrace();
+            }
+        }
+        else o = reader.getNextEvent();
+        if (o != null && (skipEvents < 1 || readEvents > skipEvents)) {
+            frame.add(o);
+            if (frame.size() >= FRAME_SIZE) {
+                readQueue.offer(frame);
+                readEvents += frame.size();
+                frame = new ArrayList<>(FRAME_SIZE);
+            }
+        }
+        Benchmark.getInstance().pause("read");
+        return frame;
     }
 
     void close() {
