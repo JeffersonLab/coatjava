@@ -1,11 +1,19 @@
 io-services:
+  # reader:
+  #   class: org.jlab.io.clara.HipoToHipoReader
+  #   name: HipoToHipoReader
+  # writer:
+  #   class: org.jlab.io.clara.HipoToHipoWriter
+  #   name: HipoToHipoWriter
   reader:
-    class: org.jlab.io.clara.HipoToHipoReader
-    name: HipoToHipoReader
+    class: org.jlab.io.clara.Clas12Reader
+    name: Clas12Reader
   writer:
-    class: org.jlab.io.clara.HipoToHipoWriter
-    name: HipoToHipoWriter
+    class: org.jlab.io.clara.Clas12Writer
+    name: Clas12Writer
 services:
+  - class: org.jlab.clas.reco.DecoderEngine
+    name: DECO
   - class: org.jlab.clas.swimtools.MagFieldsEngine
     name: MAGFIELDS
   - class: org.jlab.rec.cvt.ml.QCDDATSampleMaker
@@ -22,6 +30,5 @@ configuration:
     MAGFIELDS:
       magfieldSolenoidMap: Symm_solenoid_r601_phi1_z1201_13June2018.dat
       magfieldTorusMap: Symm_torus_r2501_phi16_z251_24Apr2018.dat
-      
 mime-types:
   - binary/data-hipo
