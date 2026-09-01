@@ -34,6 +34,7 @@ public class EngineMultiProcessor extends EngineProcessor {
     DataSource reader;
     HipoDataSync writer;
 
+    CompletableFuture rethreadThread;
     CompletableFuture readerThread;
     CompletableFuture writerThread;
     ConcurrentLinkedQueue<CompletableFuture> procThreads = new ConcurrentLinkedQueue<>();
@@ -85,7 +86,6 @@ public class EngineMultiProcessor extends EngineProcessor {
             procThreads.offer(CompletableFuture.runAsync(() -> { process(j); }));
             splitQueue.add(i, new ConcurrentLinkedQueue<>());
         }
-        CompletableFuture rethreadThread = null;
         while (!writerThread.isDone()) {
             sleep(100);
             for (CompletableFuture f : procThreads)
@@ -107,18 +107,6 @@ public class EngineMultiProcessor extends EngineProcessor {
         }
     }
 
-    /**
-     * Reset counters and queues.
-     */
-    public void reset() {
-        readQueue = new ConcurrentLinkedQueue<>();
-        writeQueue = new ConcurrentLinkedQueue<>();
-        procThreads = new ConcurrentLinkedQueue();
-        readEvents = 0;
-        writeEvents = 0;
-        failEvents = 0;
-    }
-    
     /**
      * The reader thread.
      * @param input input filenames 
@@ -173,6 +161,8 @@ public class EngineMultiProcessor extends EngineProcessor {
                 sleep(100);
             }
             else {
+                // put the event back on the queue if we're rethreading:
+                if (rethreadThread != null && !rethreadThread.isDone()) readQueue.offer(o);
                 List<DataEvent> frame = new ArrayList<>(o.size());
                 for (int i=0; i<o.size(); i++) {
                     DataEvent event;
@@ -234,6 +224,8 @@ public class EngineMultiProcessor extends EngineProcessor {
                 f.cancel(true);
                 procThreads.remove(f);
             }
+            writeEvents = 0;
+            readEvents = 0;
             progress = new ProgressPrintout();
             Benchmark.getInstance().reset();
             for (int j=0; j<threads[i]; j++) {
@@ -325,6 +317,18 @@ public class EngineMultiProcessor extends EngineProcessor {
                 readEvents, writeEvents, readEvents-writeEvents));
     }
 
+    /**
+     * Reset counters and queues.
+     */
+    void reset() {
+        readQueue = new ConcurrentLinkedQueue<>();
+        writeQueue = new ConcurrentLinkedQueue<>();
+        procThreads = new ConcurrentLinkedQueue();
+        readEvents = 0;
+        writeEvents = 0;
+        failEvents = 0;
+    }
+    
     void sleep(int milliseconds) {
         try { Thread.sleep(milliseconds); }
         catch (InterruptedException ex) {}
