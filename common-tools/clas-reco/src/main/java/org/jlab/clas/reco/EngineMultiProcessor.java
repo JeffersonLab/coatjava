@@ -27,18 +27,21 @@ import org.jlab.utils.options.OptionParser;
  */
 public class EngineMultiProcessor extends EngineProcessor {
 
-    final int MAX_READ_QUEUE = 100;
+    final int QUEUE_SIZE = 100;
     final int FRAME_SIZE = 100;
 
     DataSource reader;
     HipoDataSync writer;
+
     CompletableFuture readerThread;
     CompletableFuture writerThread;
-    ProgressPrintout progress = new ProgressPrintout();
     ConcurrentLinkedQueue<CompletableFuture> procThreads = new ConcurrentLinkedQueue();
+
     ConcurrentLinkedQueue<List<Object>> readQueue = new ConcurrentLinkedQueue<>();
     ConcurrentLinkedQueue<List<DataEvent>> writeQueue = new ConcurrentLinkedQueue<>();
     
+    ProgressPrintout progress = new ProgressPrintout();
+
     int threads;
     int maxEvents;
     int skipEvents;
@@ -55,11 +58,18 @@ public class EngineMultiProcessor extends EngineProcessor {
         maxEvents = parser.getOption("-n").intValue();
         skipEvents = parser.getOption("-s").intValue();
     }
+
+    public void scaling(String input, int... threads) {
+        for (int t : threads) {
+            this.threads = t;
+            launch(String.format("scaling-%d.hipo",t),input);
+        }
+    }
    
     /**
-     * The thread launcher.
-     * @param output
-     * @param input 
+     * The thread launcher and collector.
+     * @param output name of output file to write
+     * @param input names of input files to read
      */
     public void launch(String output, String... input) {
         readEvents = 0;
@@ -77,8 +87,8 @@ public class EngineMultiProcessor extends EngineProcessor {
             sleep(1000);
             if (readerThread.isDone()) {
                 System.err.println("------------------------------------------");
-                System.err.println(writeEvents+"/"+skipEvents+"/"+failEvents+"/"+readEvents);
-                System.err.println(readQueue.size()+","+writeQueue.size()+","+procThreads.size());
+                System.err.println(writeEvents+"+"+skipEvents+"+"+failEvents+"=?"+readEvents);
+                System.err.println(readQueue.size()+" -> "+writeQueue.size());
             }
         }
     }
@@ -92,29 +102,50 @@ public class EngineMultiProcessor extends EngineProcessor {
         // convert input filenames to a list:
         List<String> inputs = new ArrayList<>(Arrays.asList(input));
 
-        // event buffer:
+        // initialize the event frame:
         List<Object> frame = new ArrayList<>(FRAME_SIZE);
 
-        while (maxEvents < 1 || readEvents < maxEvents) {
-                
-            if (maxFileEvents > 0 && fileEvents >= maxFileEvents) break;
+        // loop over input events:
+        while ( (maxEvents < 1 || readEvents < maxEvents) &&
+                (maxFileEvents < 1 || fileEvents < maxFileEvents) ) {
 
             if (reader != null && reader.hasEvent()) {
 
                 // sleep instead of overfilling the read queue:
-                if (readQueue.size() > MAX_READ_QUEUE*threads) sleep(100);
+                if (readQueue.size() > QUEUE_SIZE*threads) sleep(100);
 
                 // read the next event into the frame:
-                else frame = read(frame);
+                else {
+                    Benchmark.getInstance().resume("read");
+                    Object o = null;
+                    if (reader instanceof EvioSource evio) {
+                        try { o = evio.getEventBuffer(++fileEvents, true); }
+                        catch (EvioException ex) {
+                            failEvents++;
+                            ex.printStackTrace();
+                        }
+                    }
+                    else o = reader.getNextEvent();
+                    if (o != null && (skipEvents < 1 || readEvents > skipEvents)) {
+                        frame.add(o);
+                        if (frame.size() >= FRAME_SIZE) {
+                            readQueue.offer(frame);
+                            readEvents += frame.size();
+                            frame = new ArrayList<>(FRAME_SIZE);
+                        }
+                    }
+                    Benchmark.getInstance().pause("read");
+                }
             }
 
             // open the next input file:
             else if (!inputs.isEmpty()) open(inputs.removeFirst());
-        
+
+            // nothing left to do:
             else break;
         }
 
-        // leftover, partial frame:
+        // write leftover, partial frame:
         if (!frame.isEmpty()) {
             System.err.println("writing partial frame: "+frame.size());
             readEvents += frame.size();
@@ -128,20 +159,15 @@ public class EngineMultiProcessor extends EngineProcessor {
      * @param thread unique thread number 
      */
     void process(int thread) {
-        List<DataEvent> frame = new ArrayList<>(100);
         while (true) {
             List<Object> o = readQueue.poll();
             if (o == null) {
-                if (readerThread.isDone()) {
-                    if (readQueue.isEmpty() && !frame.isEmpty()) {
-                        writeQueue.offer(frame);
-                        frame = new ArrayList<>(FRAME_SIZE);
-                    } 
-                    if (writeEvents+skipEvents+failEvents >= readEvents) break;
-                }
+                if (readerThread.isDone() && readQueue.isEmpty() && 
+                        writeEvents+skipEvents+failEvents >= readEvents) break;
                 sleep(100);
             }
             else {
+                List<DataEvent> frame = new ArrayList<>(o.size());
                 for (int i=0; i<o.size(); i++) {
                     DataEvent event;
                     // decode if necessary:
@@ -155,15 +181,12 @@ public class EngineMultiProcessor extends EngineProcessor {
                         Benchmark.getInstance().pause(engine.getValue().getName());
                     }
                     frame.add(event);
-                    if (frame.size() >= FRAME_SIZE) {
-                        writeQueue.offer(frame);
-                        frame = new ArrayList<>(FRAME_SIZE);
-                    }
                 }
+                writeQueue.offer(frame);
             }
         }
     }
-   
+
     /**
      * The writer thread.
      * @param output output filename
@@ -179,7 +202,7 @@ public class EngineMultiProcessor extends EngineProcessor {
                     close();
                     break;
                 }
-                sleep(100);
+                sleep(1000);
             }
             else {
                 Benchmark.getInstance().resume("write");
@@ -193,16 +216,11 @@ public class EngineMultiProcessor extends EngineProcessor {
         }
     }
 
-    /**
-     * Decoding.
-     * @param bytes EVIO byte buffer
-     * @return decoded event 
-     */
     HipoDataEvent decode(ByteBuffer bytes) {
-        Benchmark.getInstance().resume("EVIO");
+        Benchmark.getInstance().resume("evio");
         EvioDataEvent evio = new EvioDataEvent(bytes.array(), ByteOrder.LITTLE_ENDIAN);
-        Benchmark.getInstance().pause("EVIO");
-        Benchmark.getInstance().resume("DECO");
+        Benchmark.getInstance().pause("evio");
+        Benchmark.getInstance().resume("deco");
         HipoDataEvent hipo;
         try {
             CLASDecoder d = decoders.take();
@@ -210,43 +228,10 @@ public class EngineMultiProcessor extends EngineProcessor {
             decoders.put(d);
         }
         catch (InterruptedException ex) { hipo = null; }
-        Benchmark.getInstance().pause("DECO");
+        Benchmark.getInstance().pause("deco");
         return hipo;
     }
    
-    /**
-     * Read the next event, add it to the frame, and, if the frame is full,
-     * add the frame to the read queue and return a new, empty frame. 
-     * @frame the frame to fill
-     * @return the modified frame, or a new one if the frame was full
-     */
-    List<Object> read(List<Object> frame) {
-        Benchmark.getInstance().resume("read");
-        Object o = null;
-        if (reader instanceof EvioSource evio) {
-            try { o = evio.getEventBuffer(++fileEvents, true); }
-            catch (EvioException ex) {
-                failEvents++;
-                ex.printStackTrace();
-            }
-        }
-        else o = reader.getNextEvent();
-        if (o != null && (skipEvents < 1 || readEvents > skipEvents)) {
-            frame.add(o);
-            if (frame.size() >= FRAME_SIZE) {
-                readQueue.offer(frame);
-                readEvents += frame.size();
-                frame = new ArrayList<>(FRAME_SIZE);
-            }
-        }
-        Benchmark.getInstance().pause("read");
-        return frame;
-    }
-
-    /**
-     * Open the input file and do some initializations.
-     * @param filename 
-     */
     void open(String filename) {
         fileEvents = 0;
         reader = filename.endsWith(".hipo") ? new HipoDataSource() : new EvioSource();
@@ -259,9 +244,6 @@ public class EngineMultiProcessor extends EngineProcessor {
         }
     }
 
-    /**
-     * Close the output file and print performance info.
-     */
     void close() {
         writer.close();
         System.out.println(Benchmark.getInstance());
