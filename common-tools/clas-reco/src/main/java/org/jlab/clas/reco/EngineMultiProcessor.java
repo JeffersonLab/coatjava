@@ -27,6 +27,7 @@ import org.jlab.utils.options.OptionParser;
  */
 public class EngineMultiProcessor extends EngineProcessor {
 
+    final int BENCH_SECONDS = 30;
     final int QUEUE_SIZE = 100;
     final int FRAME_SIZE = 100;
 
@@ -35,8 +36,7 @@ public class EngineMultiProcessor extends EngineProcessor {
 
     CompletableFuture readerThread;
     CompletableFuture writerThread;
-    ConcurrentLinkedQueue<CompletableFuture> procThreads = new ConcurrentLinkedQueue();
-
+    ConcurrentLinkedQueue<CompletableFuture> procThreads = new ConcurrentLinkedQueue<>();
     ConcurrentLinkedQueue<List<Object>> readQueue = new ConcurrentLinkedQueue<>();
     ConcurrentLinkedQueue<List<DataEvent>> writeQueue = new ConcurrentLinkedQueue<>();
     List<ConcurrentLinkedQueue<DataEvent>> splitQueue;
@@ -52,41 +52,71 @@ public class EngineMultiProcessor extends EngineProcessor {
     int fileEvents;
     int maxFileEvents;
     
+    public static void main(String[] args) {
+        OptionParser cfg = EngineProcessor.getParser();
+        cfg.addOption("-t","4","number of threads");
+        cfg.parse(args);
+        EngineMultiProcessor proc = new EngineMultiProcessor(cfg);
+        proc.launch(Arrays.stream(cfg.getOption("-t").stringValue().split(",")).mapToInt(Integer::parseInt).toArray(), 
+                    cfg.getOption("-o").stringValue(),
+                    cfg.getOption("-i").stringValue());
+    }
+
     public EngineMultiProcessor(OptionParser parser) {
         super(parser);
         maxEvents = parser.getOption("-n").intValue();
         skipEvents = parser.getOption("-s").intValue();
     }
 
-    public void scaling(String input, int... threads) {
-        for (int t : threads) {
-            launch(t, String.format("scaling-%d.hipo",t), input);
-        }
-    }
-   
     /**
      * The thread launcher and collector.
      * @param threads number of threads
      * @param output name of output file to write
      * @param input names of input files to read
      */
-    public void launch(int threads, String output, String... input) {
-        readEvents = 0;
-        writeEvents = 0;
-        failEvents = 0;
-        splitQueue = new ArrayList<>(threads);
-        readerThread = CompletableFuture.runAsync(() -> { read(threads, input); });
+    public void launch(int[] threads, String output, String... input) {
+        shutdown();
+        reset();
+        splitQueue = new ArrayList<>(threads[0]);
+        readerThread = CompletableFuture.runAsync(() -> { read(threads[0], input); });
         writerThread = CompletableFuture.runAsync(() -> { write(output); });
-        for (int i=0; i<threads; i++) {
+        for (int i=0; i<threads[0]; i++) {
             final int j = i;
             procThreads.offer(CompletableFuture.runAsync(() -> { process(j); }));
             splitQueue.add(i, new ConcurrentLinkedQueue<>());
         }
+        CompletableFuture rethreadThread = null;
         while (!writerThread.isDone()) {
+            sleep(100);
             for (CompletableFuture f : procThreads)
                 if (f.isDone()) procThreads.remove(f);
-            sleep(100);
+            if (threads.length > 1 && writeEvents > 100 && rethreadThread == null)
+                rethreadThread = CompletableFuture.runAsync(() -> { rethread(BENCH_SECONDS,threads); });
         }
+    }
+
+    /**
+     * Shutdown all data processing, close files.
+     */
+    public void shutdown() {
+        for (CompletableFuture f : procThreads) f.cancel(true);
+        if (readerThread != null) readerThread.cancel(true);
+        if (writerThread != null) {
+            writerThread.cancel(true);
+            writer.close();
+        }
+    }
+
+    /**
+     * Reset counters and queues.
+     */
+    public void reset() {
+        readQueue = new ConcurrentLinkedQueue<>();
+        writeQueue = new ConcurrentLinkedQueue<>();
+        procThreads = new ConcurrentLinkedQueue();
+        readEvents = 0;
+        writeEvents = 0;
+        failEvents = 0;
     }
     
     /**
@@ -174,7 +204,7 @@ public class EngineMultiProcessor extends EngineProcessor {
         while (true) {
             List<DataEvent> e = writeQueue.poll();
             if (e == null) {
-                if (procThreads.isEmpty() && writeQueue.isEmpty()) {
+                if (readerThread.isDone() && procThreads.isEmpty() && writeQueue.isEmpty()) {
                     close();
                     break;
                 }
@@ -192,6 +222,38 @@ public class EngineMultiProcessor extends EngineProcessor {
         }
     }
 
+    /**
+     * The rethread thread.
+     * @param seconds delay before switching to next thread count
+     * @param threads thread counts to use 
+     */
+    void rethread(int seconds, int... threads) {
+        System.out.println("<><><> Rethreading spawned ...");
+        for (int i=0; i<threads.length; i++) {
+            for (CompletableFuture f : procThreads) {
+                f.cancel(true);
+                procThreads.remove(f);
+            }
+            progress = new ProgressPrintout();
+            Benchmark.getInstance().reset();
+            for (int j=0; j<threads[i]; j++) {
+                final int k = j;
+                procThreads.offer(CompletableFuture.runAsync(() -> { process(k); }));
+            }
+            while (progress.getNumberOfCalls() < 100) sleep(1000);
+            sleep(seconds*1000);
+            System.out.println(String.format("\n<><><><><>    RETHREAD COUNT: %d\n",threads[i]));
+            System.out.println(progress.getUpdateString());
+            System.out.println(Benchmark.getInstance());
+        }
+        shutdown();
+    }
+
+    /**
+     * Decode an event.
+     * @param bytes the EVIO byte buffer
+     * @return decoded event
+     */
     HipoDataEvent decode(ByteBuffer bytes) {
         Benchmark.getInstance().resume("evio");
         EvioDataEvent evio = new EvioDataEvent(bytes.array(), ByteOrder.LITTLE_ENDIAN);
@@ -207,7 +269,11 @@ public class EngineMultiProcessor extends EngineProcessor {
         Benchmark.getInstance().pause("deco");
         return hipo;
     }
-   
+  
+    /**
+     * Open a new input HIPO/EVIO event file.
+     * @param filename 
+     */
     void open(String filename) {
         fileEvents = 0;
         reader = filename.endsWith(".hipo") ? new HipoDataSource() : new EvioSource();
@@ -249,6 +315,9 @@ public class EngineMultiProcessor extends EngineProcessor {
         return frame;
     }
 
+    /**
+     * Close the output file and print some stuff.
+     */
     void close() {
         writer.close();
         System.out.println(Benchmark.getInstance());
@@ -259,15 +328,5 @@ public class EngineMultiProcessor extends EngineProcessor {
     void sleep(int milliseconds) {
         try { Thread.sleep(milliseconds); }
         catch (InterruptedException ex) {}
-    }
-
-    public static void main(String[] args) {
-        OptionParser parser = EngineProcessor.getParser();
-        parser.addOption("-t","4","number of threads");
-        parser.parse(args);
-        EngineMultiProcessor proc = new EngineMultiProcessor(parser);
-        proc.launch(parser.getOption("-t").intValue(),
-                    parser.getOption("-o").stringValue(),
-                    parser.getOption("-i").stringValue());
     }
 }
