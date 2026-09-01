@@ -403,6 +403,6 @@ done
 echo "installed coatjava to: $prefix_dir"
 
 # install clara
-if $installClara; then ./bin/install-clara -c $prefix_dir $clara_home; fi
+if $installClara; then ./bin/install-clara -b -c $prefix_dir $clara_home; fi
 
 echo "COATJAVA SUCCESSFULLY BUILT !"
