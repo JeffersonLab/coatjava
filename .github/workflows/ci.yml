@@ -227,7 +227,7 @@ jobs:
           tar xzvf coatjava.tar.gz
       - run: ls
       - name: run test
-        run: ./bin/recon-mutil -t 4 -n 500 -y etc/services/rgd-clarode.yml -o rec_clas_018779.evio.00001.hipo -i clas_018779.evio.00001
+        run: ./coatjava/bin/recon-mutil -t 4 -n 500 -y etc/services/rgd-clarode.yml -o rec_clas_018779.evio.00001.hipo -i clas_018779.evio.00001
       - uses: actions/upload-artifact@v7
         with:
           name: test_clara_result
