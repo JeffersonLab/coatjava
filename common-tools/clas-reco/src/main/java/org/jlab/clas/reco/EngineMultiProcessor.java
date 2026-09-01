@@ -188,18 +188,12 @@ public class EngineMultiProcessor extends EngineProcessor {
                 for (int i=0; i<e.size(); i++) {
                     Benchmark.getInstance().resume("write");
                     writer.writeEvent(e.get(i));
-                    for (int j=0; j<threads; j++) 
-                        splitQueue.get(j).offer(e.get(i));
                     Benchmark.getInstance().pause("write");
                     progress.updateStatus();
                 }
                 writeEvents += e.size();
             }
         }
-    }
-
-    void split(int thread) {
-        DataEvent e = splitQueue.get(thread).poll();
     }
 
     HipoDataEvent decode(ByteBuffer bytes) {
