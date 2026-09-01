@@ -205,13 +205,13 @@ public class EngineMultiProcessor extends EngineProcessor {
                 sleep(1000);
             }
             else {
-                Benchmark.getInstance().resume("write");
                 for (int i=0; i<e.size(); i++) {
+                    Benchmark.getInstance().resume("write");
                     writer.writeEvent(e.get(i));
+                    Benchmark.getInstance().pause("write");
                     progress.updateStatus();
                 }
                 writeEvents += e.size();
-                Benchmark.getInstance().pause("write");
             }
         }
     }
