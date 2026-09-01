@@ -37,6 +37,7 @@ public class EngineMultiProcessor extends EngineProcessor {
     CompletableFuture writerThread;
     ConcurrentLinkedQueue<CompletableFuture> procThreads = new ConcurrentLinkedQueue();
 
+    List<ConcurrentLinkedQueue<DataEvent>> splitQueue;
     ConcurrentLinkedQueue<List<Object>> readQueue = new ConcurrentLinkedQueue<>();
     ConcurrentLinkedQueue<List<DataEvent>> writeQueue = new ConcurrentLinkedQueue<>();
     
@@ -75,21 +76,18 @@ public class EngineMultiProcessor extends EngineProcessor {
         readEvents = 0;
         writeEvents = 0;
         failEvents = 0;
+        splitQueue = new ArrayList<>(threads);
         readerThread = CompletableFuture.runAsync(() -> { read(input); });
         writerThread = CompletableFuture.runAsync(() -> { write(output); });
         for (int i=0; i<threads; i++) {
             final int j = i;
             procThreads.offer(CompletableFuture.runAsync(() -> { process(j); }));
+            splitQueue.add(i, new ConcurrentLinkedQueue<>());
         }
         while (!writerThread.isDone()) {
             for (CompletableFuture f : procThreads)
                 if (f.isDone()) procThreads.remove(f);
-            sleep(1000);
-            if (readerThread.isDone()) {
-                System.err.println("------------------------------------------");
-                System.err.println(writeEvents+"+"+skipEvents+"+"+failEvents+"=?"+readEvents);
-                System.err.println(readQueue.size()+" -> "+writeQueue.size());
-            }
+            sleep(100);
         }
     }
     
@@ -112,7 +110,7 @@ public class EngineMultiProcessor extends EngineProcessor {
             if (reader != null && reader.hasEvent()) {
 
                 // sleep instead of overfilling the read queue:
-                if (readQueue.size() > QUEUE_SIZE*threads) sleep(100);
+                if (readQueue.size() > QUEUE_SIZE*threads) sleep(1000);
 
                 // read the next event into the frame:
                 else {
@@ -208,12 +206,18 @@ public class EngineMultiProcessor extends EngineProcessor {
                 for (int i=0; i<e.size(); i++) {
                     Benchmark.getInstance().resume("write");
                     writer.writeEvent(e.get(i));
+                    for (int j=0; j<threads; j++) 
+                        splitQueue.get(i).offer(e.get(i));
                     Benchmark.getInstance().pause("write");
                     progress.updateStatus();
                 }
                 writeEvents += e.size();
             }
         }
+    }
+
+    void split(int thread) {
+        DataEvent e = splitQueue.get(thread).poll();
     }
 
     HipoDataEvent decode(ByteBuffer bytes) {
