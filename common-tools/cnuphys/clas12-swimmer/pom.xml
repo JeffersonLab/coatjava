@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>cnuphys</groupId>
+    <artifactId>clas12</artifactId>
+    <version>14.1.2-SNAPSHOT</version>
+  </parent>
+
+  <artifactId>clas12-swimmer</artifactId>
+  <name>Experimental Commons Math CLAS12 Swimmer</name>
+
+  <properties>
+    <skipTests>false</skipTests>
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>cnuphys</groupId>
+      <artifactId>swimmer</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>cnuphys</groupId>
+      <artifactId>magfield</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-math3</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+</project>
