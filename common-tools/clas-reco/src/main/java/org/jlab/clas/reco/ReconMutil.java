@@ -334,6 +334,7 @@ public final class ReconMutil extends EngineProcessor {
      * Close the output file and print some stuff.
      */
     void close() {
+        serial.finish(writer);
         writer.close();
         System.out.println(Benchmark.getInstance());
         System.out.println(String.format("recon-mutil:::::  Read/Write/Diff = %d/%d/%d",
