@@ -37,9 +37,9 @@ public class ReconMutil extends EngineProcessor {
     HipoDataSync writer;
 
     // Threads and queues:
-    CompletableFuture rethreadThread;
     CompletableFuture readerThread;
     CompletableFuture writerThread;
+    CompletableFuture rethreadThread;
     ConcurrentLinkedQueue<CompletableFuture> procThreads = new ConcurrentLinkedQueue<>();
     ConcurrentLinkedQueue<List<Object>> readQueue = new ConcurrentLinkedQueue<>();
     ConcurrentLinkedQueue<List<DataEvent>> writeQueue = new ConcurrentLinkedQueue<>();
@@ -56,26 +56,21 @@ public class ReconMutil extends EngineProcessor {
     int maxFileEvents;
     ProgressPrintout progress = new ProgressPrintout();
  
-    public ReconMutil(OptionParser parser) {
+    ReconMutil(OptionParser parser) {
         super(parser);
         maxEvents = parser.getOption("-n").intValue();
         skipEvents = parser.getOption("-s").intValue();
     }
 
-    public static OptionParser getParser() {
-        OptionParser p = EngineProcessor.getParser();
-        p.addOption("-t","4","number of threads");
-        p.removeOption("-i");
-        p.setRequiresInputList(true);
-        return p;
-    }
-    
     /**
      * The "recon-mutil" command-line entry-point.
      * @param args 
      */
     public static void main(String[] args) {
-        OptionParser cfg = ReconMutil.getParser();
+        OptionParser cfg = EngineProcessor.getParser();
+        cfg.addOption("-t","4","number of threads");
+        cfg.removeOption("-i");
+        cfg.setRequiresInputList(true);
         cfg.parse(args);
         ReconMutil proc = new ReconMutil(cfg);
         proc.launch(Arrays.stream(cfg.getOption("-t").stringValue().split(",")).mapToInt(Integer::parseInt).toArray(), 
@@ -89,7 +84,7 @@ public class ReconMutil extends EngineProcessor {
      * @param output name of output file to write
      * @param input names of input files to read
      */
-    public void launch(int[] threads, String output, String... input) {
+    void launch(int[] threads, String output, String... input) {
         reset();
         readerThread = CompletableFuture.runAsync(() -> { read(threads[0], input); });
         writerThread = CompletableFuture.runAsync(() -> { write(output); });
