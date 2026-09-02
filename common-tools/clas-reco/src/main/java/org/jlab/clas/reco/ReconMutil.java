@@ -10,16 +10,18 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import org.jlab.coda.jevio.EvioException;
 import org.jlab.detector.decode.CLASDecoder;
-import org.jlab.io.base.DataEvent;
-import org.jlab.io.base.DataSource;
+import org.jlab.detector.serial.SerialHoncho;
 import org.jlab.io.evio.EvioDataEvent;
 import org.jlab.io.evio.EvioSource;
 import org.jlab.io.hipo.HipoDataEvent;
-import org.jlab.io.hipo.HipoDataSource;
-import org.jlab.io.hipo.HipoDataSync;
+import org.jlab.jnp.hipo4.data.Event;
+import org.jlab.jnp.hipo4.data.SchemaFactory;
+import org.jlab.jnp.hipo4.io.HipoReader;
+import org.jlab.jnp.hipo4.io.HipoWriterSorted;
 import org.jlab.utils.benchmark.Benchmark;
 import org.jlab.utils.benchmark.ProgressPrintout;
 import org.jlab.utils.options.OptionParser;
+import org.jlab.utils.system.ClasUtilsFile;
 
 /**
  *
@@ -32,9 +34,11 @@ public final class ReconMutil extends EngineProcessor {
     final int CHUNKS_PER_QUEUE = 100;
     final int EVENTS_PER_CHUNK = 100;
 
-    // File reader and writer: 
-    DataSource reader;
-    HipoDataSync writer;
+    // File reader and writer:
+    Object reader;
+    HipoWriterSorted writer;
+    SchemaFactory schema;
+    SerialHoncho serial;
 
     // Threads and queues:
     CompletableFuture readerThread;
@@ -42,7 +46,7 @@ public final class ReconMutil extends EngineProcessor {
     CompletableFuture rethreadThread;
     ConcurrentLinkedQueue<CompletableFuture> procThreads = new ConcurrentLinkedQueue<>();
     ConcurrentLinkedQueue<List<Object>> readQueue = new ConcurrentLinkedQueue<>();
-    ConcurrentLinkedQueue<List<DataEvent>> writeQueue = new ConcurrentLinkedQueue<>();
+    ConcurrentLinkedQueue<List<Event>> writeQueue = new ConcurrentLinkedQueue<>();
     
     // Static parameters:
     int maxEvents;
@@ -60,6 +64,9 @@ public final class ReconMutil extends EngineProcessor {
         super(parser);
         maxEvents = parser.getOption("-n").intValue();
         skipEvents = parser.getOption("-s").intValue();
+        schema = new SchemaFactory();
+        schema.initFromDirectory(ClasUtilsFile.getResourceDir("CLAS12DIR","etc/bankdefs/hipo4"));
+        serial = new SerialHoncho(schema);
     }
 
     /**
@@ -120,7 +127,7 @@ public final class ReconMutil extends EngineProcessor {
         while ( (maxEvents < 1 || readEvents < maxEvents) &&
                 (maxFileEvents < 1 || fileEvents < maxFileEvents) ) {
 
-            if (reader != null && reader.hasEvent()) {
+            if (reader != null) {
 
                 // sleep instead of overfilling the read queue:
                 if (readQueue.size() > CHUNKS_PER_QUEUE*threads) sleep(1000);
@@ -142,7 +149,8 @@ public final class ReconMutil extends EngineProcessor {
             readEvents += chunk.size();
             readQueue.offer(chunk);
         }
-        reader.close();
+
+        if (reader instanceof EvioSource evio) evio.close();
     }
 
     /**
@@ -160,12 +168,16 @@ public final class ReconMutil extends EngineProcessor {
             else {
                 // put the event back on the queue if we're rethreading:
                 //if (rethreadThread != null && !rethreadThread.isDone()) readQueue.offer(o);
-                List<DataEvent> chunk = new ArrayList<>(o.size());
+                List<Event> chunk = new ArrayList<>(o.size());
                 for (int i=0; i<o.size(); i++) {
-                    DataEvent event;
+                    HipoDataEvent event;
                     // decode if necessary:
-                    if (o.get(i) instanceof ByteBuffer bb) event = decode(bb);
-                    else event = (HipoDataEvent)o.get(i);
+                    if (o.get(i) instanceof ByteBuffer bb) {
+                        event = decode(bb);
+                    }
+                    else {
+                        event = new HipoDataEvent(((Event)o.get(i)), schema);
+                    }
                     // run it through the engine chain:
                     for (Map.Entry<String,ReconstructionEngine> engine : processorEngines.entrySet()) {
                         Benchmark.getInstance().resume(engine.getValue().getName());
@@ -173,7 +185,14 @@ public final class ReconMutil extends EngineProcessor {
                         catch (Exception ex) { ex.printStackTrace(); }
                         Benchmark.getInstance().pause(engine.getValue().getName());
                     }
-                    chunk.add(event);
+
+                    Benchmark.getInstance().resume("serial");
+                    Event e = event.getHipoEvent();
+                    Event t = serial.read(e);
+                    t.setEventTag(1);
+                    Benchmark.getInstance().pause("serial");
+                    chunk.add(e);
+                    chunk.add(t);
                 }
                 writeQueue.offer(chunk);
             }
@@ -186,12 +205,12 @@ public final class ReconMutil extends EngineProcessor {
      */
     void write(String output) {
         if (output != null) {
-            writer = new HipoDataSync();
+            writer = new HipoWriterSorted();
             writer.setCompressionType(2);
             writer.open(output);
         }
         while (true) {
-            List<DataEvent> e = writeQueue.poll();
+            List<Event> e = writeQueue.poll();
             if (e == null) {
                 if (readerThread.isDone() && procThreads.isEmpty() && writeQueue.isEmpty()) {
                     close();
@@ -202,7 +221,7 @@ public final class ReconMutil extends EngineProcessor {
             else {
                 for (int i=0; i<e.size(); i++) {
                     Benchmark.getInstance().resume("write");
-                    if (writer != null) writer.writeEvent(e.get(i));
+                    if (writer != null) writer.addEvent(e.get(i), e.get(i).getEventTag());
                     Benchmark.getInstance().pause("write");
                     progress.updateStatus();
                 }
@@ -267,12 +286,14 @@ public final class ReconMutil extends EngineProcessor {
      */
     void open(String filename) {
         fileEvents = 0;
-        reader = filename.endsWith(".hipo") ? new HipoDataSource() : new EvioSource();
-        reader.open(filename);
-        if (reader instanceof HipoDataSource hipo) {
-            maxFileEvents = 0;
-            updateDictionary(hipo, writer);
-        } else {
+        if (filename.endsWith(".hipo")) {
+            reader = new HipoReader();
+            ((HipoReader)reader).open(filename);
+            maxFileEvents = ((HipoReader)reader).getEventCount();
+        }
+        else {
+            reader = new EvioSource();
+            ((EvioSource)reader).open(filename);
             maxFileEvents = ((EvioSource)reader).getEventCount();
         }
     }
@@ -293,7 +314,10 @@ public final class ReconMutil extends EngineProcessor {
                 ex.printStackTrace();
             }
         }
-        else o = reader.getNextEvent();
+        else {
+            Event event = new Event();
+            o = ((HipoReader)reader).getEvent(event, fileEvents);
+        }
         if (o != null && (skipEvents < 1 || readEvents > skipEvents)) {
             chunk.add(o);
             if (chunk.size() >= EVENTS_PER_CHUNK) {
