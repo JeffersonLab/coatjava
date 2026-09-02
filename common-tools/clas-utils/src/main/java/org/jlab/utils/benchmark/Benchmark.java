@@ -81,6 +81,11 @@ public class Benchmark {
         return total;
     }
 
+    public String toCSV() {
+        return String.join(",",timerStore.entrySet().stream().
+            map(b -> String.format("%s:%.4f",b.getKey(),b.getValue().getTimePerCall())).toArray(String[]::new));
+    }
+    
     @Override
     public String toString(){
         StringBuilder s = new StringBuilder();
