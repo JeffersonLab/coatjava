@@ -55,7 +55,7 @@ public final class ReconMutil extends EngineProcessor {
     int fileEvents;
     int maxFileEvents;
     ProgressPrintout progress = new ProgressPrintout();
- 
+
     ReconMutil(OptionParser parser) {
         super(parser);
         maxEvents = parser.getOption("-n").intValue();
@@ -159,7 +159,7 @@ public final class ReconMutil extends EngineProcessor {
             }
             else {
                 // put the event back on the queue if we're rethreading:
-                if (rethreadThread != null && !rethreadThread.isDone()) readQueue.offer(o);
+                //if (rethreadThread != null && !rethreadThread.isDone()) readQueue.offer(o);
                 List<DataEvent> chunk = new ArrayList<>(o.size());
                 for (int i=0; i<o.size(); i++) {
                     DataEvent event;
