@@ -28,12 +28,14 @@ import org.jlab.utils.options.OptionParser;
 public class EngineMultiProcessor extends EngineProcessor {
 
     final int BENCH_SECONDS = 30;
-    final int QUEUE_SIZE = 100;
-    final int FRAME_SIZE = 100;
+    final int CHUNKS_PER_QUEUE = 100;
+    final int EVENTS_PER_CHUNK = 100;
 
+    // File reader and writer: 
     DataSource reader;
     HipoDataSync writer;
 
+    // threads and queeues:
     CompletableFuture rethreadThread;
     CompletableFuture readerThread;
     CompletableFuture writerThread;
@@ -41,28 +43,19 @@ public class EngineMultiProcessor extends EngineProcessor {
     ConcurrentLinkedQueue<List<Object>> readQueue = new ConcurrentLinkedQueue<>();
     ConcurrentLinkedQueue<List<DataEvent>> writeQueue = new ConcurrentLinkedQueue<>();
     List<ConcurrentLinkedQueue<DataEvent>> splitQueue;
-    
     ProgressPrintout progress = new ProgressPrintout();
-
+    
+    // static parameters:
     int maxEvents;
     int skipEvents;
 
+    // progress counters:
     int readEvents;
     int writeEvents;
     int failEvents;
     int fileEvents;
     int maxFileEvents;
-    
-    public static void main(String[] args) {
-        OptionParser cfg = EngineProcessor.getParser();
-        cfg.addOption("-t","4","number of threads");
-        cfg.parse(args);
-        EngineMultiProcessor proc = new EngineMultiProcessor(cfg);
-        proc.launch(Arrays.stream(cfg.getOption("-t").stringValue().split(",")).mapToInt(Integer::parseInt).toArray(), 
-                    cfg.getOption("-o").stringValue(),
-                    cfg.getOption("-i").stringValue());
-    }
-
+  
     public EngineMultiProcessor(OptionParser parser) {
         super(parser);
         maxEvents = parser.getOption("-n").intValue();
@@ -70,13 +63,37 @@ public class EngineMultiProcessor extends EngineProcessor {
     }
 
     /**
+     * The "recon-mutil" command-line tool.
+     * @param args 
+     */
+    public static void main(String[] args) {
+        OptionParser cfg = EngineMultiProcessor.getParser();
+        cfg.parse(args);
+        EngineMultiProcessor proc = new EngineMultiProcessor(cfg);
+        proc.launch(Arrays.stream(cfg.getOption("-t").stringValue().split(",")).mapToInt(Integer::parseInt).toArray(), 
+                    cfg.getOption("-o").stringValue(),
+                    cfg.getInputList().stream().toArray(String[]::new));
+    }
+
+    /**
+     * Add threads option and replace -i option with argument list.
+     * @return  
+     */
+    public static OptionParser getParser() {
+        OptionParser p = EngineProcessor.getParser();
+        p.addOption("-t","4","number of threads");
+        p.removeOption("-i");
+        p.setRequiresInputList(true);
+        return p;
+    }
+    
+    /**
      * The thread launcher and collector.
      * @param threads number of threads
      * @param output name of output file to write
      * @param input names of input files to read
      */
     public void launch(int[] threads, String output, String... input) {
-        shutdown();
         reset();
         splitQueue = new ArrayList<>(threads[0]);
         readerThread = CompletableFuture.runAsync(() -> { read(threads[0], input); });
@@ -90,20 +107,11 @@ public class EngineMultiProcessor extends EngineProcessor {
             sleep(100);
             for (CompletableFuture f : procThreads)
                 if (f.isDone()) procThreads.remove(f);
-            if (rethreadThread == null && threads.length > 1 && writeEvents > 100)
+            if (threads.length > 1 && rethreadThread == null && writeEvents > 100) {
                 rethreadThread = CompletableFuture.runAsync(() -> { rethread(BENCH_SECONDS,threads); });
-        }
-    }
-
-    /**
-     * Shutdown all data processing, close files.
-     */
-    public void shutdown() {
-        for (CompletableFuture f : procThreads) f.cancel(true);
-        if (readerThread != null) readerThread.cancel(true);
-        if (writerThread != null) {
-            writerThread.cancel(true);
-            writer.close();
+                rethreadThread.join();
+                reset();
+            }
         }
     }
 
@@ -116,8 +124,8 @@ public class EngineMultiProcessor extends EngineProcessor {
         // convert input filenames to a list:
         List<String> inputs = new ArrayList<>(Arrays.asList(input));
 
-        // initialize the event frame:
-        List<Object> frame = new ArrayList<>(FRAME_SIZE);
+        // initialize the event chunk:
+        List<Object> chunk = new ArrayList<>(EVENTS_PER_CHUNK);
 
         // loop over input events:
         while ( (maxEvents < 1 || readEvents < maxEvents) &&
@@ -126,10 +134,10 @@ public class EngineMultiProcessor extends EngineProcessor {
             if (reader != null && reader.hasEvent()) {
 
                 // sleep instead of overfilling the read queue:
-                if (readQueue.size() > QUEUE_SIZE*threads) sleep(1000);
+                if (readQueue.size() > CHUNKS_PER_QUEUE*threads) sleep(1000);
 
-                // read next event into frame, and fill queue if frame full:
-                else frame = read(frame);
+                // read next event into chunk, and fill queue if chunk full:
+                else chunk = read(chunk);
             }
 
             // open the next input file:
@@ -139,11 +147,11 @@ public class EngineMultiProcessor extends EngineProcessor {
             else break;
         }
 
-        // write leftover, partial frame:
-        if (!frame.isEmpty()) {
-            System.err.println("writing partial frame: "+frame.size());
-            readEvents += frame.size();
-            readQueue.offer(frame);
+        // write leftover, partial chunk:
+        if (!chunk.isEmpty()) {
+            System.err.println("writing partial chunk: "+chunk.size());
+            readEvents += chunk.size();
+            readQueue.offer(chunk);
         }
         reader.close();
     }
@@ -163,7 +171,7 @@ public class EngineMultiProcessor extends EngineProcessor {
             else {
                 // put the event back on the queue if we're rethreading:
                 if (rethreadThread != null && !rethreadThread.isDone()) readQueue.offer(o);
-                List<DataEvent> frame = new ArrayList<>(o.size());
+                List<DataEvent> chunk = new ArrayList<>(o.size());
                 for (int i=0; i<o.size(); i++) {
                     DataEvent event;
                     // decode if necessary:
@@ -176,9 +184,9 @@ public class EngineMultiProcessor extends EngineProcessor {
                         catch (Exception ex) { ex.printStackTrace(); }
                         Benchmark.getInstance().pause(engine.getValue().getName());
                     }
-                    frame.add(event);
+                    chunk.add(event);
                 }
-                writeQueue.offer(frame);
+                writeQueue.offer(chunk);
             }
         }
     }
@@ -213,12 +221,12 @@ public class EngineMultiProcessor extends EngineProcessor {
     }
 
     /**
-     * The rethread thread.
+     * The rethreader thread.
      * @param seconds delay before switching to next thread count
      * @param threads thread counts to use 
      */
     void rethread(int seconds, int... threads) {
-        System.out.println("<><><> Rethreading spawned ...");
+        System.out.println("~~~~~~~~~ Rethreading Initiated ~~~~~~~~~");
         for (int i=0; i<threads.length; i++) {
             for (CompletableFuture f : procThreads) {
                 f.cancel(true);
@@ -227,6 +235,7 @@ public class EngineMultiProcessor extends EngineProcessor {
             writeEvents = 0;
             readEvents = 0;
             progress = new ProgressPrintout();
+            progress.setInterval(-1);
             Benchmark.getInstance().reset();
             for (int j=0; j<threads[i]; j++) {
                 final int k = j;
@@ -234,11 +243,10 @@ public class EngineMultiProcessor extends EngineProcessor {
             }
             while (progress.getNumberOfCalls() < 100) sleep(1000);
             sleep(seconds*1000);
-            System.out.println(String.format("\n<><><><><>    RETHREAD COUNT: %d\n",threads[i]));
+            System.out.println(String.format("\n~~~~~~~~~ Rethreading Count: %d ~~~~~~~~~\n",threads[i]));
             System.out.println(progress.getUpdateString());
             System.out.println(Benchmark.getInstance());
         }
-        shutdown();
     }
 
     /**
@@ -279,12 +287,12 @@ public class EngineMultiProcessor extends EngineProcessor {
     }
 
     /**
-     * Read the next event into the frame, and, if it's full, queue the frame
+     * Read the next event into the chunk, and, if it's full, queue the chunk
      * and make a new one.
-     * @param frame
-     * @return modified frame 
+     * @param chunk
+     * @return modified chunk 
      */
-    List<Object> read(List<Object> frame) {
+    List<Object> read(List<Object> chunk) {
         Benchmark.getInstance().resume("read");
         Object o = null;
         if (reader instanceof EvioSource evio) {
@@ -296,15 +304,15 @@ public class EngineMultiProcessor extends EngineProcessor {
         }
         else o = reader.getNextEvent();
         if (o != null && (skipEvents < 1 || readEvents > skipEvents)) {
-            frame.add(o);
-            if (frame.size() >= FRAME_SIZE) {
-                readQueue.offer(frame);
-                readEvents += frame.size();
-                frame = new ArrayList<>(FRAME_SIZE);
+            chunk.add(o);
+            if (chunk.size() >= EVENTS_PER_CHUNK) {
+                readQueue.offer(chunk);
+                readEvents += chunk.size();
+                chunk = new ArrayList<>(EVENTS_PER_CHUNK);
             }
         }
         Benchmark.getInstance().pause("read");
-        return frame;
+        return chunk;
     }
 
     /**
@@ -318,9 +326,15 @@ public class EngineMultiProcessor extends EngineProcessor {
     }
 
     /**
-     * Reset counters and queues.
+     * Shutdown all threads, close files, and reset counters.
      */
     void reset() {
+        for (CompletableFuture f : procThreads) f.cancel(true);
+        if (readerThread != null) readerThread.cancel(true);
+        if (writerThread != null) {
+            writerThread.cancel(true);
+            writer.close();
+        }
         readQueue = new ConcurrentLinkedQueue<>();
         writeQueue = new ConcurrentLinkedQueue<>();
         procThreads = new ConcurrentLinkedQueue();
@@ -328,7 +342,11 @@ public class EngineMultiProcessor extends EngineProcessor {
         writeEvents = 0;
         failEvents = 0;
     }
-    
+
+    /**
+     * Catch interruptions in sleep.
+     * @param milliseconds 
+     */
     void sleep(int milliseconds) {
         try { Thread.sleep(milliseconds); }
         catch (InterruptedException ex) {}

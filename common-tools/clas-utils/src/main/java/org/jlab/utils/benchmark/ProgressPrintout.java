@@ -63,10 +63,10 @@ public class ProgressPrintout {
             this.previousPrintoutTime = System.currentTimeMillis();
             this.startPrintoutTime = this.previousPrintoutTime;
         }
-        else {
+        else if (this.printoutIntervalSeconds > 0) {
             Long currentTime   = System.currentTimeMillis();
             Double elapsedTime = (currentTime - this.previousPrintoutTime)*1e-3;
-            if(elapsedTime >= this.printoutIntervalSeconds){
+            if (elapsedTime >= this.printoutIntervalSeconds){
                 this.previousPrintoutTime = System.currentTimeMillis();
                 System.out.println(this.getUpdateString());
             }
