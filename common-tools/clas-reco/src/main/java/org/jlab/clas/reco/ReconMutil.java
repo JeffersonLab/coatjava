@@ -25,8 +25,9 @@ import org.jlab.utils.options.OptionParser;
  *
  * @author baltzell
  */
-public class EngineMultiProcessor extends EngineProcessor {
+public class ReconMutil extends EngineProcessor {
 
+    // Performance parameters:
     final int BENCH_SECONDS = 30;
     final int CHUNKS_PER_QUEUE = 100;
     final int EVENTS_PER_CHUNK = 100;
@@ -35,50 +36,32 @@ public class EngineMultiProcessor extends EngineProcessor {
     DataSource reader;
     HipoDataSync writer;
 
-    // threads and queeues:
+    // Threads and queues:
     CompletableFuture rethreadThread;
     CompletableFuture readerThread;
     CompletableFuture writerThread;
     ConcurrentLinkedQueue<CompletableFuture> procThreads = new ConcurrentLinkedQueue<>();
     ConcurrentLinkedQueue<List<Object>> readQueue = new ConcurrentLinkedQueue<>();
     ConcurrentLinkedQueue<List<DataEvent>> writeQueue = new ConcurrentLinkedQueue<>();
-    List<ConcurrentLinkedQueue<DataEvent>> splitQueue;
-    ProgressPrintout progress = new ProgressPrintout();
     
-    // static parameters:
+    // Static parameters:
     int maxEvents;
     int skipEvents;
 
-    // progress counters:
+    // Progress counters:
     int readEvents;
     int writeEvents;
     int failEvents;
     int fileEvents;
     int maxFileEvents;
-  
-    public EngineMultiProcessor(OptionParser parser) {
+    ProgressPrintout progress = new ProgressPrintout();
+ 
+    public ReconMutil(OptionParser parser) {
         super(parser);
         maxEvents = parser.getOption("-n").intValue();
         skipEvents = parser.getOption("-s").intValue();
     }
 
-    /**
-     * The "recon-mutil" command-line tool.
-     * @param args 
-     */
-    public static void main(String[] args) {
-        OptionParser cfg = EngineMultiProcessor.getParser();
-        cfg.parse(args);
-        EngineMultiProcessor proc = new EngineMultiProcessor(cfg);
-        proc.launch(Arrays.stream(cfg.getOption("-t").stringValue().split(",")).mapToInt(Integer::parseInt).toArray(), 
-                    cfg.getOption("-o").stringValue(),
-                    cfg.getInputList().stream().toArray(String[]::new));
-    }
-
-    /**
-     * Add threads option and replace -i option with argument list.
-     * @return  
-     */
     public static OptionParser getParser() {
         OptionParser p = EngineProcessor.getParser();
         p.addOption("-t","4","number of threads");
@@ -88,6 +71,19 @@ public class EngineMultiProcessor extends EngineProcessor {
     }
     
     /**
+     * The "recon-mutil" command-line entry-point.
+     * @param args 
+     */
+    public static void main(String[] args) {
+        OptionParser cfg = ReconMutil.getParser();
+        cfg.parse(args);
+        ReconMutil proc = new ReconMutil(cfg);
+        proc.launch(Arrays.stream(cfg.getOption("-t").stringValue().split(",")).mapToInt(Integer::parseInt).toArray(), 
+                    cfg.getOption("-o").stringValue(),
+                    cfg.getInputList().stream().toArray(String[]::new));
+    }
+
+    /**
      * The thread launcher and collector.
      * @param threads number of threads
      * @param output name of output file to write
@@ -95,13 +91,11 @@ public class EngineMultiProcessor extends EngineProcessor {
      */
     public void launch(int[] threads, String output, String... input) {
         reset();
-        splitQueue = new ArrayList<>(threads[0]);
         readerThread = CompletableFuture.runAsync(() -> { read(threads[0], input); });
         writerThread = CompletableFuture.runAsync(() -> { write(output); });
         for (int i=0; i<threads[0]; i++) {
             final int j = i;
             procThreads.offer(CompletableFuture.runAsync(() -> { process(j); }));
-            splitQueue.add(i, new ConcurrentLinkedQueue<>());
         }
         while (!writerThread.isDone()) {
             sleep(100);
@@ -196,9 +190,11 @@ public class EngineMultiProcessor extends EngineProcessor {
      * @param output output filename
      */
     void write(String output) {
-        writer = new HipoDataSync();
-        writer.setCompressionType(2);
-        writer.open(output);
+        if (output != null) {
+            writer = new HipoDataSync();
+            writer.setCompressionType(2);
+            writer.open(output);
+        }
         while (true) {
             List<DataEvent> e = writeQueue.poll();
             if (e == null) {
@@ -211,7 +207,7 @@ public class EngineMultiProcessor extends EngineProcessor {
             else {
                 for (int i=0; i<e.size(); i++) {
                     Benchmark.getInstance().resume("write");
-                    writer.writeEvent(e.get(i));
+                    if (writer != null) writer.writeEvent(e.get(i));
                     Benchmark.getInstance().pause("write");
                     progress.updateStatus();
                 }
@@ -326,7 +322,7 @@ public class EngineMultiProcessor extends EngineProcessor {
     }
 
     /**
-     * Shutdown all threads, close files, and reset counters.
+     * Forcefully shutdown all threads, close files, and reset queuess and counters.
      */
     void reset() {
         for (CompletableFuture f : procThreads) f.cancel(true);
