@@ -25,7 +25,7 @@ import org.jlab.utils.options.OptionParser;
  *
  * @author baltzell
  */
-public class ReconMutil extends EngineProcessor {
+public final class ReconMutil extends EngineProcessor {
 
     // Performance parameters:
     final int BENCH_SECONDS = 30;
@@ -63,19 +63,19 @@ public class ReconMutil extends EngineProcessor {
     }
 
     /**
-     * The command-line entry-point known as recon-mutil.
+     * The command-line entry-point known as "recon-mutil".
      * @param args command-line arguments
      */
     public static void main(String[] args) {
-        OptionParser cfg = EngineProcessor.getParser();
-        cfg.addOption("-t","4","number of threads");
-        cfg.removeOption("-i");
-        cfg.setRequiresInputList(true);
-        cfg.parse(args);
-        ReconMutil proc = new ReconMutil(cfg);
-        proc.launch(Arrays.stream(cfg.getOption("-t").stringValue().split(",")).mapToInt(Integer::parseInt).toArray(), 
-                    cfg.getOption("-o").stringValue(),
-                    cfg.getInputList().stream().toArray(String[]::new));
+        OptionParser o = EngineProcessor.getParser();
+        o.addOption("-t","4","number of threads");
+        o.removeOption("-i");
+        o.setRequiresInputList(true);
+        o.parse(args);
+        ReconMutil r = new ReconMutil(o);
+        r.launch(Arrays.stream(o.getOption("-t").stringValue().split(",")).mapToInt(Integer::parseInt).toArray(), 
+                o.getOption("-o").stringValue(),
+                o.getInputList().stream().toArray(String[]::new));
     }
 
     /**
