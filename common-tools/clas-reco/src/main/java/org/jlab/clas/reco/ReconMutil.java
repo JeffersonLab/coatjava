@@ -63,8 +63,8 @@ public class ReconMutil extends EngineProcessor {
     }
 
     /**
-     * The "recon-mutil" command-line entry-point.
-     * @param args 
+     * The command-line entry-point known as recon-mutil.
+     * @param args command-line arguments
      */
     public static void main(String[] args) {
         OptionParser cfg = EngineProcessor.getParser();
