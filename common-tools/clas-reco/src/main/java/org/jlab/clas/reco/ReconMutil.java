@@ -41,7 +41,7 @@ import org.json.JSONObject;
  *
  * @author baltzell
  */
-public final class ReconMutil {
+class ReconMutil {
 
     // Performance parameters:
     final int BENCH_SECONDS = 30;
@@ -52,7 +52,7 @@ public final class ReconMutil {
     Object reader;
     HipoWriterSorted writer;
     List<Bank> schemaBankList;
-    static SchemaFactory schema = new SchemaFactory();
+    static final SchemaFactory schema = new SchemaFactory();
     static { schema.initFromDirectory(ClasUtilsFile.getResourceDir("CLAS12DIR","etc/bankdefs/hipo4")); }
     
     // Processors:
