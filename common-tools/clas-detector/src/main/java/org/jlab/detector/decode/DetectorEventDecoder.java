@@ -220,12 +220,14 @@ public class DetectorEventDecoder {
             if (adc.getPulseSize() > 0) {
                 try {
                     ExtendedFADCFitter[] hits = extendedFitter.multiFit(nsa, nsb, tet, ped, adc.getPulseArray());
+                    // the first hit is treated conventionally:
                     adc.setADC(nsa, nsb);
                     adc.setIntegral(hits[0].adc + hits[0].ped*(nsa+nsb));
                     adc.setHeight((short) hits[0].pulsePeakValue);
                     adc.setTimeWord(hits[0].t0);
                     adc.setPedestal((short) hits[0].ped);
-                    for (int j = 0; j < hits.length; j++) {
+                    // and extra hits get a new object here:
+                    for (int j = 1; j < hits.length; j++) {
                         ADCData a = new ADCData();
                         a.setADC(nsa, nsb);
                         a.setOrder(adc.getOrder());
@@ -236,6 +238,7 @@ public class DetectorEventDecoder {
                         data.addADC(a);
                     }
                 } catch (Exception e) {
+                    e.printStackTrace();
                     System.err.println(">>>> error : fitting pulse "+dd.getCrate()+
                         " / "+dd.getSlot()+" / "+dd.getChannel());
                 }
