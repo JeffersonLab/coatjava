@@ -40,9 +40,11 @@ public final class ReconMutil extends EngineProcessor {
     // File reader and writer:
     Object reader;
     HipoWriterSorted writer;
-    SchemaFactory schema;
     SerialHoncho serial;
     List<Bank> schemaBankList;
+
+    static final SchemaFactory schema = new SchemaFactory();
+    static { schema.initFromDirectory(ClasUtilsFile.getResourceDir("CLAS12DIR","etc/bankdefs/hipo4")); }
 
     // Threads and queues:
     CompletableFuture readerThread;
@@ -71,27 +73,9 @@ public final class ReconMutil extends EngineProcessor {
         this.parser = parser;
         maxEvents = parser.getOption("-n").intValue();
         skipEvents = parser.getOption("-s").intValue();
-        schema = new SchemaFactory();
-        schema.initFromDirectory(ClasUtilsFile.getResourceDir("CLAS12DIR","etc/bankdefs/hipo4"));
         serial = new SerialHoncho(schema);
         if (!parser.getOption("-y").isDefault())
             yaml = new ClaraYaml(parser.getOption("-y").stringValue());
-    }
-
-    /**
-     * The command-line entry-point known as "recon-mutil".
-     * @param args command-line arguments
-     */
-    public static void main(String[] args) {
-        OptionParser o = EngineProcessor.getParser();
-        o.addOption("-t","4","number of threads");
-        o.removeOption("-i");
-        o.setRequiresInputList(true);
-        o.parse(args);
-        ReconMutil r = new ReconMutil(o);
-        r.launch(Arrays.stream(o.getOption("-t").stringValue().split(",")).mapToInt(Integer::parseInt).toArray(), 
-                o.getOption("-o").stringValue(),
-                o.getInputList().stream().toArray(String[]::new));
     }
 
     /**
@@ -209,43 +193,11 @@ public final class ReconMutil extends EngineProcessor {
     }
 
     /**
-     * Open the writer and initialize its schema.
-     * @param filename output filename
-     * @param yaml the configuration
-     */
-    void open(String filename, ClaraYaml yaml) {
-        writer = new HipoWriterSorted();
-        writer.setCompressionType(2);
-        String d = ClasUtilsFile.getResourceDir("CLAS12DIR", "etc/bankdefs/hipo4");
-        if (yaml.getSchemaDirectory() != null) d = yaml.getSchemaDirectory();
-        if (!parser.getOption("-S").isDefault()) d = parser.getOption("-S").stringValue();
-        SchemaFactory s = new SchemaFactory();
-        s.initFromDirectory(d);
-        JSONObject json = yaml.filter("writer");
-        if (json.has("wildcard")) {
-            SchemaFactory s2 = s.reduce(json.getString("wildcard"));
-            writer.getSchemaFactory().copy(s2);
-        }
-        else writer.getSchemaFactory().copy(s);
-        schemaBankList = new ArrayList<>();
-        if (json.has("wildcard")) {
-            if (json.optBoolean("schema_filter",true)) {
-                int schemaSize = writer.getSchemaFactory().getSchemaList().size();
-                for (int i=0; i<schemaSize; i++) {
-                    Bank dataBank = new Bank(writer.getSchemaFactory().getSchemaList().get(i));
-                    schemaBankList.add(dataBank);
-                }
-            }
-        }
-        writer.open(filename);
-    }
-    
-    /**
      * The writer thread.
      * @param output output filename
      */
     void write(String output) {
-        if (output != null) open(output, yaml);
+        if (output != null) writer = open(output, yaml);
         while (true) {
             List<Event> e = writeQueue.poll();
             if (e == null) {
@@ -343,6 +295,39 @@ public final class ReconMutil extends EngineProcessor {
     }
 
     /**
+     * Open a new writer and initialize its schema.
+     * @param filename output filename
+     * @param yaml the configuration
+     */
+    HipoWriterSorted open(String filename, ClaraYaml yaml) {
+        HipoWriterSorted w = new HipoWriterSorted();
+        w.setCompressionType(2);
+        String d = ClasUtilsFile.getResourceDir("CLAS12DIR", "etc/bankdefs/hipo4");
+        if (yaml.getSchemaDirectory() != null) d = yaml.getSchemaDirectory();
+        if (!parser.getOption("-S").isDefault()) d = parser.getOption("-S").stringValue();
+        SchemaFactory s = new SchemaFactory();
+        s.initFromDirectory(d);
+        JSONObject json = yaml.filter("writer");
+        if (json.has("wildcard")) {
+            SchemaFactory s2 = s.reduce(json.getString("wildcard"));
+            w.getSchemaFactory().copy(s2);
+        }
+        else w.getSchemaFactory().copy(s);
+        schemaBankList = new ArrayList<>();
+        if (json.has("wildcard")) {
+            if (json.optBoolean("schema_filter",true)) {
+                int schemaSize = w.getSchemaFactory().getSchemaList().size();
+                for (int i=0; i<schemaSize; i++) {
+                    Bank dataBank = new Bank(w.getSchemaFactory().getSchemaList().get(i));
+                    schemaBankList.add(dataBank);
+                }
+            }
+        }
+        w.open(filename);
+        return w;
+    }
+    
+    /**
      * Read the next event into the chunk, and, if it's full, queue the chunk
      * and make a new one.
      * @param chunk
@@ -380,7 +365,7 @@ public final class ReconMutil extends EngineProcessor {
     void close() {
         serial.finish(writer);
         writer.close();
-        System.out.println(String.format("recon-mutil:::::  Read/Write/Diff = %d/%d/%d",
+        System.out.println(String.format("recon-mutil :: read/write/diff = %d/%d/%d",
                 readEvents, writeEvents, readEvents-writeEvents));
     }
 
@@ -409,5 +394,23 @@ public final class ReconMutil extends EngineProcessor {
     void sleep(int milliseconds) {
         try { Thread.sleep(milliseconds); }
         catch (InterruptedException ex) {}
+    }
+    
+    /**
+     * The command-line entry-point known as "recon-mutil".
+     * @param args command-line arguments
+     */
+    public static void main(String[] args) {
+        OptionParser o = EngineProcessor.getParser();
+        o.removeOption("-i");
+        o.removeOption("-o");
+        o.addOption("-t","4","number of threads");
+        o.addOption("-o", null, "output file name");
+        o.setRequiresInputList(true);
+        o.parse(args);
+        ReconMutil r = new ReconMutil(o);
+        r.launch(Arrays.stream(o.getOption("-t").stringValue().split(",")).mapToInt(Integer::parseInt).toArray(), 
+                o.getOption("-o").stringValue(),
+                o.getInputList().stream().toArray(String[]::new));
     }
 }
