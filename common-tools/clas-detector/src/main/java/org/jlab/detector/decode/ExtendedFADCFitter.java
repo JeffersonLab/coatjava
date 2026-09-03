@@ -203,13 +203,14 @@ public class ExtendedFADCFitter implements IFADCFitter {
                                     break;
                                 }
                             }
+                            // add the new hit we just made:
                             hits.add(f);
                             // move search bin forward:
-                            bin = hits.getLast().pulsePeakPosition;
+                            bin = f.pulsePeakPosition;
                             break;
                         }
                     }
-                    // if we didn't generate a hit, stop:
+                    // if we didn't generate a new hit, stop:
                     if (hits.isEmpty()) break;
                 }
             }
