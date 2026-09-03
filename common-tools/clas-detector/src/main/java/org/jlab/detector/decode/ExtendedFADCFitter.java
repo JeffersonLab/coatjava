@@ -164,9 +164,14 @@ public class ExtendedFADCFitter implements IFADCFitter {
     }
 
     public ExtendedFADCFitter[] multiFit(int nsa, int nsb, int tet, int pedr, short[] pulse) {
+        
         List<ExtendedFADCFitter> hits = new ArrayList<>();
+
+        // start with our conventional pulse fitting:
         fit(nsa, nsb, tet, pedr, pulse);
         hits.add(this);
+
+        // and look for more later pulses:
         if (pulsePeakPosition > 0) {
             boolean belowThreshold = false;
             for (int bin=pulsePeakPosition+1; bin<pulse.length; bin++) {
