@@ -89,11 +89,11 @@ public class SerialHoncho {
         return helicities;
     }
 
-    public ConstantsManager getConstants() {
+    public ConstantsManager getConstantsManager() {
         return conman;
     }
 
-    public SchemaFactory getSchema() {
+    public SchemaFactory getSchemaFactory() {
         return schema;
     }
 }
