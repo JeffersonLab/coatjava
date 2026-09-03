@@ -42,7 +42,7 @@ public final class ReconMutil extends EngineProcessor {
     HipoWriterSorted writer;
     SchemaFactory schema;
     SerialHoncho serial;
-    List<Bank> schemaBankList = new ArrayList<Bank>();
+    List<Bank> schemaBankList;
 
     // Threads and queues:
     CompletableFuture readerThread;
@@ -208,15 +208,20 @@ public final class ReconMutil extends EngineProcessor {
         }
     }
 
+    /**
+     * Open the writer and initialize its schema.
+     * @param filename output filename
+     * @param yaml the configuration
+     */
     void open(String filename, ClaraYaml yaml) {
         writer = new HipoWriterSorted();
         writer.setCompressionType(2);
-        JSONObject json = yaml.filter("writer");
         String d = ClasUtilsFile.getResourceDir("CLAS12DIR", "etc/bankdefs/hipo4");
         if (yaml.getSchemaDirectory() != null) d = yaml.getSchemaDirectory();
         if (!parser.getOption("-S").isDefault()) d = parser.getOption("-S").stringValue();
         SchemaFactory s = new SchemaFactory();
         s.initFromDirectory(d);
+        JSONObject json = yaml.filter("writer");
         if (json.has("wildcard")) {
             SchemaFactory s2 = s.reduce(json.getString("wildcard"));
             writer.getSchemaFactory().copy(s2);

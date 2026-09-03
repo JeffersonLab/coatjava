@@ -16,6 +16,7 @@ import org.jlab.detector.scalers.DaqScalers;
 import org.jlab.detector.scalers.DaqScalersSequence;
 import org.jlab.detector.helicity.HelicityBit;
 import org.jlab.detector.helicity.HelicitySequenceDelayed;
+import org.jlab.detector.serial.SerialHoncho;
 import org.jlab.jnp.hipo4.io.HipoWriterSorted;
 import org.jlab.utils.options.OptionParser;
 import org.jlab.utils.system.ClasUtilsFile;
@@ -274,4 +275,20 @@ public class Processor {
         if (writer != null) writer.close();
     }
 
+    public void postprocess(int run, String input, SerialHoncho serial, HipoWriterSorted writer, List<Bank> banks) {
+        int d = serial.getConstantsManager().getConstants(run, "/runcontrol/helicity").getIntValue("delay",0,0,0);
+        HelicitySequenceDelayed helicity = new HelicitySequenceDelayed(d);
+        helicity.addStream(serial.getHelicities());
+        Processor p = new Processor(List.of(input), serial.getSchemaFactory(), helicity, serial.getScalers());
+        HipoReader r = new HipoReader();
+        r.open(input);
+        Event e = new Event();
+        while (r.hasNext()) {
+            r.nextEvent(e);
+            p.processEvent(e);
+            int tag = e.getEventTag();
+            if (tag==1 || banks.isEmpty()) writer.addEvent(e,tag);
+            else writer.addEvent(e.reduceEvent(banks),tag);
+        }
+    }
 }

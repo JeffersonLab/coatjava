@@ -88,5 +88,12 @@ public class SerialHoncho {
     public TreeSet<HelicityState> getHelicities() {
         return helicities;
     }
-    
+
+    public ConstantsManager getConstantsManager() {
+        return conman;
+    }
+
+    public SchemaFactory getSchemaFactory() {
+        return schema;
+    }
 }
