@@ -223,7 +223,7 @@ public final class ReconMutil extends EngineProcessor {
         }
         else writer.getSchemaFactory().copy(s);
         schemaBankList = new ArrayList<>();
-        if (json.has("schema_dir") && json.has("wildcard")) {
+        if (json.has("wildcard")) {
             if (json.optBoolean("schema_filter",true)) {
                 int schemaSize = writer.getSchemaFactory().getSchemaList().size();
                 for (int i=0; i<schemaSize; i++) {
