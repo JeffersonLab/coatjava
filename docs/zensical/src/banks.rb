@@ -152,6 +152,16 @@ specs_fully_sorted.each do |group_id, spec_list|
     "`#{spec['name'].gsub /::.*/, ''}`"
   end.uniq
 
+  # check if the bank name has any funny characters
+  spec_list.each do |spec|
+    unless spec['name'].match? /\A[a-zA-Z:]+\z/
+      raise "bank '#{spec['name']}' has unexpected character(s)"
+    end
+    if spec['name'].gsub(/::/, '').match? /:/ # FIXME: won't catch `::::`, `::::::`, etc.
+      raise "bank '#{spec['name']}' has unexpected colon(s)"
+    end
+  end
+
   outMain.puts "\n## #{uniq_prefixes.join ', '} Banks"
   outMain.puts "**Group ID:** #{group_id}\n\n"
   table_row outMain, ['Item ID', 'Name', 'Description']
