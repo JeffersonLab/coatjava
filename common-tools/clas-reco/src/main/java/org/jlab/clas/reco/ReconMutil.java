@@ -14,14 +14,17 @@ import org.jlab.detector.serial.SerialHoncho;
 import org.jlab.io.evio.EvioDataEvent;
 import org.jlab.io.evio.EvioSource;
 import org.jlab.io.hipo.HipoDataEvent;
+import org.jlab.jnp.hipo4.data.Bank;
 import org.jlab.jnp.hipo4.data.Event;
 import org.jlab.jnp.hipo4.data.SchemaFactory;
 import org.jlab.jnp.hipo4.io.HipoReader;
 import org.jlab.jnp.hipo4.io.HipoWriterSorted;
+import org.jlab.utils.ClaraYaml;
 import org.jlab.utils.benchmark.Benchmark;
 import org.jlab.utils.benchmark.ProgressPrintout;
 import org.jlab.utils.options.OptionParser;
 import org.jlab.utils.system.ClasUtilsFile;
+import org.json.JSONObject;
 
 /**
  *
@@ -39,6 +42,7 @@ public final class ReconMutil extends EngineProcessor {
     HipoWriterSorted writer;
     SchemaFactory schema;
     SerialHoncho serial;
+    List<Bank> schemaBankList = new ArrayList<Bank>();
 
     // Threads and queues:
     CompletableFuture readerThread;
@@ -51,6 +55,8 @@ public final class ReconMutil extends EngineProcessor {
     // Static parameters:
     int maxEvents;
     int skipEvents;
+    ClaraYaml yaml;
+    OptionParser parser;
 
     // Progress counters:
     int readEvents;
@@ -62,11 +68,14 @@ public final class ReconMutil extends EngineProcessor {
 
     ReconMutil(OptionParser parser) {
         super(parser);
+        this.parser = parser;
         maxEvents = parser.getOption("-n").intValue();
         skipEvents = parser.getOption("-s").intValue();
         schema = new SchemaFactory();
         schema.initFromDirectory(ClasUtilsFile.getResourceDir("CLAS12DIR","etc/bankdefs/hipo4"));
         serial = new SerialHoncho(schema);
+        if (!parser.getOption("-y").isDefault())
+            yaml = new ClaraYaml(parser.getOption("-y").stringValue());
     }
 
     /**
@@ -199,16 +208,39 @@ public final class ReconMutil extends EngineProcessor {
         }
     }
 
+    void open(String filename, ClaraYaml yaml) {
+        writer = new HipoWriterSorted();
+        writer.setCompressionType(2);
+        JSONObject json = yaml.filter("writer");
+        String d = ClasUtilsFile.getResourceDir("CLAS12DIR", "etc/bankdefs/hipo4");
+        if (yaml.getSchemaDirectory() != null) d = yaml.getSchemaDirectory();
+        if (!parser.getOption("-S").isDefault()) d = parser.getOption("-S").stringValue();
+        SchemaFactory s = new SchemaFactory();
+        s.initFromDirectory(d);
+        if (json.has("wildcard")) {
+            SchemaFactory s2 = s.reduce(json.getString("wildcard"));
+            writer.getSchemaFactory().copy(s2);
+        }
+        else writer.getSchemaFactory().copy(s);
+        schemaBankList = new ArrayList<>();
+        if (json.has("schema_dir") && json.has("wildcard")) {
+            if (json.optBoolean("schema_filter",true)) {
+                int schemaSize = writer.getSchemaFactory().getSchemaList().size();
+                for (int i=0; i<schemaSize; i++) {
+                    Bank dataBank = new Bank(writer.getSchemaFactory().getSchemaList().get(i));
+                    schemaBankList.add(dataBank);
+                }
+            }
+        }
+        writer.open(filename);
+    }
+    
     /**
      * The writer thread.
      * @param output output filename
      */
     void write(String output) {
-        if (output != null) {
-            writer = new HipoWriterSorted();
-            writer.setCompressionType(2);
-            writer.open(output);
-        }
+        if (output != null) open(output, yaml);
         while (true) {
             List<Event> e = writeQueue.poll();
             if (e == null) {
@@ -221,7 +253,14 @@ public final class ReconMutil extends EngineProcessor {
             else {
                 for (int i=0; i<e.size(); i++) {
                     Benchmark.getInstance().resume("write");
-                    if (writer != null) writer.addEvent(e.get(i), e.get(i).getEventTag());
+                    if (writer != null) {
+                        if (e.get(i).getEventTag() > 0 || schemaBankList.isEmpty()) {
+                            writer.addEvent(e.get(i), e.get(i).getEventTag());
+                        }
+                        else {
+                            writer.addEvent(e.get(i).reduceEvent(schemaBankList), e.get(i).getEventTag());
+                        }
+                    }
                     Benchmark.getInstance().pause("write");
                     progress.updateStatus();
                 }
@@ -331,12 +370,11 @@ public final class ReconMutil extends EngineProcessor {
     }
 
     /**
-     * Close the output file and print some stuff.
+     * Close the output file.
      */
     void close() {
         serial.finish(writer);
         writer.close();
-        System.out.println(Benchmark.getInstance());
         System.out.println(String.format("recon-mutil:::::  Read/Write/Diff = %d/%d/%d",
                 readEvents, writeEvents, readEvents-writeEvents));
     }
@@ -349,7 +387,7 @@ public final class ReconMutil extends EngineProcessor {
         if (readerThread != null) readerThread.cancel(true);
         if (writerThread != null) {
             writerThread.cancel(true);
-            writer.close();
+            close();
         }
         readQueue = new ConcurrentLinkedQueue<>();
         writeQueue = new ConcurrentLinkedQueue<>();
