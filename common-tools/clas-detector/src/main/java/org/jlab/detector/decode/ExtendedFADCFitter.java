@@ -167,37 +167,44 @@ public class ExtendedFADCFitter implements IFADCFitter {
         
         List<ExtendedFADCFitter> hits = new ArrayList<>();
 
-        // start with our conventional pulse fitting:
+        // initialize with our conventional pulse fitting:
         fit(nsa, nsb, tet, pedr, pulse);
         hits.add(this);
 
         // and look for more later pulses:
         if (pulsePeakPosition > 0) {
+
+            // start at the first pulse's maximum and look forward:
             boolean belowThreshold = false;
-            for (int bin=pulsePeakPosition+1; bin<pulse.length; bin++) {
+            for (int crossBin=pulsePeakPosition+1; crossBin<pulse.length; crossBin++) {
 
                 // mark that we went below theshold:
-                if (pulse[bin] <= ped+tet) belowThreshold = true;
+                if (pulse[crossBin] <= ped+tet) belowThreshold = true;
 
-                // we crossed theshold again, find the next hit:
+                // we went below and above theshold again:
                 else if (belowThreshold) {
 
                     belowThreshold = false;
 
-                    // search for the maximum:
-                    for (int maxBin = bin; maxBin<pulse.length; maxBin++) {
-                        // found the next hit's maximum:
+                    // find the maximum:
+                    for (int maxBin = crossBin; maxBin<pulse.length; maxBin++) {
                         if (pulse[maxBin] < pulse[maxBin-1]) {
 
                             // make a new hit:
                             ExtendedFADCFitter f = new ExtendedFADCFitter();
-                            f.thresholdCrossing = bin;
+                            f.ped = ped;
+                            f.thresholdCrossing = crossBin;
                             f.pulsePeakPosition = maxBin-1;
                             f.pulsePeakValue = pulse[maxBin-1];
 
+                            // define its energy:
+                            final int eLimit = Math.min(pulse.length, crossBin + nsa);
+                            for (int eBin = Math.max(crossBin-nsb,0); eBin < eLimit; eBin++)
+                                f.adc += pulse[eBin] - f.ped;
+
                             // find the half-max crossing upwards:
                             final double halfMax = (pulse[maxBin-1] + baseline)/2;
-                            for (int halfBinUp = bin+1; halfBinUp < maxBin; halfBinUp++) {
+                            for (int halfBinUp = crossBin+1; halfBinUp < maxBin; halfBinUp++) {
                                 if (pulse[halfBinUp] <= halfMax && pulse[halfBinUp+1] > halfMax) {
 
                                     // define timing:
@@ -220,8 +227,9 @@ public class ExtendedFADCFitter implements IFADCFitter {
 
                             // add the new hit we just made:
                             hits.add(f);
+
                             // move search bin forward:
-                            bin = f.pulsePeakPosition;
+                            crossBin = f.pulsePeakPosition;
                             break;
                         }
                     }
