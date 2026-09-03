@@ -211,12 +211,10 @@ public final class ReconMutil extends EngineProcessor {
                 for (int i=0; i<e.size(); i++) {
                     Benchmark.getInstance().resume("write");
                     if (writer != null) {
-                        if (e.get(i).getEventTag() > 0 || schemaBankList.isEmpty()) {
+                        if (e.get(i).getEventTag() > 0 || schemaBankList.isEmpty())
                             writer.addEvent(e.get(i), e.get(i).getEventTag());
-                        }
-                        else {
+                        else
                             writer.addEvent(e.get(i).reduceEvent(schemaBankList), e.get(i).getEventTag());
-                        }
                     }
                     Benchmark.getInstance().pause("write");
                     progress.updateStatus();
