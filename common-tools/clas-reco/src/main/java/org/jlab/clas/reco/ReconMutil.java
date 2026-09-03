@@ -1,15 +1,26 @@
 package org.jlab.clas.reco;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import org.jlab.clara.engine.EngineData;
+import org.jlab.clara.engine.EngineDataType;
 import org.jlab.coda.jevio.EvioException;
 import org.jlab.detector.decode.CLASDecoder;
+import org.jlab.detector.decode.CLASDecoderPool;
 import org.jlab.detector.serial.SerialHoncho;
 import org.jlab.io.evio.EvioDataEvent;
 import org.jlab.io.evio.EvioSource;
@@ -30,7 +41,7 @@ import org.json.JSONObject;
  *
  * @author baltzell
  */
-public final class ReconMutil extends EngineProcessor {
+public final class ReconMutil {
 
     // Performance parameters:
     final int BENCH_SECONDS = 30;
@@ -40,11 +51,14 @@ public final class ReconMutil extends EngineProcessor {
     // File reader and writer:
     Object reader;
     HipoWriterSorted writer;
-    SerialHoncho serial;
     List<Bank> schemaBankList;
-
-    static final SchemaFactory schema = new SchemaFactory();
+    static SchemaFactory schema = new SchemaFactory();
     static { schema.initFromDirectory(ClasUtilsFile.getResourceDir("CLAS12DIR","etc/bankdefs/hipo4")); }
+    
+    // Processors:
+    SerialHoncho serial;
+    Map<String,ReconstructionEngine> engines = new LinkedHashMap<>();
+    CLASDecoderPool decoders = new CLASDecoderPool(64,"default",null);
 
     // Threads and queues:
     CompletableFuture readerThread;
@@ -69,13 +83,12 @@ public final class ReconMutil extends EngineProcessor {
     ProgressPrintout progress = new ProgressPrintout();
 
     ReconMutil(OptionParser parser) {
-        super(parser);
-        this.parser = parser;
+        parser.syncLogLevel(Logger.getLogger(ReconMutil.class.getPackage().getName()));
         maxEvents = parser.getOption("-n").intValue();
         skipEvents = parser.getOption("-s").intValue();
         serial = new SerialHoncho(schema);
-        if (!parser.getOption("-y").isDefault())
-            yaml = new ClaraYaml(parser.getOption("-y").stringValue());
+        this.parser = parser;
+        configure();
     }
 
     /**
@@ -172,7 +185,7 @@ public final class ReconMutil extends EngineProcessor {
                         event = new HipoDataEvent(((Event)o.get(i)), schema);
                     }
                     // run it through the engine chain:
-                    for (Map.Entry<String,ReconstructionEngine> engine : processorEngines.entrySet()) {
+                    for (Map.Entry<String,ReconstructionEngine> engine : engines.entrySet()) {
                         Benchmark.getInstance().resume(engine.getValue().getName());
                         try { engine.getValue().processDataEvent(event); }
                         catch (Exception ex) { ex.printStackTrace(); }
@@ -385,6 +398,66 @@ public final class ReconMutil extends EngineProcessor {
         failEvents = 0;
     }
 
+    ReconstructionEngine addEngine(String name, String clazz, String jsonConf) {
+        ReconstructionEngine engine = null;
+        try {
+            Class c = Class.forName(clazz);
+            if (ReconstructionEngine.class.isAssignableFrom(c)==true){
+                engine = (ReconstructionEngine) c.newInstance();
+                if (jsonConf != null && !jsonConf.equals("null")) {
+                    EngineData input = new EngineData();
+                    input.setData(EngineDataType.JSON.mimeType(), jsonConf);
+                    engine.configure(input);
+                }
+                else engine.init();
+                engines.put(name == null ? engine.getName() : name, engine);
+            }
+            else Logger.getLogger(ReconMutil.class.getPackage().getName())
+                    .log(clazz.contains("DecoderEngine") ? Level.INFO : Level.SEVERE,
+                    "Class is not a reconstruction engine : {0}", clazz);
+        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException ex) {
+            Logger.getLogger(ReconMutil.class.getPackage().getName()).log(Level.SEVERE, null, ex);
+        }
+        return engine;
+    }
+
+    void configure() {
+        if (!parser.getOption("-y").isDefault()) {
+            yaml = new ClaraYaml(parser.getOption("-y").stringValue());
+            for (JSONObject service : yaml.services()) {
+                JSONObject cfg = yaml.filter(service.getString("name"));
+                if (cfg.length() > 0) addEngine(service.getString("name"), service.getString("class"), cfg.toString());
+                else addEngine(service.getString("name"), service.getString("class"), null);
+            }
+        }
+        else if (!parser.getOption("-c").isDefault()) {
+            for (String s : parser.getOption("-c").stringValue().split(","))
+                addEngine(null, s, null);
+        }
+        else {
+            InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream("services.txt");
+            BufferedReader br = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
+            try {
+                for (String line; (line=br.readLine()) != null;)
+                    addEngine(line.split(" ")[0],line.split(" ")[1],null);
+            } catch (IOException ex) {
+                System.getLogger(ReconMutil.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
+            }
+        }
+        if (!parser.getOption("-P").isDefault()) {
+            //ReconstructionEngine pp = addEngine("BG","org.jlab.service.postproc.PostprocEngine",null);
+            //pp.engineConfigMap.pu("preloadFile");
+            //pp.engineConfigMap.pu("restream");
+            //pp.engineConfigMap.pu("rebuild");
+        }
+        if (!parser.getOption("-B").isDefault()) {
+            ReconstructionEngine bg = addEngine("BG","org.jlab.service.bg.BackgroundEngine",null);
+            bg.engineConfigMap.put("filename",parser.getOption("-B").stringValue());
+        }
+        if (!parser.getOption("-S").isDefault()) {
+        }
+    }
+
     /**
      * Catch interruptions in sleep.
      * @param milliseconds 
@@ -402,8 +475,10 @@ public final class ReconMutil extends EngineProcessor {
         OptionParser o = EngineProcessor.getParser();
         o.removeOption("-i");
         o.removeOption("-o");
+        o.removeOption("-c");
         o.addOption("-t","4","number of threads");
         o.addOption("-o", null, "output file name");
+        o.addOption("-c","2","comma-separated engine list");
         o.setRequiresInputList(true);
         o.parse(args);
         ReconMutil r = new ReconMutil(o);
