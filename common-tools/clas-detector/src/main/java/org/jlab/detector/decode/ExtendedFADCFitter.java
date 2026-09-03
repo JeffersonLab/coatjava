@@ -166,49 +166,52 @@ public class ExtendedFADCFitter implements IFADCFitter {
     public ExtendedFADCFitter[] multiFit(int nsa, int nsb, int tet, int ped, short[] pulse) {
         List<ExtendedFADCFitter> hits = new ArrayList<>();
         fit(nsa, nsb, tet, ped, pulse);
-        boolean belowThreshold = false;
-        for (int bin=pulsePeakPosition+1; bin<pulse.length; bin++) {
-            // mark that we went below theshold:
-            if (pulse[bin] <= ped+tet) belowThreshold = true;
-            // we crossed theshold again, find the next hit:
-            else if (belowThreshold) {
-                belowThreshold = false;
-                // search for the maximum:
-                for (int maxBin = bin; maxBin<pulse.length; maxBin++) {
-                    // found the next hit's maximum:
-                    if (pulse[maxBin] < pulse[maxBin-1]) {
-                        // make a new hit:
-                        ExtendedFADCFitter f = new ExtendedFADCFitter();
-                        f.thresholdCrossing = bin;
-                        f.pulsePeakPosition = maxBin-1;
-                        f.pulsePeakValue = pulse[maxBin-1];
-                        final double halfMax = (pulse[maxBin-1] + baseline)/2;
-                        // find the half-max crossing upwards:
-                        for (int halfBinUp = bin+1; halfBinUp < maxBin; halfBinUp++) {
-                            if (pulse[halfBinUp] <= halfMax && pulse[halfBinUp+1] > halfMax) {
-                                int a0 = pulse[halfBinUp];
-                                int a1 = pulse[halfBinUp+1];
-                                f.tcourse = halfBinUp;
-                                f.tfine   = ((int) ((halfMax - a0)/(a1-a0) * 64));
-                                f.t0      = (tcourse << 6) + tfine;
-                                // find the half-max crossing downwards:
-                                for (int halfBinDown = halfBinUp; halfBinDown<pulse.length; halfBinDown++) {
-                                    if (pulse[halfBinDown] > halfMax && pulse[halfBinDown+1] <= halfMax) {
-                                        f.pulseWidth = halfBinDown - halfBinUp;
-                                        break;
+        hits.add(this);
+        if (pulsePeakPosition > 0) {
+            boolean belowThreshold = false;
+            for (int bin=pulsePeakPosition+1; bin<pulse.length; bin++) {
+                // mark that we went below theshold:
+                if (pulse[bin] <= ped+tet) belowThreshold = true;
+                // we crossed theshold again, find the next hit:
+                else if (belowThreshold) {
+                    belowThreshold = false;
+                    // search for the maximum:
+                    for (int maxBin = bin; maxBin<pulse.length; maxBin++) {
+                        // found the next hit's maximum:
+                        if (pulse[maxBin] < pulse[maxBin-1]) {
+                            // make a new hit:
+                            ExtendedFADCFitter f = new ExtendedFADCFitter();
+                            f.thresholdCrossing = bin;
+                            f.pulsePeakPosition = maxBin-1;
+                            f.pulsePeakValue = pulse[maxBin-1];
+                            final double halfMax = (pulse[maxBin-1] + baseline)/2;
+                            // find the half-max crossing upwards:
+                            for (int halfBinUp = bin+1; halfBinUp < maxBin; halfBinUp++) {
+                                if (pulse[halfBinUp] <= halfMax && pulse[halfBinUp+1] > halfMax) {
+                                    int a0 = pulse[halfBinUp];
+                                    int a1 = pulse[halfBinUp+1];
+                                    f.tcourse = halfBinUp;
+                                    f.tfine   = ((int) ((halfMax - a0)/(a1-a0) * 64));
+                                    f.t0      = (tcourse << 6) + tfine;
+                                    // find the half-max crossing downwards:
+                                    for (int halfBinDown = halfBinUp; halfBinDown<pulse.length; halfBinDown++) {
+                                        if (pulse[halfBinDown] > halfMax && pulse[halfBinDown+1] <= halfMax) {
+                                            f.pulseWidth = halfBinDown - halfBinUp;
+                                            break;
+                                        }
                                     }
+                                    break;
                                 }
-                                break;
                             }
+                            hits.add(f);
+                            // move search bin forward:
+                            bin = hits.getLast().pulsePeakPosition;
+                            break;
                         }
-                        hits.add(f);
-                        // move search bin forward:
-                        bin = hits.getLast().pulsePeakPosition;
-                        break;
                     }
+                    // if we didn't generate a hit, stop:
+                    if (hits.isEmpty()) break;
                 }
-                // if we didn't generate a hit, stop:
-                if (hits.isEmpty()) break;
             }
         }
         return hits.stream().toArray(ExtendedFADCFitter[]::new);
