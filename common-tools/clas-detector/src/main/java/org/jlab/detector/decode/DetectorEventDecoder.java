@@ -218,21 +218,21 @@ public class DetectorEventDecoder {
         for (int i = 0; i < nadc; i++) {
             ADCData adc = data.getADCData(i);
             if (adc.getPulseSize() > 0) {
-                adc.setADC(nsa, nsb);
                 try {
-                    ExtendedFADCFitter[] f = extendedFitter.multiFit(nsa, nsb, tet, ped, adc.getPulseArray());
-                    adc.setIntegral(f[0].adc + f[0].ped*(nsa+nsb));
-                    adc.setHeight((short) f[0].pulsePeakValue);
-                    adc.setTimeWord(f[0].t0);
-                    adc.setPedestal((short) f[0].ped);
-                    for (int j = 0; j < f.length; j++) {
+                    ExtendedFADCFitter[] hits = extendedFitter.multiFit(nsa, nsb, tet, ped, adc.getPulseArray());
+                    adc.setADC(nsa, nsb);
+                    adc.setIntegral(hits[0].adc + hits[0].ped*(nsa+nsb));
+                    adc.setHeight((short) hits[0].pulsePeakValue);
+                    adc.setTimeWord(hits[0].t0);
+                    adc.setPedestal((short) hits[0].ped);
+                    for (int j = 0; j < hits.length; j++) {
                         ADCData a = new ADCData();
-                        a.setOrder(adc.getOrder());
-                        a.setIntegral(f[j].adc + f[j].ped*(nsa+nsb));
-                        a.setHeight((short) f[j].pulsePeakValue);
-                        a.setTimeWord(f[j].t0);
-                        a.setPedestal((short) f[j].ped);
                         a.setADC(nsa, nsb);
+                        a.setOrder(adc.getOrder());
+                        a.setIntegral(hits[j].adc + hits[j].ped*(nsa+nsb));
+                        a.setHeight((short) hits[j].pulsePeakValue);
+                        a.setTimeWord(hits[j].t0);
+                        a.setPedestal((short) hits[j].ped);
                         data.addADC(a);
                     }
                 } catch (Exception e) {
