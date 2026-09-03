@@ -161,9 +161,13 @@ public class ClaraYaml {
                     ret.accumulate(key, globals.getString(key));
                 }
             }
-            if (config.has("services")) {
-                if (config.getJSONObject("services").has(serviceName)) {
-                    JSONObject service = config.getJSONObject("services").getJSONObject(serviceName);
+            String section = "services";
+            if (serviceName.equals("reader") || serviceName.equals("writer")) {
+                section = "io-services";
+            }
+            if (config.has(section)) {
+                if (config.getJSONObject(section).has(serviceName)) {
+                    JSONObject service = config.getJSONObject(section).getJSONObject(serviceName);
                     for (String key : service.keySet()) {
                         ret.put(key, service.getString(key));
                     }
