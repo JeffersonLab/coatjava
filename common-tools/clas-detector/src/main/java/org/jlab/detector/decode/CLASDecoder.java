@@ -219,29 +219,31 @@ public class CLASDecoder {
 
         Bank adcBANK = new Bank(schemaFactory.getSchema(name),
                 adcDGTZ.stream().mapToInt(b -> b.getADCSize()).sum());
-        
+       
+        int row = 0;
         for(int i = 0; i < adcDGTZ.size(); i++){
             for (int j = 0; j<adcDGTZ.get(i).getADCSize(); j++) {
-                adcBANK.putByte( 0, i, (byte) adcDGTZ.get(i).getDescriptor().getSector());
-                adcBANK.putByte( 1, i, (byte) adcDGTZ.get(i).getDescriptor().getLayer());
-                adcBANK.putShort(2, i, (short) adcDGTZ.get(i).getDescriptor().getComponent());
-                adcBANK.putByte( 3, i, (byte) adcDGTZ.get(i).getDescriptor().getOrder());
-                adcBANK.putInt(  4, i, adcDGTZ.get(i).getADCData(j).getADC());
+                adcBANK.putByte( 0, row, (byte) adcDGTZ.get(i).getDescriptor().getSector());
+                adcBANK.putByte( 1, row, (byte) adcDGTZ.get(i).getDescriptor().getLayer());
+                adcBANK.putShort(2, row, (short) adcDGTZ.get(i).getDescriptor().getComponent());
+                adcBANK.putByte( 3, row, (byte) adcDGTZ.get(i).getDescriptor().getOrder());
+                adcBANK.putInt(  4, row, adcDGTZ.get(i).getADCData(j).getADC());
                 if (type == DetectorType.BMT || type == DetectorType.FMT || type == DetectorType.FTTRK) {
-                    adcBANK.putInt( 4, i, adcDGTZ.get(i).getADCData(j).getHeight());
-                    adcBANK.putInt( 7, i, adcDGTZ.get(i).getADCData(j).getIntegral());
-                    adcBANK.putLong(8, i, adcDGTZ.get(i).getADCData(j).getTimeStamp());
+                    adcBANK.putInt( 4, row, adcDGTZ.get(i).getADCData(j).getHeight());
+                    adcBANK.putInt( 7, row, adcDGTZ.get(i).getADCData(j).getIntegral());
+                    adcBANK.putLong(8, row, adcDGTZ.get(i).getADCData(j).getTimeStamp());
                 }
                 if(type == DetectorType.BAND) {
-                    adcBANK.putInt(  5, i, adcDGTZ.get(i).getADCData(j).getHeight());
-                    adcBANK.putFloat(6, i, (float) adcDGTZ.get(i).getADCData(j).getTime());
-                    adcBANK.putShort(7, i, (short) adcDGTZ.get(i).getADCData(j).getPedestal());
+                    adcBANK.putInt(  5, row, adcDGTZ.get(i).getADCData(j).getHeight());
+                    adcBANK.putFloat(6, row, (float) adcDGTZ.get(i).getADCData(j).getTime());
+                    adcBANK.putShort(7, row, (short) adcDGTZ.get(i).getADCData(j).getPedestal());
                 }
                 else {
-                    adcBANK.putFloat(5, i, (float) adcDGTZ.get(i).getADCData(j).getTime());
-                    adcBANK.putShort(6, i, (short) adcDGTZ.get(i).getADCData(j).getPedestal());
+                    adcBANK.putFloat(5, row, (float) adcDGTZ.get(i).getADCData(j).getTime());
+                    adcBANK.putShort(6, row, (short) adcDGTZ.get(i).getADCData(j).getPedestal());
                 }
-                if(type == DetectorType.BST) adcBANK.putLong(7, i, adcDGTZ.get(i).getADCData(j).getTimeStamp());
+                if(type == DetectorType.BST) adcBANK.putLong(7, row, adcDGTZ.get(i).getADCData(j).getTimeStamp());
+                row++;
             }
         }
         return adcBANK;
