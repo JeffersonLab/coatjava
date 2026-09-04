@@ -20,7 +20,7 @@ public class Constants {
     public static double CAANGLE4=19.;
     public static double CAANGLE5=3.5;
     public boolean seedingDebugMode =false;
-   
+    public boolean QCDDATSample=true; // FIXME(CD): should this be configurable from `yaml`?
     
     
     // private constructor for a singleton
