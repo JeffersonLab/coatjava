@@ -3,7 +3,7 @@ package org.jlab.io.clara;
 import java.io.File;
 import java.nio.file.Path;
 import java.util.List;
-import org.jlab.analysis.postprocess.Processor;
+import org.jlab.detector.serial.PostProcessor;
 import org.jlab.clara.std.services.EventWriterException;
 import org.jlab.detector.calib.utils.ConstantsManager;
 import org.jlab.detector.helicity.HelicitySequenceDelayed;
@@ -98,7 +98,7 @@ public class Clas12Writer extends HipoToHipoWriter {
         int d = conman.getConstants(getRunNumber(), "/runcontrol/helicity").getIntValue("delay",0,0,0);
         HelicitySequenceDelayed helicity = new HelicitySequenceDelayed(d);
         helicity.addStream(serial.getHelicities());
-        Processor p = new Processor(List.of(filename), fullSchema, helicity, serial.getScalers());
+        PostProcessor p = new PostProcessor(List.of(filename), fullSchema, helicity, serial.getScalers());
         HipoReader r = new HipoReader();
         r.open(filename);
         Event e = new Event();
