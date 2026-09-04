@@ -227,12 +227,12 @@ jobs:
           tar xzvf clara.tar.gz
           tar xzvf coatjava.tar.gz
       - run: ls
-      - name: run test
-        run: ./bin/run-clara -y ./etc/services/rgd-clarode.yml -t 4 -n 500 -c ./clara -o ./tmp ./clas_018779.evio.00001
+      - name: run clara
+        run: ./coatjava/bin/run-clara -y ./etc/services/rgd-clarode.yml -t 4 -n 100 -c ./clara -o ./tmp ./clas_018779.evio.00001
+      - name: run mutil
+        run: ./coatjava/bin/recon-mutil -y ./etc/services/rgd-clarode.yml -t 4 -n 30 -o rec.hipo ./clas_018779.evio.00001
       - name: ls tmp
-        run: ls -lhtr tmp
-      - name: rename
-        run: mv -v tmp/rec_clas_018779.evio.00001.hipo rec.hipo
+        run: ls -lhtr . tmp
       - uses: actions/upload-artifact@v7
         with:
           name: test_clara_result
