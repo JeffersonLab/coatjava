@@ -217,33 +217,35 @@ public class CLASDecoder {
         List<DetectorDataDgtz> adcDGTZ = this.getEntriesADC(type);
         if (adcDGTZ.isEmpty()) return null;
 
-        Bank adcBANK = new Bank(schemaFactory.getSchema(name), adcDGTZ.size());
-
+        Bank adcBANK = new Bank(schemaFactory.getSchema(name),
+                adcDGTZ.stream().mapToInt(b -> b.getADCSize()).sum());
+        
         for(int i = 0; i < adcDGTZ.size(); i++){
-            adcBANK.putByte( 0, i, (byte) adcDGTZ.get(i).getDescriptor().getSector());
-            adcBANK.putByte( 1, i, (byte) adcDGTZ.get(i).getDescriptor().getLayer());
-            adcBANK.putShort(2, i, (short) adcDGTZ.get(i).getDescriptor().getComponent());
-            adcBANK.putByte( 3, i, (byte) adcDGTZ.get(i).getDescriptor().getOrder());
-            adcBANK.putInt(  4, i, adcDGTZ.get(i).getADCData(0).getADC());
-            if (type == DetectorType.BMT || type == DetectorType.FMT || type == DetectorType.FTTRK) {
-            	adcBANK.putInt( 4, i, adcDGTZ.get(i).getADCData(0).getHeight());
-            	adcBANK.putInt( 7, i, adcDGTZ.get(i).getADCData(0).getIntegral());
-            	adcBANK.putLong(8, i, adcDGTZ.get(i).getADCData(0).getTimeStamp());
+            for (int j = 0; j<adcDGTZ.get(i).getADCSize(); j++) {
+                adcBANK.putByte( 0, i, (byte) adcDGTZ.get(i).getDescriptor().getSector());
+                adcBANK.putByte( 1, i, (byte) adcDGTZ.get(i).getDescriptor().getLayer());
+                adcBANK.putShort(2, i, (short) adcDGTZ.get(i).getDescriptor().getComponent());
+                adcBANK.putByte( 3, i, (byte) adcDGTZ.get(i).getDescriptor().getOrder());
+                adcBANK.putInt(  4, i, adcDGTZ.get(i).getADCData(j).getADC());
+                if (type == DetectorType.BMT || type == DetectorType.FMT || type == DetectorType.FTTRK) {
+                    adcBANK.putInt( 4, i, adcDGTZ.get(i).getADCData(j).getHeight());
+                    adcBANK.putInt( 7, i, adcDGTZ.get(i).getADCData(j).getIntegral());
+                    adcBANK.putLong(8, i, adcDGTZ.get(i).getADCData(j).getTimeStamp());
+                }
+                if(type == DetectorType.BAND) {
+                    adcBANK.putInt(  5, i, adcDGTZ.get(i).getADCData(j).getHeight());
+                    adcBANK.putFloat(6, i, (float) adcDGTZ.get(i).getADCData(j).getTime());
+                    adcBANK.putShort(7, i, (short) adcDGTZ.get(i).getADCData(j).getPedestal());
+                }
+                else {
+                    adcBANK.putFloat(5, i, (float) adcDGTZ.get(i).getADCData(j).getTime());
+                    adcBANK.putShort(6, i, (short) adcDGTZ.get(i).getADCData(j).getPedestal());
+                }
+                if(type == DetectorType.BST) adcBANK.putLong(7, i, adcDGTZ.get(i).getADCData(j).getTimeStamp());
             }
-            if(type == DetectorType.BAND) {
-                adcBANK.putInt(  5, i, adcDGTZ.get(i).getADCData(0).getHeight());
-                adcBANK.putFloat(6, i, (float) adcDGTZ.get(i).getADCData(0).getTime());
-                adcBANK.putShort(7, i, (short) adcDGTZ.get(i).getADCData(0).getPedestal());
-            }
-            else {
-                adcBANK.putFloat(5, i, (float) adcDGTZ.get(i).getADCData(0).getTime());
-                adcBANK.putShort(6, i, (short) adcDGTZ.get(i).getADCData(0).getPedestal());
-            }
-            if(type == DetectorType.BST) adcBANK.putLong(7, i, adcDGTZ.get(i).getADCData(0).getTimeStamp());
-         }
+        }
         return adcBANK;
     }
-
 
     public Bank getDataBankTDC(String name, DetectorType type){
 
