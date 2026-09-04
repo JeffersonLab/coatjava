@@ -310,7 +310,7 @@ public class EngineProcessor {
     }
 
     public void processFile(String file, String output){
-        this.processFile(file, output, -1, -1);
+        this.processFile(file, output, 0, 0);
     }
 
     public void processEvent(DataEvent event, HipoDataSync writer) {
@@ -396,8 +396,8 @@ public class EngineProcessor {
         parser.addRequired("-i","input.evio/hipo");
         parser.setRequiresInputList(false);
         parser.addOption("-c","0","use default configuration [0 - no, 1 - yes/default, 2 - all services] ");
-        parser.addOption("-s","-1","number of events to skip");
-        parser.addOption("-n","-1","number of events to process");
+        parser.addOption("-s","0","number of events to skip");
+        parser.addOption("-n","0","number of events to process");
         parser.addOption("-y","0","yaml file");
         parser.addOption("-u","true","update dictionary from writer ? ");
         parser.addOption("-S",null,"schema directory");
