@@ -134,7 +134,7 @@ public class EngineProcessor {
         String[] names = new String[]{
             "MAGFIELDS",
             "DCCR","DCHB","FTOFHB","EC","HTCC","EBHB",
-            "DCTB","FTOFTB","EBTB","VTX"
+            "DCTB","FTOFTB","EBTB","OCC"
         };
 
         String[] services = new String[]{
@@ -148,7 +148,7 @@ public class EngineProcessor {
             "org.jlab.service.dc.DCTBEngine",
             "org.jlab.service.ftof.FTOFTBEngine",
             "org.jlab.service.eb.EBTBEngine",
-            "org.jlab.rec.service.vtx.VTXEngine"
+            "org.jlab.calibration.service.OccupanceEngine",
         };
 
         for(int i = 0; i < names.length; i++){
@@ -164,7 +164,7 @@ public class EngineProcessor {
             "CVTFP","CTOF","CND","BAND",
             "HTCC","LTCC","EBHB",
             "DCTB","FMT","FTOFTB","CVT","EBTB",
-            "RICHEB","RTPC","AHDC","ATOF","ALERT", "MC","VTX"
+            "RICHEB","RTPC","AHDC","ATOF","ALERT", "MC","VTX","OCC"
         };
 
         String[] services = new String[]{
@@ -197,7 +197,8 @@ public class EngineProcessor {
             "org.jlab.service.atof.ATOFEngine",
             "org.jlab.service.alert.ALERTEngine",
             "org.jlab.service.mc.TruthMatch",
-            "org.jlab.rec.service.vtx.VTXEngine"
+            "org.jlab.rec.service.vtx.VTXEngine",
+            "org.jlab.calibration.service.OccupanceEngine",
         };
         if(names.length!=services.length)
             LOGGER.log(Level.SEVERE, "initAll : the list of services does not match the list of service names...  ");
