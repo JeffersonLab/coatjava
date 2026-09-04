@@ -234,7 +234,7 @@ public class ExtendedFADCFitter implements IFADCFitter {
                         }
                     }
                     // if we didn't generate a new hit, stop:
-                    if (hits.isEmpty()) break;
+                    if (hits.size() < 2) break;
                 }
             }
         }
