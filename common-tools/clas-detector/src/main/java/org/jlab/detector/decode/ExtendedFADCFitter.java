@@ -1,5 +1,8 @@
 package org.jlab.detector.decode;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  *
  * @author gavalian
@@ -17,9 +20,7 @@ public class ExtendedFADCFitter implements IFADCFitter {
     public double  baseline, rms;
     private int    tcourse, tfine;
 
-    public ExtendedFADCFitter(){
-        
-    }
+    public ExtendedFADCFitter(){}
 
     public void fitCourseTime(int nsa, int nsb, int tet, int pedr, short[] pulse) {
         pedsum=0;adc=0;mmsum=0;summing_in_progress=0;
@@ -162,4 +163,81 @@ public class ExtendedFADCFitter implements IFADCFitter {
         }
     }
 
+    public ExtendedFADCFitter[] multiFit(int nsa, int nsb, int tet, int pedr, short[] pulse) {
+        
+        List<ExtendedFADCFitter> hits = new ArrayList<>();
+
+        // initialize with our conventional pulse fitting:
+        fit(nsa, nsb, tet, pedr, pulse);
+        hits.add(this);
+
+        // and look for more later pulses:
+        if (pulsePeakPosition > 0) {
+
+            // start at the first pulse's maximum and look forward:
+            boolean belowThreshold = false;
+            for (int crossBin=pulsePeakPosition+1; crossBin<pulse.length; crossBin++) {
+
+                // mark that we went below theshold:
+                if (pulse[crossBin] <= ped+tet) belowThreshold = true;
+
+                // we went below and above theshold again:
+                else if (belowThreshold) {
+
+                    belowThreshold = false;
+
+                    // find the maximum:
+                    for (int maxBin = crossBin; maxBin<pulse.length; maxBin++) {
+                        if (pulse[maxBin] < pulse[maxBin-1]) {
+
+                            // make a new hit:
+                            ExtendedFADCFitter f = new ExtendedFADCFitter();
+                            f.ped = ped;
+                            f.thresholdCrossing = crossBin;
+                            f.pulsePeakPosition = maxBin-1;
+                            f.pulsePeakValue = pulse[maxBin-1];
+
+                            // define its energy:
+                            final int eLimit = Math.min(pulse.length, crossBin + nsa);
+                            for (int eBin = Math.max(crossBin-nsb,0); eBin < eLimit; eBin++)
+                                f.adc += pulse[eBin] - f.ped;
+
+                            // find the half-max crossing upwards:
+                            final double halfMax = (pulse[maxBin-1] + baseline)/2;
+                            for (int halfBinUp = crossBin+1; halfBinUp < maxBin; halfBinUp++) {
+                                if (pulse[halfBinUp] <= halfMax && pulse[halfBinUp+1] > halfMax) {
+
+                                    // define timing:
+                                    int a0 = pulse[halfBinUp];
+                                    int a1 = pulse[halfBinUp+1];
+                                    f.tcourse = halfBinUp;
+                                    f.tfine   = ((int) ((halfMax - a0)/(a1-a0) * 64));
+                                    f.t0      = (tcourse << 6) + tfine;
+
+                                    // find the half-max crossing downwards:
+                                    for (int halfBinDown = halfBinUp; halfBinDown<pulse.length; halfBinDown++) {
+                                        if (pulse[halfBinDown] > halfMax && pulse[halfBinDown+1] <= halfMax) {
+                                            f.pulseWidth = halfBinDown - halfBinUp;
+                                            break;
+                                        }
+                                    }
+                                    break;
+                                }
+                            }
+
+                            // add the new hit we just made:
+                            hits.add(f);
+
+                            // move search bin forward:
+                            crossBin = f.pulsePeakPosition;
+                            break;
+                        }
+                    }
+                    // if we didn't generate a new hit, stop:
+                    if (hits.size() < 2) break;
+                }
+            }
+        }
+        return hits.stream().toArray(ExtendedFADCFitter[]::new);
+    }
 }
