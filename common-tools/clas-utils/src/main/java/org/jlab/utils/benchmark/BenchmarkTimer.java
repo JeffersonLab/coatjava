@@ -85,7 +85,7 @@ public class BenchmarkTimer {
         isPaused = true;
     }
     
-    public double getMiliseconds(){
+    public double getMilliseconds(){
         return totalTime.get() / 1.0e6;
     }
     
@@ -100,6 +100,6 @@ public class BenchmarkTimer {
     }
 
     public double getTimePerCall() {
-        return numberOfCalls.get() > 0 ? getMiliseconds() / numberOfCalls.get() : 0;
+        return numberOfCalls.get() > 0 ? getMilliseconds() / numberOfCalls.get() : 0;
     }
 }
