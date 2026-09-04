@@ -41,7 +41,7 @@ import org.json.JSONObject;
  *
  * @author baltzell
  */
-class ReconMutil {
+final class ReconMutil {
 
     // Performance parameters:
     final int BENCH_SECONDS = 30;
@@ -83,12 +83,7 @@ class ReconMutil {
     ProgressPrintout progress = new ProgressPrintout();
 
     ReconMutil(OptionParser parser) {
-        parser.syncLogLevel(Logger.getLogger(ReconMutil.class.getPackage().getName()));
-        maxEvents = parser.getOption("-n").intValue();
-        skipEvents = parser.getOption("-s").intValue();
-        serial = new SerialHoncho(schema);
-        this.parser = parser;
-        configure();
+        init(parser);
     }
 
     /**
@@ -398,19 +393,26 @@ class ReconMutil {
         failEvents = 0;
     }
 
-    ReconstructionEngine addEngine(String name, String clazz, String jsonConf) {
+    /**
+     * Add a new engine to the list.
+     * @param label display name
+     * @param clazz full class name
+     * @param cfg engine configuration
+     * @return 
+     */
+    ReconstructionEngine addEngine(String label, String clazz, JSONObject cfg) {
         ReconstructionEngine engine = null;
         try {
             Class c = Class.forName(clazz);
             if (ReconstructionEngine.class.isAssignableFrom(c)==true){
                 engine = (ReconstructionEngine) c.newInstance();
-                if (jsonConf != null && !jsonConf.equals("null")) {
+                if (cfg != null && !cfg.toString().equals("null")) {
                     EngineData input = new EngineData();
-                    input.setData(EngineDataType.JSON.mimeType(), jsonConf);
+                    input.setData(EngineDataType.JSON.mimeType(), cfg);
                     engine.configure(input);
                 }
                 else engine.init();
-                engines.put(name == null ? engine.getName() : name, engine);
+                engines.put(label == null ? engine.getName() : label, engine);
             }
             else Logger.getLogger(ReconMutil.class.getPackage().getName())
                     .log(clazz.contains("DecoderEngine") ? Level.INFO : Level.SEVERE,
@@ -421,12 +423,27 @@ class ReconMutil {
         return engine;
     }
 
-    void configure() {
+    /**
+     * Catch interruptions in sleep.
+     * @param milliseconds 
+     */
+    void sleep(int milliseconds) {
+        try { Thread.sleep(milliseconds); }
+        catch (InterruptedException ex) {}
+    }
+   
+    void init(OptionParser parser) {
+        this.parser = parser;
+        parser.syncLogLevel(Logger.getLogger(ReconMutil.class.getPackage().getName()));
+        maxEvents = parser.getOption("-n").intValue();
+        skipEvents = parser.getOption("-s").intValue();
+        serial = new SerialHoncho(schema);
+        engines = new LinkedHashMap<>();
         if (!parser.getOption("-y").isDefault()) {
             yaml = new ClaraYaml(parser.getOption("-y").stringValue());
             for (JSONObject service : yaml.services()) {
                 JSONObject cfg = yaml.filter(service.getString("name"));
-                if (cfg.length() > 0) addEngine(service.getString("name"), service.getString("class"), cfg.toString());
+                if (cfg.length() > 0) addEngine(service.getString("name"), service.getString("class"), cfg);
                 else addEngine(service.getString("name"), service.getString("class"), null);
             }
         }
@@ -459,15 +476,6 @@ class ReconMutil {
     }
 
     /**
-     * Catch interruptions in sleep.
-     * @param milliseconds 
-     */
-    void sleep(int milliseconds) {
-        try { Thread.sleep(milliseconds); }
-        catch (InterruptedException ex) {}
-    }
-    
-    /**
      * The command-line entry-point known as "recon-mutil".
      * @param args command-line arguments
      */
@@ -486,4 +494,5 @@ class ReconMutil {
                 o.getOption("-o").stringValue(),
                 o.getInputList().stream().toArray(String[]::new));
     }
+    
 }
