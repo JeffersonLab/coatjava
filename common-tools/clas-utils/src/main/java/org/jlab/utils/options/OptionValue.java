@@ -14,8 +14,8 @@ public class OptionValue {
     private String optionDefault     = "0";
             
     public OptionValue() { }
-    public OptionValue(String opt) {  setOption(opt);}
-    public OptionValue(String opt,String value) {  setOption(opt); setValue(value);}
+    public OptionValue(String opt) { setOption(opt);}
+    public OptionValue(String opt,String value) {  setOption(opt); setValue(value); setDefault(value); }
     
     public final OptionValue setOption(String opt){ this.optionString = opt; return this;}
     public final OptionValue setValue(String value){ this.optionValue = value; return this;}

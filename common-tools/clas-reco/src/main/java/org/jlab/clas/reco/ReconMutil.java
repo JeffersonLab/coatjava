@@ -146,7 +146,6 @@ final class ReconMutil {
 
         // write leftover, partial chunk:
         if (!chunk.isEmpty()) {
-            System.err.println("writing partial chunk: "+chunk.size());
             readEvents += chunk.size();
             readQueue.offer(chunk);
         }
@@ -452,7 +451,7 @@ final class ReconMutil {
                 addEngine(null, s, null);
         }
         else {
-            InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream("services.txt");
+            InputStream is = ReconMutil.class.getClassLoader().getResourceAsStream("org/jlab/clas/reco/services.txt");
             BufferedReader br = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
             try {
                 for (String line; (line=br.readLine()) != null;)
