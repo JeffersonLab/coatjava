@@ -284,9 +284,13 @@ public class Measurements {
         
     private List<Surface> getClusterSurfaces(DetectorType type, List<Cluster> clusters, Ray ray) {
         
-        List<Surface> surfaces = this.getClusterSurfaces(type, clusters, ray);        
-        for(Surface surf : surfaces) {
-            surf.hemisphere = this.getHemisphere(ray, surf); 
+        List<Surface> surfaces = new ArrayList<>();        
+        for(Cluster cluster : clusters) {
+            Surface surf = this.getClusterSurface(type, cluster);
+            if(surf!=null) {
+                surf.hemisphere = (int) Math.signum(cluster.center().y()); 
+                surfaces.add(surf);
+            }
         }
         return surfaces;
     }
@@ -303,6 +307,7 @@ public class Measurements {
         }
         return surfaces;
     }
+    
     private Surface getClusterSurface(DetectorType type, Cluster cluster) {
         if(cluster.getDetector()!=type) return null;
         int layer = MLayer.getType(type, cluster.getLayer()).getCVTLayer();

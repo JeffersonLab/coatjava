@@ -995,7 +995,7 @@ public class RecoBankWriter {
         //bank.show();
         return bank;
     }
-     
+
     public static void appendCVTBanks(DataEvent event,
             List<Hit> sVThits, List<Hit> bMThits,
             List<Cluster> sVTclusters, List<Cluster> bMTclusters,

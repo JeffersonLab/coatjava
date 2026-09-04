@@ -59,7 +59,7 @@ public class CCDBConstantsLoader {
         double[][] CRCEDGE1 = new double[NREGIONS][NSECTORS];   // the angle of the first edge of each PCB detector A, B, C
         double[][] CRCEDGE2 = new double[NREGIONS][NSECTORS];   // the angle of the second edge of each PCB detector A, B, C
         double[] CRCXPOS = new double[NREGIONS]; 		// Distance on the PCB between the PCB first edge and the edge of the first strip in mm
-        
+
          int GRID_SIZE=405;
          double[] THETA_L_grid = new double [GRID_SIZE];
          double[] ELEC_grid = new double [GRID_SIZE];
@@ -211,7 +211,7 @@ public class CCDBConstantsLoader {
          	ELEC_grid[i]=dbprovider.getDouble("/calibration/mvt/lorentz/Edrift",i);
          	MAG_grid[i]=dbprovider.getDouble("/calibration/mvt/lorentz/Bfield",i);
         }
-        
+         
         // alignment and offsets
         double xpos = dbprovider.getDouble("/geometry/cvt/mvt/position/x", 0 );
         double ypos = dbprovider.getDouble("/geometry/cvt/mvt/position/y", 0 );
@@ -254,7 +254,7 @@ public class CCDBConstantsLoader {
             BMTConstants.TOLOCAL[layer-1][sector-1]   = transform.inverse();
         }
         
-       
+         
         BMTConstants.setCRCRADIUS(CRCRADIUS);
         BMTConstants.setCRZRADIUS(CRZRADIUS);
         BMTConstants.setCRZNSTRIPS(CRZNSTRIPS);

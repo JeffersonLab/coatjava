@@ -7,7 +7,6 @@ import org.jlab.clas.tracking.kalmanfilter.AStateVecs;
 import org.jlab.clas.tracking.kalmanfilter.Surface;
 import org.jlab.clas.tracking.kalmanfilter.Units;
 import org.jlab.clas.tracking.trackrep.Helix;
-import org.jlab.clas.tracking.utilities.MatrixOps;
 import org.jlab.geom.prim.Line3D;
 import org.jlab.geom.prim.Point3D;
 import org.jlab.geom.prim.Vector3D;
@@ -18,11 +17,11 @@ import org.jlab.geom.prim.Vector3D;
  */
 public class StateVecs extends AStateVecs {
 
-    
+     
     @Override
     public boolean getStateVecPosAtMeasSite(StateVec sv, AMeasVecs.MeasVec mv, Swim swim) {
         double[] swimPars = new double[7];
-        
+
         if(mv.surface==null) return false;
         
         int dir = (int) Math.signum(mv.k-sv.k);
@@ -41,7 +40,7 @@ public class StateVecs extends AStateVecs {
         if(this.straight) {
 
             Point3D st   = new Point3D(sv.x, sv.y, sv.z); 
-            Vector3D stu = new Vector3D(sv.px,sv.py,sv.pz).asUnit();
+            Vector3D stu = new Vector3D(sv.px*dir,sv.py*dir,sv.pz*dir).asUnit();
             
             if(mv.surface.plane!=null) {
                 Line3D toPln = new Line3D(st, stu);
@@ -49,7 +48,7 @@ public class StateVecs extends AStateVecs {
                 int ints = mv.surface.plane.intersection(toPln, inters);
                 sv.x = inters.x();
                 sv.y = inters.y();
-                sv.z = inters.z();  
+                sv.z = inters.z();                   
                 sv.path = inters.distance(st);
             }
             else if(mv.surface.cylinder!=null) {
@@ -57,11 +56,16 @@ public class StateVecs extends AStateVecs {
                 mv.surface.toLocal().apply(stu);
                 double r = mv.surface.cylinder.baseArc().radius();
                 double delta = Math.sqrt((st.x()*stu.x()+st.y()*stu.y())*(st.x()*stu.x()+st.y()*stu.y())-(-r*r+st.x()*st.x()+st.y()*st.y())*(stu.x()*stu.x()+stu.y()*stu.y()));
-                double l = (-(st.x()*stu.x()+st.y()*stu.y())+delta)/(stu.x()*stu.x()+stu.y()*stu.y());
-                if(Math.signum(st.y()+l*stu.y())!=mv.hemisphere) {
-                    l = (-(st.x()*stu.x()+st.y()*stu.y())-delta)/(stu.x()*stu.x()+stu.y()*stu.y()); 
-                } 
+                double l1 = (-(st.x()*stu.x()+st.y()*stu.y())+delta)/(stu.x()*stu.x()+stu.y()*stu.y());
+                double l2 = (-(st.x()*stu.x()+st.y()*stu.y())-delta)/(stu.x()*stu.x()+stu.y()*stu.y());
+//                if(Math.signum(st.y()+l*stu.y())!=mv.hemisphere) {
+                double l = l1;
+                if(l1>0 && l2<0) l = l1;
+                else if(l1<0 && l2>0) l = l2;
+                else if(l1>0 && l2>0) l = l1 < l2 ? l1 : l2;
+                else return false;
                 Point3D inters = new Point3D(st.x()+l*stu.x(),st.y()+l*stu.y(),st.z()+l*stu.z());
+                if(l<0) System.out.println("arghhhhhhhhhh "+ mv.layer + " " + mv.surface.getSector() + " " + st.toString() + " " + stu.toString() + " " + inters.toString());
                 mv.surface.toGlobal().apply(inters);
                 // RDV: should switch to use clas-geometry intersection method, not done now to alwys return a value
                 sv.x = inters.x();
@@ -241,7 +245,7 @@ public class StateVecs extends AStateVecs {
         double cosEntranceAngle = this.getLocalDirAtMeasSite(vec, mv.measurements.get(vec.k));
 
         double p = Math.sqrt(vec.px*vec.px + vec.py*vec.py + vec.pz*vec.pz);
-        if(this.straight) p = 1;
+        if(this.straight) p = 100;
         
         // Highland-Lynch-Dahl formula
         double sctRMS = surf.getThetaMS(p, mass, cosEntranceAngle);

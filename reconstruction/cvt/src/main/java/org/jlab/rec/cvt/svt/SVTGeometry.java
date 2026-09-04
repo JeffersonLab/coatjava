@@ -87,7 +87,7 @@ public class SVTGeometry {
     public static double getModuleLength() {
         return SVTConstants.MODULELEN;
     }
-        
+    
     public Line3D getStrip0(int layer, int sector, int strip) {
         Line3d line = this._svtStripFactory.getShiftedStrip(layer-1, sector-1, strip-1);
         return new Line3D(line.origin().x,line.origin().y,line.origin().z,
@@ -246,7 +246,7 @@ public class SVTGeometry {
         surface.hemisphere = 0;
         surface.setLayer(layer);
         surface.setSector(sector);
-        surface.setError(0);
+        surface.setError(0); 
         for(String key : SVTConstants.MATERIALPROPERTIES.keySet()) {
             double[] p = SVTConstants.MATERIALPROPERTIES.get(key);
             surface.addMaterial(key, p[0]/2, p[1], p[2], p[3], p[4], Units.MM);
