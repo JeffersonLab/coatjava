@@ -170,7 +170,7 @@ jobs:
         with:
           name: build_ubuntu-latest
       - name: untar build
-        run: tar xzvf coatjava.tar.gz
+        run: tar xzf coatjava.tar.gz
       - name: spotbugs
         run: ./build-coatjava.sh --spotbugs --no-maps --no-progress
 
@@ -194,7 +194,7 @@ jobs:
           path: |
             clas_018779.evio.00001
       - name: untar build
-        run: tar xzvf coatjava.tar.gz
+        run: tar xzf coatjava.tar.gz
       - name: run test
         run: |
           ls -lhtr
@@ -224,8 +224,8 @@ jobs:
             clas_018779.evio.00001
       - name: untar build
         run: |
-          tar xzvf clara.tar.gz
-          tar xzvf coatjava.tar.gz
+          tar xzf clara.tar.gz
+          tar xzf coatjava.tar.gz
       - run: ls
       - name: run clara
         run: ./coatjava/bin/run-clara -y ./etc/services/rgd-clarode.yml -t 4 -n 100 -c ./clara -o ./tmp ./clas_018779.evio.00001
@@ -277,8 +277,8 @@ jobs:
           name: build_${{ matrix.runner }}
       - name: untar build
         run: |
-          tar xzvf coatjava.tar.gz
-          tar xzvf clara.tar.gz
+          tar xzf coatjava.tar.gz
+          tar xzf clara.tar.gz
       - name: run test
         run: |
           git lfs install
@@ -305,8 +305,8 @@ jobs:
           name: build_macos
       - name: untar build
         run: |
-          tar xzvf coatjava.tar.gz
-          tar xzvf clara.tar.gz
+          tar xzf coatjava.tar.gz
+          tar xzf clara.tar.gz
       - name: run test
         run: |
           git lfs install
@@ -333,7 +333,7 @@ jobs:
         with:
           name: build_ubuntu-latest
       - name: untar build
-        run: tar xzvf coatjava.tar.gz
+        run: tar xzf coatjava.tar.gz
       - name: test run-groovy
         run: coatjava/bin/run-groovy validation/advanced-tests/test-run-groovy.groovy
 
@@ -355,7 +355,7 @@ jobs:
         with:
           name: build_ubuntu-latest
       - name: untar build
-        run: tar xzvf coatjava.tar.gz
+        run: tar xzf coatjava.tar.gz
       - name: hipo2npz
         run: ./coatjava/bin/hipo2npz rec.hipo rec.npz
       - name: hipo2npz-dump
