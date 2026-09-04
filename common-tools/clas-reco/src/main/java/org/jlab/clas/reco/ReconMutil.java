@@ -407,7 +407,7 @@ final class ReconMutil {
                 engine = (ReconstructionEngine) c.newInstance();
                 if (cfg != null && !cfg.toString().equals("null")) {
                     EngineData input = new EngineData();
-                    input.setData(EngineDataType.JSON.mimeType(), cfg);
+                    input.setData(EngineDataType.JSON.mimeType(), cfg.toString());
                     engine.configure(input);
                 }
                 else engine.init();
