@@ -21,6 +21,7 @@ import org.jlab.clara.engine.EngineDataType;
 import org.jlab.coda.jevio.EvioException;
 import org.jlab.detector.decode.CLASDecoder;
 import org.jlab.detector.decode.CLASDecoderPool;
+import org.jlab.detector.serial.PostProcessor;
 import org.jlab.detector.serial.SerialHoncho;
 import org.jlab.io.evio.EvioDataEvent;
 import org.jlab.io.evio.EvioSource;
@@ -109,6 +110,10 @@ final class ReconMutil {
                 rethreadThread.join();
                 reset();
             }
+        }
+        if (!parser.getOption("-P").isDefault()) {
+            PostProcessor pp = new PostProcessor(parser.getInputList(), false, false);
+            pp.processFile(output, output);
         }
     }
 
@@ -459,12 +464,6 @@ final class ReconMutil {
             } catch (IOException ex) {
                 System.getLogger(ReconMutil.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
             }
-        }
-        if (!parser.getOption("-P").isDefault()) {
-            //ReconstructionEngine pp = addEngine("BG","org.jlab.service.postproc.PostprocEngine",null);
-            //pp.engineConfigMap.pu("preloadFile");
-            //pp.engineConfigMap.pu("restream");
-            //pp.engineConfigMap.pu("rebuild");
         }
         if (!parser.getOption("-B").isDefault()) {
             ReconstructionEngine bg = addEngine("BG","org.jlab.service.bg.BackgroundEngine",null);
