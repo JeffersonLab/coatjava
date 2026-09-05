@@ -61,12 +61,14 @@ final class ReconMutil {
     Map<String,ReconstructionEngine> engines = new LinkedHashMap<>();
     CLASDecoderPool decoders = new CLASDecoderPool(64,"default",null);
 
-    // Threads and queues:
+    // Threads:
     CompletableFuture readerThread;
     CompletableFuture writerThread;
     CompletableFuture rethreadThread;
     ConcurrentLinkedQueue<CompletableFuture> decoThreads = new ConcurrentLinkedQueue<>();
     ConcurrentLinkedQueue<CompletableFuture> procThreads = new ConcurrentLinkedQueue<>();
+
+    // Queues:
     ConcurrentLinkedQueue<List<Object>> readQueue = new ConcurrentLinkedQueue<>();
     ConcurrentLinkedQueue<List<HipoDataEvent>> procQueue = new ConcurrentLinkedQueue<>();
     ConcurrentLinkedQueue<List<Event>> writeQueue = new ConcurrentLinkedQueue<>();
