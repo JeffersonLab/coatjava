@@ -175,6 +175,14 @@ clara:
     - run-clara -v -c $CLARA_HOME -t 4 -y ./etc/services/rgd-clarode.yml -n 30 -o out $EVIOFILE
     - mv out/rec_$EVIOFILE.hipo claroded.hipo
 
+recon-mutil:
+  stage: test
+  needs: [build,download]
+  dependencies: [build,download]
+  script:
+    - tar -xzf coatjava.tar.gz
+    - recon-mutil -t 4 -y ./etc/services/rgd-clarode.yml -n 30 -o rec_$EVIOFILE.hipo $EVIOFILE
+
 profile:
   extends: .clon
   allow_failure: true

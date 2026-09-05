@@ -1,4 +1,4 @@
-package org.jlab.analysis.postprocess;
+package org.jlab.detector.serial;
 
 import java.util.List;
 import java.util.TreeMap;
@@ -24,7 +24,7 @@ import org.jlab.utils.system.ClasUtilsFile;
  *
  * @author baltzell
  */
-public class Processor {
+public class PostProcessor {
 
     public static final String CCDB_TABLES[] = {"/runcontrol/fcup","/runcontrol/slm",
         "/runcontrol/helicity","/daq/config/scalers/dsc1","/runcontrol/hwp"};
@@ -37,7 +37,7 @@ public class Processor {
     private HelicitySequenceDelayed helicitySequence = null;
     private TreeMap<Integer,Integer> eventUnix = null;
 
-    public Processor(List<String> files, boolean restream, boolean rebuild) {
+    public PostProcessor(List<String> files, boolean restream, boolean rebuild) {
         HipoReader r = new HipoReader();
         r.open(files.get(0));
         schemaFactory = r.getSchemaFactory();
@@ -46,13 +46,13 @@ public class Processor {
         recEvent = new Bank(schemaFactory.getSchema("REC::Event"));
         conman = new ConstantsManager();
         conman.init(CCDB_TABLES);
-        helicitySequence = Util.getHelicity(files, schemaFactory, restream, conman);
+        helicitySequence = SerialUtil.getHelicity(files, schemaFactory, restream, conman);
         if (rebuild) chargeSequence = DaqScalersSequence.rebuildSequence(1, conman, files);
         else chargeSequence = DaqScalersSequence.readSequence(files);
         eventUnix = getEventUnixMap(schemaFactory, files); 
     }
 
-    public Processor(List<String> files, SchemaFactory schema, HelicitySequenceDelayed h, DaqScalersSequence s) {
+    public PostProcessor(List<String> files, SchemaFactory schema, HelicitySequenceDelayed h, DaqScalersSequence s) {
         schemaFactory = schema;
         helicitySequence = h;
         chargeSequence = s;
@@ -102,7 +102,7 @@ public class Processor {
         DataBank helScaler = event.getBank("HEL::scaler");
         if (helScaler.rows()>0) {
             event.removeBank("HEL::scaler");
-            Util.assignScalerHelicity(runcfg.getLong("timestamp",0), ((HipoDataBank)helScaler).getBank(), helicitySequence);
+            SerialUtil.assignScalerHelicity(runcfg.getLong("timestamp",0), ((HipoDataBank)helScaler).getBank(), helicitySequence);
             event.appendBank(helScaler);
         }
     }
@@ -122,7 +122,7 @@ public class Processor {
         event.read(helScaler);
         if (helScaler.getRows()>0) {
             event.remove(schemaFactory.getSchema("HEL::scaler"));
-            Util.assignScalerHelicity(runcfg.getLong("timestamp",0), helScaler, helicitySequence);
+            SerialUtil.assignScalerHelicity(runcfg.getLong("timestamp",0), helScaler, helicitySequence);
             event.write(helScaler);
         }
     }
@@ -231,6 +231,22 @@ public class Processor {
         }
     }
 
+    public void processFile(String input, String output) {
+        Event event = new Event();
+        HipoReader r = new HipoReader();
+        r.open(input);
+        HipoWriterSorted w = new HipoWriterSorted();
+        w.getSchemaFactory().initFromDirectory(ClasUtilsFile.getResourceDir("CLAS12DIR", "etc/bankdefs/hipo4"));
+        w.setCompressionType(2);
+        w.open(output);
+        while (r.hasNext()) {
+            r.nextEvent(event);
+            processEvent(event);
+            if (w != null) w.addEvent(event);
+        }
+        r.close();
+    }
+
     /**
      * The "postprocess" program.
      * @param args
@@ -247,7 +263,7 @@ public class Processor {
         boolean restream = !o.getOption("-f").isDefault();
         boolean rebuild = !o.getOption("-c").isDefault();
 
-        Processor post = new Processor(o.getInputList(), restream, rebuild);
+        PostProcessor post = new PostProcessor(o.getInputList(), restream, rebuild);
         
         HipoWriterSorted writer = null;
 
