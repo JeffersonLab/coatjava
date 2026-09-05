@@ -49,7 +49,7 @@ final class ReconMutil {
     final int CHUNKS_PER_QUEUE = 100;
     final int EVENTS_PER_CHUNK = 100;
 
-    // File reader and writer:
+    // File I/O:
     Object reader;
     HipoWriterSorted writer;
     List<Bank> schemaBankList;
@@ -58,8 +58,8 @@ final class ReconMutil {
     
     // Processors:
     SerialHoncho serial;
-    Map<String,ReconstructionEngine> engines = new LinkedHashMap<>();
     CLASDecoderPool decoders = new CLASDecoderPool(64,"default",null);
+    Map<String,ReconstructionEngine> engines = new LinkedHashMap<>();
 
     // Threads:
     CompletableFuture readerThread;
