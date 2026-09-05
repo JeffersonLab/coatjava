@@ -65,8 +65,10 @@ final class ReconMutil {
     CompletableFuture readerThread;
     CompletableFuture writerThread;
     CompletableFuture rethreadThread;
+    ConcurrentLinkedQueue<CompletableFuture> decoThreads = new ConcurrentLinkedQueue<>();
     ConcurrentLinkedQueue<CompletableFuture> procThreads = new ConcurrentLinkedQueue<>();
     ConcurrentLinkedQueue<List<Object>> readQueue = new ConcurrentLinkedQueue<>();
+    ConcurrentLinkedQueue<List<HipoDataEvent>> procQueue = new ConcurrentLinkedQueue<>();
     ConcurrentLinkedQueue<List<Event>> writeQueue = new ConcurrentLinkedQueue<>();
     
     // Static parameters:
@@ -99,10 +101,13 @@ final class ReconMutil {
         writerThread = CompletableFuture.runAsync(() -> { write(output); });
         for (int i=0; i<threads[0]; i++) {
             final int j = i;
+            decoThreads.offer(CompletableFuture.runAsync(() -> { decode(j); }));
             procThreads.offer(CompletableFuture.runAsync(() -> { process(j); }));
         }
         while (!writerThread.isDone()) {
             sleep(100);
+            for (CompletableFuture f : decoThreads)
+                if (f.isDone()) decoThreads.remove(f);
             for (CompletableFuture f : procThreads)
                 if (f.isDone()) procThreads.remove(f);
             if (threads.length > 1 && rethreadThread == null && writeEvents > 100) {
@@ -127,7 +132,7 @@ final class ReconMutil {
         List<String> inputs = new ArrayList<>(Arrays.asList(input));
 
         // initialize the event chunk:
-        List<Object> chunk = new ArrayList<>(EVENTS_PER_CHUNK);
+        List<Object> output = new ArrayList<>(EVENTS_PER_CHUNK);
 
         // loop over input events:
         while ( (maxEvents < 1 || readEvents < maxEvents) &&
@@ -139,7 +144,7 @@ final class ReconMutil {
                 if (readQueue.size() > CHUNKS_PER_QUEUE*threads) sleep(1000);
 
                 // read next event into chunk, and fill queue if chunk full:
-                else chunk = read(chunk);
+                else output = read(output);
             }
 
             // open the next input file:
@@ -150,56 +155,75 @@ final class ReconMutil {
         }
 
         // write leftover, partial chunk:
-        if (!chunk.isEmpty()) {
-            readEvents += chunk.size();
-            readQueue.offer(chunk);
+        if (!output.isEmpty()) {
+            readEvents += output.size();
+            readQueue.offer(output);
         }
 
         if (reader instanceof EvioSource evio) evio.close();
     }
 
     /**
-     * The event processor thread.
-     * @param thread unique thread number 
+     * The decoder thread.
+     * @param thread thread number
+     */
+    void decode(int thread) {
+        while (true) {
+            List<Object> input = readQueue.poll();
+            if (input == null) {
+                if (readerThread.isDone() && readQueue.isEmpty() && 
+                        writeEvents+skipEvents+failEvents >= readEvents) break;
+                sleep(100);
+            }
+            else {
+                List<HipoDataEvent> output = new ArrayList<>(input.size());
+                for (int i=0; i<input.size(); i++) {
+                    HipoDataEvent event = input.get(i) instanceof ByteBuffer
+                            ? decode((ByteBuffer)input.get(i))
+                            : new HipoDataEvent(((Event)input.get(i)), schema);
+                    Event taggedEvent = serial.read(event.getHipoEvent());
+                    if (!taggedEvent.isEmpty()) output.add(new HipoDataEvent(taggedEvent, schema));
+                    output.add(event);
+                }
+                procQueue.offer(output);
+            }
+        }
+    }
+    
+    /**
+     * The data processor thread.
+     * @param thread thread number 
      */
     void process(int thread) {
         while (true) {
-            List<Object> o = readQueue.poll();
-            if (o == null) {
-                if (readerThread.isDone() && readQueue.isEmpty() && 
+            List<HipoDataEvent> input = procQueue.poll();
+            if (input == null) {
+                if (decoThreads.isEmpty() && procQueue.isEmpty() && 
                         writeEvents+skipEvents+failEvents >= readEvents) break;
                 sleep(100);
             }
             else {
                 // put the event back on the queue if we're rethreading:
                 //if (rethreadThread != null && !rethreadThread.isDone()) readQueue.offer(o);
-                List<Event> chunk = new ArrayList<>(o.size());
-                for (int i=0; i<o.size(); i++) {
-                    HipoDataEvent event;
-                    // decode if necessary:
-                    if (o.get(i) instanceof ByteBuffer bb) {
-                        event = decode(bb);
-                    }
-                    else {
-                        event = new HipoDataEvent(((Event)o.get(i)), schema);
-                    }
+                List<Event> output = new ArrayList<>(input.size());
+                for (int i=0; i<input.size(); i++) {
                     // run it through the engine chain:
                     for (Map.Entry<String,ReconstructionEngine> engine : engines.entrySet()) {
                         Benchmark.getInstance().resume(engine.getValue().getName());
-                        try { engine.getValue().processDataEvent(event); }
+                        try { engine.getValue().processDataEvent(input.get(i)); }
                         catch (Exception ex) { ex.printStackTrace(); }
                         Benchmark.getInstance().pause(engine.getValue().getName());
                     }
 
                     Benchmark.getInstance().resume("serial");
-                    Event e = event.getHipoEvent();
+                    Event e = input.get(i).getHipoEvent();
                     Event t = serial.read(e);
                     t.setEventTag(1);
                     Benchmark.getInstance().pause("serial");
-                    chunk.add(e);
-                    chunk.add(t);
+                    output.add(e);
+                    output.add(t);
                 }
-                writeQueue.offer(chunk);
+                writeQueue.offer(output);
             }
         }
     }
