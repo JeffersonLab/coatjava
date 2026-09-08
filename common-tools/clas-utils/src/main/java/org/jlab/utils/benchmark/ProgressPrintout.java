@@ -88,6 +88,10 @@ public class ProgressPrintout {
         }        
         return str.toString();
     }
+
+    public int getNumberOfCalls() {
+        return numberOfCalls;
+    }
     
     public static void main(String[] args){
         ProgressPrintout  progress = new ProgressPrintout();
