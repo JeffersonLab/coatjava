@@ -9,6 +9,7 @@ import org.jlab.detector.calib.utils.RCDBConstants;
 import org.jlab.detector.scalers.DaqScalers;
 import org.jlab.detector.helicity.HelicitySequenceManager;
 import org.jlab.detector.scalers.DaqScalersSequence;
+import org.jlab.detector.serial.SerialUtil;
 import org.jlab.jnp.hipo4.data.Bank;
 import org.jlab.jnp.hipo4.data.Event;
 import org.jlab.jnp.hipo4.io.HipoReader;
@@ -122,7 +123,7 @@ public class RebuildScalers {
                     runScalerBank = ds.createRunBank(writer.getSchemaFactory());
                     helScalerBank = ds.createHelicityBank(writer.getSchemaFactory());
                    
-                    Util.assignScalerHelicity(event, helScalerBank, helSeq);
+                    SerialUtil.assignScalerHelicity(event, helScalerBank, helSeq);
 
                     // put modified HEL/RUN::scaler back in the event:
                     event.write(runScalerBank);
