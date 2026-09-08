@@ -61,7 +61,7 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-java@v5.7.0
+      - uses: actions/setup-java@v6.0.0
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.java_distribution }}
@@ -91,7 +91,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-java@v5.7.0
+      - uses: actions/setup-java@v6.0.0
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.java_distribution }}
@@ -137,7 +137,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-java@v5.7.0
+      - uses: actions/setup-java@v6.0.0
         with:
           java-version: ${{ matrix.JAVA_VERSION }}
           distribution: ${{ env.java_distribution }}
@@ -161,7 +161,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - name: Set up JDK
-        uses: actions/setup-java@v5.7.0
+        uses: actions/setup-java@v6.0.0
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.java_distribution }}
@@ -170,7 +170,7 @@ jobs:
         with:
           name: build_ubuntu-latest
       - name: untar build
-        run: tar xzvf coatjava.tar.gz
+        run: tar xzf coatjava.tar.gz
       - name: spotbugs
         run: ./build-coatjava.sh --spotbugs --no-maps --no-progress
 
@@ -180,7 +180,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - name: Set up JDK
-        uses: actions/setup-java@v5.7.0
+        uses: actions/setup-java@v6.0.0
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.java_distribution }}
@@ -194,7 +194,7 @@ jobs:
           path: |
             clas_018779.evio.00001
       - name: untar build
-        run: tar xzvf coatjava.tar.gz
+        run: tar xzf coatjava.tar.gz
       - name: run test
         run: |
           ls -lhtr
@@ -209,7 +209,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - name: Set up JDK
-        uses: actions/setup-java@v5.7.0
+        uses: actions/setup-java@v6.0.0
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.java_distribution }}
@@ -224,8 +224,8 @@ jobs:
             clas_018779.evio.00001
       - name: untar build
         run: |
-          tar xzvf clara.tar.gz
-          tar xzvf coatjava.tar.gz
+          tar xzf clara.tar.gz
+          tar xzf coatjava.tar.gz
       - run: ls
       - name: run test
         run: ./bin/run-clara -y ./etc/services/rgd-clarode.yml -t 4 -n 500 -c ./clara -o ./tmp ./clas_018779.evio.00001
@@ -267,7 +267,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - name: Set up JDK
-        uses: actions/setup-java@v5.7.0
+        uses: actions/setup-java@v6.0.0
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.java_distribution }}
@@ -277,8 +277,8 @@ jobs:
           name: build_${{ matrix.runner }}
       - name: untar build
         run: |
-          tar xzvf coatjava.tar.gz
-          tar xzvf clara.tar.gz
+          tar xzf coatjava.tar.gz
+          tar xzf clara.tar.gz
       - name: run test
         run: |
           git lfs install
@@ -295,7 +295,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - name: Set up JDK
-        uses: actions/setup-java@v5.7.0
+        uses: actions/setup-java@v6.0.0
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.java_distribution }}
@@ -305,8 +305,8 @@ jobs:
           name: build_macos
       - name: untar build
         run: |
-          tar xzvf coatjava.tar.gz
-          tar xzvf clara.tar.gz
+          tar xzf coatjava.tar.gz
+          tar xzf clara.tar.gz
       - name: run test
         run: |
           git lfs install
@@ -320,7 +320,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - name: Set up JDK
-        uses: actions/setup-java@v5.7.0
+        uses: actions/setup-java@v6.0.0
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.java_distribution }}
@@ -333,7 +333,7 @@ jobs:
         with:
           name: build_ubuntu-latest
       - name: untar build
-        run: tar xzvf coatjava.tar.gz
+        run: tar xzf coatjava.tar.gz
       - name: test run-groovy
         run: coatjava/bin/run-groovy validation/advanced-tests/test-run-groovy.groovy
 
@@ -343,7 +343,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - name: Set up JDK
-        uses: actions/setup-java@v5.7.0
+        uses: actions/setup-java@v6.0.0
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.java_distribution }}
@@ -355,7 +355,7 @@ jobs:
         with:
           name: build_ubuntu-latest
       - name: untar build
-        run: tar xzvf coatjava.tar.gz
+        run: tar xzf coatjava.tar.gz
       - name: hipo2npz
         run: ./coatjava/bin/hipo2npz rec.hipo rec.npz
       - name: hipo2npz-dump
@@ -384,7 +384,7 @@ jobs:
           path: pages/jacoco
       ### javadoc
       - name: set up JDK
-        uses: actions/setup-java@v5.7.0
+        uses: actions/setup-java@v6.0.0
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.java_distribution }}
