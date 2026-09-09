@@ -98,7 +98,10 @@ final class ReconMutil {
      * @param input names of input files to read
      */
     void launch(int[] threads, String output, String... input) {
+
         reset();
+        
+        // spawn all the threads:
         readerThread = CompletableFuture.runAsync(() -> { read(threads[0], input); });
         writerThread = CompletableFuture.runAsync(() -> { write(output); });
         for (int i=0; i<threads[0]; i++) {
@@ -106,22 +109,29 @@ final class ReconMutil {
             decoThreads.offer(CompletableFuture.runAsync(() -> { decode(j); }));
             procThreads.offer(CompletableFuture.runAsync(() -> { process(j); }));
         }
+       
+        // wait for the writer to be done:
         while (!writerThread.isDone()) {
             sleep(100);
+
+            // cleanup completed parallel threads:
             for (CompletableFuture f : decoThreads)
                 if (f.isDone()) decoThreads.remove(f);
             for (CompletableFuture f : procThreads)
                 if (f.isDone()) procThreads.remove(f);
+
+            // perform scaling test:
             if (threads.length > 1 && rethreadThread == null && writeEvents > 100) {
                 rethreadThread = CompletableFuture.runAsync(() -> { rethread(BENCH_SECONDS,threads); });
                 rethreadThread.join();
                 reset();
             }
         }
-        if (!parser.getOption("-P").isDefault()) {
-            PostProcessor pp = new PostProcessor(parser.getInputList(), false, false);
-            pp.processFile(output, output);
-        }
+
+        //if (!parser.getOption("-P").isDefault()) {
+        //    PostProcessor pp = new PostProcessor(parser.getInputList(), false, false);
+        //    pp.processFile(output, output);
+        //}
     }
 
     /**
@@ -339,23 +349,25 @@ final class ReconMutil {
         HipoWriterSorted w = new HipoWriterSorted();
         w.setCompressionType(2);
         String d = ClasUtilsFile.getResourceDir("CLAS12DIR", "etc/bankdefs/hipo4");
-        if (yaml.getSchemaDirectory() != null) d = yaml.getSchemaDirectory();
+        if (yaml != null && yaml.getSchemaDirectory() != null) d = yaml.getSchemaDirectory();
         if (!parser.getOption("-S").isDefault()) d = parser.getOption("-S").stringValue();
         SchemaFactory s = new SchemaFactory();
         s.initFromDirectory(d);
-        JSONObject json = yaml.filter("writer");
-        if (json.has("wildcard")) {
-            SchemaFactory s2 = s.reduce(json.getString("wildcard"));
-            w.getSchemaFactory().copy(s2);
-        }
-        else w.getSchemaFactory().copy(s);
-        schemaBankList = new ArrayList<>();
-        if (json.has("wildcard")) {
-            if (json.optBoolean("schema_filter",true)) {
-                int schemaSize = w.getSchemaFactory().getSchemaList().size();
-                for (int i=0; i<schemaSize; i++) {
-                    Bank dataBank = new Bank(w.getSchemaFactory().getSchemaList().get(i));
-                    schemaBankList.add(dataBank);
+        if (yaml != null) {
+            JSONObject json = yaml.filter("writer");
+            if (json.has("wildcard")) {
+                SchemaFactory s2 = s.reduce(json.getString("wildcard"));
+                w.getSchemaFactory().copy(s2);
+            }
+            else w.getSchemaFactory().copy(s);
+            schemaBankList = new ArrayList<>();
+            if (json.has("wildcard")) {
+                if (json.optBoolean("schema_filter",true)) {
+                    int schemaSize = w.getSchemaFactory().getSchemaList().size();
+                    for (int i=0; i<schemaSize; i++) {
+                        Bank dataBank = new Bank(w.getSchemaFactory().getSchemaList().get(i));
+                        schemaBankList.add(dataBank);
+                    }
                 }
             }
         }
@@ -406,7 +418,7 @@ final class ReconMutil {
     }
 
     /**
-     * Forcefully shutdown all threads, close files, and reset queuess and counters.
+     * Forcefully shutdown all threads, close files, and reset queues and counters.
      */
     void reset() {
         for (CompletableFuture f : procThreads) f.cancel(true);
