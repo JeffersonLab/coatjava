@@ -1,7 +1,6 @@
 package org.jlab.detector.serial;
 
 import java.util.TreeMap;
-import java.util.TreeSet;
 import org.jlab.detector.calib.utils.ConstantsManager;
 import org.jlab.detector.decode.CLASDecoder;
 import org.jlab.detector.helicity.HelicityBit;
@@ -29,7 +28,6 @@ public class SerialHoncho {
         conman.init("/runcontrol/hwp","/runcontrol/helicity");
         runConfig = new Bank(schema.getSchema("RUN::config"));
         helicityAdc = new Bank(schema.getSchema("HEL::adc"));
-        helicities = new TreeSet<>();
         scalers = new DaqScalersSequence(schema);
         eventUnix = new TreeMap<>();
         tag1banks = new Bank[TAG1BANKS.length];
@@ -42,11 +40,17 @@ public class SerialHoncho {
         event.read(runConfig);
         event.read(helicityAdc);
         if (runConfig.getRows() > 0) {
+            if (run <= 0 && runConfig.getInt("run", 0) > 0) {
+                run = runConfig.getInt("run",0);
+                helicitySequence = new HelicitySequenceDelayed(
+                    conman.getConstants(run, "/runcontrol/helicity").getIntValue("delay",0,0,0));
+            }
             int unix = runConfig.getInt("unixtime",0);
             int evno = runConfig.getInt("event",0);
             if (unix > 0 && evno > 0) eventUnix.put(evno, unix);
         }
-        helicities.add(HelicityState.createFromFadcBank(helicityAdc, runConfig, conman));
+        if (helicitySequence != null)
+            helicitySequence.addState(HelicityState.createFromFadcBank(helicityAdc, runConfig, conman));
         return CLASDecoder.createTaggedEvent(event, runConfig, tag1banks);
     }
    
@@ -68,11 +72,11 @@ public class SerialHoncho {
 
     public void finish(HipoWriterSorted writer) {
         writer.addEvent(getUnixEvent(runConfig),1);
-        HelicitySequence.writeFlips(schema, writer, helicities);
+        helicitySequence.writeFlips(writer, 1);
     }
 
     public void clear() {
-        while (helicities.size() > 100) helicities.pollFirst();
+        //helicitySequence.clear(100);
         scalers.clear(100);
     }
     
@@ -80,16 +84,8 @@ public class SerialHoncho {
         return scalers;
     }
     
-    public TreeSet<HelicityState> getHelicities() {
-        return helicities;
-    }
-
-    public HelicitySequenceDelayed getHelicitySequence() {
-        // FIXME:  autogenerate if necessary
-        HelicitySequenceDelayed h = new HelicitySequenceDelayed(
-                conman.getConstants(4013, "/runcontrol/helicity").getIntValue("delay",0,0,0));
-        h.addStream(helicities);
-        return h;
+    public HelicitySequence getHelicities() {
+        return helicitySequence;
     }
 
     public ConstantsManager getConstantsManager() {
@@ -99,7 +95,7 @@ public class SerialHoncho {
     public SchemaFactory getSchemaFactory() {
         return schema;
     }
-
+    
     SchemaFactory schema;
     Bank[] tag1banks;
     // FIXME: store Schema for banks;
@@ -107,8 +103,9 @@ public class SerialHoncho {
     Bank helicityAdc;
     ConstantsManager conman;
     TreeMap<Integer,Integer> eventUnix;
-    TreeSet<HelicityState> helicities;
+    HelicitySequence helicitySequence;
     DaqScalersSequence scalers;
+    int run;
   
     Event getUnixEvent(Bank config) {
         Bank unix = new Bank(schema.getSchema("RUN::unix"));
@@ -151,16 +148,16 @@ public class SerialHoncho {
         }
     }
 
-    void processHelicity(Event event, Bank runcfg, Bank recevt) {
-        HelicityBit hb = getHelicitySequence().search(runcfg.getLong("timestamp", 0));
-        HelicityBit hbraw = getHelicitySequence().getHalfWavePlate() ? HelicityBit.getFlipped(hb) : hb;
-        recevt.putByte("helicity",0,hb.value());
-        recevt.putByte("helicityRaw",0,hbraw.value());
+    void processHelicity(Event event, Bank runConfig, Bank recEvent) {
+        HelicityBit hb = helicitySequence.search(runConfig.getLong("timestamp", 0));
+        HelicityBit hbraw = helicitySequence.getHalfWavePlate() ? HelicityBit.getFlipped(hb) : hb;
+        recEvent.putByte("helicity",0,hb.value());
+        recEvent.putByte("helicityRaw",0,hbraw.value());
         Bank helScaler = new Bank(schema.getSchema("HEL::scaler"));
         event.read(helScaler);
         if (helScaler.getRows()>0) {
             event.remove(schema.getSchema("HEL::scaler"));
-            SerialUtil.assignScalerHelicity(runcfg.getLong("timestamp",0), helScaler, getHelicitySequence());
+            SerialUtil.assignScalerHelicity(runConfig.getLong("timestamp",0), helScaler, helicitySequence);
             event.write(helScaler);
         }
     }
