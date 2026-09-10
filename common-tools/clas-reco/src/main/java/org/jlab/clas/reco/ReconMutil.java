@@ -156,8 +156,8 @@ final class ReconMutil {
 
             if (reader != null) {
 
-                // sleep instead of overfilling the read queue:
-                if (false) sleep(100);//readQueue.size() > CHUNKS_PER_QUEUE*threads) sleep(1000);
+                // sleep instead of overfilling the read queue (100K events, ~2GB):
+                if (readEvents > 1e5) sleep(1000);
 
                 // read next event into chunk, and fill queue if chunk full:
                 else output = read(output);
