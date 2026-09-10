@@ -1,12 +1,6 @@
 package org.jlab.clas.reco;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
@@ -14,16 +8,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.jlab.clara.engine.EngineData;
-import org.jlab.clara.engine.EngineDataType;
 import org.jlab.coda.jevio.EvioException;
-import org.jlab.detector.decode.CLASDecoder;
-import org.jlab.detector.decode.CLASDecoderPool;
-import org.jlab.detector.serial.PostProcessor;
-import org.jlab.detector.serial.SerialHoncho;
-import org.jlab.io.evio.EvioDataEvent;
 import org.jlab.io.evio.EvioSource;
 import org.jlab.io.hipo.HipoDataEvent;
 import org.jlab.jnp.hipo4.data.Bank;
@@ -31,6 +17,8 @@ import org.jlab.jnp.hipo4.data.Event;
 import org.jlab.jnp.hipo4.data.SchemaFactory;
 import org.jlab.jnp.hipo4.io.HipoReader;
 import org.jlab.jnp.hipo4.io.HipoWriterSorted;
+import org.jlab.detector.decode.CLASDecoderPool;
+import org.jlab.detector.serial.SerialHoncho;
 import org.jlab.utils.ClaraYaml;
 import org.jlab.utils.benchmark.Benchmark;
 import org.jlab.utils.benchmark.ProgressPrintout;
@@ -53,6 +41,7 @@ final class ReconMutil {
     Object reader;
     HipoWriterSorted writer;
     List<Bank> schemaBankList;
+    String schemaDirectory;
     static final SchemaFactory schema = new SchemaFactory();
     static { schema.initFromDirectory(ClasUtilsFile.getResourceDir("CLAS12DIR","etc/bankdefs/hipo4")); }
     
@@ -77,7 +66,6 @@ final class ReconMutil {
     int maxEvents;
     int skipEvents;
     ClaraYaml yaml;
-    OptionParser parser;
 
     // Progress counters:
     int readEvents;
@@ -112,7 +100,7 @@ final class ReconMutil {
        
         // wait for the writer to be done:
         while (!writerThread.isDone()) {
-            sleep(100);
+            ReconUtil.sleep(100);
 
             // cleanup completed parallel threads:
             for (CompletableFuture f : decoThreads)
@@ -153,7 +141,7 @@ final class ReconMutil {
             if (reader != null) {
 
                 // sleep instead of overfilling the read queue:
-                if (readQueue.size() > CHUNKS_PER_QUEUE*threads) sleep(1000);
+                if (readQueue.size() > CHUNKS_PER_QUEUE*threads) ReconUtil.sleep(1000);
 
                 // read next event into chunk, and fill queue if chunk full:
                 else output = read(output);
@@ -185,13 +173,13 @@ final class ReconMutil {
             if (input == null) {
                 if (readerThread.isDone() && readQueue.isEmpty() && 
                         writeEvents+skipEvents+failEvents >= readEvents) break;
-                sleep(100);
+                ReconUtil.sleep(100);
             }
             else {
                 List<HipoDataEvent> output = new ArrayList<>(input.size());
                 for (int i=0; i<input.size(); i++) {
                     HipoDataEvent event = input.get(i) instanceof ByteBuffer
-                            ? decode((ByteBuffer)input.get(i))
+                            ? ReconUtil.decode(thread, decoders, (ByteBuffer)input.get(i))
                             : new HipoDataEvent(((Event)input.get(i)), schema);
                     Event taggedEvent = serial.read(event.getHipoEvent());
                     if (!taggedEvent.isEmpty()) output.add(new HipoDataEvent(taggedEvent, schema));
@@ -212,7 +200,7 @@ final class ReconMutil {
             if (input == null) {
                 if (decoThreads.isEmpty() && procQueue.isEmpty() && 
                         writeEvents+skipEvents+failEvents >= readEvents) break;
-                sleep(100);
+                ReconUtil.sleep(100);
             }
             else {
                 // put the event back on the queue if we're rethreading:
@@ -253,7 +241,7 @@ final class ReconMutil {
                     close();
                     break;
                 }
-                sleep(1000);
+                ReconUtil.sleep(1000);
             }
             else {
                 for (int i=0; i<e.size(); i++) {
@@ -293,35 +281,14 @@ final class ReconMutil {
                 final int k = j;
                 procThreads.offer(CompletableFuture.runAsync(() -> { process(k); }));
             }
-            while (progress.getNumberOfCalls() < 100) sleep(1000);
-            sleep(seconds*1000);
+            while (progress.getNumberOfCalls() < 100) ReconUtil.sleep(1000);
+            ReconUtil.sleep(seconds*1000);
             System.out.println(String.format("\n~~~~~~~~~ Rethreading Count: %d ~~~~~~~~~\n",threads[i]));
             System.out.println(progress.getUpdateString());
             System.out.println(Benchmark.getInstance());
         }
     }
 
-    /**
-     * Decode an event.
-     * @param bytes the EVIO byte buffer
-     * @return decoded event
-     */
-    HipoDataEvent decode(ByteBuffer bytes) {
-        Benchmark.getInstance().resume("evio");
-        EvioDataEvent evio = new EvioDataEvent(bytes.array(), ByteOrder.LITTLE_ENDIAN);
-        Benchmark.getInstance().pause("evio");
-        Benchmark.getInstance().resume("deco");
-        HipoDataEvent hipo;
-        try {
-            CLASDecoder d = decoders.take();
-            hipo = d.getDecodedDataEvenet(evio);
-            decoders.put(d);
-        }
-        catch (InterruptedException ex) { hipo = null; }
-        Benchmark.getInstance().pause("deco");
-        return hipo;
-    }
-  
     /**
      * Open a new input HIPO/EVIO event file.
      * @param filename 
@@ -348,29 +315,9 @@ final class ReconMutil {
     HipoWriterSorted open(String filename, ClaraYaml yaml) {
         HipoWriterSorted w = new HipoWriterSorted();
         w.setCompressionType(2);
-        String d = ClasUtilsFile.getResourceDir("CLAS12DIR", "etc/bankdefs/hipo4");
-        if (yaml != null && yaml.getSchemaDirectory() != null) d = yaml.getSchemaDirectory();
-        if (!parser.getOption("-S").isDefault()) d = parser.getOption("-S").stringValue();
-        SchemaFactory s = new SchemaFactory();
-        s.initFromDirectory(d);
-        if (yaml != null) {
-            JSONObject json = yaml.filter("writer");
-            if (json.has("wildcard")) {
-                SchemaFactory s2 = s.reduce(json.getString("wildcard"));
-                w.getSchemaFactory().copy(s2);
-            }
-            else w.getSchemaFactory().copy(s);
-            schemaBankList = new ArrayList<>();
-            if (json.has("wildcard")) {
-                if (json.optBoolean("schema_filter",true)) {
-                    int schemaSize = w.getSchemaFactory().getSchemaList().size();
-                    for (int i=0; i<schemaSize; i++) {
-                        Bank dataBank = new Bank(w.getSchemaFactory().getSchemaList().get(i));
-                        schemaBankList.add(dataBank);
-                    }
-                }
-            }
-        }
+        JSONObject json = yaml == null ? null : yaml.filter("writer");
+        ReconUtil.setSchema(w, json, schemaDirectory);
+        schemaBankList = ReconUtil.getSchema(w, json);
         w.open(filename);
         return w;
     }
@@ -436,46 +383,16 @@ final class ReconMutil {
     }
 
     /**
-     * Add a new engine to the list.
-     * @param label display name
-     * @param clazz full class name
-     * @param cfg engine configuration
-     * @return 
+     * Create and initialize an engine, and add it to the processing list.
+     * @return the initialized engine
      */
     ReconstructionEngine addEngine(String label, String clazz, JSONObject cfg) {
-        ReconstructionEngine engine = null;
-        try {
-            Class c = Class.forName(clazz);
-            if (ReconstructionEngine.class.isAssignableFrom(c)==true){
-                engine = (ReconstructionEngine) c.newInstance();
-                if (cfg != null && !cfg.toString().equals("null")) {
-                    EngineData input = new EngineData();
-                    input.setData(EngineDataType.JSON.mimeType(), cfg.toString());
-                    engine.configure(input);
-                }
-                else engine.init();
-                engines.put(label == null ? engine.getName() : label, engine);
-            }
-            else Logger.getLogger(ReconMutil.class.getPackage().getName())
-                    .log(clazz.contains("DecoderEngine") ? Level.INFO : Level.SEVERE,
-                    "Class is not a reconstruction engine : {0}", clazz);
-        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException ex) {
-            Logger.getLogger(ReconMutil.class.getPackage().getName()).log(Level.SEVERE, null, ex);
-        }
-        return engine;
+        ReconstructionEngine e = ReconUtil.initEngine(label, clazz, cfg);
+        engines.put(label == null ? e.getName() :label, e);
+        return e;
     }
 
-    /**
-     * Catch interruptions in sleep.
-     * @param milliseconds 
-     */
-    void sleep(int milliseconds) {
-        try { Thread.sleep(milliseconds); }
-        catch (InterruptedException ex) {}
-    }
-   
     void init(OptionParser parser) {
-        this.parser = parser;
         parser.syncLogLevel(Logger.getLogger(ReconMutil.class.getPackage().getName()));
         maxEvents = parser.getOption("-n").intValue();
         skipEvents = parser.getOption("-s").intValue();
@@ -494,23 +411,21 @@ final class ReconMutil {
                 addEngine(null, s, null);
         }
         else {
-            InputStream is = ReconMutil.class.getClassLoader().getResourceAsStream("org/jlab/clas/reco/services.txt");
-            BufferedReader br = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
-            try {
-                for (String line; (line=br.readLine()) != null;)
-                    addEngine(line.split(" ")[0],line.split(" ")[1],null);
-            } catch (IOException ex) {
-                System.getLogger(ReconMutil.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
-            }
+            for (String line : ReconUtil.readResourceLines("services.txt"))
+                addEngine(line.split(" ")[0],line.split(" ")[1],null);
         }
         if (!parser.getOption("-B").isDefault()) {
             ReconstructionEngine bg = addEngine("BG","org.jlab.service.bg.BackgroundEngine",null);
             bg.engineConfigMap.put("filename",parser.getOption("-B").stringValue());
         }
-        if (!parser.getOption("-S").isDefault()) {
-        }
+        if (!parser.getOption("-S").isDefault())
+            schemaDirectory = parser.getOption("-S").stringValue();
+        else if (yaml != null && yaml.getSchemaDirectory() != null)
+            schemaDirectory = yaml.getSchemaDirectory();
+        else
+            schemaDirectory = ClasUtilsFile.getResourceDir("CLAS12DIR", "etc/bankdefs/hipo4");
     }
-
+    
     /**
      * The command-line entry-point known as "recon-mutil".
      * @param args command-line arguments
@@ -530,5 +445,4 @@ final class ReconMutil {
                 o.getOption("-o").stringValue(),
                 o.getInputList().stream().toArray(String[]::new));
     }
-    
 }
