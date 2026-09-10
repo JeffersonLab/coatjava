@@ -83,10 +83,10 @@ final class ReconMutil {
     // Progress counters:
     int readEvents;
     int writeEvents;
-    AtomicInteger taggedEvents;
     int failEvents;
     int fileEvents;
     int maxFileEvents;
+    AtomicInteger taggedEvents = new AtomicInteger();
     ProgressPrintout progress = new ProgressPrintout();
 
     ReconMutil(OptionParser parser) {
@@ -102,6 +102,8 @@ final class ReconMutil {
     void launch(int[] threads, String output, String... input) {
 
         reset();
+
+        System.out.println(String.format("recon-mutil::  Spawning %d+++ Threads...",threads[0]));
         
         // spawn all the threads:
         readerThread = CompletableFuture.runAsync(() -> { read(threads[0], input); });
@@ -114,7 +116,12 @@ final class ReconMutil {
        
         // wait for the writer to be done:
         while (!writerThread.isDone()) {
-            sleep(100);
+            sleep(1000);
+
+            //System.out.println(String.format("recon-mutil::  read(%b)/[deco(%d)]/proc(%d)/tag/write(%b)",
+            //        readerThread.isDone(), decoThreads.size(), procThreads.size(), writerThread.isDone()));
+            //System.out.println(String.format("recon-util::  %d-%d/%d/%d/%d", readEvents,
+            //        readQueue.size(), procQueue.size(), taggedEvents.get(), writeQueue.size()));
 
             // cleanup completed parallel threads:
             for (CompletableFuture f : decoThreads)
@@ -129,11 +136,6 @@ final class ReconMutil {
                 reset();
             }
         }
-
-        //if (!parser.getOption("-P").isDefault()) {
-        //    PostProcessor pp = new PostProcessor(parser.getInputList(), false, false);
-        //    pp.processFile(output, output);
-        //}
     }
 
     /**
@@ -155,7 +157,7 @@ final class ReconMutil {
             if (reader != null) {
 
                 // sleep instead of overfilling the read queue:
-                if (readQueue.size() > CHUNKS_PER_QUEUE*threads) sleep(1000);
+                if (false) sleep(100);//readQueue.size() > CHUNKS_PER_QUEUE*threads) sleep(1000);
 
                 // read next event into chunk, and fill queue if chunk full:
                 else output = read(output);
@@ -215,6 +217,10 @@ final class ReconMutil {
      */
     void process(int thread) {
         while (true) {
+            if (serial.getScalers().size() < 10 || taggedEvents.get() < 100) {
+                sleep(100);
+                continue;
+            }
             List<HipoDataEvent> input = procQueue.poll();
             if (input == null) {
                 if (decoThreads.isEmpty() && procQueue.isEmpty() && 
@@ -232,9 +238,6 @@ final class ReconMutil {
                         Benchmark.getInstance().pause(engine.getValue().getName());
                     }
                     Event e = input.get(i).getHipoEvent();
-                    Benchmark.getInstance().resume(thread,"post");
-                    serial.process(e);
-                    Benchmark.getInstance().pause(thread,"post");
                     output.add(e);
                 }
                 writeQueue.offer(output);
@@ -259,6 +262,9 @@ final class ReconMutil {
             }
             else {
                 for (int i=0; i<e.size(); i++) {
+                    Benchmark.getInstance().resume("post");
+                    serial.process(e.get(i));
+                    Benchmark.getInstance().pause("post");
                     Benchmark.getInstance().resume("write");
                     if (writer != null) {
                         if (e.get(i).getEventTag() > 0 || schemaBankList.isEmpty())
