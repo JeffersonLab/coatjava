@@ -61,7 +61,8 @@ public class Track extends Trajectory implements Comparable<Track> {
     private double secondaryChi2;                  // for track with no beamSpot information
     private int    secondaryNDF;                   // for track with no beamSpot information
     private int _status = 0;
-
+    private double purity=0;
+    private double[] effs;// eff for hits on tracks from MC: [0]=BST eff; [1]=BMT eff; [2] = total eff
 
     public Track(Helix helix) {
         super(helix);
@@ -647,6 +648,34 @@ public class Track extends Trajectory implements Comparable<Track> {
                 }
             }
         }        
+    }
+
+    /**
+     * @return the purity
+     */
+    public double getPurity() {
+        return purity;
+    }
+    
+    /**
+     * @param purity the purity to set
+     */
+    public void setPurity(double purity) {
+        this.purity = purity;
+    }
+
+    /**
+     * @return the effs
+     */
+    public double[] getEffs() {
+        return effs;
+    }
+
+    /**
+     * @param effs the effs to set
+     */
+    public void setEffs(double[] effs) {
+        this.effs = effs;
     }
 
 
