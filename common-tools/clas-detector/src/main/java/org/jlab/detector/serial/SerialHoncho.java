@@ -4,8 +4,11 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import org.jlab.detector.calib.utils.ConstantsManager;
 import org.jlab.detector.decode.CLASDecoder;
+import org.jlab.detector.helicity.HelicityBit;
 import org.jlab.detector.helicity.HelicitySequence;
+import org.jlab.detector.helicity.HelicitySequenceDelayed;
 import org.jlab.detector.helicity.HelicityState;
+import org.jlab.detector.scalers.DaqScalers;
 import org.jlab.detector.scalers.DaqScalersSequence;
 import org.jlab.jnp.hipo4.data.Bank;
 import org.jlab.jnp.hipo4.data.Event;
@@ -20,15 +23,6 @@ public class SerialHoncho {
     
     static final String[] TAG1BANKS = {"RUN::scaler","HEL::scaler","RAW::scaler","RAW::epics","HEL::flip","COAT::config"};
    
-    SchemaFactory schema;
-    Bank[] tag1banks;
-    Bank runConfig;
-    Bank helicityAdc;
-    ConstantsManager conman;
-    TreeMap<Integer,Integer> eventUnix;
-    TreeSet<HelicityState> helicities;
-    DaqScalersSequence scalers;
-  
     public SerialHoncho(SchemaFactory schema) {
         this.schema = schema;
         conman = new ConstantsManager();
@@ -55,6 +49,22 @@ public class SerialHoncho {
         helicities.add(HelicityState.createFromFadcBank(helicityAdc, runConfig, conman));
         return CLASDecoder.createTaggedEvent(event, runConfig, tag1banks);
     }
+   
+    public void process(Event event) {
+        Bank cfg = new Bank(schema.getSchema("RUN::config"));
+        Bank evt = new Bank(schema.getSchema("REC::Event"));
+        event.read(cfg);
+        event.read(evt);
+        if (cfg.getRows() > 0) {
+            processEventUnix(event, cfg);
+            if (evt.getRows() > 0) {
+                event.remove(evt.getSchema());
+                processHelicity(event, cfg, evt);
+                processScalers(cfg, evt);
+                event.write(evt);
+            }
+        }
+    }
 
     public void finish(HipoWriterSorted writer) {
         writer.addEvent(getUnixEvent(runConfig),1);
@@ -66,6 +76,40 @@ public class SerialHoncho {
         scalers.clear(100);
     }
     
+    public DaqScalersSequence getScalers() {
+        return scalers;
+    }
+    
+    public TreeSet<HelicityState> getHelicities() {
+        return helicities;
+    }
+
+    public HelicitySequenceDelayed getHelicitySequence() {
+        // FIXME:  autogenerate if necessary
+        HelicitySequenceDelayed h = new HelicitySequenceDelayed(
+                conman.getConstants(4013, "/runcontrol/helicity").getIntValue("delay",0,0,0));
+        h.addStream(helicities);
+        return h;
+    }
+
+    public ConstantsManager getConstantsManager() {
+        return conman;
+    }
+
+    public SchemaFactory getSchemaFactory() {
+        return schema;
+    }
+
+    SchemaFactory schema;
+    Bank[] tag1banks;
+    // FIXME: store Schema for banks;
+    Bank runConfig;
+    Bank helicityAdc;
+    ConstantsManager conman;
+    TreeMap<Integer,Integer> eventUnix;
+    TreeSet<HelicityState> helicities;
+    DaqScalersSequence scalers;
+  
     Event getUnixEvent(Bank config) {
         Bank unix = new Bank(schema.getSchema("RUN::unix"));
         unix.setRows(eventUnix.size());
@@ -81,19 +125,44 @@ public class SerialHoncho {
         return e;
     }
 
-    public DaqScalersSequence getScalers() {
-        return scalers;
-    }
-    
-    public TreeSet<HelicityState> getHelicities() {
-        return helicities;
+    int getUnixTime(Bank runConfig) {
+        if (runConfig.getRows() < 1) {
+            Integer key =  eventUnix.floorKey(runConfig.getInt("event",0));
+            if (key != null) {
+                Integer unix = eventUnix.get(key);
+                if (unix != null) return unix;
+            }
+        }
+        return 0;
     }
 
-    public ConstantsManager getConstantsManager() {
-        return conman;
+    void processEventUnix(Event event, Bank runConfig) {
+        int ut = getUnixTime(runConfig);
+        event.remove(runConfig.getSchema());
+        runConfig.putInt("unixtime", 0, ut);
+        event.write(runConfig);
     }
 
-    public SchemaFactory getSchemaFactory() {
-        return schema;
+    void processScalers(Bank runConfig, Bank recEvent) {
+        DaqScalers ds = scalers.get(runConfig.getLong("timestamp", 0));
+        if (ds != null) {
+            recEvent.putFloat("beamCharge",0, (float) ds.dsc2.getBeamChargeGated());
+            recEvent.putDouble("liveTime",0,ds.dsc2.getLivetime());
+        }
     }
+
+    void processHelicity(Event event, Bank runcfg, Bank recevt) {
+        HelicityBit hb = getHelicitySequence().search(runcfg.getLong("timestamp", 0));
+        HelicityBit hbraw = getHelicitySequence().getHalfWavePlate() ? HelicityBit.getFlipped(hb) : hb;
+        recevt.putByte("helicity",0,hb.value());
+        recevt.putByte("helicityRaw",0,hbraw.value());
+        Bank helScaler = new Bank(schema.getSchema("HEL::scaler"));
+        event.read(helScaler);
+        if (helScaler.getRows()>0) {
+            event.remove(schema.getSchema("HEL::scaler"));
+            SerialUtil.assignScalerHelicity(runcfg.getLong("timestamp",0), helScaler, getHelicitySequence());
+            event.write(helScaler);
+        }
+    }
+
 }
