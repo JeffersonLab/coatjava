@@ -160,7 +160,7 @@ final class ReconMutil {
             }
 
             // open the next input file:
-            else if (!inputs.isEmpty()) open(inputs.removeFirst());
+            else if (!inputs.isEmpty()) reader = open(inputs.removeFirst());
 
             // no more events to read:
             else break;
@@ -326,18 +326,20 @@ final class ReconMutil {
      * Open a new input HIPO/EVIO event file.
      * @param filename 
      */
-    void open(String filename) {
+    Object open(String filename) {
         fileEvents = 0;
+        Object ret;
         if (filename.endsWith(".hipo")) {
-            reader = new HipoReader();
-            ((HipoReader)reader).open(filename);
-            maxFileEvents = ((HipoReader)reader).getEventCount();
+            ret = new HipoReader();
+            ((HipoReader)ret).open(filename);
+            maxFileEvents = ((HipoReader)ret).getEventCount();
         }
         else {
-            reader = new EvioSource();
-            ((EvioSource)reader).open(filename);
-            maxFileEvents = ((EvioSource)reader).getEventCount();
+            ret = new EvioSource();
+            ((EvioSource)ret).open(filename);
+            maxFileEvents = ((EvioSource)ret).getEventCount();
         }
+        return ret;
     }
 
     /**
@@ -348,31 +350,45 @@ final class ReconMutil {
     HipoWriterSorted open(String filename, ClaraYaml yaml) {
         HipoWriterSorted w = new HipoWriterSorted();
         w.setCompressionType(2);
+        schemaBankList = setSchema(w, yaml, parser);
+        w.open(filename);
+        return w;
+    }
+
+    /**
+     * Define output schema, copied from HipoToHipoWriter
+     * @param w the writer whose schema to set
+     * @param y the yaml configuration
+     */
+    static List<Bank> setSchema(HipoWriterSorted w, ClaraYaml y, OptionParser p) {
+        
         String d = ClasUtilsFile.getResourceDir("CLAS12DIR", "etc/bankdefs/hipo4");
-        if (yaml != null && yaml.getSchemaDirectory() != null) d = yaml.getSchemaDirectory();
-        if (!parser.getOption("-S").isDefault()) d = parser.getOption("-S").stringValue();
+        if (y != null && y.getSchemaDirectory() != null) d = y.getSchemaDirectory();
+        if (!p.getOption("-S").isDefault()) d = p.getOption("-S").stringValue();
+        
         SchemaFactory s = new SchemaFactory();
         s.initFromDirectory(d);
-        if (yaml != null) {
-            JSONObject json = yaml.filter("writer");
+        
+        JSONObject json = y == null ? null : y.filter("writer");
+        if (json != null) {
             if (json.has("wildcard")) {
                 SchemaFactory s2 = s.reduce(json.getString("wildcard"));
                 w.getSchemaFactory().copy(s2);
             }
-            else w.getSchemaFactory().copy(s);
-            schemaBankList = new ArrayList<>();
-            if (json.has("wildcard")) {
-                if (json.optBoolean("schema_filter",true)) {
-                    int schemaSize = w.getSchemaFactory().getSchemaList().size();
-                    for (int i=0; i<schemaSize; i++) {
-                        Bank dataBank = new Bank(w.getSchemaFactory().getSchemaList().get(i));
-                        schemaBankList.add(dataBank);
-                    }
+        }
+        else w.getSchemaFactory().copy(s);
+       
+        List<Bank> banks = new ArrayList<>();
+        if (json != null && json.has("wildcard")) {
+            if (json.optBoolean("schema_filter",true)) {
+                int schemaSize = w.getSchemaFactory().getSchemaList().size();
+                for (int i=0; i<schemaSize; i++) {
+                    Bank dataBank = new Bank(w.getSchemaFactory().getSchemaList().get(i));
+                    banks.add(dataBank);
                 }
             }
         }
-        w.open(filename);
-        return w;
+        return banks;
     }
     
     /**
@@ -384,6 +400,7 @@ final class ReconMutil {
     List<Object> read(List<Object> chunk) {
         Benchmark.getInstance().resume("read");
         Object o = null;
+        // read the next EVIO event:
         if (reader instanceof EvioSource evio) {
             try { o = evio.getEventBuffer(++fileEvents, true); }
             catch (EvioException ex) {
@@ -391,10 +408,9 @@ final class ReconMutil {
                 ex.printStackTrace();
             }
         }
-        else {
-            Event event = new Event();
-            o = ((HipoReader)reader).getEvent(event, fileEvents);
-        }
+        // read the next HIPO event:
+        else o = ((HipoReader)reader).getEvent(new Event(), fileEvents);
+        // add event to chunk and queue the chunk if full:
         if (o != null && (skipEvents < 1 || readEvents > skipEvents)) {
             chunk.add(o);
             if (chunk.size() >= EVENTS_PER_CHUNK) {
@@ -442,7 +458,7 @@ final class ReconMutil {
      * @param cfg engine configuration
      * @return 
      */
-    ReconstructionEngine addEngine(String label, String clazz, JSONObject cfg) {
+    static ReconstructionEngine addEngine(Map<String,ReconstructionEngine>engines, String label, String clazz, JSONObject cfg) {
         ReconstructionEngine engine = null;
         try {
             Class c = Class.forName(clazz);
@@ -485,26 +501,26 @@ final class ReconMutil {
             yaml = new ClaraYaml(parser.getOption("-y").stringValue());
             for (JSONObject service : yaml.services()) {
                 JSONObject cfg = yaml.filter(service.getString("name"));
-                if (cfg.length() > 0) addEngine(service.getString("name"), service.getString("class"), cfg);
-                else addEngine(service.getString("name"), service.getString("class"), null);
+                if (cfg.length() > 0) addEngine(engines, service.getString("name"), service.getString("class"), cfg);
+                else addEngine(engines, service.getString("name"), service.getString("class"), null);
             }
         }
         else if (!parser.getOption("-c").isDefault()) {
             for (String s : parser.getOption("-c").stringValue().split(","))
-                addEngine(null, s, null);
+                addEngine(engines, null, s, null);
         }
         else {
             InputStream is = ReconMutil.class.getClassLoader().getResourceAsStream("org/jlab/clas/reco/services.txt");
             BufferedReader br = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
             try {
                 for (String line; (line=br.readLine()) != null;)
-                    addEngine(line.split(" ")[0],line.split(" ")[1],null);
+                    addEngine(engines, line.split(" ")[0],line.split(" ")[1],null);
             } catch (IOException ex) {
                 System.getLogger(ReconMutil.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
             }
         }
         if (!parser.getOption("-B").isDefault()) {
-            ReconstructionEngine bg = addEngine("BG","org.jlab.service.bg.BackgroundEngine",null);
+            ReconstructionEngine bg = addEngine(engines, "BG","org.jlab.service.bg.BackgroundEngine",null);
             bg.engineConfigMap.put("filename",parser.getOption("-B").stringValue());
         }
         if (!parser.getOption("-S").isDefault()) {
