@@ -233,6 +233,7 @@ final class ReconMutil {
                     t.setEventTag(1);
                     Benchmark.getInstance().pause("serial");
                     output.add(e);
+                    if (!t.isEmpty())
                     output.add(t);
                 }
                 writeQueue.offer(output);
@@ -311,13 +312,9 @@ final class ReconMutil {
         EvioDataEvent evio = new EvioDataEvent(bytes.array(), ByteOrder.LITTLE_ENDIAN);
         Benchmark.getInstance().pause("evio");
         Benchmark.getInstance().resume("deco");
-        HipoDataEvent hipo;
-        try {
-            CLASDecoder d = decoders.take();
-            hipo = d.getDecodedDataEvenet(evio);
-            decoders.put(d);
-        }
-        catch (InterruptedException ex) { hipo = null; }
+        CLASDecoder d = decoders.take();
+        HipoDataEvent hipo = d.getDecodedDataEvenet(evio);
+        decoders.put(d);
         Benchmark.getInstance().pause("deco");
         return hipo;
     }
