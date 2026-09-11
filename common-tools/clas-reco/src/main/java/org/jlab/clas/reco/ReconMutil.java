@@ -44,6 +44,8 @@ import org.json.JSONObject;
  */
 final class ReconMutil {
 
+    boolean DEBUG = true;
+
     // Performance parameters:
     final int BENCH_SECONDS = 30;
     final int EVENTS_PER_CHUNK = 100;
@@ -68,7 +70,7 @@ final class ReconMutil {
     ConcurrentLinkedQueue<CompletableFuture> procThreads = new ConcurrentLinkedQueue<>();
 
     // Queues:
-    ConcurrentLinkedQueue<List<Object>> readQueue = new ConcurrentLinkedQueue<>();
+    ConcurrentLinkedQueue<List<Object>> decoQueue = new ConcurrentLinkedQueue<>();
     ConcurrentLinkedQueue<List<HipoDataEvent>> procQueue = new ConcurrentLinkedQueue<>();
     ConcurrentLinkedQueue<List<Event>> writeQueue = new ConcurrentLinkedQueue<>();
     boolean paused = false;
@@ -117,10 +119,12 @@ final class ReconMutil {
         while (!writerThread.isDone()) {
             sleep(1000);
 
-            //System.out.println(String.format("recon-mutil::  read(%b)/[deco(%d)]/proc(%d)/tag/write(%b)",
-            //        readerThread.isDone(), decoThreads.size(), procThreads.size(), writerThread.isDone()));
-            //System.out.println(String.format("recon-util::  %d-%d/%d/%d/%d", readEvents,
-            //        readQueue.size(), procQueue.size(), taggedEvents.get(), writeQueue.size()));
+            if (DEBUG){
+                System.out.println(String.format("recon-mutil::  read(%b)/[deco(%d)]/proc(%d)/tag/write(%b)",
+                    readerThread.isDone(), decoThreads.size(), procThreads.size(), writerThread.isDone()));
+                System.out.println(String.format("recon-util::  %d-%d/%d/%d/%d", readEvents,
+                    decoQueue.size(), procQueue.size(), taggedEvents.get(), writeQueue.size()));
+            }
 
             // cleanup completed parallel threads:
             for (CompletableFuture f : decoThreads)
@@ -172,7 +176,7 @@ final class ReconMutil {
         // write leftover, partial chunk:
         if (!output.isEmpty()) {
             readEvents += output.size();
-            readQueue.offer(output);
+            decoQueue.offer(output);
         }
 
         if (reader instanceof EvioSource evio) evio.close();
@@ -184,10 +188,9 @@ final class ReconMutil {
      */
     void decode(int thread) {
         while (true) {
-            List<Object> input = readQueue.poll();
+            List<Object> input = decoQueue.poll();
             if (input == null) {
-                if (readerThread.isDone() && readQueue.isEmpty() && 
-                        writeEvents+skipEvents+failEvents >= readEvents) break;
+                if (decoQueue.isEmpty() && readerThread.isDone() && decoQueue.isEmpty()) break; 
                 sleep(100);
             }
             else {
@@ -220,6 +223,10 @@ final class ReconMutil {
                 sleep(100);
                 continue;
             }
+            if (procQueue.isEmpty() && decoThreads.isEmpty() && procQueue.isEmpty()) {
+                if (writeEvents+skipEvents+failEvents >= readEvents) break;
+                sleep(100);
+            }
             List<HipoDataEvent> input = procQueue.poll();
             if (input == null) {
                 if (decoThreads.isEmpty() && procQueue.isEmpty() && 
@@ -237,6 +244,10 @@ final class ReconMutil {
                         Benchmark.getInstance().pause(engine.getValue().getName());
                     }
                     Event e = input.get(i).getHipoEvent();
+                    Benchmark.getInstance().resume("post");
+                    serial.process(e);
+                    serial.process(e);
+                    Benchmark.getInstance().pause("post");
                     output.add(e);
                 }
                 writeQueue.offer(output);
@@ -261,9 +272,6 @@ final class ReconMutil {
             }
             else {
                 for (int i=0; i<e.size(); i++) {
-                    Benchmark.getInstance().resume("post");
-                    serial.process(e.get(i));
-                    Benchmark.getInstance().pause("post");
                     Benchmark.getInstance().resume("write");
                     if (writer != null) {
                         if (e.get(i).getEventTag() > 0 || schemaBankList.isEmpty())
@@ -401,7 +409,7 @@ final class ReconMutil {
         if (o != null && (skipEvents < 1 || readEvents > skipEvents)) {
             chunk.add(o);
             if (chunk.size() >= EVENTS_PER_CHUNK) {
-                readQueue.offer(chunk);
+                decoQueue.offer(chunk);
                 readEvents += chunk.size();
                 chunk = new ArrayList<>(EVENTS_PER_CHUNK);
             }
@@ -431,7 +439,7 @@ final class ReconMutil {
             writerThread.cancel(true);
             close();
         }
-        readQueue = new ConcurrentLinkedQueue<>();
+        decoQueue = new ConcurrentLinkedQueue<>();
         writeQueue = new ConcurrentLinkedQueue<>();
         procThreads = new ConcurrentLinkedQueue();
         readEvents = 0;
