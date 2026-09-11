@@ -73,6 +73,7 @@ final class ReconMutil {
     ConcurrentLinkedQueue<List<Object>> readQueue = new ConcurrentLinkedQueue<>();
     ConcurrentLinkedQueue<List<HipoDataEvent>> procQueue = new ConcurrentLinkedQueue<>();
     ConcurrentLinkedQueue<List<Event>> writeQueue = new ConcurrentLinkedQueue<>();
+    boolean paused = false;
     
     // Static parameters:
     int maxEvents;
@@ -217,7 +218,7 @@ final class ReconMutil {
      */
     void process(int thread) {
         while (true) {
-            if (serial.getScalers().size() < 10 || taggedEvents.get() < 100) {
+            if (paused || serial.getScalers().size() < 10 || taggedEvents.get() < 100) {
                 sleep(100);
                 continue;
             }
