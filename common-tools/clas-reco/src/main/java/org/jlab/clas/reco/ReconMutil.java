@@ -39,7 +39,6 @@ import org.jlab.utils.system.ClasUtilsFile;
 import org.json.JSONObject;
 
 /**
- * FIXME: add tagged bank counter for completino decision
  * 
  * @author baltzell
  */
@@ -47,7 +46,6 @@ final class ReconMutil {
 
     // Performance parameters:
     final int BENCH_SECONDS = 30;
-    final int CHUNKS_PER_QUEUE = 100;
     final int EVENTS_PER_CHUNK = 100;
 
     // File I/O:
