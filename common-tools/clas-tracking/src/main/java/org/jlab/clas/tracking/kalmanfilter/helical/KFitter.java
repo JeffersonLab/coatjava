@@ -87,7 +87,7 @@ public class KFitter extends AKFitter {
     public void runFitter() {
         this.runFitter(sv, mv);
     }
-
+    
     public double getChi2() {
         return this.getChi2(0);
     }
@@ -186,9 +186,10 @@ public class KFitter extends AKFitter {
             if(Double.isNaN(newchisq) ||
                sv.smoothed().get(0)==null ||
                sv.smoothed().get(0).kappa==0 || 
-               Double.isNaN(sv.smoothed().get(0).kappa)) {
-                this.setFitFailed = true; 
-                break; 
+               Double.isNaN(sv.smoothed().get(0).kappa) || 
+               Double.isNaN(sv.smoothed().get(0).dz)) {
+                this.setFitFailed = true;
+                break;
             }            
             // if chi2 improved and curvature is non-zero, save fit results but continue iterating
             else if(newchisq < this.chi2) {

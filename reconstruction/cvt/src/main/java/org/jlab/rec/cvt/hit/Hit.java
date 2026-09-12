@@ -280,7 +280,7 @@ public class Hit implements Comparable<Hit> {
     public int getAssociatedTrackID() {
         return AssociatedTrackID;
     }
-    
+
 
     public void setAssociatedTrackID(int associatedTrackID) {
         AssociatedTrackID = associatedTrackID;

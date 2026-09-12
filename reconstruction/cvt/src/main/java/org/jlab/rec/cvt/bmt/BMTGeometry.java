@@ -300,7 +300,7 @@ public class BMTGeometry {
     public double getThickness() {
         
         return BMTConstants.HDRIFT;
-    }    
+    }
     
     /**
      * Return offset of the selected tile, identified by layer and sector
@@ -805,7 +805,7 @@ public class BMTGeometry {
         Point3D local = this.toLocal(traj, layer, sector);
         return local.toVector3D().phi();
     }
-
+         
     /**
      * Calculate Theta Lorentz based on solenoid scale and drift settings
      * @param layer

@@ -400,7 +400,7 @@ public class SVTConstants {
                         SUPPORTRADIUS[region] = cp.getDouble(ccdbPath+"region/CuSupportInnerRadius", region); // radius to inner side of heatSinkRidge
 
                         for( int m = 0; m < NMODULES; m++ )
-                        {			
+		{			
 					switch( m ) 
 					{
 					case 0: // U = lower / inner

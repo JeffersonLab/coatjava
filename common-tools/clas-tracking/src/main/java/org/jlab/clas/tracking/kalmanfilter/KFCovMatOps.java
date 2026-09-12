@@ -47,7 +47,7 @@ public class KFCovMatOps{
         }
         return Cinv;
     }
-        
+    
     public double[][] smoothCovMat(double[][] C_n_kp1, double[][] C_k, double[][] A , double[][] C_k_kp1) {
         double[][] At = null;
         try {
