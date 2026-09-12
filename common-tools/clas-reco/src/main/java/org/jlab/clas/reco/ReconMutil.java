@@ -44,7 +44,7 @@ import org.json.JSONObject;
  */
 final class ReconMutil {
 
-    boolean DEBUG = true;
+    boolean DEBUG = false;
 
     // Performance parameters:
     final int BENCH_SECONDS = 30;
@@ -190,7 +190,11 @@ final class ReconMutil {
         while (true) {
             List<Object> input = decoQueue.poll();
             if (input == null) {
-                if (decoQueue.isEmpty() && readerThread.isDone() && decoQueue.isEmpty()) break; 
+                if (decoQueue.isEmpty() && readerThread.isDone() && decoQueue.isEmpty()) {
+                    if (thread == 0) serial.updateHelicitySequence();
+                    System.err.println("recon-mutil::  Helicity sequence updated");
+                    break;
+                } 
                 sleep(100);
             }
             else {
@@ -224,7 +228,7 @@ final class ReconMutil {
                 continue;
             }
             if (procQueue.isEmpty() && decoThreads.isEmpty() && procQueue.isEmpty()) {
-                if (writeEvents+skipEvents+failEvents >= readEvents) break;
+                if (writeEvents+skipEvents+failEvents >= readEvents+taggedEvents.get()) break;
                 sleep(100);
             }
             List<HipoDataEvent> input = procQueue.poll();
@@ -245,7 +249,6 @@ final class ReconMutil {
                     }
                     Event e = input.get(i).getHipoEvent();
                     Benchmark.getInstance().resume("post");
-                    serial.process(e);
                     serial.process(e);
                     Benchmark.getInstance().pause("post");
                     output.add(e);

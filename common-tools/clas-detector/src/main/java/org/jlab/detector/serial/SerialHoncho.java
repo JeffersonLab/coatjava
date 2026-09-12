@@ -83,7 +83,7 @@ public class SerialHoncho {
             processEventUnix(event, cfg);
             if (evt.getRows() > 0) {
                 event.remove(evt.getSchema());
-                //processHelicity(event, cfg, evt);
+                processHelicity(event, cfg, evt);
                 processScalers(cfg, evt);
                 event.write(evt);
             }
@@ -118,6 +118,10 @@ public class SerialHoncho {
         helicitySequence = null;
     }
 
+    public TreeSet<HelicityState> getHelicities() {
+        return helicities;
+    }
+
     public DaqScalersSequence getScalers() {
         return scalers;
     }
@@ -130,10 +134,6 @@ public class SerialHoncho {
         return schema;
     }
    
-    public TreeSet<HelicityState> getHelicities() {
-        return helicities;
-    }
-
     public void updateHelicitySequence() {
         helicitySequence = new HelicitySequenceDelayed(
             conman.getConstants(run, "/runcontrol/helicity").getIntValue("delay",0,0,0));
