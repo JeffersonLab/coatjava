@@ -35,10 +35,10 @@ public class SerialHoncho {
     Schema helScaler;
     Schema helicityAdc;
     ConstantsManager conman;
-    TreeMap<Integer,Integer> eventUnix;
-    HelicitySequence helicitySequence;
-    TreeSet<HelicityState> helicities;
-    DaqScalersSequence scalers;
+    volatile TreeMap<Integer,Integer> eventUnix;
+    volatile HelicitySequence helicitySequence;
+    volatile TreeSet<HelicityState> helicities;
+    volatile DaqScalersSequence scalers;
     int run = 0;
   
     public SerialHoncho(SchemaFactory schema) {
@@ -63,9 +63,8 @@ public class SerialHoncho {
         scalers.add(event);
         event.read(cfg);
         event.read(hel);
-        if (cfg.getRows() > 0) {
-            if (run <= 0 && cfg.getInt("run", 0) > 0)
-                run = cfg.getInt("run",0);
+        if (cfg.getRows() > 0 && cfg.getInt("run", 0) > 0) {
+            run = cfg.getInt("run",0);
             int unix = cfg.getInt("unixtime",0);
             int evno = cfg.getInt("event",0);
             if (unix > 0 && evno > 0) eventUnix.put(evno, unix);
