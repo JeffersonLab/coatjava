@@ -48,7 +48,7 @@ final class ReconMutil {
 
     // Performance parameters:
     final int BENCH_SECONDS = 30;
-    final int EVENTS_PER_CHUNK = 100;
+    final int EVENTS_PER_CHUNK = 10;
 
     // File I/O:
     Object reader;
@@ -194,25 +194,34 @@ final class ReconMutil {
                             ? decode((ByteBuffer)input.get(i))
                             : new HipoDataEvent(((Event)input.get(i)), schema);
                     output.add(event);
-                    Benchmark.getInstance().resume("serial");
+                    Benchmark.getInstance().resume(thread, "serial");
                     Event taggedEvent = serial.read(event.getHipoEvent());
                     if (!taggedEvent.isEmpty()) {
                         output.add(new HipoDataEvent(taggedEvent, schema));
                         taggedEvents.incrementAndGet();
                     }
-                    if (thread == 0 && ++serials % 10000 == 0) {
-                        paused = true;
-                        sleep(1000);
-                        serial.updateHelicitySequence();
-                        paused = false;
+                    if (thread == 0 && ++serials > 1000 ) {
+                        System.err.println(serial.getScalers().size()+" "+serial.getHelicities().size());
+                        if (serial.getScalers().size() > 10 ||
+                            serial.getHelicities().size() > 5000) {
+                            paused = true;
+                            sleep(1000);
+                            serial.updateHelicitySequence();
+                            paused = false;
+                        }
+                        serials = 0;
                     }
-                    Benchmark.getInstance().pause("serial");
+                    Benchmark.getInstance().pause(thread, "serial");
                 }
                 procQueue.offer(output);
             }
         }
+        paused = true;
+        sleep(1000);
+        serial.updateHelicitySequence();
+        paused = false;
     }
-    
+
     /**
      * The data processor thread.
      * @param thread thread number 
@@ -238,15 +247,15 @@ final class ReconMutil {
                 List<Event> output = new ArrayList<>(input.size());
                 for (int i=0; i<input.size(); i++) {
                     for (Map.Entry<String,ReconstructionEngine> engine : engines.entrySet()) {
-                        Benchmark.getInstance().resume(engine.getValue().getName());
+                        Benchmark.getInstance().resume(thread, engine.getValue().getName());
                         try { engine.getValue().processDataEvent(input.get(i)); }
                         catch (Exception ex) { ex.printStackTrace(); }
-                        Benchmark.getInstance().pause(engine.getValue().getName());
+                        Benchmark.getInstance().pause(thread, engine.getValue().getName());
                     }
                     Event e = input.get(i).getHipoEvent();
-                    Benchmark.getInstance().resume("post");
+                    Benchmark.getInstance().resume(thread, "post");
                     serial.process(e);
-                    Benchmark.getInstance().pause("post");
+                    Benchmark.getInstance().pause(thread, "post");
                     output.add(e);
                 }
                 writeQueue.offer(output);

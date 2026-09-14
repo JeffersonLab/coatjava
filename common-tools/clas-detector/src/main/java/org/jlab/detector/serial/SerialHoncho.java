@@ -1,7 +1,6 @@
 package org.jlab.detector.serial;
 
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.TreeMap;
@@ -40,7 +39,7 @@ public class SerialHoncho {
     volatile TreeSet<HelicityState> helicities;
     volatile DaqScalersSequence scalers;
     int run = 0;
-  
+
     public SerialHoncho(SchemaFactory schema) {
         this.schema = schema;
         conman = new ConstantsManager();
@@ -57,19 +56,12 @@ public class SerialHoncho {
             tag1banks[i] = schema.getSchema(TAG1BANKS[i]);
     }
 
-    public synchronized Event read(Event event) {
+    public Event read(Event event) {
         Bank cfg = new Bank(runConfig);
         Bank hel = new Bank(helicityAdc);
-        scalers.add(event);
         event.read(cfg);
         event.read(hel);
-        if (cfg.getRows() > 0 && cfg.getInt("run", 0) > 0) {
-            run = cfg.getInt("run",0);
-            int unix = cfg.getInt("unixtime",0);
-            int evno = cfg.getInt("event",0);
-            if (unix > 0 && evno > 0) eventUnix.put(evno, unix);
-        }
-        helicities.add(HelicityState.createFromFadcBank(hel, cfg, conman));
+        read(event, cfg, hel);
         return CLASDecoder.createTaggedEvent(event, cfg, createTaggedBanks(tag1banks));
     }
 
@@ -89,18 +81,46 @@ public class SerialHoncho {
         }
     }
 
-    public void prune() {
-        // remove identical helicities in the stream:
+    synchronized void read(Event event, Bank runConfig, Bank helicityAdc) {
+        scalers.add(event);
+        helicities.add(HelicityState.createFromFadcBank(helicityAdc, runConfig, conman));
+        prune();
+        if (runConfig.getRows() > 0) {
+            int r = runConfig.getInt("run", 0);
+            if (r > 0) {
+                if (r != run) {
+                    clear();
+                    run = r;
+                }
+            }
+            if (run > 0) {
+                int unix = runConfig.getInt("unixtime",0);
+                int evno = runConfig.getInt("event",0);
+                if (unix > 0 && evno > 0) eventUnix.put(evno, unix);
+            }
+        }
+    }
+
+    void prune() {
+        // Estimated size of HelicityState is ~22 bytes.
+        // 1 million states, ~22 MB, 1 minute at 10 kHz trigger.
+        if (helicities.size() > 2e6) 
+            pruneHelicities((int)1e6); 
+        // Assuming scalers are 50x larger.
+        // 10,000 events is 2.7 hours at 1 Hz.
+        if (scalers.size() > 2e4)
+            scalers.clear((int)1e4);
+    }
+
+    void pruneHelicities(int depth) {
         HelicityState prev = null;
-        Iterator<HelicityState> iter = (ListIterator)helicities.iterator();
-        while (iter.hasNext()) {
+        ListIterator<HelicityState> iter = (ListIterator)helicities.iterator();
+        final int size = helicities.size();
+        while (iter.hasNext() && iter.nextIndex() < size-depth) {
             HelicityState next = iter.next();
             if (prev != null && prev == next)
                 helicities.remove(next);
         }
-        scalers.clear((int)1e5);
-        // trim helicities to 100 million events, ~1 run, ~1 GB:
-        //while (helicities.size() < 1e8) helicities.pollFirst();
     }
 
     public void finish(HipoWriterSorted writer) {
