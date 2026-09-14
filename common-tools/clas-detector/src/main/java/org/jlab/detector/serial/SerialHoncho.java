@@ -81,38 +81,7 @@ public class SerialHoncho {
         }
     }
 
-    synchronized void read(Event event, Bank runConfig, Bank helicityAdc) {
-        scalers.add(event);
-        helicities.add(HelicityState.createFromFadcBank(helicityAdc, runConfig, conman));
-        prune();
-        if (runConfig.getRows() > 0) {
-            int r = runConfig.getInt("run", 0);
-            if (r > 0) {
-                if (r != run) {
-                    clear();
-                    run = r;
-                }
-            }
-            if (run > 0) {
-                int unix = runConfig.getInt("unixtime",0);
-                int evno = runConfig.getInt("event",0);
-                if (unix > 0 && evno > 0) eventUnix.put(evno, unix);
-            }
-        }
-    }
-
-    void prune() {
-        // Estimated size of HelicityState is ~22 bytes.
-        // 1 million states, ~22 MB, 1 minute at 10 kHz trigger.
-        if (helicities.size() > 2e6) 
-            pruneHelicities(helicities, (int)1e6); 
-        // Assuming scalers are 50x larger.
-        // 10,000 events is 2.7 hours at 1 Hz.
-        if (scalers.size() > 2e4)
-            scalers.clear((int)1e4);
-    }
-
-    public void finish(HipoWriterSorted writer) {
+    public void closure(HipoWriterSorted writer) {
         Bank cfg = new Bank(runConfig, 1);
         cfg.putInt("run",0,run); 
         writer.addEvent(getUnixEvent(cfg),1);
@@ -148,6 +117,37 @@ public class SerialHoncho {
         helicitySequence.addStream(helicities);
     }
     
+    void read(Event event, Bank runConfig, Bank helicityAdc) {
+        scalers.add(event);
+        helicities.add(HelicityState.createFromFadcBank(helicityAdc, runConfig, conman));
+        prune();
+        if (runConfig.getRows() > 0) {
+            int r = runConfig.getInt("run", 0);
+            if (r > 0) {
+                if (r != run) {
+                    clear();
+                    run = r;
+                }
+            }
+            if (run > 0) {
+                int unix = runConfig.getInt("unixtime",0);
+                int evno = runConfig.getInt("event",0);
+                if (unix > 0 && evno > 0) eventUnix.put(evno, unix);
+            }
+        }
+    }
+
+    void prune() {
+        // Estimated size of HelicityState is ~22 bytes.
+        // 1 million states, ~22 MB, 1 minute at 10 kHz trigger.
+        if (helicities.size() > 2e6) 
+            pruneHelicities(helicities, (int)1e6); 
+        // Assuming scalers are 50x larger.
+        // 10,000 events is 2.7 hours at 1 Hz.
+        if (scalers.size() > 2e4)
+            scalers.clear((int)1e4);
+    }
+
     Event getUnixEvent(Bank runConfig) {
         Bank unix = new Bank(schema.getSchema("RUN::unix"));
         unix.setRows(eventUnix.size());
