@@ -126,7 +126,7 @@ final class ReconMutil {
 
         // wait for finish:
         while (!writerThread.isDone()) {
-            sleep(1000);
+            sleep(5000);
             if (DEBUG) show();
             for (CompletableFuture f : decoThreads) if (f.isDone()) decoThreads.remove(f);
             for (CompletableFuture f : procThreads) if (f.isDone()) procThreads.remove(f);
@@ -179,7 +179,12 @@ final class ReconMutil {
      * @param thread thread number
      */
     void decode(int thread) {
+        final int helicityClock = 30;  // Hz
+        final int triggerRate = 25000; // Hz
+        final int minReload = 2 * triggerRate / helicityClock;
         int serials = 0;
+        int reloads = 0;
+        int reload = minReload;
         while (true) {
             List<Object> input = decoQueue.poll();
             if (input == null) {
@@ -200,24 +205,23 @@ final class ReconMutil {
                         output.add(new HipoDataEvent(taggedEvent, schema));
                         taggedEvents.incrementAndGet();
                     }
-                    if (thread == 0 && ++serials > 1000 ) {
-                        System.err.println(serial.getScalers().size()+" "+serial.getHelicities().size());
-                        if (serial.getScalers().size() > 10 ||
-                            serial.getHelicities().size() > 5000) {
-                            paused = true;
-                            sleep(1000);
-                            serial.updateHelicitySequence();
-                            paused = false;
-                        }
+                    if (thread == 0 && ++serials > reload) {
+                        updateHelicity();
                         serials = 0;
+                        reload += 10 * reloads * minReload;
+                        reloads++;
                     }
                     Benchmark.getInstance().pause(thread, "serial");
                 }
                 procQueue.offer(output);
             }
         }
+        if (thread == 0) updateHelicity();
+    }
+
+    void updateHelicity() {
         paused = true;
-        sleep(1000);
+        sleep(5000);
         serial.updateHelicitySequence();
         paused = false;
     }
@@ -232,14 +236,11 @@ final class ReconMutil {
                 sleep(100);
                 continue;
             }
-            if (procQueue.isEmpty() && decoThreads.isEmpty() && procQueue.isEmpty()) {
-                if (writeEvents+skipEvents+failEvents >= readEvents+taggedEvents.get()) break;
-                sleep(100);
-            }
             List<HipoDataEvent> input = procQueue.poll();
             if (input == null) {
-                if (decoThreads.isEmpty() && procQueue.isEmpty() && 
-                        writeEvents+skipEvents+failEvents >= readEvents) break;
+                if (procQueue.isEmpty() && decoThreads.isEmpty() && procQueue.isEmpty()) {
+                    if (writeEvents+skipEvents+failEvents >= readEvents+taggedEvents.get()) break;
+                }
                 sleep(100);
             }
             else {
@@ -261,6 +262,7 @@ final class ReconMutil {
                 writeQueue.offer(output);
             }
         }
+        System.out.println("recon-mutil:: processor thread #"+thread+" exiting.");
     }
 
     /**
@@ -539,8 +541,8 @@ final class ReconMutil {
                 readerThread.isDone(), decoThreads.size(), procThreads.size(), writerThread.isDone());
         String s2 = String.format(" queues(d/p/w)=(%d/%d/%d)",
                 decoQueue.size(), procQueue.size(), writeQueue.size());
-        String s3 = String.format(" events(r/w/t)=(%d/%d/%d)",
-                readEvents, writeEvents, taggedEvents.get());
+        String s3 = String.format(" events(r/w/t/f)=(%d/%d/%d)",
+                readEvents, writeEvents, taggedEvents.get(), failEvents);
         System.out.println("recon-mutil::  "+s1+" "+s2+" "+s3);
     }
 

@@ -105,22 +105,11 @@ public class SerialHoncho {
         // Estimated size of HelicityState is ~22 bytes.
         // 1 million states, ~22 MB, 1 minute at 10 kHz trigger.
         if (helicities.size() > 2e6) 
-            pruneHelicities((int)1e6); 
+            pruneHelicities(helicities, (int)1e6); 
         // Assuming scalers are 50x larger.
         // 10,000 events is 2.7 hours at 1 Hz.
         if (scalers.size() > 2e4)
             scalers.clear((int)1e4);
-    }
-
-    void pruneHelicities(int depth) {
-        HelicityState prev = null;
-        ListIterator<HelicityState> iter = (ListIterator)helicities.iterator();
-        final int size = helicities.size();
-        while (iter.hasNext() && iter.nextIndex() < size-depth) {
-            HelicityState next = iter.next();
-            if (prev != null && prev == next)
-                helicities.remove(next);
-        }
     }
 
     public void finish(HipoWriterSorted writer) {
@@ -211,6 +200,17 @@ public class SerialHoncho {
             event.remove(helScaler);
             SerialUtil.assignScalerHelicity(runConfig.getLong("timestamp",0), scaler, helicitySequence);
             event.write(scaler);
+        }
+    }
+
+    static void pruneHelicities(TreeSet<HelicityState> helicities, int depth) {
+        HelicityState prev = null;
+        ListIterator<HelicityState> iter = (ListIterator)helicities.iterator();
+        final int size = helicities.size();
+        while (iter.hasNext() && iter.nextIndex() < size-depth) {
+            HelicityState next = iter.next();
+            if (prev != null && prev == next)
+                helicities.remove(next);
         }
     }
 
