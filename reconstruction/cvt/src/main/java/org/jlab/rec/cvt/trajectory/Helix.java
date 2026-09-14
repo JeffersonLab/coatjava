@@ -178,15 +178,6 @@ public class Helix {
         return 1. / C;
     }
 
-    //  (x,y) coordinates of the circle center
-    public double xCen() {
-        return (radius() - this.getDCA()) * Math.sin(this.getPhiAtDCA());
-    }
-
-    public double yCen() {
-        return (-radius() + this.getDCA()) * Math.cos(this.getPhiAtDCA());
-    }
-
     //  (x,y) coordinates of the dca
     public double xDCA() {
         return -this.getDCA() * Math.sin(this.getPhiAtDCA());
@@ -198,7 +189,7 @@ public class Helix {
 
     public Point3D getVertex() {
         return new Point3D(this.xDCA()+this.getXb(),this.yDCA()+this.getYb(),this.getZ0());
-    }
+    }       
         
     public double getPt(double solenoidMag) { 
         double pt = Constants.LIGHTVEL * this.radius() * solenoidMag;
@@ -214,18 +205,7 @@ public class Helix {
         double py = pt*Math.sin(this.getPhiAtDCA());
         
         return new Vector3D(px,py,pz);
-    }
-        
-    public double getArcLengthDCA(Point3D refpoint) {
-        //insure that the refpoint is on the helix
-        if (refpoint == null) {
-            return 0;
-        }
-        double refX = radius() * Math.cos(refpoint.toVector3D().phi());
-        double refY = radius() * Math.sin(refpoint.toVector3D().phi());
-        double arclen = arcLength(xCen(), yCen(), radius(), xCen(), yCen(), refX, refY);
-        return arclen;
-    }
+    }        
 
     // this method finds the arclength between 2 points in a circle
     // this private method is used to get the pathlength from a point on the helical track to the distance of closest approach
@@ -272,16 +252,13 @@ public class Helix {
             return new Point3D(x, y, z);
         }
 
-
-        double par = 1. - ((r * r - d0 * d0) * omega * omega) / (2. * (1. + d0 * Math.abs(omega)));
+        double par = (2. * (1. + d0 * omega) - (r * r - d0 * d0) * omega * omega) / (2. * Math.abs(1. + d0 * omega));
         double newPathLength = Math.abs(Math.acos(par) / omega);
 
         double alpha = -newPathLength * omega;
 
-        double x = d0 * charge * Math.sin(phi0) + (charge / Math.abs(omega)) 
-                * (Math.sin(phi0) - Math.cos(alpha) * Math.sin(phi0) - Math.sin(alpha) * Math.cos(phi0))+xb;
-        double y = -d0 * charge * Math.cos(phi0) - (charge / Math.abs(omega)) 
-                * (Math.cos(phi0) + Math.sin(alpha) * Math.sin(phi0) - Math.cos(alpha) * Math.cos(phi0))+yb;
+        double x = d0 * Math.sin(phi0) + 1./omega * (Math.sin(phi0) - Math.sin(phi0 + alpha));
+        double y = -d0 * Math.cos(phi0) - 1./omega * (Math.cos(phi0) - Math.cos(phi0 + alpha));
         double z = z0 + newPathLength * tandip;
 
         return new Point3D(x, y, z);
@@ -301,7 +278,7 @@ public class Helix {
             return new Vector3D(ux, uy, uz);
         }
 
-        double par = 1. - ((r * r - d0 * d0) * omega * omega) / (2. * (1. + d0 * Math.abs(omega)));
+        double par = (2. * (1. + d0 * omega) - (r * r - d0 * d0) * omega * omega) / (2. * Math.abs(1. + d0 * omega));
         double newPathLength = Math.abs(Math.acos(par) / omega);
 
         double alpha = newPathLength * omega;
