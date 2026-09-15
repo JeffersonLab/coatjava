@@ -26,7 +26,7 @@ public class OccupanceEngine extends ReconstructionEngine {
     @Override
     public boolean processDataEventUser(DataEvent event) {
         for (OccupanceTable t : tables) {
-            RawDataBank b = new RawDataBank(t.getHitBank(), 1000, OrderGroups.NOMINAL);
+            RawDataBank b = new RawDataBank(t.getHitBank(), 1000, OrderGroups.NODENOISE);
             b.read(event);
             t.fill(b, false);
         }
