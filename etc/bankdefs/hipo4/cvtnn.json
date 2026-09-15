@@ -1,0 +1,104 @@
+[ 
+ {
+    "name": "CVTRec::MLHit",
+    "group": 20500,
+    "item" : 51,
+    "info": "reconstructed hits (1st pass tracking)",
+    "entries": [
+       {"name":"id",            "type":"S", "info":"id of the hit"},
+       {"name":"sidx",          "type":"S", "info":"row in the MLSeed bank"},
+       {"name":"tidx",          "type":"S", "info":"row in the MLTrack bank"},
+       {"name":"rectid",        "type":"S", "info":"reconstructed track id associated with the hit"},
+       {"name":"recsid",        "type":"S", "info":"reconstructed seed id associated with the hit"},
+       {"name":"mctid",         "type":"S", "info":"MC track id associated with the hit"},
+       {"name":"sector",        "type":"B", "info":"sector"},
+       {"name":"layer",         "type":"B", "info":"layer (1...6)=SVT; (7...12)=BMT"},
+       {"name":"type",          "type":"B", "info":"detector type: 0=SVT; 1=BMT-Z; 2=BMT-C"},
+       {"name":"strip",         "type":"S", "info":"strip number"},
+       {"name":"order",         "type":"B", "info":"order 0=MC hit-on-track; 1=noise hit"},
+       {"name":"cid",           "type":"S", "info":"associated cluster id"},
+       {"name":"cweight",       "type":"F", "info":"1/1+|difference to associated cluster centroid|"},
+       {"name":"sweight",       "type":"F", "info":"1/1+|normalized difference to associated cluster seed|"},
+       {"name":"x1",            "type":"F", "info":"geometric strip first end-point x-coordinate"},
+       {"name":"y1",            "type":"F", "info":"geometric strip first end-point y-coordinate"},
+       {"name":"z1",            "type":"F", "info":"geometric strip first end-point z-coordinate"},
+       {"name":"x2",            "type":"F", "info":"geometric strip second end-point x-coordinate"},
+       {"name":"y2",            "type":"F", "info":"geometric strip second end-point y-coordinate"},
+       {"name":"z2",            "type":"F", "info":"geometric strip second end-point z-coordinate"}
+    ]
+ },
+ {
+    "name": "CVT::MLHit",
+    "group": 20500,
+    "item" : 52,
+    "info": "reconstructed hits (2nd pass tracking)",
+    "entries": [
+       {"name":"id",            "type":"S", "info":"id of the hit"},
+       {"name":"sidx",          "type":"S", "info":"row in the MLSeed bank"},
+       {"name":"tidx",          "type":"S", "info":"row in the MLTrack bank"},
+       {"name":"rectid",        "type":"S", "info":"reconstructed track id associated with the hit"},
+       {"name":"recsid",        "type":"S", "info":"reconstructed seed id associated with the hit"},
+       {"name":"mctid",         "type":"S", "info":"MC track id associated with the hit"},
+       {"name":"sector",        "type":"B", "info":"sector"},
+       {"name":"layer",         "type":"B", "info":"layer (1...6)=SVT; (7...12)=BMT"},
+       {"name":"type",          "type":"B", "info":"detector type: 0=SVT; 1=BMT-Z; 2=BMT-C"},
+       {"name":"strip",         "type":"S", "info":"strip number"},
+       {"name":"order",         "type":"B", "info":"order 0=MC hit-on-track; 1=noise hit"},
+       {"name":"cid",           "type":"S", "info":"associated cluster id"},
+       {"name":"cweight",       "type":"F", "info":"1/1+|normalized difference to associated cluster centroid|"},
+       {"name":"sweight",       "type":"F", "info":"1/1+|normalized difference to associated cluster seed|"},
+       {"name":"x1",            "type":"F", "info":"geometric strip first end-point x-coordinate"},
+       {"name":"y1",            "type":"F", "info":"geometric strip first end-point y-coordinate"},
+       {"name":"z1",            "type":"F", "info":"geometric strip first end-point z-coordinate"},
+       {"name":"x2",            "type":"F", "info":"geometric strip second end-point x-coordinate"},
+       {"name":"y2",            "type":"F", "info":"geometric strip second end-point y-coordinate"},
+       {"name":"z2",            "type":"F", "info":"geometric strip second end-point z-coordinate"}
+    ]
+ },
+ {
+    "name": "CVTRec::MLSeed",
+    "group": 20500,
+    "item" : 61,
+    "info": "reconstructed seeds (1st pass tracking)",
+    "entries": [
+       {"name":"id",            "type":"S", "info":"id of the seed"},
+       {"name":"purity",        "type":"F", "info":"seed purity: Nb of reconstructed true hits in seed / total hits on seed"},
+       {"name":"efficiency",    "type":"F", "info":"seed purity: Nb of reconstructed true hits in seed / MC hits in gemerated track"}
+    ]
+ },
+ {
+    "name": "CVTRec::MLTrack",
+    "group": 20500,
+    "item" : 62,
+    "info": "reconstructed seeds (1st pass tracking)",
+    "entries": [
+       {"name":"id",            "type":"S", "info":"id of the seed"},     
+       {"name":"purity",        "type":"F", "info":"seed purity: Nb of reconstructed true hits in track / total hits on track"},
+       {"name":"efficiency",    "type":"F", "info":"seed purity: Nb of reconstructed true hits in track / MC hits in gemerated track"}
+    ]
+ },
+ {
+    "name": "CVT::MLSeed",
+    "group": 20500,
+    "item" : 63,
+    "info": "reconstructed seeds (2nd pass tracking)",
+    "entries": [
+       {"name":"id",            "type":"S", "info":"id of the track"},     
+       {"name":"purity",        "type":"F", "info":"seed purity: Nb of reconstructed true hits in seed / total hits on seed"},
+       {"name":"efficiency",    "type":"F", "info":"seed purity: Nb of reconstructed true hits in seed / MC hits in gemerated track"}
+    ]
+ },
+ {
+    "name": "CVT::MLTrack",
+    "group": 20500,
+    "item" : 64,
+    "info": "reconstructed seeds (2nd pass tracking)",
+    "entries": [
+       {"name":"id",            "type":"S", "info":"id of the track"},      
+       {"name":"purity",        "type":"F", "info":"seed purity: Nb of reconstructed true hits in track / total hits on track"},
+       {"name":"efficiency",    "type":"F", "info":"seed purity: Nb of reconstructed true hits in track / MC hits in gemerated track"}
+    ]
+ }
+ 
+  
+]
