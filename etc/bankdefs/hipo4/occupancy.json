@@ -238,5 +238,29 @@
             { "name":"component" , "type":"S", "info":"component"},
             { "name":"hits"      , "type":"F", "info":"number of hits"}
         ]
+    },
+    {
+        "name": "OCC::CND::adc",
+        "group": 500,
+        "item": 30,
+        "info": "Occupancy Bank",
+        "entries": [
+            { "name":"sector"    , "type":"B", "info":"sector"},
+            { "name":"layer"     , "type":"B", "info":"layer"},
+            { "name":"component" , "type":"S", "info":"component"},
+            { "name":"hits"      , "type":"F", "info":"number of hits"}
+        ]
+    },
+    {
+        "name": "OCC::CND::tdc",
+        "group": 500,
+        "item": 31,
+        "info": "Occupancy Bank",
+        "entries": [
+            { "name":"sector"    , "type":"B", "info":"sector"},
+            { "name":"layer"     , "type":"B", "info":"layer"},
+            { "name":"component" , "type":"S", "info":"component"},
+            { "name":"hits"      , "type":"F", "info":"number of hits"}
+        ]
     }
 ]
