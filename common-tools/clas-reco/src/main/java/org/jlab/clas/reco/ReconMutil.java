@@ -129,7 +129,7 @@ final class ReconMutil {
 
         // wait for finish:
         while (!writerThread.isDone()) {
-            sleep(500);
+            sleep(5000);
             if (DEBUG) show();
             for (CompletableFuture f : decoThreads) if (f.isDone()) decoThreads.remove(f);
             for (CompletableFuture f : procThreads) if (f.isDone()) procThreads.remove(f);
@@ -245,7 +245,6 @@ final class ReconMutil {
                 if (procQueue.isEmpty() && decoThreads.isEmpty() && procQueue.isEmpty()) {
                     if (writeEvents+skipEvents+failEvents >= readEvents+taggedEvents.get()) {
                         System.out.println("recon-mutil:: processor thread #"+thread+" exiting.");
-                        System.exit(99);
                         break;
                     }
                 }
@@ -261,11 +260,7 @@ final class ReconMutil {
                         catch (Exception ex) { ex.printStackTrace(); }
                         Benchmark.getInstance().pause(thread, engine.getKey());
                     }
-                    Event e = input.get(i).getHipoEvent();
-                    //Benchmark.getInstance().resume(thread, "post");
-                    //synchronized (serial) { serial.process(e); }
-                    //Benchmark.getInstance().pause(thread, "post");
-                    output.add(e);
+                    output.add(input.get(i).getHipoEvent());
                 }
                 writeQueue.offer(output);
             }
@@ -474,44 +469,9 @@ final class ReconMutil {
     }
 
     /**
-     * Add a new engine to the list.
-     * @param label display name
-     * @param clazz full class name
-     * @param cfg engine configuration
-     * @return 
+     * Initialize ReconMutil.
+     * @param parser 
      */
-    static ReconstructionEngine addEngine(Map<String,ReconstructionEngine> engines, String label, String clazz, JSONObject cfg) {
-        ReconstructionEngine engine = null;
-        try {
-            Class c = Class.forName(clazz);
-            if (ReconstructionEngine.class.isAssignableFrom(c)==true){
-                engine = (ReconstructionEngine) c.newInstance();
-                if (cfg != null && !cfg.toString().equals("null")) {
-                    EngineData input = new EngineData();
-                    input.setData(EngineDataType.JSON.mimeType(), cfg.toString());
-                    engine.configure(input);
-                }
-                else engine.init();
-                engines.put(label == null ? engine.getName() : label, engine);
-            }
-            else Logger.getLogger(ReconMutil.class.getPackage().getName())
-                    .log(clazz.contains("DecoderEngine") ? Level.INFO : Level.SEVERE,
-                    "Class is not a reconstruction engine : {0}", clazz);
-        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException ex) {
-            Logger.getLogger(ReconMutil.class.getPackage().getName()).log(Level.SEVERE, null, ex);
-        }
-        return engine;
-    }
-
-    /**
-     * Catch interruptions in sleep.
-     * @param milliseconds 
-     */
-    void sleep(int milliseconds) {
-        try { Thread.sleep(milliseconds); }
-        catch (InterruptedException ex) {}
-    }
-   
     void init(OptionParser parser) {
         this.parser = parser;
         parser.syncLogLevel(Logger.getLogger(ReconMutil.class.getPackage().getName()));
@@ -549,6 +509,9 @@ final class ReconMutil {
         }
     }
 
+    /**
+     * Print the thread, queue, and event states.
+     */
     void show() {
         String s1 = String.format("threads(r/d/p/w)=(%b/%d/%d/%b)",
                 !readerThread.isDone(), decoThreads.size(), procThreads.size(), !writerThread.isDone());
@@ -559,6 +522,45 @@ final class ReconMutil {
         System.out.println("recon-mutil::  "+s1+" "+s2+" "+s3);
     }
 
+    /**
+     * Add a new engine to the list.
+     * @param label display name
+     * @param clazz full class name
+     * @param cfg engine configuration
+     * @return 
+     */
+    static ReconstructionEngine addEngine(Map<String,ReconstructionEngine> engines, String label, String clazz, JSONObject cfg) {
+        ReconstructionEngine engine = null;
+        try {
+            Class c = Class.forName(clazz);
+            if (ReconstructionEngine.class.isAssignableFrom(c)==true){
+                engine = (ReconstructionEngine) c.newInstance();
+                if (cfg != null && !cfg.toString().equals("null")) {
+                    EngineData input = new EngineData();
+                    input.setData(EngineDataType.JSON.mimeType(), cfg.toString());
+                    engine.configure(input);
+                }
+                else engine.init();
+                engines.put(label == null ? engine.getName() : label, engine);
+            }
+            else Logger.getLogger(ReconMutil.class.getPackage().getName())
+                    .log(clazz.contains("DecoderEngine") ? Level.INFO : Level.SEVERE,
+                    "Class is not a reconstruction engine : {0}", clazz);
+        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException ex) {
+            Logger.getLogger(ReconMutil.class.getPackage().getName()).log(Level.SEVERE, null, ex);
+        }
+        return engine;
+    }
+
+    /**
+     * Catch interruptions in sleep.
+     * @param milliseconds 
+     */
+    static void sleep(int milliseconds) {
+        try { Thread.sleep(milliseconds); }
+        catch (InterruptedException ex) {}
+    }
+   
     /**
      * The command-line entry-point known as "recon-mutil".
      * @param args command-line arguments
