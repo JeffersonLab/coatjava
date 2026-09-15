@@ -34,11 +34,11 @@ public class CLASDecoderPool {
         }
     }
 
-    public CLASDecoder take() throws InterruptedException {
+    public CLASDecoder take() {
         return pool.poll();
     }
 
-    public void put(CLASDecoder decoder) throws InterruptedException {
+    public void put(CLASDecoder decoder) {
         pool.offer(decoder);
     }
 
