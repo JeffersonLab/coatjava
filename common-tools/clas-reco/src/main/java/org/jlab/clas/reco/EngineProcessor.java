@@ -46,6 +46,10 @@ public class EngineProcessor {
 
     public EngineProcessor(){}
 
+    public EngineProcessor(OptionParser parser) { 
+        init(parser);
+    }
+
     private ReconstructionEngine findEngine(String clazz) {
         for (String k : processorEngines.keySet()) {
             if (processorEngines.get(k).getClass().getName().equals(clazz)) {
@@ -307,7 +311,7 @@ public class EngineProcessor {
     }
 
     public void processFile(String file, String output){
-        this.processFile(file, output, -1, -1);
+        this.processFile(file, output, 0, 0);
     }
 
     public void processEvent(DataEvent event, HipoDataSync writer) {
@@ -393,8 +397,8 @@ public class EngineProcessor {
         parser.addRequired("-i","input.evio/hipo");
         parser.setRequiresInputList(false);
         parser.addOption("-c","0","use default configuration [0 - no, 1 - yes/default, 2 - all services] ");
-        parser.addOption("-s","-1","number of events to skip");
-        parser.addOption("-n","-1","number of events to process");
+        parser.addOption("-s","0","number of events to skip");
+        parser.addOption("-n","0","number of events to process");
         parser.addOption("-y","0","yaml file");
         parser.addOption("-u","true","update dictionary from writer ? ");
         parser.addOption("-S",null,"schema directory");
@@ -405,62 +409,53 @@ public class EngineProcessor {
         return parser;
     }
 
-    public static void main(String[] args){
+    protected final void init(OptionParser p) {
+        p.syncLogLevel(LOGGER);
 
-        OptionParser parser = EngineProcessor.getParser();
-        parser.parse(args);
-        parser.syncLogLevel(LOGGER);
+        if(p.getOption("-u").stringValue().contains("false"))
+            updateDictionary = false;
 
-        List<String> services = parser.getInputList();
-
-        String  inputFile = parser.getOption("-i").stringValue();
-        String outputFile = parser.getOption("-o").stringValue();
-
-        EngineProcessor proc = new EngineProcessor();
-
-        int config  = parser.getOption("-c").intValue();
-        int nskip   = parser.getOption("-s").intValue();
-        int nevents = parser.getOption("-n").intValue();
-        String yamlFileName = parser.getOption("-y").stringValue();
-
-        String update = parser.getOption("-u").stringValue();
-        if(update.contains("false")==true) proc.updateDictionary = false;
-
-        if(!yamlFileName.equals("0")) {
-            proc.parseYaml(yamlFileName);
+        // configure from YAML:
+        if(!p.getOption("-y").stringValue().equals("0")) {
+            parseYaml(p.getOption("-y").stringValue());
         }
-        else if (config>0){
-            if(config>2){
-                proc.initCaloDebug();
-            } else if(config==2){
-                proc.initAll();
-            } else {
-                proc.initDefault();
-            }
+        // use a builtin engine list:
+        else if (p.getOption("-c").intValue() > 0) {
+            if (p.getOption("-c").intValue() > 2 ) initCaloDebug();
+            else if (p.getOption("-c").intValue() == 2) initAll();
+            else initDefault();
         }
+        // command-line engine list:
         else {
-            for(String engine : services){
+            for(String engine : p.getInputList()){
                 System.out.println("Adding reconstruction engine " + engine);
-                proc.addEngine(engine);
+                addEngine(engine);
             }
         }
 
         // command-line schema overrides YAML:
-        if (parser.getOption("-S").stringValue() != null)
-            proc.setBanksToKeep(parser.getOption("-S").stringValue());
+        if (p.getOption("-S").stringValue() != null)
+            setBanksToKeep(p.getOption("-S").stringValue());
 
         // command-line filename for background merging overrides YAML:
-        if (parser.getOption("-B").stringValue() != null)
-            proc.setBackgroundFiles(parser.getOption("-B").stringValue());
+        if (p.getOption("-B").stringValue() != null)
+            setBackgroundFiles(p.getOption("-B").stringValue());
         
         // command-line filename for post-processing overrides YAML:
-        if (parser.getOption("-P").stringValue() != null) {
-            proc.setPreloadFiles(parser.getOption("-P").stringValue(),
-                parser.getOption("-H").intValue()!=0,
-                parser.getOption("-R").intValue()!=0);
+        if (p.getOption("-P").stringValue() != null) {
+            setPreloadFiles(p.getOption("-P").stringValue(),
+                p.getOption("-H").intValue()!=0,
+                p.getOption("-R").intValue()!=0);
         }
-
-        proc.processFile(inputFile,outputFile,nskip,nevents);
     }
 
+     public static void main(String[] args) {
+        OptionParser parser = EngineProcessor.getParser();
+        parser.parse(args);
+        EngineProcessor proc = new EngineProcessor(parser);
+        proc.processFile(parser.getOption("-i").stringValue(),
+                         parser.getOption("-o").stringValue(),
+                         parser.getOption("-s").intValue(),
+                         parser.getOption("-n").intValue());
+    }
 }

@@ -20,21 +20,19 @@ services:
     name: FTEB
   - class: org.jlab.service.raster.RasterEngine
     name: RASTER
-# DC clustering: nominal algoritm, filled the cluster bank for ai and conventional tracking
+  - class: org.jlab.service.ai.DCDenoiseEngine
+    name: DCDN    
   - class: org.jlab.service.dc.DCHBClustering
     name: DCCR
   - class: org.jlab.service.dc.DCHBClustering
     name: DCRAI
-# This is where the AI plugin would go.  THe AI code reads the HB clusters.  
-  - class: org.jlab.service.mltn.MLTDEngine
-    name: MLTD
-  - class: org.jlab.service.mltn.MLTDEngine
-    name: MLTAI
-# DC using clustering: regular HB tracking
-  - class: org.jlab.service.dc.DCHBPostClusterAI
+  - class: org.jlab.service.ai.DCClsComboEngine
+    name: DCCC
+  - class: org.jlab.service.ai.DCClsComboEngine
+    name: DCCAI
+  - class: org.jlab.service.dc.DCHBTrackingAI
     name: DCHB
-# DC using clustering on AI hits: NN assisted HB tracking
-  - class: org.jlab.service.dc.DCHBPostClusterAI
+  - class: org.jlab.service.dc.DCHBTrackingAI
     name: DCHAI
   - class: org.jlab.service.ftof.FTOFHBEngine
     name: FTOFHB
@@ -99,10 +97,7 @@ configuration:
       #rawBankGroup: "DEFAULT"
       rawBankGroup: "NOISE1"
       outputBankPrefix: "DN"
-    MLTD:
-      run: "6302"
-    MLTAI:
-      run: "6302"
+    DCCAI:
       inputBankPrefix:  "DN"
       outputBankPrefix:  "aidn"
     DCHB:

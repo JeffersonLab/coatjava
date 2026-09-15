@@ -18,8 +18,8 @@ services:
     name: FTEB
   - class: org.jlab.service.raster.RasterEngine
     name: RASTER
-#  - class: org.jlab.service.ai.DCDenoiseEngine
-#    name: DCDN    
+  - class: org.jlab.service.ai.DCDenoiseEngine
+    name: DCDN    
   - class: org.jlab.service.dc.DCHBClustering
     name: DCCR
   - class: org.jlab.service.ai.DCClsComboEngine
@@ -72,6 +72,8 @@ services:
     name: VTX
   - class: org.jlab.calibration.service.CalibBanksEngine
     name: CALIB
+  - class: org.jlab.service.mc.TruthMatch
+    name: MC
 configuration:
   global:
     variation: mc2026
@@ -84,6 +86,8 @@ configuration:
     MAGFIELDS:
       magfieldSolenoidMap: Symm_solenoid_r601_phi1_z1201_13June2018.dat
       magfieldTorusMap: Symm_torus_r2501_phi16_z251_24Apr2018.dat
+    DCCR:
+      rawBankGroup: "NODENOISE"
     RTPC:
       rtpcSimulation: "true"
       

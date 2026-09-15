@@ -21,6 +21,7 @@ import ai.djl.translate.Translator;
 import ai.djl.translate.TranslatorContext;
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.jlab.clas.reco.ReconstructionEngine;
@@ -31,8 +32,8 @@ import org.jlab.rec.ai.dcCluster.DCCluster;
 import org.jlab.rec.ai.dcCluster.DCClusterCombo;
 
 public class DCClsComboEngine extends ReconstructionEngine {
-    final String inputBank = "HitBasedTrkg::Clusters";
-    final String outputBank = "ai::tracks";
+    String inputBank = "HitBasedTrkg::Clusters";
+    String outputBank = "ai::tracks";
     
     final static String CONF_THREADS = "threads";
     
@@ -124,6 +125,11 @@ public class DCClsComboEngine extends ReconstructionEngine {
             LOGGER.log(Level.SEVERE, null, ex);
             return false;
         }  
+  
+        String inputBankPrefix  = Optional.ofNullable(this.getEngineConfigString("inputBankPrefix")).orElse("");
+        String outputBankPrefix = Optional.ofNullable(this.getEngineConfigString("outputBankPrefix")).orElse("ai");
+        inputBank  = "HitBasedTrkg::"+inputBankPrefix+"Clusters";
+        outputBank = outputBankPrefix+"::tracks";
         
         return true;        
     }

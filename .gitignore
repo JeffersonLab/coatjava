@@ -8,6 +8,11 @@ target
 tmp
 /common-tools/clas-io/src/main/java/org/jlab/io/banks
 
+# data files
+*.evio
+*.hipo
+!/etc/data/test/*.hipo
+
 # deployment
 /myLocalMvnRepo
 /coatjava-*.tar.gz
@@ -50,7 +55,6 @@ hs_err_pid*
 
 # no log files:
 *.log
-*.evio 
 
 bin/evio2hipotest
 export.sh

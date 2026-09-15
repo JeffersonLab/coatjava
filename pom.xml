@@ -53,7 +53,7 @@
       <dependency>
         <groupId>com.github.spotbugs</groupId>
         <artifactId>spotbugs</artifactId>
-        <version>4.10.3</version>
+        <version>4.10.4</version>
       </dependency>
 
       <dependency>
@@ -78,7 +78,7 @@
       <dependency>
         <groupId>org.yaml</groupId>
         <artifactId>snakeyaml</artifactId>
-        <version>2.6</version>
+        <version>2.7</version>
       </dependency>
 
       <dependency>
@@ -271,7 +271,7 @@
       <plugin>
         <groupId>com.github.spotbugs</groupId>
         <artifactId>spotbugs-maven-plugin</artifactId>
-        <version>4.10.3.0</version>
+        <version>4.10.4.0</version>
         <configuration>
           <excludeFilterFile>spotbugs-exclude.xml</excludeFilterFile>
         </configuration>
@@ -302,7 +302,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.15.0</version>
+        <version>3.16.0</version>
         <configuration>
           <release>21</release> <!-- CI variable `JAVA_VERSION` must match this; see also dependabot configuration -->
           <encoding>UTF-8</encoding>
