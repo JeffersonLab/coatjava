@@ -18,6 +18,8 @@ import org.jlab.rec.cvt.track.Track;
 import org.jlab.rec.cvt.trajectory.Helix;
 import org.jlab.rec.cvt.trajectory.StateVec;
 import org.jlab.geom.prim.Line3D;
+import org.jlab.geom.prim.Point3D;
+import org.jlab.geom.prim.Arc3D;
 import org.jlab.rec.cvt.Constants;
 import org.jlab.rec.cvt.bmt.BMTType;
 import org.jlab.rec.cvt.hit.Hit;
@@ -58,6 +60,14 @@ public class RecoBankWriter {
             bank.setByte("status", i, (byte) hitlist.get(i).getStrip().getStatus());  
             
             if(bank.getDescriptor().hasEntry("ai")){
+                Line3D line = hitlist.get(i).getStrip().getLine();
+                bank.setFloat("xo", i, (float)line.origin().x() / 10);
+                bank.setFloat("yo", i, (float)line.origin().y() / 10);
+                bank.setFloat("zo", i, (float)line.origin().z() / 10);
+                bank.setFloat("xe", i, (float)line.end().x() / 10);
+                bank.setFloat("ye", i, (float)line.end().y() / 10);
+                bank.setFloat("ze", i, (float)line.end().z() / 10);                
+                
                 bank.setByte("ai", i, hitlist.get(i).getDenoiseStatus()); 
                 if(hitlist.get(i).getDenoiseProbality().size() == 1)
                     bank.setFloat("probability1", i,  (float) hitlist.get(i).getDenoiseProbality().get(0));
@@ -220,6 +230,24 @@ public class RecoBankWriter {
             bank.setByte("status", i, (byte) hitlist.get(i).getStrip().getStatus()); 
             
             if(bank.getDescriptor().hasEntry("ai")){
+                Point3D originPoint, endPoint;
+                if(hitlist.get(i).getType() == BMTType.Z) {
+                    Line3D line = hitlist.get(i).getStrip().getLine();
+                    originPoint = line.origin();
+                    endPoint = line.end();
+                }
+                else {
+                    Arc3D arcLine = hitlist.get(i).getStrip().getArc();
+                    originPoint = arcLine.origin();
+                    endPoint = arcLine.end();
+                }
+                bank.setFloat("xo", i, (float)originPoint.x() / 10);
+                bank.setFloat("yo", i, (float)originPoint.y() / 10);
+                bank.setFloat("zo", i, (float)originPoint.z() / 10);
+                bank.setFloat("xe", i, (float)endPoint.x() / 10);
+                bank.setFloat("ye", i, (float)endPoint.y() / 10);
+                bank.setFloat("ze", i, (float)endPoint.z() / 10);                 
+                                                
                 bank.setByte("ai", i, hitlist.get(i).getDenoiseStatus());
                 if(hitlist.get(i).getDenoiseProbality().size() == 1)
                     bank.setFloat("probability", i,  (float) hitlist.get(i).getDenoiseProbality().get(0));
