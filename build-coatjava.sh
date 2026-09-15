@@ -80,6 +80,7 @@ do
     --https) auxRetrieval=https ;;
     --wipe)  auxRetrieval=wipe  ;;
     --no-aux|--noaux)
+      auxRetrieval=noaux
       auxDownloadMaps=false
       auxDownloadNets=false
       auxDownloadSqlites=false
@@ -205,6 +206,8 @@ case $auxRetrieval in
     fi
     ;;
   https)
+    ;;
+  noaux)
     ;;
   *)
     echo "ERROR: data retrieval option \`--$auxRetrieval\` is not supported" >&2
