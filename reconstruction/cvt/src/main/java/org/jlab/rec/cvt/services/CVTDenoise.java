@@ -258,7 +258,7 @@ public class CVTDenoise {
             if(hit.getType() == BMTType.Z) {
                 Line3D line = hit.getStrip().getLine();
                 originPoint = line.origin();
-                endPoint = line.origin();
+                endPoint = line.end();
             }
             else {
                 Arc3D arcLine = hit.getStrip().getArc();
