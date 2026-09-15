@@ -72,7 +72,6 @@ final class ReconMutil {
     // Threads:
     volatile CompletableFuture readerThread;
     volatile CompletableFuture writerThread;
-    volatile CompletableFuture rethreadThread;
     volatile ConcurrentLinkedQueue<CompletableFuture> decoThreads = new ConcurrentLinkedQueue<>();
     volatile ConcurrentLinkedQueue<CompletableFuture> procThreads = new ConcurrentLinkedQueue<>();
 
@@ -121,9 +120,9 @@ final class ReconMutil {
         }
 
         // perform scaling test:
-        if (threads.length > 1 && rethreadThread == null && writeEvents > 100) {
-            rethreadThread = CompletableFuture.runAsync(() -> { rethread(BENCH_SECONDS,threads); });
-            rethreadThread.join();
+        if (threads.length > 1) {
+            while (writeEvents < 100) sleep(1000);
+            CompletableFuture.runAsync(() -> { rethread(BENCH_SECONDS,threads); }).join();
             reset();
         }
 
