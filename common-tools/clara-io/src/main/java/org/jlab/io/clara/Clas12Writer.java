@@ -61,4 +61,5 @@ public class Clas12Writer extends HipoToHipoWriter {
         super.closeWriter();
         serial.clear();
     }
+
 }
