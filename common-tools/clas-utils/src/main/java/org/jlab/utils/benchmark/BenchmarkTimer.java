@@ -1,7 +1,7 @@
 package org.jlab.utils.benchmark;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -12,8 +12,8 @@ import java.util.concurrent.atomic.AtomicLong;
 public class BenchmarkTimer {
 
     public static class BenchmarkMultiTimer extends BenchmarkTimer {
-        HashMap<Integer,Long> timeAtResume = new HashMap<>();
-        HashMap<Integer,Boolean> isPaused = new HashMap<>();
+        ConcurrentHashMap<Integer,Long> timeAtResume = new ConcurrentHashMap<>();
+        ConcurrentHashMap<Integer,Boolean> isPaused = new ConcurrentHashMap<>();
         public BenchmarkMultiTimer(String name) { super(name); }
         public void resume(int thread) {
             if (!isPaused.containsKey(thread) || isPaused.get(thread)) {
