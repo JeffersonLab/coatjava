@@ -98,6 +98,7 @@ public class SerialHoncho {
         Bank cfg = new Bank(runConfig, 1);
         cfg.putInt("run",0,run); 
         writer.addEvent(getUnixEvent(cfg),1);
+        if (helicitySequence == null) updateHelicitySequence();
         helicitySequence.writeFlips(writer, 1);
     }
 
