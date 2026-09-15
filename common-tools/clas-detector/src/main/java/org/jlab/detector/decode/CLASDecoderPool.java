@@ -6,16 +6,14 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  *
  * @author baltzell
  */
-public class CLASDecoderPool {
+public class CLASDecoderPool extends ConcurrentLinkedQueue<CLASDecoder> {
    
-    ConcurrentLinkedQueue<CLASDecoder> pool;
-
     int sharedConstantsManagers = 64;
 
     public CLASDecoderPool(int size, String variation, String timestamp) {
 
-        pool = new ConcurrentLinkedQueue<>();
-        
+        super();
+
         CLASDecoder d0 = null;
         
         for (int i=0; i<size; i++) {
@@ -30,16 +28,7 @@ public class CLASDecoderPool {
             }
             else d = new CLASDecoder(d0);
             
-            pool.add(d);
+            add(d);
         }
     }
-
-    public CLASDecoder take() throws InterruptedException {
-        return pool.poll();
-    }
-
-    public void put(CLASDecoder decoder) throws InterruptedException {
-        pool.offer(decoder);
-    }
-
 }
