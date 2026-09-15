@@ -84,7 +84,7 @@ public class SerialHoncho {
             if (evt.getRows() > 0) {
                 event.remove(evt.getSchema());
                 processHelicity(event, cfg, evt);
-                processScalers(cfg, evt);
+                processScalers(scalers.get(cfg.getLong("timestamp",0)), evt);
                 event.write(evt);
             }
         }
@@ -126,13 +126,22 @@ public class SerialHoncho {
     public SchemaFactory getSchemaFactory() {
         return schema;
     }
-   
+  
+    /**
+     * Recreate the HelicitySequence from the TreeSet of helicity states.
+     */
     public void updateHelicitySequence() {
         helicitySequence = new HelicitySequenceDelayed(
             conman.getConstants(run, "/runcontrol/helicity").getIntValue("delay",0,0,0));
         helicitySequence.addStream(helicities);
     }
-    
+   
+    /**
+     * 
+     * @param event
+     * @param runConfig
+     * @param helicityAdc 
+     */
     void read(Event event, Bank runConfig, Bank helicityAdc) {
         scalers.add(event);
         helicities.add(HelicityState.createFromFadcBank(helicityAdc, runConfig, conman));
@@ -153,6 +162,9 @@ public class SerialHoncho {
         }
     }
 
+    /**
+     * Trim down the helicity and scaler FIFOs to reasonable values.
+     */
     void prune() {
         // Estimated size of HelicityState is ~22 bytes.
         // 1 million states, ~22 MB, 1 minute at 10 kHz trigger.
@@ -164,6 +176,11 @@ public class SerialHoncho {
             scalers.clear((int)1e4);
     }
 
+    /**
+     * Get a new event with RUN::unix and RUN::config banks.
+     * @param runConfig
+     * @return 
+     */
     Event getUnixEvent(Bank runConfig) {
         Bank unix = new Bank(schema.getSchema("RUN::unix"));
         unix.setRows(eventUnix.size());
@@ -179,6 +196,10 @@ public class SerialHoncho {
         return e;
     }
 
+    /**
+     * Get the unix time for a given RUN::config bank.
+     * @return unix time
+     */
     int getUnixTime(Bank runConfig) {
         if (runConfig.getRows() < 1) {
             Integer key =  eventUnix.floorKey(runConfig.getInt("event",0));
@@ -190,6 +211,9 @@ public class SerialHoncho {
         return 0;
     }
 
+    /**
+     * Update RUN::config's unixtime, and update the event.
+     */
     void processEventUnix(Event event, Bank runConfig) {
         int ut = getUnixTime(runConfig);
         event.remove(runConfig.getSchema());
@@ -197,14 +221,12 @@ public class SerialHoncho {
         event.write(runConfig);
     }
 
-    void processScalers(Bank runConfig, Bank recEvent) {
-        DaqScalers ds = scalers.get(runConfig.getLong("timestamp", 0));
-        if (ds != null) {
-            recEvent.putFloat("beamCharge",0, (float) ds.dsc2.getBeamChargeGated());
-            recEvent.putDouble("liveTime",0,ds.dsc2.getLivetime());
-        }
-    }
-
+    /**
+     * Update an event's helicity information, in REC::Event and HEL::scaler.
+     * @param event
+     * @param runConfig
+     * @param recEvent 
+     */
     void processHelicity(Event event, Bank runConfig, Bank recEvent) {
         HelicityBit hb = helicitySequence.search(runConfig.getLong("timestamp", 0));
         HelicityBit hbraw = helicitySequence.getHalfWavePlate() ? HelicityBit.getFlipped(hb) : hb;
@@ -219,6 +241,22 @@ public class SerialHoncho {
         }
     }
 
+    /**
+     * Update a REC::EVent's bank beam-charge information.  
+     */
+    static void processScalers(DaqScalers ds, Bank recEvent) {
+        if (ds != null) {
+            recEvent.putFloat("beamCharge",0, (float) ds.dsc2.getBeamChargeGated());
+            recEvent.putDouble("liveTime",0,ds.dsc2.getLivetime());
+        }
+    }
+
+    /**
+     * For all states deeper than depth, remove consecutive helicity states that
+     * differ only by timestamp.
+     * @param helicities
+     * @param depth 
+     */
     static void pruneHelicities(TreeSet<HelicityState> helicities, int depth) {
         HelicityState prev = null;
         ListIterator<HelicityState> iter = (ListIterator)helicities.iterator();
@@ -230,6 +268,11 @@ public class SerialHoncho {
         }
     }
 
+    /**
+     * FIXME:  Switch to lists and delete this.
+     * @param tag1banks
+     * @return 
+     */
     static Bank[] createTaggedBanks(Schema[] tag1banks) {
         List<Bank> lbank = Arrays.asList(tag1banks).stream().map(s -> new Bank(s)).collect(Collectors.toList());
         ListIterator<Bank> ibank = lbank.listIterator();
