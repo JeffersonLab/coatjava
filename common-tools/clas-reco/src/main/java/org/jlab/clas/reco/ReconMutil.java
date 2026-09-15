@@ -51,6 +51,12 @@ final class ReconMutil {
     final int BENCH_SECONDS = 30;
     final int EVENTS_PER_CHUNK = 10;
 
+    // Static parameters:
+    int maxEvents;
+    int skipEvents;
+    ClaraYaml yaml;
+    OptionParser parser;
+
     // File I/O:
     Object reader;
     HipoWriterSorted writer;
@@ -61,25 +67,19 @@ final class ReconMutil {
     // Processors:
     volatile SerialHoncho serial;
     CLASDecoderPool decoders = new CLASDecoderPool(64,"default",null);
-    Map<String,ReconstructionEngine> engines = new LinkedHashMap<>();
+    volatile Map<String,ReconstructionEngine> engines = new LinkedHashMap<>();
 
     // Threads:
-    CompletableFuture readerThread;
-    CompletableFuture writerThread;
-    CompletableFuture rethreadThread;
-    ConcurrentLinkedQueue<CompletableFuture> decoThreads = new ConcurrentLinkedQueue<>();
-    ConcurrentLinkedQueue<CompletableFuture> procThreads = new ConcurrentLinkedQueue<>();
+    volatile CompletableFuture readerThread;
+    volatile CompletableFuture writerThread;
+    volatile CompletableFuture rethreadThread;
+    volatile ConcurrentLinkedQueue<CompletableFuture> decoThreads = new ConcurrentLinkedQueue<>();
+    volatile ConcurrentLinkedQueue<CompletableFuture> procThreads = new ConcurrentLinkedQueue<>();
 
     // Queues:
-    ConcurrentLinkedQueue<List<Object>> decoQueue = new ConcurrentLinkedQueue<>();
-    ConcurrentLinkedQueue<List<HipoDataEvent>> procQueue = new ConcurrentLinkedQueue<>();
-    ConcurrentLinkedQueue<List<Event>> writeQueue = new ConcurrentLinkedQueue<>();
-
-    // Static parameters:
-    int maxEvents;
-    int skipEvents;
-    ClaraYaml yaml;
-    OptionParser parser;
+    volatile ConcurrentLinkedQueue<List<Object>> decoQueue = new ConcurrentLinkedQueue<>();
+    volatile ConcurrentLinkedQueue<List<HipoDataEvent>> procQueue = new ConcurrentLinkedQueue<>();
+    volatile ConcurrentLinkedQueue<List<Event>> writeQueue = new ConcurrentLinkedQueue<>();
 
     // Progress counters:
     volatile int readEvents;
@@ -129,7 +129,7 @@ final class ReconMutil {
 
         // wait for finish:
         while (!writerThread.isDone()) {
-            sleep(5000);
+            sleep(500);
             if (DEBUG) show();
             for (CompletableFuture f : decoThreads) if (f.isDone()) decoThreads.remove(f);
             for (CompletableFuture f : procThreads) if (f.isDone()) procThreads.remove(f);
@@ -222,16 +222,14 @@ final class ReconMutil {
                 procQueue.offer(output);
             }
         }
-        if (thread == 0) {
-            synchronized (serialLock) {
-                updateHelicity();
-            }
+        synchronized (serialLock) {
+            if (thread == 0) updateHelicity();
         }
     }
 
     void updateHelicity() {
         paused.set(true);
-        sleep(5000);
+        sleep(1000);
         serial.updateHelicitySequence();
         paused.set(false);
     }
@@ -242,15 +240,12 @@ final class ReconMutil {
      */
     void process(int thread) {
         while (true) {
-            if (paused.get()) {
-                sleep(100);
-                continue;
-            }
             List<HipoDataEvent> input = procQueue.poll();
             if (input == null) {
                 if (procQueue.isEmpty() && decoThreads.isEmpty() && procQueue.isEmpty()) {
                     if (writeEvents+skipEvents+failEvents >= readEvents+taggedEvents.get()) {
                         System.out.println("recon-mutil:: processor thread #"+thread+" exiting.");
+                        System.exit(99);
                         break;
                     }
                 }
@@ -261,10 +256,10 @@ final class ReconMutil {
                 List<Event> output = new ArrayList<>(input.size());
                 for (int i=0; i<input.size(); i++) {
                     for (Map.Entry<String,ReconstructionEngine> engine : engines.entrySet()) {
-                        Benchmark.getInstance().resume(thread, engine.getValue().getName());
+                        Benchmark.getInstance().resume(thread, engine.getKey());
                         try { engine.getValue().processDataEvent(input.get(i)); }
                         catch (Exception ex) { ex.printStackTrace(); }
-                        Benchmark.getInstance().pause(thread, engine.getValue().getName());
+                        Benchmark.getInstance().pause(thread, engine.getKey());
                     }
                     Event e = input.get(i).getHipoEvent();
                     //Benchmark.getInstance().resume(thread, "post");
@@ -294,9 +289,7 @@ final class ReconMutil {
             }
             else {
                 for (int i=0; i<e.size(); i++) {
-                    while (paused.get()) {
-                        sleep (100);
-                    }
+                    while (paused.get()) sleep (100);
                     Benchmark.getInstance().resume("post");
                     synchronized (serialLock) {
                         serial.process(e.get(i));
@@ -487,7 +480,7 @@ final class ReconMutil {
      * @param cfg engine configuration
      * @return 
      */
-    ReconstructionEngine addEngine(String label, String clazz, JSONObject cfg) {
+    static ReconstructionEngine addEngine(Map<String,ReconstructionEngine> engines, String label, String clazz, JSONObject cfg) {
         ReconstructionEngine engine = null;
         try {
             Class c = Class.forName(clazz);
@@ -530,26 +523,26 @@ final class ReconMutil {
             yaml = new ClaraYaml(parser.getOption("-y").stringValue());
             for (JSONObject service : yaml.services()) {
                 JSONObject cfg = yaml.filter(service.getString("name"));
-                if (cfg.length() > 0) addEngine(service.getString("name"), service.getString("class"), cfg);
-                else addEngine(service.getString("name"), service.getString("class"), null);
+                if (cfg.length() > 0) addEngine(engines, service.getString("name"), service.getString("class"), cfg);
+                else addEngine(engines, service.getString("name"), service.getString("class"), null);
             }
         }
         else if (!parser.getOption("-c").isDefault()) {
-            for (String s : parser.getOption("-c").stringValue().split(","))
-                addEngine(null, s, null);
+            for (String clazz : parser.getOption("-c").stringValue().split(","))
+                addEngine(engines, null, clazz, null);
         }
         else {
             InputStream is = ReconMutil.class.getClassLoader().getResourceAsStream("org/jlab/clas/reco/services.txt");
             BufferedReader br = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
             try {
                 for (String line; (line=br.readLine()) != null;)
-                    addEngine(line.split(" ")[0],line.split(" ")[1],null);
+                    addEngine(engines, line.split(" ")[0],line.split(" ")[1],null);
             } catch (IOException ex) {
                 System.getLogger(ReconMutil.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
             }
         }
         if (!parser.getOption("-B").isDefault()) {
-            ReconstructionEngine bg = addEngine("BG","org.jlab.service.bg.BackgroundEngine",null);
+            ReconstructionEngine bg = addEngine(engines, "BG","org.jlab.service.bg.BackgroundEngine",null);
             bg.engineConfigMap.put("filename",parser.getOption("-B").stringValue());
         }
         if (!parser.getOption("-S").isDefault()) {

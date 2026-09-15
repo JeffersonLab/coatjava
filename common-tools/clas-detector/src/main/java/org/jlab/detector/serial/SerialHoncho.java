@@ -56,6 +56,11 @@ public class SerialHoncho {
             tag1banks[i] = schema.getSchema(TAG1BANKS[i]);
     }
 
+    /**
+     * Register an event's serial data and return a (possibly empty) tag-1 event.
+     * @param event
+     * @return new tag-1 event 
+     */
     public Event read(Event event) {
         Bank cfg = new Bank(runConfig);
         Bank hel = new Bank(helicityAdc);
@@ -65,6 +70,10 @@ public class SerialHoncho {
         return CLASDecoder.createTaggedEvent(event, cfg, createTaggedBanks(tag1banks));
     }
 
+    /**
+     * Modify a physics event's helicity and charge information. 
+     * @param event 
+     */
     public void process(Event event) {
         Bank cfg = new Bank(runConfig);
         Bank evt = new Bank(recEvent);
@@ -81,6 +90,10 @@ public class SerialHoncho {
         }
     }
 
+    /**
+     * Add helicity and unixtime sequence banks.
+     * @param writer
+     */
     public void closure(HipoWriterSorted writer) {
         Bank cfg = new Bank(runConfig, 1);
         cfg.putInt("run",0,run); 
@@ -88,6 +101,9 @@ public class SerialHoncho {
         helicitySequence.writeFlips(writer, 1);
     }
 
+    /**
+     * Zero all the sequences.
+     */
     public void clear() {
         eventUnix.clear();
         helicities.clear();
