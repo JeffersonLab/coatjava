@@ -96,10 +96,14 @@ public class SerialHoncho {
      */
     public void closure(HipoWriterSorted writer) {
         Bank cfg = new Bank(runConfig, 1);
-        cfg.putInt("run",0,run); 
+        cfg.putInt("run",0,run);
+        System.err.println("POOP1");
         writer.addEvent(getUnixEvent(cfg),1);
+        System.err.println("POOP2");
         if (helicitySequence == null) updateHelicitySequence();
+        System.err.println("POOP3");
         helicitySequence.writeFlips(writer, 1);
+        System.err.println("POOP4");
     }
 
     /**
