@@ -278,9 +278,9 @@ final class ReconMutil {
                 for (int i=0; i<e.size(); i++) {
                     while (paused.get()) ReconUtil.sleep (100);
                     Benchmark.getInstance().resume("post");
-                    //synchronized (serialLock) {
-                    //    serial.process(e.get(i));
-                    //}
+                    synchronized (serialLock) {
+                        serial.process(e.get(i));
+                    }
                     Benchmark.getInstance().pause("post");
                     Benchmark.getInstance().resume("write");
                     if (writer != null) {
