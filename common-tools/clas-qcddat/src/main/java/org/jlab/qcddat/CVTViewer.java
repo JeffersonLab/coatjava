@@ -79,6 +79,7 @@ public class CVTViewer extends Application {
     private CheckBox showSVT;
     private CheckBox showBMTC;
     private CheckBox showBMTZ;
+    private CheckBox showPersistence;
 
     private Label hoverLabel;
     private Label infoLabel;
@@ -253,7 +254,8 @@ public class CVTViewer extends Application {
     }
 
     private void renderCachedEvent() {
-        pointsGroup.getChildren().clear();
+        if(!showPersistence.isSelected())
+          pointsGroup.getChildren().clear();
 
         if (!isCurrentEventCached()) {
             infoLabel.setText(String.format(
@@ -378,6 +380,14 @@ public class CVTViewer extends Application {
     }
 
     private HBox buildLegendPane() {
+
+        Label persistenceTitle = new Label("Persistence");
+        persistenceTitle.setStyle("-fx-font-size: 14px; -fx-font-weight: bold;");
+        showPersistence = new CheckBox("Persist");
+        showPersistence.setSelected(false);
+        Button clearPersistence = new Button("Clear");
+        clearPersistence.setOnAction(e -> { pointsGroup.getChildren().clear(); });
+
         Label legendTitle = new Label("Detectors");
         legendTitle.setStyle("-fx-font-size: 14px; -fx-font-weight: bold;");
 
@@ -450,6 +460,10 @@ public class CVTViewer extends Application {
 
         VBox col1 = new VBox(
             8,
+            persistenceTitle,
+            showPersistence,
+            clearPersistence,
+            new Separator(),
             legendTitle,
             showSVT, svtColor,
             showBMTC, cColor,
