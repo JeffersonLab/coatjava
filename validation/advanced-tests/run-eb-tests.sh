@@ -49,8 +49,7 @@ if [ $? != 0 ] ; then echo "EBTwoTrackTest compilation failure" ; exit 1 ; fi
 
 # run reconstruction:
 rm -f out_${stub}.hipo
-../../coatjava/bin/recon-mutil -t 6 -l INFO -o out_${stub}.hipo ${input_dir}/${stub}.hipo
-exit
+../../coatjava/bin/recon-mutil -t 6 -l SEVERE -o out_${stub}.hipo ${input_dir}/${stub}.hipo
 
 # run EB tests:
 java -Xmx1536m -Xms1024m -cp $classPath -DINPUTFILE=out_${stub}.hipo eb.EBTwoTrackTest
