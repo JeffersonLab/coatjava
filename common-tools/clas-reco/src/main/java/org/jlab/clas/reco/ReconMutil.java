@@ -45,8 +45,6 @@ import org.json.JSONObject;
  */
 final class ReconMutil {
 
-    boolean DEBUG = true;
-
     // Performance parameters:
     final int BENCH_SECONDS = 30;
     final int EVENTS_PER_CHUNK = 10;
@@ -82,16 +80,15 @@ final class ReconMutil {
 
     // Progress counters:
     volatile int readEvents;
-    volatile int writeEvents;
     volatile int failEvents;
     volatile int fileEvents;
     volatile int maxFileEvents;
+    volatile int writeEvents;
     volatile AtomicInteger taggedEvents = new AtomicInteger();
     volatile ProgressPrintout progress = new ProgressPrintout();
 
     // Control flags:
     AtomicBoolean paused = new AtomicBoolean(true);
-
     final Object serialLock = new Object();
     
     ReconMutil(OptionParser parser) {
@@ -129,9 +126,9 @@ final class ReconMutil {
         // wait for finish:
         while (!writerThread.isDone()) {
             sleep(5000);
-            if (DEBUG) show();
             for (CompletableFuture f : decoThreads) if (f.isDone()) decoThreads.remove(f);
             for (CompletableFuture f : procThreads) if (f.isDone()) procThreads.remove(f);
+            if (true) show();
         }
     }
 
@@ -148,7 +145,7 @@ final class ReconMutil {
         List<Object> output = new ArrayList<>(EVENTS_PER_CHUNK);
 
         // loop over input events:
-        while ( (maxEvents < 1 || readEvents < maxEvents) &&
+        while ( (maxEvents < 1 || writeEvents < maxEvents+taggedEvents.get()) &&
                 (maxFileEvents < 1 || fileEvents < maxFileEvents) ) {
 
             if (reader != null) {
@@ -198,19 +195,19 @@ final class ReconMutil {
                 List<HipoDataEvent> output = new ArrayList<>(input.size());
                 for (int i=0; i<input.size(); i++) {
                     HipoDataEvent event = input.get(i) instanceof ByteBuffer
-                            ? decode((ByteBuffer)input.get(i))
+                            ? decode(thread, (ByteBuffer)input.get(i))
                             : new HipoDataEvent(((Event)input.get(i)), schema);
                     output.add(event);
                     Benchmark.getInstance().resume(thread, "serial");
                     Event tag;
                     synchronized (serialLock) {
                         tag = serial.read(event.getHipoEvent());
-                        if (thread == 0 && ++serials > reload) {
-                            updateHelicity();
-                            serials = 0;
-                            reload += 10 * reloads * minReload;
-                            reloads++;
-                        }
+                    }
+                    if (thread == 0 && ++serials > reload) {
+                        updateHelicity();
+                        serials = 0;
+                        reload += 10 * reloads * minReload;
+                        reloads++;
                     }
                     if (!tag.isEmpty()) {
                         output.add(new HipoDataEvent(tag, schema));
@@ -221,15 +218,15 @@ final class ReconMutil {
                 procQueue.offer(output);
             }
         }
-        synchronized (serialLock) {
-            if (thread == 0) updateHelicity();
-        }
+        if (thread == 0) updateHelicity();
     }
 
     void updateHelicity() {
         paused.set(true);
         sleep(1000);
-        serial.updateHelicitySequence();
+        synchronized (serialLock) {
+            serial.updateHelicitySequence();
+        }
         paused.set(false);
     }
 
@@ -239,13 +236,15 @@ final class ReconMutil {
      */
     void process(int thread) {
         while (true) {
+            if (maxEvents > 0 && writeEvents > maxEvents+taggedEvents.get()) {
+                readerThread.cancel(true);
+                break;
+            }
             List<HipoDataEvent> input = procQueue.poll();
             if (input == null) {
                 if (procQueue.isEmpty() && decoThreads.isEmpty() && procQueue.isEmpty()) {
-                    if (writeEvents+skipEvents+failEvents >= readEvents+taggedEvents.get()) {
-                        System.out.println("recon-mutil:: processor thread #"+thread+" exiting.");
+                    if (writeEvents+skipEvents+failEvents >= readEvents+taggedEvents.get())
                         break;
-                    }
                 }
                 sleep(100);
             }
@@ -253,11 +252,13 @@ final class ReconMutil {
                 //if (rethreadThread != null && !rethreadThread.isDone()) readQueue.offer(o);
                 List<Event> output = new ArrayList<>(input.size());
                 for (int i=0; i<input.size(); i++) {
-                    for (Map.Entry<String,ReconstructionEngine> engine : engines.entrySet()) {
-                        Benchmark.getInstance().resume(thread, engine.getKey());
-                        try { engine.getValue().processDataEvent(input.get(i)); }
-                        catch (Exception ex) { ex.printStackTrace(); }
-                        Benchmark.getInstance().pause(thread, engine.getKey());
+                    if (input.get(i).getHipoEvent().getEventTag() == 0) {
+                        for (Map.Entry<String,ReconstructionEngine> engine : engines.entrySet()) {
+                            Benchmark.getInstance().resume(thread, engine.getKey());
+                            try { engine.getValue().processDataEvent(input.get(i)); }
+                            catch (Exception ex) { ex.printStackTrace(); }
+                            Benchmark.getInstance().pause(thread, engine.getKey());
+                        }
                     }
                     output.add(input.get(i).getHipoEvent());
                 }
@@ -338,15 +339,15 @@ final class ReconMutil {
      * @param bytes the EVIO byte buffer
      * @return decoded event
      */
-    HipoDataEvent decode(ByteBuffer bytes) {
-        Benchmark.getInstance().resume("evio");
+    HipoDataEvent decode(int thread, ByteBuffer bytes) {
+        Benchmark.getInstance().resume(thread, "evio");
         EvioDataEvent evio = new EvioDataEvent(bytes.array(), ByteOrder.LITTLE_ENDIAN);
-        Benchmark.getInstance().pause("evio");
-        Benchmark.getInstance().resume("deco");
+        Benchmark.getInstance().pause(thread, "evio");
+        Benchmark.getInstance().resume(thread, "deco");
         CLASDecoder d = decoders.take();
         HipoDataEvent hipo = d.getDecodedDataEvenet(evio);
         decoders.put(d);
-        Benchmark.getInstance().pause("deco");
+        Benchmark.getInstance().pause(thread, "deco");
         return hipo;
     }
   
