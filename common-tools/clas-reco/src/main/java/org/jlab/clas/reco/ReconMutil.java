@@ -51,8 +51,8 @@ final class ReconMutil {
     Object reader;
     HipoWriterSorted writer;
     List<Bank> schemaBankList;
-    static final SchemaFactory schema = new SchemaFactory();
-    static { schema.initFromDirectory(ClasUtilsFile.getResourceDir("CLAS12DIR","etc/bankdefs/hipo4")); }
+    static final SchemaFactory fullSchema = new SchemaFactory();
+    static { fullSchema.initFromDirectory(ClasUtilsFile.getResourceDir("CLAS12DIR","etc/bankdefs/hipo4")); }
     
     // Processors:
     SerialHoncho serial;
@@ -188,7 +188,7 @@ final class ReconMutil {
                 for (int i=0; i<input.size(); i++) {
                     HipoDataEvent event = input.get(i) instanceof ByteBuffer
                             ? decode(thread, (ByteBuffer)input.get(i))
-                            : new HipoDataEvent(((Event)input.get(i)), schema);
+                            : new HipoDataEvent(((Event)input.get(i)), fullSchema);
                     output.add(event);
                     Benchmark.getInstance().resume(thread, "serial");
                     Event tag;
@@ -202,7 +202,7 @@ final class ReconMutil {
                         reloads++;
                     }
                     if (!tag.isEmpty()) {
-                        output.add(new HipoDataEvent(tag, schema));
+                        output.add(new HipoDataEvent(tag, fullSchema));
                         taggedEvents.incrementAndGet();
                     }
                     Benchmark.getInstance().pause(thread, "serial");
@@ -449,7 +449,7 @@ final class ReconMutil {
         parser.syncLogLevel(Logger.getLogger(ReconMutil.class.getPackage().getName()));
         maxEvents = parser.getOption("-n").intValue();
         skipEvents = parser.getOption("-s").intValue();
-        serial = new SerialHoncho(schema);
+        serial = new SerialHoncho(fullSchema);
         engines = new LinkedHashMap<>();
         if (!parser.getOption("-y").isDefault()) {
             yaml = new ClaraYaml(parser.getOption("-y").stringValue());
