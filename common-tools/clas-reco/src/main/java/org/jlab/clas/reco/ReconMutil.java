@@ -412,7 +412,7 @@ final class ReconMutil {
      * Close the output file.
      */
     void close() {
-        //serial.closure(writer);
+        serial.closure(writer);
         writer.close();
         System.out.println(Benchmark.getInstance());
         System.out.println(String.format("recon-mutil :: read/write/tagged/diff = %d/%d/%d/%d",
