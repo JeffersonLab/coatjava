@@ -52,6 +52,8 @@ public class CVTViewer extends Application {
 
     // ---------- bounded cache ----------
     private static final int MAX_CACHE_SIZE = 200;
+    private static final int MAX_LAYER = 12;
+    private static final int MAX_SECTOR = 18;
 
     private HipoDataSource reader;
     private final List<List<HitPoint>> eventPointCache = new ArrayList<>();
@@ -72,7 +74,8 @@ public class CVTViewer extends Application {
     private CheckBox showLoc1;
     private CheckBox showLoc2;
     private CheckBox showLoc3;
-    private CheckBox[] showLayer = new CheckBox[12];
+    private CheckBox[] showLayer = new CheckBox[MAX_LAYER];
+    private CheckBox[] showSector = new CheckBox[MAX_SECTOR];
     private CheckBox showSVT;
     private CheckBox showBMTC;
     private CheckBox showBMTZ;
@@ -112,15 +115,17 @@ public class CVTViewer extends Application {
         final DetectorKind kind;
         final int pointloc;
         final int layer;
+        final int sector;
         final int mctrue;
 
-        HitPoint(double x, double y, double z, DetectorKind kind, int loc, int layer, int mct) {
+        HitPoint(double x, double y, double z, DetectorKind kind, int loc, int layer, int sector, int mct) {
             this.x = x;
             this.y = y;
             this.z = z;
             this.kind = kind;
             this.pointloc = loc;
             this.layer = layer;
+            this.sector = sector;
             this.mctrue = mct;
         }
     }
@@ -276,7 +281,7 @@ public class CVTViewer extends Application {
         int nOther = 0;
 
         for (HitPoint p : points) {
-            if (!isVisible(p.kind) || !isVisibleLoc(p.pointloc) || !isVisibleLayer(p.layer)) {
+            if (!isVisible(p.kind) || !isVisibleLoc(p.pointloc) || !isVisibleLayer(p.layer) || !isVisibleSector(p.sector)) {
                 continue;
             }
 
@@ -372,7 +377,7 @@ public class CVTViewer extends Application {
         return controls;
     }
 
-    private VBox buildLegendPane() {
+    private HBox buildLegendPane() {
         Label legendTitle = new Label("Detectors");
         legendTitle.setStyle("-fx-font-size: 14px; -fx-font-weight: bold;");
 
@@ -412,12 +417,27 @@ public class CVTViewer extends Application {
 
         Label layerTitle = new Label("Layer");
         layerTitle.setStyle("-fx-font-size: 14px; -fx-font-weight: bold;");
-
-        for (int l=0; l<12; l++) {
-            showLayer[l] = new CheckBox(Integer.toString(l+1));
+        for (int l=0; l<MAX_LAYER; l++) {
+            showLayer[l] = new CheckBox(Integer.toString(l+1) + "(" + detectorKindFromLayer(l+1) + ")");
             showLayer[l].setSelected(true);
             showLayer[l].setOnAction(e -> renderCachedEvent());
         }
+        Button layerNone = new Button("None");
+        layerNone.setOnAction(e -> { for(int l=0; l<MAX_LAYER; l++) showLayer[l].setSelected(false); renderCachedEvent(); });
+        Button layerAll = new Button("All");
+        layerAll.setOnAction(e -> { for(int l=0; l<MAX_LAYER; l++) showLayer[l].setSelected(true); renderCachedEvent(); });
+
+        Label sectorTitle = new Label("Sector");
+        sectorTitle.setStyle("-fx-font-size: 14px; -fx-font-weight: bold;");
+        for (int l=0; l<MAX_SECTOR; l++) {
+            showSector[l] = new CheckBox(Integer.toString(l+1));
+            showSector[l].setSelected(true);
+            showSector[l].setOnAction(e -> renderCachedEvent());
+        }
+        Button sectorNone = new Button("None");
+        sectorNone.setOnAction(e -> { for(int s=0; s<MAX_SECTOR; s++) showSector[s].setSelected(false); renderCachedEvent(); });
+        Button sectorAll = new Button("All");
+        sectorAll.setOnAction(e -> { for(int s=0; s<MAX_SECTOR; s++) showSector[s].setSelected(true); renderCachedEvent(); });
 
         Label help = new Label(
                 "Mouse drag: rotate\n" +
@@ -428,27 +448,36 @@ public class CVTViewer extends Application {
         );
         help.setWrapText(true);
 
-        VBox box = new VBox(
-                8,
-                legendTitle,
-                showSVT, svtColor,
-                showBMTC, cColor,
-                showBMTZ, zColor,
-                new Separator(),
-                locTitle,
-                showLoc1,
-                showLoc2,
-                showLoc3,
-                new Separator(),
-                layerTitle,
-                showLayer[0], showLayer[1], showLayer[2], showLayer[3], showLayer[4],  showLayer[5],
-                showLayer[6], showLayer[7], showLayer[8], showLayer[9], showLayer[10], showLayer[11],
-                new Separator(),
-                help
-        );
-        box.setPadding(new Insets(12));
-        box.setPrefWidth(220);
-        box.setStyle("-fx-background-color: #f7f7f7;");
+        VBox col1 = new VBox(
+            8,
+            legendTitle,
+            showSVT, svtColor,
+            showBMTC, cColor,
+            showBMTZ, zColor,
+            new Separator(),
+            locTitle,
+            showLoc1,
+            showLoc2,
+            showLoc3,
+            new Separator(),
+            layerTitle
+            );
+        for (int l=0; l<MAX_LAYER; l++)
+          col1.getChildren().addAll(showLayer[l]);
+        col1.getChildren().addAll(layerAll, layerNone, new Separator(), help);
+        col1.setPadding(new Insets(12));
+        // col1.setPrefWidth(180);
+        col1.setStyle("-fx-background-color: #f7f7f7;");
+
+        VBox col2 = new VBox(8, sectorTitle);
+        for (int s=0; s<MAX_SECTOR; s++)
+          col2.getChildren().addAll(showSector[s]);
+        col2.getChildren().addAll(sectorAll, sectorNone);
+        col2.setPadding(new Insets(12));
+        // col2.setPrefWidth(180);
+        col2.setStyle("-fx-background-color: #f7f7f7;");
+
+        HBox box = new HBox(col1, col2);
         return box;
     }
 
@@ -576,11 +605,16 @@ public class CVTViewer extends Application {
         return showLayer[layer-1].isSelected();
     }
 
+    private boolean isVisibleSector(int sector) {
+        return showSector[sector-1].isSelected();
+    }
+
     private List<HitPoint> extractAllThreePoints(DataBank bank) {
         List<HitPoint> out = new ArrayList<>();
 
         for (int i = 0; i < bank.rows(); i++) {
             int layer = bank.getByte("layer", i);
+            int sector = bank.getByte("sector", i);
             DetectorKind kind = detectorKindFromLayer(layer);
             int mct = bank.getByte("mctrue", i);
 
@@ -588,21 +622,21 @@ public class CVTViewer extends Application {
                     bank.getFloat("x1", i),
                     bank.getFloat("y1", i),
                     bank.getFloat("z1", i),
-                    kind, 1, layer, mct
+                    kind, 1, layer, sector, mct
             ));
 
             out.add(new HitPoint(
                     bank.getFloat("x2", i),
                     bank.getFloat("y2", i),
                     bank.getFloat("z2", i),
-                    kind, 2, layer, mct
+                    kind, 2, layer, sector, mct
             ));
 
             out.add(new HitPoint(
                     bank.getFloat("x3", i),
                     bank.getFloat("y3", i),
                     bank.getFloat("z3", i),
-                    kind, 3, layer, mct
+                    kind, 3, layer, sector, mct
             ));
         }
 
