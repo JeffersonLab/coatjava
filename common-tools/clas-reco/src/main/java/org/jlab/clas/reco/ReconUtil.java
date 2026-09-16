@@ -52,12 +52,10 @@ public class ReconUtil {
      */
     static String getSchemaDirectory(OptionParser parser, ClaraYaml yaml) {
         String d = ClasUtilsFile.getResourceDir("CLAS12DIR", "etc/bankdefs/hipo4");
-        if (yaml != null && yaml.getSchemaDirectory() != null) {
+        if (yaml != null && yaml.getSchemaDirectory() != null)
             d = yaml.getSchemaDirectory();
-        }
-        if (!parser.getOption("-S").isDefault()) {
+        if (!parser.getOption("-S").isDefault())
             d = parser.getOption("-S").stringValue();
-        }
         return d;
     }
 
@@ -118,10 +116,8 @@ public class ReconUtil {
      * @param milliseconds
      */
     static void sleep(int milliseconds) {
-        try {
-            Thread.sleep(milliseconds);
-        } catch (InterruptedException ex) {
-        }
+        try { Thread.sleep(milliseconds); }
+        catch (InterruptedException ex) {}
     }
 
     static List<String> readResourceLines(String resource) {
