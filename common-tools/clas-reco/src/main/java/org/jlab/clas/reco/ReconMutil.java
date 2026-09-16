@@ -55,20 +55,20 @@ final class ReconMutil {
     static { schema.initFromDirectory(ClasUtilsFile.getResourceDir("CLAS12DIR","etc/bankdefs/hipo4")); }
     
     // Processors:
-    volatile SerialHoncho serial;
+    SerialHoncho serial;
     CLASDecoderPool decoders = new CLASDecoderPool(64,"default",null);
-    volatile Map<String,ReconstructionEngine> engines = new LinkedHashMap<>();
+    Map<String,ReconstructionEngine> engines = new LinkedHashMap<>();
 
     // Threads:
-    volatile CompletableFuture readerThread;
-    volatile CompletableFuture writerThread;
-    volatile ConcurrentLinkedQueue<CompletableFuture> decoThreads = new ConcurrentLinkedQueue<>();
-    volatile ConcurrentLinkedQueue<CompletableFuture> procThreads = new ConcurrentLinkedQueue<>();
+    CompletableFuture readerThread;
+    CompletableFuture writerThread;
+    ConcurrentLinkedQueue<CompletableFuture> decoThreads = new ConcurrentLinkedQueue<>();
+    ConcurrentLinkedQueue<CompletableFuture> procThreads = new ConcurrentLinkedQueue<>();
 
     // Queues:
-    volatile ConcurrentLinkedQueue<List<Object>> decoQueue = new ConcurrentLinkedQueue<>();
-    volatile ConcurrentLinkedQueue<List<HipoDataEvent>> procQueue = new ConcurrentLinkedQueue<>();
-    volatile ConcurrentLinkedQueue<List<Event>> writeQueue = new ConcurrentLinkedQueue<>();
+    ConcurrentLinkedQueue<List<Object>> decoQueue = new ConcurrentLinkedQueue<>();
+    ConcurrentLinkedQueue<List<HipoDataEvent>> procQueue = new ConcurrentLinkedQueue<>();
+    ConcurrentLinkedQueue<List<Event>> writeQueue = new ConcurrentLinkedQueue<>();
 
     // Progress counters:
     volatile int readEvents;
