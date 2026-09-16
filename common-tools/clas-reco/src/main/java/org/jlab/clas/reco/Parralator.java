@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.jlab.coda.jevio.EvioException;
 import org.jlab.io.evio.EvioSource;
@@ -46,10 +47,11 @@ public abstract class Parralator {
     volatile int writeEvents;
     volatile AtomicInteger taggedEvents = new AtomicInteger();
     volatile ProgressPrintout progress = new ProgressPrintout();
+    AtomicBoolean paused = new AtomicBoolean(true);
 
-    abstract HipoDataEvent[] decode(Object o);
+    abstract HipoDataEvent[] decode(int thread, Object o);
     abstract void close();
-    abstract void process(HipoDataEvent event);
+    abstract void process(int thread, HipoDataEvent event);
     abstract void write(Event event);
     abstract HipoWriterSorted open(String filename);
     
@@ -59,7 +61,7 @@ public abstract class Parralator {
      * @param output name of output file to write
      * @param input names of input files to read
      */
-    void launch(int[] threads, String... input) {
+    public void launch(int[] threads, String... input) {
 
         reset();
 
@@ -135,6 +137,7 @@ public abstract class Parralator {
      * Forcefully shutdown all threads, close files, and reset queues and counters.
      */
     void reset() {
+        paused.set(true);
         for (CompletableFuture f : procThreads) f.cancel(true);
         for (CompletableFuture f : decoThreads) f.cancel(true);
         if (readerThread != null) readerThread.cancel(true);
@@ -189,7 +192,7 @@ public abstract class Parralator {
      * The decoder thread.
      * @param thread thread number
      */
-    void decode(int thread) {
+    final void decode(int thread) {
         while (true) {
             List<Object> input = decoQueue.poll();
             if (input == null) {
@@ -200,7 +203,7 @@ public abstract class Parralator {
             else {
                 List<HipoDataEvent> output = new ArrayList<>(input.size());
                 for (int i=0; i<input.size(); i++) {
-                    for (HipoDataEvent event : decode(input.get(i)))
+                    for (HipoDataEvent event : decode(thread, input.get(i)))
                         output.add(event);
                 }
                 procQueue.offer(output);
@@ -212,7 +215,7 @@ public abstract class Parralator {
      * The data processor thread.
      * @param thread thread number 
      */
-    void process(int thread) {
+    final void process(int thread) {
         while (true) {
             if (maxEvents > 0 && writeEvents > maxEvents+taggedEvents.get()) {
                 readerThread.cancel(true);
@@ -230,9 +233,9 @@ public abstract class Parralator {
                 //if (rethreadThread != null && !rethreadThread.isDone()) readQueue.offer(o);
                 List<Event> output = new ArrayList<>(input.size());
                 for (int i=0; i<input.size(); i++) {
-                    if (input.get(i).getHipoEvent().getEventTag() == 0) {
-                        process(input.get(i));
-                    }
+                    while (paused.get()) ReconUtil.sleep(100);
+                    if (input.get(i).getHipoEvent().getEventTag() == 0)
+                        process(thread, input.get(i));
                     output.add(input.get(i).getHipoEvent());
                 }
                 writeQueue.offer(output);
@@ -244,7 +247,7 @@ public abstract class Parralator {
      * The writer thread.
      * @param output output filename
      */
-    void write() {
+    final void write() {
         while (true) {
             List<Event> e = writeQueue.poll();
             if (e == null) {
@@ -269,7 +272,7 @@ public abstract class Parralator {
      * @param seconds delay before switching to next thread count
      * @param threads thread counts to use 
      */
-    void rethread(int seconds, int... threads) {
+    final void rethread(int seconds, int... threads) {
         System.out.println("~~~~~~~~~ Rethreading Initiated ~~~~~~~~~");
         for (int i=0; i<threads.length; i++) {
             for (CompletableFuture f : procThreads) {
@@ -291,6 +294,19 @@ public abstract class Parralator {
             System.out.println(progress.getUpdateString());
             System.out.println(Benchmark.getInstance());
         }
+    }
+
+    /**
+     * Print the thread, queue, and event states.
+     */
+    public void show() {
+        String s1 = String.format("threads(r/d/p/w)=(%b/%d/%d/%b)",
+                !readerThread.isDone(), decoThreads.size(), procThreads.size(), !writerThread.isDone());
+        String s2 = String.format(" queues(d/p/w)=(%d/%d/%d)",
+                decoQueue.size(), procQueue.size(), writeQueue.size());
+        String s3 = String.format(" events(r/w/t/f)=(%d/%d/%d/%d)",
+                readEvents, writeEvents, taggedEvents.get(), failEvents);
+        System.out.println("recon-mutil::  "+s1+" "+s2+" "+s3);
     }
 
 }
