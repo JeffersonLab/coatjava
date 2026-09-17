@@ -86,14 +86,14 @@ public abstract class Porch {
 
         // wait for finish:
         while (!writerThread.isDone()) {
+            if (readerThread.isCompletedExceptionally()) System.exit(101);
+            if (writerThread.isCompletedExceptionally()) System.exit(102);
             for (CompletableFuture f : decoThreads) if (f.isDone()) decoThreads.remove(f);
             for (CompletableFuture f : procThreads) if (f.isDone()) procThreads.remove(f);
             ReconUtil.sleep(1000);
             show();
         }
 
-        if (readerThread.isCompletedExceptionally()) System.exit(101);
-        if (writerThread.isCompletedExceptionally()) System.exit(102);
     }
 
     /**
