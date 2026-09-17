@@ -19,7 +19,7 @@ public class Benchmark {
     private final Map<String,BenchmarkMultiTimer> timerStore = new LinkedHashMap<>();
     private Timer updateTimer = null;
     
-    private Benchmark() {}
+    public Benchmark() {}
     
     public static Benchmark getInstance(){
         return benchmarkInstance;
