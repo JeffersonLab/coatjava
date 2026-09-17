@@ -1,5 +1,6 @@
 package org.jlab.detector.serial;
 
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.List;
 import java.util.ListIterator;
@@ -14,6 +15,7 @@ import org.jlab.detector.helicity.HelicitySequenceDelayed;
 import org.jlab.detector.helicity.HelicityState;
 import org.jlab.detector.scalers.DaqScalers;
 import org.jlab.detector.scalers.DaqScalersSequence;
+import org.jlab.io.hipo.HipoDataEvent;
 import org.jlab.jnp.hipo4.data.Bank;
 import org.jlab.jnp.hipo4.data.Event;
 import org.jlab.jnp.hipo4.data.Schema;

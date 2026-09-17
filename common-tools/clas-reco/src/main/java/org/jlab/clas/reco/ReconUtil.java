@@ -4,6 +4,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -12,6 +14,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.jlab.clara.engine.EngineData;
 import org.jlab.clara.engine.EngineDataType;
+import org.jlab.detector.decode.CLASDecoder;
+import org.jlab.detector.decode.CLASDecoderPool;
+import org.jlab.io.evio.EvioDataEvent;
+import org.jlab.io.hipo.HipoDataEvent;
 import org.jlab.jnp.hipo4.data.Bank;
 import org.jlab.jnp.hipo4.data.SchemaFactory;
 import org.jlab.utils.ClaraYaml;
@@ -60,7 +66,7 @@ public class ReconUtil {
     }
 
     /**
-     *
+     * Get a list of banks in the schema for filtering.
      * @param schema
      * @param yaml
      * @return
@@ -120,6 +126,11 @@ public class ReconUtil {
         catch (InterruptedException ex) {}
     }
 
+    /** 
+     * Just get the ascii contents of a resource file.
+     * @param resource
+     * @return files lines
+     */
     static List<String> readResourceLines(String resource) {
         List<String> lines = new ArrayList<>();
         InputStream is = ReconMutil.class.getClassLoader().getResourceAsStream(resource);
@@ -131,5 +142,18 @@ public class ReconUtil {
         }
         return lines;
     }
-    
+
+    /**
+     * Decode an event.
+     * @param bytes an EVIO event byte buffer
+     * @return decoded HIPO event
+     */
+    public static HipoDataEvent decode(ByteBuffer bytes) {
+        EvioDataEvent evio = new EvioDataEvent(bytes.array(), ByteOrder.LITTLE_ENDIAN);
+        CLASDecoder d = CLASDecoderPool.getInstance().take();
+        HipoDataEvent hipo = d.getDecodedDataEvent(evio);
+        CLASDecoderPool.getInstance().put(d);
+        return hipo;
+    }
+
 }

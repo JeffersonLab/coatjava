@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
 import org.jlab.detector.serial.SerialHoncho;
 import org.jlab.io.evio.EvioSource;
@@ -24,15 +25,15 @@ import org.json.JSONObject;
  * 
  * @author baltzell
  */
-final class ReconMutil extends Parralator {
+final class ReconMutil extends Porch {
 
     ClaraYaml yaml;
     OptionParser parser;
     HipoWriterSorted writer;
     List<Bank> schemaBankList;
     SerialHoncho serial;
-    Map<String,ReconstructionEngine> engines = new LinkedHashMap<>();
     final Object serialLock = new Object();
+    AtomicBoolean paused = new AtomicBoolean(true);
     static final SchemaFactory fullSchema = new SchemaFactory();
     static { fullSchema.initFromDirectory(ClasUtilsFile.getResourceDir("CLAS12DIR","etc/bankdefs/hipo4")); }
     int serials;
@@ -44,11 +45,40 @@ final class ReconMutil extends Parralator {
         init(parser);
     }
 
+    /**
+     * Open a new input HIPO/EVIO event file.
+     * @param filename 
+     */
     @Override
-    HipoDataEvent[] decode(int thread, Object o) {
+    public Object openReader(String filename) {
+        fileEvents = 0;
+        if (filename.endsWith(".hipo")) {
+            reader = new HipoReader();
+            ((HipoReader)reader).open(filename);
+            maxFileEvents = ((HipoReader)reader).getEventCount();
+        }
+        else {
+            reader = new EvioSource();
+            ((EvioSource)reader).open(filename);
+            maxFileEvents = ((EvioSource)reader).getEventCount();
+        }
+        return reader;
+    }
+
+
+    @Override
+    void reset(){
+        paused.set(true);
+        super.reset();
+    }
+
+    @Override
+    public HipoDataEvent[] decode(int thread, Object o) {
+        Benchmark.getInstance().resume(thread, "deco");
         HipoDataEvent event = o instanceof ByteBuffer
-                ? Parralator.decode(thread, (ByteBuffer)o)
+                ? ReconUtil.decode((ByteBuffer)o)
                 : new HipoDataEvent(((Event)o), fullSchema);
+        Benchmark.getInstance().pause(thread, "deco");
         Event tag;
         Benchmark.getInstance().resume(thread, "serial");
         synchronized (serialLock) {
@@ -61,7 +91,7 @@ final class ReconMutil extends Parralator {
             taggedEvents.incrementAndGet();
         }
         if (thread == 0 && ++serials > reload) {
-            updateHelicity();
+            updateHelicitySequence();
             serials = 0;
             reload += 10 * reloads * minReload;
             reloads++;
@@ -70,11 +100,11 @@ final class ReconMutil extends Parralator {
         return ret;
     }
 
-    @Override
-    void declosure() {
-        updateHelicity();
-    }
-
+    /**
+     * 
+     * @param thread
+     * @param event 
+     */
     @Override
     void process(int thread, HipoDataEvent event) {
         for (Map.Entry<String,ReconstructionEngine> engine : engines.entrySet()) {
@@ -86,8 +116,9 @@ final class ReconMutil extends Parralator {
     }
 
     @Override
-    void write(Event event) {
+    public void write(Event event) {
         Benchmark.getInstance().resume("post");
+        while (paused.get()) ReconUtil.sleep(100); 
         synchronized (serialLock) {
             serial.process(event);
         }
@@ -104,37 +135,29 @@ final class ReconMutil extends Parralator {
         writeEvents++;
     }
 
-    /**
-     * Close the output file.
-     */
     @Override
-    void close() {
+    public void exitDecoderThread() {
+        updateHelicitySequence();
+    }
+    
+    @Override
+    public void exitWriterThread() {
         if (writer != null) {
             serial.closure(writer);
             writer.close();
         }
-        super.close();
+        System.out.println(Benchmark.getInstance());
+        System.out.println(String.format("recon-mutil :: read/write/tagged/diff = %d/%d/%d/%d",
+                readEvents, writeEvents, taggedEvents.get(), writeEvents-readEvents-taggedEvents.get()));
     }
 
-
-    /**
-     * Open a new input HIPO/EVIO event file.
-     * @param filename 
-     */
-    @Override
-    Object openReader(String filename) {
-        fileEvents = 0;
-        if (filename.endsWith(".hipo")) {
-            reader = new HipoReader();
-            ((HipoReader)reader).open(filename);
-            maxFileEvents = ((HipoReader)reader).getEventCount();
+    void updateHelicitySequence() {
+        paused.set(true);
+        ReconUtil.sleep(1000);
+        synchronized (serialLock) {
+            serial.updateHelicitySequence();
         }
-        else {
-            reader = new EvioSource();
-            ((EvioSource)reader).open(filename);
-            maxFileEvents = ((EvioSource)reader).getEventCount();
-        }
-        return reader;
+        paused.set(false);
     }
 
     /**
@@ -152,15 +175,6 @@ final class ReconMutil extends Parralator {
         return writer;
     }
  
-    void updateHelicity() {
-        paused.set(true);
-        ReconUtil.sleep(1000);
-        synchronized (serialLock) {
-            serial.updateHelicitySequence();
-        }
-        paused.set(false);
-    }
-
     /**
      * Initialize ReconMutil.
      * @param parser 

@@ -24,15 +24,19 @@ $COAT/bin/decoder -t -0.5 -s 0.0 -i ./data/twoTrackEvents_809_raw.evio -o ./twoT
 $COAT/bin/hipo-utils -stats ./twoTrackEvents_809.hipo
 
 # run clara
-$COAT/bin/run-clara -y $COAT/etc/services/kpp.yaml ./twoTrackEvents_809.hipo
-[ $? -ne 0 ] && echo "reconstruction with clara failure" && exit 4
+#$COAT/bin/run-clara -y $COAT/etc/services/kpp.yaml ./twoTrackEvents_809.hipo
+#[ $? -ne 0 ] && echo "reconstruction with clara failure" && exit 4
+
+# run recon-mutil
+$COAT/bin/recon-mutil -y $COAT/etc/services/kpp.yaml -o rec_twoTrackEvents_809.hipo ./data/twoTrackEvents_809_raw.evio
+[ $? -ne 0 ] && echo "reconstruction with recon-mutil failure" && exit 5
 
 # compile test codes
 javac -cp $classPath src/kpptracking/KppTrackingTest.java 
-[ $? -ne 0 ] && echo "KppTrackingTest compilation failure" && exit 5
+[ $? -ne 0 ] && echo "KppTrackingTest compilation failure" && exit 6
 
 # run KppTracking junit tests
 java -DCLAS12DIR="$COAT" -Xmx1536m -Xms1024m -cp $classPath org.junit.runner.JUnitCore kpptracking.KppTrackingTest
-[ $? -ne 0 ] && echo "KppTracking unit test failure" && exit 6
+[ $? -ne 0 ] && echo "KppTracking unit test failure" && exit 7
 
 echo "KppTracking passed unit tests"
