@@ -32,7 +32,7 @@ public class CLASDecoderPool extends ConcurrentLinkedQueue<CLASDecoder> {
         }
     }
 
-    static CLASDecoderPool instance = null;
+    volatile static CLASDecoderPool instance = null;
 
     public static CLASDecoderPool getInstance() {
         if (instance == null) 
