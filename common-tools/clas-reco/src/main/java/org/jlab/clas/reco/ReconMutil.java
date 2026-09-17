@@ -312,9 +312,9 @@ final class ReconMutil {
             }
             writeEvents = 0;
             readEvents = 0;
+            benchmark = new Benchmark();
             progress = new ProgressPrintout();
             progress.setInterval(-1);
-            benchmark.reset();
             for (int j=0; j<threads[i]; j++) {
                 final int k = j;
                 procThreads.offer(CompletableFuture.runAsync(() -> { process(k); }));
@@ -324,6 +324,7 @@ final class ReconMutil {
             System.out.println(String.format("\n~~~~~~~~~ Rethreading Count: %d ~~~~~~~~~\n",threads[i]));
             System.out.println(progress.getUpdateString());
             System.out.println(benchmark);
+
         }
     }
 
