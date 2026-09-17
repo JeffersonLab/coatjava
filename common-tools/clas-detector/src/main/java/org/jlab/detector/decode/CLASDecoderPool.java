@@ -42,4 +42,12 @@ public class CLASDecoderPool {
         pool.offer(decoder);
     }
 
+    static CLASDecoderPool instance = null;
+
+    public static CLASDecoderPool getInstance() {
+        if (instance == null) 
+            instance = new CLASDecoderPool(64,"default",null);
+        return instance;
+    }
+
 }

@@ -1,17 +1,12 @@
 package org.jlab.clas.reco;
 
 import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
-import org.jlab.detector.decode.CLASDecoder;
-import org.jlab.detector.decode.CLASDecoderPool;
 import org.jlab.detector.serial.SerialHoncho;
-import org.jlab.io.evio.EvioDataEvent;
 import org.jlab.io.evio.EvioSource;
 import org.jlab.io.hipo.HipoDataEvent;
 import org.jlab.jnp.hipo4.data.Bank;
@@ -33,22 +28,18 @@ final class ReconMutil extends Parralator {
 
     ClaraYaml yaml;
     OptionParser parser;
-
-    // File I/O:
     HipoWriterSorted writer;
     List<Bank> schemaBankList;
+    SerialHoncho serial;
+    Map<String,ReconstructionEngine> engines = new LinkedHashMap<>();
+    final Object serialLock = new Object();
     static final SchemaFactory fullSchema = new SchemaFactory();
     static { fullSchema.initFromDirectory(ClasUtilsFile.getResourceDir("CLAS12DIR","etc/bankdefs/hipo4")); }
-    
-    // Processors:
-    SerialHoncho serial;
-    CLASDecoderPool decoders = new CLASDecoderPool(64,"default",null);
-    Map<String,ReconstructionEngine> engines = new LinkedHashMap<>();
+    int serials;
+    int minReload = 5000;
+    int reload = minReload;
+    int reloads = 0;
 
-    // Control flags:
-    AtomicBoolean paused = new AtomicBoolean(true);
-    final Object serialLock = new Object();
-    
     ReconMutil(OptionParser parser) {
         init(parser);
     }
@@ -56,36 +47,32 @@ final class ReconMutil extends Parralator {
     @Override
     HipoDataEvent[] decode(int thread, Object o) {
         HipoDataEvent event = o instanceof ByteBuffer
-                ? decode(thread, (ByteBuffer)o)
+                ? Parralator.decode(thread, (ByteBuffer)o)
                 : new HipoDataEvent(((Event)o), fullSchema);
-        Benchmark.getInstance().resume(thread, "serial");
         Event tag;
+        Benchmark.getInstance().resume(thread, "serial");
         synchronized (serialLock) {
             tag = serial.read(event.getHipoEvent());
         }
-        /*
+        HipoDataEvent[] ret = new HipoDataEvent[1+(tag.isEmpty()?0:1)];
+        ret[0] = event;
+        if (!tag.isEmpty()) {
+            ret[1] = new HipoDataEvent(tag, fullSchema);
+            taggedEvents.incrementAndGet();
+        }
         if (thread == 0 && ++serials > reload) {
             updateHelicity();
             serials = 0;
             reload += 10 * reloads * minReload;
             reloads++;
         }
-        if (!tag.isEmpty()) {
-            output.add(new HipoDataEvent(tag, fullSchema));
-            taggedEvents.incrementAndGet();
-        }
-        */
         Benchmark.getInstance().pause(thread, "serial");
-        return null;
+        return ret;
     }
 
-    void updateHelicity() {
-        paused.set(true);
-        ReconUtil.sleep(1000);
-        synchronized (serialLock) {
-            serial.updateHelicitySequence();
-        }
-        paused.set(false);
+    @Override
+    void declosure() {
+        updateHelicity();
     }
 
     @Override
@@ -118,27 +105,24 @@ final class ReconMutil extends Parralator {
     }
 
     /**
-     * Decode an event.
-     * @param bytes the EVIO byte buffer
-     * @return decoded event
+     * Close the output file.
      */
-    HipoDataEvent decode(int thread, ByteBuffer bytes) {
-        Benchmark.getInstance().resume(thread, "evio");
-        EvioDataEvent evio = new EvioDataEvent(bytes.array(), ByteOrder.LITTLE_ENDIAN);
-        Benchmark.getInstance().pause(thread, "evio");
-        Benchmark.getInstance().resume(thread, "deco");
-        CLASDecoder d = decoders.take();
-        HipoDataEvent hipo = d.getDecodedDataEvenet(evio);
-        decoders.put(d);
-        Benchmark.getInstance().pause(thread, "deco");
-        return hipo;
+    @Override
+    void close() {
+        if (writer != null) {
+            serial.closure(writer);
+            writer.close();
+        }
+        super.close();
     }
-  
+
+
     /**
      * Open a new input HIPO/EVIO event file.
      * @param filename 
      */
-    void openin(String filename) {
+    @Override
+    Object openReader(String filename) {
         fileEvents = 0;
         if (filename.endsWith(".hipo")) {
             reader = new HipoReader();
@@ -150,6 +134,7 @@ final class ReconMutil extends Parralator {
             ((EvioSource)reader).open(filename);
             maxFileEvents = ((EvioSource)reader).getEventCount();
         }
+        return reader;
     }
 
     /**
@@ -157,8 +142,8 @@ final class ReconMutil extends Parralator {
      * @param filename output filename
      * @param yaml the configuration
      */
-    HipoWriterSorted open(String filename, ClaraYaml yaml) {
-        HipoWriterSorted writer = new HipoWriterSorted();
+    HipoWriterSorted openWriter(String filename) {
+        writer = new HipoWriterSorted();
         writer.setCompressionType(2);
         SchemaFactory s = ReconUtil.getSchemaFactory(parser, yaml);
         writer.getSchemaFactory().copy(s);
@@ -167,16 +152,13 @@ final class ReconMutil extends Parralator {
         return writer;
     }
  
-    /**
-     * Close the output file.
-     */
-    @Override
-    void close() {
-        serial.closure(writer);
-        writer.close();
-        System.out.println(Benchmark.getInstance());
-        System.out.println(String.format("recon-mutil :: read/write/tagged/diff = %d/%d/%d/%d",
-                readEvents, writeEvents, taggedEvents.get(), writeEvents-readEvents-taggedEvents.get()));
+    void updateHelicity() {
+        paused.set(true);
+        ReconUtil.sleep(1000);
+        synchronized (serialLock) {
+            serial.updateHelicitySequence();
+        }
+        paused.set(false);
     }
 
     /**
@@ -227,13 +209,10 @@ final class ReconMutil extends Parralator {
         o.setRequiresInputList(true);
         o.parse(args);
         ReconMutil r = new ReconMutil(o);
+        if (!o.getOption("-o").isDefault())
+            r.openWriter(o.getOption("-o").stringValue());
         r.launch(Arrays.stream(o.getOption("-t").stringValue().split(",")).mapToInt(Integer::parseInt).toArray(), 
                 o.getInputList().stream().toArray(String[]::new));
     }
 
-    @Override
-    HipoWriterSorted open(String filename) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-    
 }

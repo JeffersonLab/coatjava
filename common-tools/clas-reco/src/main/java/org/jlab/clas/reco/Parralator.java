@@ -1,5 +1,7 @@
 package org.jlab.clas.reco;
 
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -8,11 +10,13 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.jlab.coda.jevio.EvioException;
+import org.jlab.detector.decode.CLASDecoder;
+import org.jlab.detector.decode.CLASDecoderPool;
+import org.jlab.io.evio.EvioDataEvent;
 import org.jlab.io.evio.EvioSource;
 import org.jlab.io.hipo.HipoDataEvent;
 import org.jlab.jnp.hipo4.data.Event;
 import org.jlab.jnp.hipo4.io.HipoReader;
-import org.jlab.jnp.hipo4.io.HipoWriterSorted;
 import org.jlab.utils.benchmark.Benchmark;
 import org.jlab.utils.benchmark.ProgressPrintout;
 
@@ -25,7 +29,8 @@ public abstract class Parralator {
     // Static parameters:
     int maxEvents;
     int skipEvents;
-    
+   
+    // Processors:
     Object reader;
 
     // Queues:
@@ -49,16 +54,15 @@ public abstract class Parralator {
     volatile ProgressPrintout progress = new ProgressPrintout();
     AtomicBoolean paused = new AtomicBoolean(true);
 
+    abstract Object openReader(String filename);
     abstract HipoDataEvent[] decode(int thread, Object o);
-    abstract void close();
+    abstract void declosure();
     abstract void process(int thread, HipoDataEvent event);
     abstract void write(Event event);
-    abstract HipoWriterSorted open(String filename);
     
     /**
      * The thread launcher and collector.
      * @param threads number of threads
-     * @param output name of output file to write
      * @param input names of input files to read
      */
     public void launch(int[] threads, String... input) {
@@ -118,7 +122,7 @@ public abstract class Parralator {
             }
 
             // open the next input file:
-            else if (!inputs.isEmpty()) open(inputs.removeFirst());
+            else if (!inputs.isEmpty()) reader = openReader(inputs.removeFirst());
 
             // no more events to read:
             else break;
@@ -209,6 +213,7 @@ public abstract class Parralator {
                 procQueue.offer(output);
             }
         }
+        if (thread == 0) declosure();
     }
 
     /**
@@ -297,6 +302,24 @@ public abstract class Parralator {
     }
 
     /**
+     * Decode an event.
+     * @param thread
+     * @param bytes the EVIO byte buffer
+     * @return decoded event
+     */
+    public static HipoDataEvent decode(int thread, ByteBuffer bytes) {
+        Benchmark.getInstance().resume(thread, "evio");
+        EvioDataEvent evio = new EvioDataEvent(bytes.array(), ByteOrder.LITTLE_ENDIAN);
+        Benchmark.getInstance().pause(thread, "evio");
+        Benchmark.getInstance().resume(thread, "deco");
+        CLASDecoder d = CLASDecoderPool.getInstance().take();
+        HipoDataEvent hipo = d.getDecodedDataEvenet(evio);
+        CLASDecoderPool.getInstance().put(d);
+        Benchmark.getInstance().pause(thread, "deco");
+        return hipo;
+    }
+  
+    /**
      * Print the thread, queue, and event states.
      */
     public void show() {
@@ -309,4 +332,10 @@ public abstract class Parralator {
         System.out.println("recon-mutil::  "+s1+" "+s2+" "+s3);
     }
 
+    void close() {
+        System.out.println(Benchmark.getInstance());
+        System.out.println(String.format("recon-mutil :: read/write/tagged/diff = %d/%d/%d/%d",
+                readEvents, writeEvents, taggedEvents.get(), writeEvents-readEvents-taggedEvents.get()));
+    }
+    
 }
