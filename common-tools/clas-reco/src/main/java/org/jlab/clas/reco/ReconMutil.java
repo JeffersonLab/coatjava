@@ -348,9 +348,9 @@ final class ReconMutil {
         EvioDataEvent evio = new EvioDataEvent(bytes.array(), ByteOrder.LITTLE_ENDIAN);
         benchmark.pause(thread, "evio");
         benchmark.resume(thread, "deco");
-        CLASDecoder d = decoders.take();
+        CLASDecoder d = decoders.poll();
         HipoDataEvent hipo = d.getDecodedDataEvent(evio);
-        decoders.put(d);
+        decoders.offer(d);
         benchmark.pause(thread, "deco");
         return hipo;
     }
