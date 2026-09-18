@@ -6,16 +6,14 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  *
  * @author baltzell
  */
-public class CLASDecoderPool {
+public class CLASDecoderPool extends ConcurrentLinkedQueue<CLASDecoder> {
    
-    ConcurrentLinkedQueue<CLASDecoder> pool;
-
     int sharedConstantsManagers = 64;
 
     public CLASDecoderPool(int size, String variation, String timestamp) {
 
-        pool = new ConcurrentLinkedQueue<>();
-        
+        super();
+
         CLASDecoder d0 = null;
         
         for (int i=0; i<size; i++) {
@@ -30,16 +28,15 @@ public class CLASDecoderPool {
             }
             else d = new CLASDecoder(d0);
             
-            pool.add(d);
+            add(d);
         }
     }
 
-    public CLASDecoder take() {
-        return pool.poll();
-    }
+    volatile static CLASDecoderPool instance = null;
 
-    public void put(CLASDecoder decoder) {
-        pool.offer(decoder);
+    public static synchronized CLASDecoderPool getInstance() {
+        if (instance == null) 
+            instance = new CLASDecoderPool(64,"default",null);
+        return instance;
     }
-
 }
