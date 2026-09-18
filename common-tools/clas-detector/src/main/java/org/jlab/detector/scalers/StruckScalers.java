@@ -158,7 +158,7 @@ public class StruckScalers extends ArrayList<StruckScaler> {
         for (int ii=0; ii<this.size()-2; ii++) {
             if (this.get(ii).interval != this.get(ii+2).interval) continue;
             if (this.get(ii).clock<0 && this.get(ii+2).clock>0) {
-                if (this.get(ii).gatedClock>0 && this.get(ii+2).gatedClock<0) {
+                if (this.get(ii).gatedClock>=0 && this.get(ii+2).gatedClock<0) {
                     d.put(this.get(ii+2), this.get(ii));
                 }
             }
