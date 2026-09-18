@@ -81,7 +81,6 @@ final class ReconMutil {
     volatile Benchmark benchmark = new Benchmark();
 
     // Control flags:
-    final AtomicBoolean decoderPause = new AtomicBoolean(false);
     final AtomicBoolean serialPause = new AtomicBoolean(true);
     
     ReconMutil(OptionParser parser) {
@@ -184,7 +183,6 @@ final class ReconMutil {
             else {
                 List<HipoDataEvent> output = new ArrayList<>(input.size());
                 for (int i=0; i<input.size(); i++) {
-                    while (decoderPause.get()) ReconUtil.sleep(1000);
                     HipoDataEvent event = input.get(i) instanceof ByteBuffer
                             ? decode(thread, (ByteBuffer)input.get(i))
                             : new HipoDataEvent(((Event)input.get(i)), fullSchema);
@@ -258,7 +256,7 @@ final class ReconMutil {
         while (true) {
             List<Event> e = writeQueue.poll();
             if (e == null) {
-                if (decoThreads.isEmpty() && procThreads.isEmpty() && writeQueue.isEmpty()) {
+                if (decoThreads.isEmpty() && procThreads.isEmpty() && procQueue.isEmpty() && writeQueue.isEmpty()) {
                     close();
                     break;
                 }
@@ -294,24 +292,17 @@ final class ReconMutil {
      */
     void rethreader(int seconds, int... threads) {
         System.out.println("recon-mutil::  ~~~~~~~~~ rethreading initiated ~~~~~~~~~");
+        progress.setInterval(-1);
         List<Benchmark> benches = new ArrayList<>();
-        while (progress.getNumberOfCalls() < 100) ReconUtil.sleep(1000);
+        for (int i=threads[0]; i<64; i++) {
+            final int j = i;
+            decoThreads.offer(CompletableFuture.runAsync(() -> { decoder(j); }));
+        }
+        while (writeEvents < 100 || !isDone(decoThreads))
+            ReconUtil.sleep(1000);
+        System.out.println("recon-mutil::  ~~~~~~~~~ rethreading primed ~~~~~~~~~");
         for (int i=0; i<threads.length; i++) {
-            for (CompletableFuture f : procThreads) {
-                f.cancel(true);
-                procThreads.remove(f);
-            }
-            writeEvents = 0;
-            readEvents = 0;
-            while (procQueue.size()*EVENTS_PER_CHUNK < Math.max(1E4,300*threads[i])) {
-                decoderPause.set(false);
-                System.out.println("recon-mutil::  ~~~~~~~~~ decoding for rethreading ~~~~~~~~~");
-                ReconUtil.sleep(1000);
-            }
-            decoderPause.set(true);
-            ReconUtil.sleep(100);
-            progress = new ProgressPrintout();
-            progress.setInterval(-1);
+            cancel(procThreads);
             benchmark = new Benchmark();
             for (int j=0; j<threads[i]; j++) {
                 final int k = j;
@@ -517,6 +508,19 @@ final class ReconMutil {
         r.launch(Arrays.stream(o.getOption("-t").stringValue().split(",")).mapToInt(Integer::parseInt).toArray(), 
                 o.getOption("-o").stringValue(),
                 o.getInputList().stream().toArray(String[]::new));
+    }
+    
+    static boolean isDone(ConcurrentLinkedQueue<CompletableFuture> queue) {
+        for (CompletableFuture f : queue)
+            if (!f.isDone()) return false;
+        return true;
+    }
+
+    static void cancel(ConcurrentLinkedQueue<CompletableFuture> queue) {
+        for (CompletableFuture f : queue) {
+            f.cancel(true);
+            queue.remove(f);
+        }
     }
     
 }
