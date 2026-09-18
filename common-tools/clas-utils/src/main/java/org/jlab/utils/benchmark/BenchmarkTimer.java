@@ -36,16 +36,6 @@ public class BenchmarkTimer {
         }
     }
 
-    public static class BenchmarkTimerTotal extends BenchmarkMultiTimer {
-        ArrayList<BenchmarkTimer> benchmarks = new ArrayList<>();
-        public BenchmarkTimerTotal(String name) { super(name); }
-        public void add(BenchmarkTimer b) {
-            benchmarks.add(b);
-            totalTime.addAndGet(b.totalTime.get());
-            numberOfCalls.addAndGet(b.numberOfCalls.get());
-        }
-    }
-
     private String timerName = "generic";
     private long timeAtResume = 0;
     private Boolean isPaused = true;
@@ -96,10 +86,10 @@ public class BenchmarkTimer {
     @Override
     public String toString() {
         return String.format("%-15s : #Calls %12d, Total = %12.2f sec, Unit = %12.3f msec",
-            getName(), numberOfCalls.get(), getSeconds(), getTimePerCall());
+            getName(), numberOfCalls.get(), getSeconds(), getMillisecondsPerCall());
     }
 
-    public double getTimePerCall() {
+    public double getMillisecondsPerCall() {
         return numberOfCalls.get() > 0 ? getMilliseconds() / numberOfCalls.get() : 0;
     }
 }
