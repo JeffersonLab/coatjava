@@ -81,8 +81,8 @@ final class ReconMutil {
     volatile Benchmark benchmark = new Benchmark();
 
     // Control flags:
-    AtomicBoolean paused = new AtomicBoolean(true);
-    final Object serialLock = new Object();
+    final AtomicBoolean decoderPause = new AtomicBoolean(false);
+    final AtomicBoolean serialPause = new AtomicBoolean(true);
     
     ReconMutil(OptionParser parser) {
         init(parser);
@@ -101,27 +101,24 @@ final class ReconMutil {
         System.out.println(String.format("recon-mutil::  spawning 2*%d+2 threads",threads[0]));
         
         // spawn all the threads:
-        readerThread = CompletableFuture.runAsync(() -> { read(threads[0], input); });
-        writerThread = CompletableFuture.runAsync(() -> { write(output); });
+        readerThread = CompletableFuture.runAsync(() -> { reader(threads[0], input); });
+        writerThread = CompletableFuture.runAsync(() -> { writer(output); });
         for (int i=0; i<threads[0]; i++) {
             final int j = i;
-            decoThreads.offer(CompletableFuture.runAsync(() -> { decode(j); }));
-            procThreads.offer(CompletableFuture.runAsync(() -> { process(j); }));
+            decoThreads.offer(CompletableFuture.runAsync(() -> { decoder(j); }));
+            procThreads.offer(CompletableFuture.runAsync(() -> { processer(j); }));
         }
 
         // perform scaling test:
-        if (threads.length > 1) {
-            while (writeEvents < 100) ReconUtil.sleep(1000);
-            CompletableFuture.runAsync(() -> { rethread(BENCH_SECONDS,threads); }).join();
-            reset();
-        }
+        CompletableFuture rethreadThread = threads.length < 2 ? null :
+            CompletableFuture.runAsync(() -> { rethreader(BENCH_SECONDS,threads); });
 
         // wait for finish:
-        while (!writerThread.isDone()) {
+        while ((rethreadThread == null || !rethreadThread.isDone()) && !writerThread.isDone() ) {
             for (CompletableFuture f : decoThreads) if (f.isDone()) decoThreads.remove(f);
             for (CompletableFuture f : procThreads) if (f.isDone()) procThreads.remove(f);
             ReconUtil.sleep(1000);
-            //show();
+            show();
         }
     }
 
@@ -129,7 +126,7 @@ final class ReconMutil {
      * The reader thread.
      * @param input input filenames 
      */
-    void read(int threads, String... input) {
+    void reader(int threads, String... input) {
 
         // convert input filenames to a list:
         List<String> inputs = new ArrayList<>(Arrays.asList(input));
@@ -170,7 +167,7 @@ final class ReconMutil {
      * The decoder thread.
      * @param thread thread number
      */
-    void decode(int thread) {
+    void decoder(int thread) {
         final int helicityClock = 30;  // Hz
         final int triggerRate = 25000; // Hz
         final int minReload = 2 * triggerRate / helicityClock;
@@ -178,6 +175,10 @@ final class ReconMutil {
         int reloads = 0;
         int reload = minReload;
         while (true) {
+            if (decoderPause.get()) {
+                ReconUtil.sleep(1000);
+                continue;
+            }
             List<Object> input = decoQueue.poll();
             if (input == null) {
                 if (decoQueue.isEmpty() && readerThread.isDone() && decoQueue.isEmpty())
@@ -193,7 +194,7 @@ final class ReconMutil {
                     output.add(event);
                     benchmark.resume(thread, "serial");
                     Event tag;
-                    synchronized (serialLock) {
+                    synchronized (serialPause) {
                         tag = serial.read(event.getHipoEvent());
                     }
                     if (thread == 0 && ++serials > reload) {
@@ -214,20 +215,11 @@ final class ReconMutil {
         if (thread == 0) updateHelicity();
     }
 
-    void updateHelicity() {
-        paused.set(true);
-        ReconUtil.sleep(1000);
-        synchronized (serialLock) {
-            serial.updateHelicitySequence();
-        }
-        paused.set(false);
-    }
-
     /**
      * The data processor thread.
      * @param thread thread number 
      */
-    void process(int thread) {
+    void processer(int thread) {
         while (true) {
             if (maxEvents > 0 && writeEvents > maxEvents+taggedEvents.get()) {
                 readerThread.cancel(true);
@@ -264,12 +256,12 @@ final class ReconMutil {
      * The writer thread.
      * @param output output filename
      */
-    void write(String output) {
+    void writer(String output) {
         if (output != null) writer = open(output, yaml);
         while (true) {
             List<Event> e = writeQueue.poll();
             if (e == null) {
-                if (readerThread.isDone() && procThreads.isEmpty() && writeQueue.isEmpty()) {
+                if (decoThreads.isEmpty() && procThreads.isEmpty() && writeQueue.isEmpty()) {
                     close();
                     break;
                 }
@@ -277,9 +269,9 @@ final class ReconMutil {
             }
             else {
                 for (int i=0; i<e.size(); i++) {
-                    while (paused.get()) ReconUtil.sleep (100);
+                    while (serialPause.get()) ReconUtil.sleep (100);
                     benchmark.resume("post");
-                    synchronized (serialLock) {
+                    synchronized (serialPause) {
                         serial.process(e.get(i));
                     }
                     benchmark.pause("post");
@@ -303,8 +295,9 @@ final class ReconMutil {
      * @param seconds delay before switching to next thread count
      * @param threads thread counts to use 
      */
-    void rethread(int seconds, int... threads) {
-        System.out.println("~~~~~~~~~ Rethreading Initiated ~~~~~~~~~");
+    void rethreader(int seconds, int... threads) {
+        System.out.println("recon-mutil::  ~~~~~~~~~ rethreading initiated ~~~~~~~~~");
+        List<Benchmark> benches = new ArrayList<>();
         for (int i=0; i<threads.length; i++) {
             for (CompletableFuture f : procThreads) {
                 f.cancel(true);
@@ -312,20 +305,39 @@ final class ReconMutil {
             }
             writeEvents = 0;
             readEvents = 0;
-            benchmark = new Benchmark();
+            while (procQueue.size()*EVENTS_PER_CHUNK < Math.max(1E4,300*threads[i])) {
+                System.out.println("recon-mutil::  ~~~~~~~~~ decoding for rethreading ~~~~~~~~~");
+                ReconUtil.sleep(1000);
+            }
             progress = new ProgressPrintout();
             progress.setInterval(-1);
+            decoderPause.set(true);
             for (int j=0; j<threads[i]; j++) {
                 final int k = j;
-                procThreads.offer(CompletableFuture.runAsync(() -> { process(k); }));
+                procThreads.offer(CompletableFuture.runAsync(() -> { processer(k); }));
             }
             while (progress.getNumberOfCalls() < 100) ReconUtil.sleep(1000);
+            benchmark = new Benchmark();
             ReconUtil.sleep(seconds*1000);
-            System.out.println(String.format("\n~~~~~~~~~ Rethreading Count: %d ~~~~~~~~~\n",threads[i]));
+            System.out.println(String.format("\nrecon-mutil:: ~~~~~~~~~ rethreading count: %d ~~~~~~~~~\n",threads[i]));
             System.out.println(progress.getUpdateString());
             System.out.println(benchmark);
-
+            benches.add(benchmark);
+            benchmark = new Benchmark();
+            decoderPause.set(false);
         }
+        for (Benchmark b : benches) {
+            System.out.println(String.join("\n",b.toCSV()));
+        }
+    }
+
+    void updateHelicity() {
+        serialPause.set(true);
+        ReconUtil.sleep(1000);
+        synchronized (serialPause) {
+            serial.updateHelicitySequence();
+        }
+        serialPause.set(false);
     }
 
     /**
@@ -416,7 +428,8 @@ final class ReconMutil {
     void close() {
         serial.closure(writer);
         writer.close();
-        System.out.println(benchmark);
+        if (parser.getOption("-t").stringValue().split(",").length == 1)
+            System.out.println(benchmark);
         System.out.println(String.format("recon-mutil :: read/write/tagged/diff = %d/%d/%d/%d",
                 readEvents, writeEvents, taggedEvents.get(), writeEvents-readEvents-taggedEvents.get()));
     }
@@ -425,7 +438,7 @@ final class ReconMutil {
      * Forcefully shutdown all threads, close files, and reset queues and counters.
      */
     void reset() {
-        paused.set(true);
+        serialPause.set(true);
         for (CompletableFuture f : procThreads) f.cancel(true);
         for (CompletableFuture f : decoThreads) f.cancel(true);
         if (readerThread != null) readerThread.cancel(true);

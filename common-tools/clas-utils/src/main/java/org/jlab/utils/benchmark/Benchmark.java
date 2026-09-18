@@ -109,6 +109,13 @@ public class Benchmark {
         return s.toString();
     }
 
+    public String[] toCSV() {
+        return new String[]{
+            String.join(",",timerStore.keySet()),
+            String.join(",",timerStore.values().stream().map(x -> String.valueOf(x.getMillisecondsPerCall())).toList())
+        };
+    }
+
     public static void main(String[] args){
         Benchmark b = getInstance();
         b.printTimer(10);
