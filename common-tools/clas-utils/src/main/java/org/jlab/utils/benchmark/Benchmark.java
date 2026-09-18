@@ -7,7 +7,6 @@ import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 import org.jlab.utils.benchmark.BenchmarkTimer.BenchmarkMultiTimer;
-import org.jlab.utils.benchmark.BenchmarkTimer.BenchmarkTimerTotal;
 
 /**
  *
@@ -74,13 +73,6 @@ public class Benchmark {
         return timerStore.getOrDefault(name, null);
     }
 
-    public BenchmarkTimer getTotal(String name) {
-        BenchmarkTimerTotal total = new BenchmarkTimerTotal(name);
-        for (BenchmarkTimer b : timerStore.values())
-            total.add(b);
-        return total;
-    }
-
     @Override
     public String toString(){
         StringBuilder s = new StringBuilder();
@@ -100,13 +92,18 @@ public class Benchmark {
                 s.append(b);
                 s.append("   *\n");
             }
-            s.append("*   ");
-            s.append(getTotal(""));
-            s.append("   *\n");
             s.append(margins);
             s.append("\n");
         }
         return s.toString();
+    }
+
+    public String[] toCSV() {
+        return new String[]{
+            String.join(",",timerStore.keySet()) + ",TOTAL",
+            String.join(",",timerStore.values().stream().map(x -> String.valueOf(x.getMillisecondsPerCall())).toList())
+                + "," + timerStore.values().stream().mapToDouble(x -> x.getMillisecondsPerCall()).sum()
+        };
     }
 
     public static void main(String[] args){

@@ -36,6 +36,7 @@ public class BenchmarkTimer {
         }
     }
 
+<<<<<<< HEAD
     public static class BenchmarkTimerTotal extends BenchmarkMultiTimer {
         ArrayList<BenchmarkTimer> benchmarks = new ArrayList<>();
         public BenchmarkTimerTotal(String name) { super(name); }
@@ -46,6 +47,8 @@ public class BenchmarkTimer {
         }
     }
 
+=======
+>>>>>>> a3d7828a8 (remove bogus total timer)
     private String timerName = "generic";
     private long timeAtResume = 0;
     private Boolean isPaused = true;
