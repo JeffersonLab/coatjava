@@ -194,7 +194,7 @@ public class StruckScalers extends ArrayList<StruckScaler> {
      * @param interval the type of helicity interval to preserve
      */
     private void strip(HelicityInterval interval) {
-        for (int ii=0; ii<this.size(); ii++) {
+        for (int ii=this.size()-1; ii>=0; ii--) {
             if (this.get(ii).getHelicityInterval(this.helTable) != interval) {
                 this.remove(ii);
             }
