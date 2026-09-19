@@ -18,7 +18,7 @@ public class Benchmark {
     private final Map<String,BenchmarkMultiTimer> timerStore = new LinkedHashMap<>();
     private Timer updateTimer = null;
     
-    private Benchmark() {}
+    public Benchmark() {}
     
     public static Benchmark getInstance(){
         return benchmarkInstance;
@@ -92,6 +92,11 @@ public class Benchmark {
                 s.append(b);
                 s.append("   *\n");
             }
+            s.append(String.format("*   %-15s : #Calls %12.2f, Total = %12.2f sec, Unit = %12.3f msec   *\n",
+                 "TOTAL",
+                 ((float)timers.stream().mapToInt(x -> x.numberOfCalls.get()).sum())/timers.size(),
+                 timers.stream().mapToDouble(x -> x.getSeconds()).sum(),
+                 timers.stream().mapToDouble(x -> x.getMillisecondsPerCall()).sum()));
             s.append(margins);
             s.append("\n");
         }
@@ -106,16 +111,4 @@ public class Benchmark {
         };
     }
 
-    public static void main(String[] args){
-        Benchmark b = getInstance();
-        b.printTimer(10);
-        int loop = 0;
-        while(true){
-            b.resume("COUNT");
-            loop++;
-            b.pause("COUNT");
-            try { Thread.sleep(2000); }
-            catch (InterruptedException ex) {}
-        }
-    }
 }
