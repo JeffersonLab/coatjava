@@ -92,6 +92,11 @@ public class Benchmark {
                 s.append(b);
                 s.append("   *\n");
             }
+	    s.append(String.format("*   %-15s : #Calls %12.2f, Total = %12.2f sec, Unit = %12.3f msec   *\n",
+                 "TOTAL",
+                 ((float)timers.stream().mapToInt(x -> x.numberOfCalls.get()).sum())/timers.size(),
+                 timers.stream().mapToDouble(x -> x.getSeconds()).sum(),
+                 timers.stream().mapToDouble(x -> x.getMillisecondsPerCall()).sum()));
             s.append(margins);
             s.append("\n");
         }
