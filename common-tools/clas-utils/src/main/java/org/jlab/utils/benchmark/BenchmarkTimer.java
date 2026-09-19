@@ -83,13 +83,14 @@ public class BenchmarkTimer {
         return totalTime.get() / 1.0e9;
     }
     
+    public double getMillisecondsPerCall() {
+        return numberOfCalls.get() > 0 ? getMilliseconds() / numberOfCalls.get() : 0;
+    }
+
     @Override
     public String toString() {
         return String.format("%-15s : #Calls %12d, Total = %12.2f sec, Unit = %12.3f msec",
             getName(), numberOfCalls.get(), getSeconds(), getMillisecondsPerCall());
     }
 
-    public double getMillisecondsPerCall() {
-        return numberOfCalls.get() > 0 ? getMilliseconds() / numberOfCalls.get() : 0;
-    }
 }
