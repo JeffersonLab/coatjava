@@ -111,16 +111,4 @@ public class Benchmark {
         };
     }
 
-    public static void main(String[] args){
-        Benchmark b = getInstance();
-        b.printTimer(10);
-        int loop = 0;
-        while(true){
-            b.resume("COUNT");
-            loop++;
-            b.pause("COUNT");
-            try { Thread.sleep(2000); }
-            catch (InterruptedException ex) {}
-        }
-    }
 }
