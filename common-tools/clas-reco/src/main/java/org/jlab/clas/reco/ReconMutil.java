@@ -49,6 +49,7 @@ final class ReconMutil {
     int skipEvents;
     ClaraYaml yaml;
     OptionParser parser;
+    double[] fields;
 
     // File I/O:
     Object reader;
@@ -118,9 +119,8 @@ final class ReconMutil {
             CompletableFuture.runAsync(() -> { rethreader(BENCH_SECONDS,threads); });
 
         // wait for finish:
-        while (!writerThread.isDone() && (rethreadThread == null || !rethreadThread.isDone())) {
-            ReconUtil.sleep(5000);
-        }
+        writerThread.join();
+        if (rethreadThread != null) rethreadThread.join();
     }
 
     /**
@@ -258,10 +258,8 @@ final class ReconMutil {
         while (true) {
             List<Event> e = writeQueue.poll();
             if (e == null) {
-                if (decoThreads.isEmpty() && procThreads.isEmpty() && procQueue.isEmpty() && writeQueue.isEmpty()) {
-                    close();
+                if (decoThreads.isEmpty() && procThreads.isEmpty() && procQueue.isEmpty() && writeQueue.isEmpty())
                     break;
-                }
                 ReconUtil.sleep(1000);
             }
             else {
@@ -285,6 +283,7 @@ final class ReconMutil {
                 writeEvents += e.size();
             }
         }
+        close();
     }
 
     /**
@@ -346,7 +345,9 @@ final class ReconMutil {
         benchmark.pause(thread, "evio");
         benchmark.resume(thread, "deco");
         CLASDecoder d = decoders.poll();
-        HipoDataEvent hipo = d.getDecodedDataEvent(evio);
+        HipoDataEvent hipo = fields != null ?
+                d.getDecodedDataEvent(evio, fields[0], fields[1]) :
+                d.getDecodedDataEvent(evio);
         decoders.offer(d);
         benchmark.pause(thread, "deco");
         return hipo;
@@ -489,11 +490,18 @@ final class ReconMutil {
         }
         else {
             for (String line : ReconUtil.readResourceLines("org/jlab/clas/reco/services.txt"))
-                ReconUtil.addEngine(engines, line.split(" ")[0],line.split(" ")[1],null);
+                ReconUtil.addEngine(engines, line.split(" ")[0], line.split(" ")[1], null);
         }
         if (!parser.getOption("-B").isDefault()) {
-            ReconstructionEngine bg = ReconUtil.addEngine(engines, "BG","org.jlab.service.bg.BackgroundEngine",null);
+            ReconstructionEngine bg = ReconUtil.addEngine(engines, "BG", "org.jlab.service.bg.BackgroundEngine", null);
             bg.engineConfigMap.put("filename",parser.getOption("-B").stringValue());
+        }
+        if (!parser.getOption("-f").isDefault()) {
+            try {
+                fields = Arrays.stream(parser.getOption("-f").stringValue()
+                .split(",")).mapToDouble(s -> Double.parseDouble(s)).toArray();
+            }
+            catch (Exception e) { System.err.println("invalid -f:  "+parser.getOption("-f").stringValue()); }
         }
     }
 
@@ -501,10 +509,10 @@ final class ReconMutil {
      * Print the thread, queue, and event states.
      */
     void show() {
-        String s1 = String.format("threads(r/d/p/w)=(%b/%d/%d/%b)",
-                !readerThread.isDone(), decoThreads.size(), procThreads.size(), !writerThread.isDone());
+        String s1 = String.format("threads(r/d/p/w)=(%b/%b:%d/%b:%d/%b)",
+                !readerThread.isDone(), !ReconUtil.isDone(decoThreads),decoThreads.size(), !ReconUtil.isDone(procThreads),procThreads.size(), !writerThread.isDone());
         String s2 = String.format(" queues(d/p/w)=(%d/%d/%d)",
-                decoQueue.size(), procQueue.size(), writeQueue.size());
+                decoQueue.size()*EVENTS_PER_CHUNK, procQueue.size()*EVENTS_PER_CHUNK, writeQueue.size()*EVENTS_PER_CHUNK);
         String s3 = String.format(" events(r/w/t/f)=(%d/%d/%d/%d)",
                 readEvents, writeEvents, taggedEvents.get(), failEvents);
         Logger.getLogger(ReconMutil.class.getName()).log(Level.INFO, () -> s1+" "+s2+" "+s3);
@@ -514,12 +522,12 @@ final class ReconMutil {
      * Periodically print the thread, queue, and event states.
      * @param seconds 
      */
-    public Timer showPeriodic(int seconds) {
-        Timer t = new Timer("Benchmark", true);
+    public Timer showPeriodic(double seconds) {
+        Timer t = new Timer("timer", true);
         t.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() { show() ;}
-        }, 0, 1000*seconds);
+        }, 0, (int)(1000*seconds));
         return t;
     }
 
@@ -532,9 +540,11 @@ final class ReconMutil {
         o.removeOption("-i");
         o.removeOption("-o");
         o.removeOption("-c");
+        o.removeOption("-P");
         o.addOption("-t","4","number of threads");
         o.addOption("-o", null, "output file name");
         o.addOption("-c","2","comma-separated engine list");
+        o.addOption("-f",null,"solenoid and torus field scales, comma-separated");
         o.setRequiresInputList(true);
         o.parse(args);
         ReconMutil r = new ReconMutil(o);
