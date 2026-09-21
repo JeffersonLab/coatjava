@@ -120,7 +120,7 @@ public class Benchmark implements Comparator<String> {
         };
     }
 
-    public void sortHeaders() {
+    public void sortByName() {
         List<String> keys = new ArrayList<>(timerStore.keySet());
         Collections.sort(keys, this);
         Map<String,BenchmarkMultiTimer> timers = new LinkedHashMap<>();
