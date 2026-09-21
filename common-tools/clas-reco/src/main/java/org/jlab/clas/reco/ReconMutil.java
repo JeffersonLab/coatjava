@@ -119,9 +119,7 @@ final class ReconMutil {
 
         // wait for finish:
         while (!writerThread.isDone() && (rethreadThread == null || !rethreadThread.isDone())) {
-            ReconUtil.sleep(100);
-            //for (CompletableFuture f : decoThreads) if (f.isDone()) decoThreads.remove(f);
-            //for (CompletableFuture f : procThreads) if (f.isDone()) procThreads.remove(f);
+            ReconUtil.sleep(5000);
         }
     }
 
@@ -325,6 +323,7 @@ final class ReconMutil {
             String[] csv = benches.get(thread).toCSV();
             System.out.println("threads,"+csv[0]+"\n"+thread+","+csv[1]);
         }
+        stopProcessing();
     }
 
     void updateHelicity() {
@@ -437,8 +436,8 @@ final class ReconMutil {
      */
     void reset() {
         serialPause.set(true);
-        for (CompletableFuture f : procThreads) f.cancel(true);
-        for (CompletableFuture f : decoThreads) f.cancel(true);
+        ReconUtil.cancel(decoThreads);
+        ReconUtil.cancel(procThreads);
         if (readerThread != null) readerThread.cancel(true);
         if (writerThread != null) {
             writerThread.cancel(true);
@@ -454,13 +453,15 @@ final class ReconMutil {
     }
 
     /**
-     * Stop processing cleanly.
+     * Stop processing, somewhat cleanly.
      */
     void stopProcessing() {
+        if (readerThread != null) readerThread.cancel(true);
         ReconUtil.cancel(decoThreads);
         ReconUtil.cancel(procThreads);
         decoQueue.clear();
         procQueue.clear();
+        writeQueue.clear();
     }
     
     /**
