@@ -390,24 +390,6 @@ public class EngineProcessor {
         }
     }
 
-    protected static OptionParser getParser() {
-        OptionParser parser = new OptionParser("recon-util");
-        parser.addRequired("-o","output.hipo");
-        parser.addRequired("-i","input.evio/hipo");
-        parser.setRequiresInputList(false);
-        parser.addOption("-c","0","use default configuration [0 - no, 1 - yes/default, 2 - all services] ");
-        parser.addOption("-s","0","number of events to skip");
-        parser.addOption("-n","0","number of events to process");
-        parser.addOption("-y","0","yaml file");
-        parser.addOption("-u","true","update dictionary from writer ? ");
-        parser.addOption("-S",null,"schema directory");
-        parser.addOption("-B",null,"background file");
-        parser.addOption("-P",null,"preload file for post-processing");
-        parser.addOption("-R","0","rebuild scalers");
-        parser.addOption("-H","0","restream helicity");
-        return parser;
-    }
-
     protected final void init(OptionParser p) {
         p.syncLogLevel(LOGGER);
 
@@ -449,7 +431,7 @@ public class EngineProcessor {
     }
 
      public static void main(String[] args) {
-        OptionParser parser = EngineProcessor.getParser();
+        OptionParser parser = ReconUtil.getParser();
         parser.parse(args);
         EngineProcessor proc = new EngineProcessor(parser);
         proc.processFile(parser.getOption("-i").stringValue(),

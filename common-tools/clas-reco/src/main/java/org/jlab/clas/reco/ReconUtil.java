@@ -18,10 +18,29 @@ import org.jlab.jnp.hipo4.data.Bank;
 import org.jlab.jnp.hipo4.data.SchemaFactory;
 import org.jlab.utils.ClaraYaml;
 import org.jlab.utils.options.OptionParser;
+import org.jlab.utils.options.OptionValue;
 import org.jlab.utils.system.ClasUtilsFile;
 import org.json.JSONObject;
 
 public class ReconUtil {
+
+    static OptionParser getParser() {
+        OptionParser parser = new OptionParser("recon-util");
+        parser.addRequired("-o","output.hipo");
+        parser.addRequired("-i","input.evio/hipo");
+        parser.setRequiresInputList(false);
+        parser.addOption("-c","0","use default configuration [0 - no, 1 - yes/default, 2 - all services] ");
+        parser.addOption("-s","0","number of events to skip");
+        parser.addOption("-n","0","number of events to process");
+        parser.addOption("-y","0","yaml file");
+        parser.addOption("-u","true","update dictionary from writer ? ");
+        parser.addOption("-S",null,"schema directory");
+        parser.addOption("-B",null,"background file");
+        parser.addOption("-P",null,"preload file for post-processing");
+        parser.addOption("-R","0","rebuild scalers");
+        parser.addOption("-H","0","restream helicity");
+        return parser;
+    }
 
     /**
      * Get a new schema factory, potentially filtered based on yaml.
@@ -29,10 +48,10 @@ public class ReconUtil {
      * @param yaml
      * @return
      */
-    static SchemaFactory getSchemaFactory(OptionParser parser, ClaraYaml yaml) {
+    static SchemaFactory getSchemaFactory(OptionValue opt, ClaraYaml yaml) {
         SchemaFactory ret = new SchemaFactory();
         SchemaFactory stock = new SchemaFactory();
-        stock.initFromDirectory(getSchemaDirectory(parser, yaml));
+        stock.initFromDirectory(getSchemaDirectory(opt, yaml));
         if (yaml == null) {
             ret.copy(stock);
         } else {
@@ -52,12 +71,12 @@ public class ReconUtil {
      * @param yaml
      * @return the chosen schema directory
      */
-    static String getSchemaDirectory(OptionParser parser, ClaraYaml yaml) {
+    static String getSchemaDirectory(OptionValue opt, ClaraYaml yaml) {
         String d = ClasUtilsFile.getResourceDir("CLAS12DIR", "etc/bankdefs/hipo4");
         if (yaml != null && yaml.getSchemaDirectory() != null)
             d = yaml.getSchemaDirectory();
-        if (!parser.getOption("-S").isDefault())
-            d = parser.getOption("-S").stringValue();
+        if (opt != null)
+            d = opt.stringValue();
         return d;
     }
 
