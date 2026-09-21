@@ -115,8 +115,8 @@ public class Benchmark implements Comparator<String> {
     public String[] toCSV() {
         return new String[]{
             String.join(",",timerStore.keySet()) + ",TOTAL",
-            String.join(",",timerStore.values().stream().map(x -> String.valueOf(x.getMillisecondsPerCall())).toList())
-                + "," + timerStore.values().stream().mapToDouble(x -> x.getMillisecondsPerCall()).sum()
+            String.join(",",timerStore.values().stream().map(x -> String.format("%.2f",x.getMillisecondsPerCall())).toList())
+                + "," + String.format("%.2f",timerStore.values().stream().mapToDouble(x -> x.getMillisecondsPerCall()).sum())
         };
     }
 
