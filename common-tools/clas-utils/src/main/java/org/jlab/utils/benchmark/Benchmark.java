@@ -1,8 +1,12 @@
 package org.jlab.utils.benchmark;
 
 import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -12,14 +16,19 @@ import org.jlab.utils.benchmark.BenchmarkTimer.BenchmarkMultiTimer;
  *
  * @author gavalian
  */
-public class Benchmark {
-    
+public class Benchmark implements Comparator<String> {
+   
     private static final Benchmark benchmarkInstance = new Benchmark();
-    private final Map<String,BenchmarkMultiTimer> timerStore = new LinkedHashMap<>();
+    private Map<String,BenchmarkMultiTimer> timerStore = new LinkedHashMap<>();
     private Timer updateTimer = null;
+    private final ArrayList<String> specials = new ArrayList<>();
     
     public Benchmark() {}
-    
+
+    public Benchmark(String[] specials) {
+        this.specials.addAll(Arrays.asList(specials));
+    }
+
     public static Benchmark getInstance(){
         return benchmarkInstance;
     }
@@ -111,4 +120,22 @@ public class Benchmark {
         };
     }
 
+    public void sortHeaders() {
+        List<String> keys = new ArrayList<>(timerStore.keySet());
+        Collections.sort(keys, this);
+        Map<String,BenchmarkMultiTimer> timers = new LinkedHashMap<>();
+        for (String s : keys)
+            timers.put(s, timerStore.get(s));
+        timerStore = timers;
+    }
+
+    @Override
+    public int compare(String s1, String s2) {
+        if (specials.contains(s1)) {
+            return specials.contains(s2) ? s1.compareTo(s2) : -1;
+        } else {
+            return specials.contains(s2) ? 1 : s1.compareTo(s2);
+        }
+    }
+    
 }
