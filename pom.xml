@@ -355,7 +355,8 @@
               <goal>tree</goal>
               <goal>analyze-only</goal>
             </goals>
-            <configuration>
+	    <configuration>
+	      <outputFile>maven-dependency-tree.txt</outputFile>
               <failOnWarning>true</failOnWarning>
               <!-- ignore certain "unused but declared" warnings -->
               <ignoredUnusedDeclaredDependencies>
