@@ -4,19 +4,15 @@
 # and input data files at ./data
 
 # set up environment
-CLARA_HOME=$PWD/../../clara/ ; export CLARA_HOME
-COAT=$CLARA_HOME/plugins/clas12/
-
-# source coatjava environment
-source $COAT/libexec/env.sh
+source $PWD/../../coatjava/libexec/env.sh
 classPath="${COATJAVA_CLASSPATH}:../lib/*:src/"
 
 # run reconstruction
-$COAT/bin/recon-mutil -t 4 -y $COAT/etc/services/kpp.yaml -o rec_twoTrackEvents_809.hipo data/twoTrackEvents_809_raw.evio
+recon-mutil -f 0,-0.5 -t 4 -y $CLAS12DIR/etc/services/kpp.yaml -o rec_twoTrackEvents_809.hipo data/twoTrackEvents_809_raw.evio
 [ $? -ne 0 ] && echo "recon-mutil failure" && exit 1
 
 # take a peek
-$COAT/bin/hipo-utils -stats ./rec_twoTrackEvents_809.hipo
+hipo-utils -stats ./rec_twoTrackEvents_809.hipo
 [ $? -ne 0 ] && echo "recon-utils failure" && exit 2
 
 # compile test codes
@@ -24,7 +20,7 @@ javac -cp $classPath src/kpptracking/KppTrackingTest.java
 [ $? -ne 0 ] && echo "KppTrackingTest compilation failure" && exit 3
 
 # run KppTracking junit tests
-java -DCLAS12DIR="$COAT" -Xmx1536m -Xms1024m -cp $classPath org.junit.runner.JUnitCore kpptracking.KppTrackingTest
+java -Xmx1536m -Xms1024m -cp $classPath org.junit.runner.JUnitCore kpptracking.KppTrackingTest
 [ $? -ne 0 ] && echo "KppTracking unit test failure" && exit 4
 
 echo "KppTracking passed unit tests"
