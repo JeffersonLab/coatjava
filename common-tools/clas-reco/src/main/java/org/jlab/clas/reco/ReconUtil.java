@@ -17,7 +17,6 @@ import org.jlab.clara.engine.EngineDataType;
 import org.jlab.jnp.hipo4.data.Bank;
 import org.jlab.jnp.hipo4.data.SchemaFactory;
 import org.jlab.utils.ClaraYaml;
-import org.jlab.utils.benchmark.Benchmark;
 import org.jlab.utils.options.OptionParser;
 import org.jlab.utils.system.ClasUtilsFile;
 import org.json.JSONObject;
@@ -139,11 +138,20 @@ public class ReconUtil {
         }
         return lines;
     }
-   
+  
+    /**
+     * Check whether any of the given futures are still running.
+     * @param queue
+     * @return whether any are still running
+     */
     static boolean isDone(ConcurrentLinkedQueue<CompletableFuture> queue) {
         return queue.stream().filter(f -> !f.isDone()).toList().isEmpty();
     }
 
+    /**
+     * Forcefully cancel and remove all given futures from their queue.
+     * @param queue
+     */
     static void cancel(ConcurrentLinkedQueue<CompletableFuture> queue) {
         for (CompletableFuture f : queue) {
             f.cancel(true);
