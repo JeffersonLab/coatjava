@@ -15,7 +15,7 @@ import org.jlab.utils.benchmark.BenchmarkTimer.BenchmarkMultiTimer;
 public class Benchmark {
     
     private static final Benchmark benchmarkInstance = new Benchmark();
-    protected final Map<String,BenchmarkMultiTimer> timerStore = new LinkedHashMap<>();
+    private final Map<String,BenchmarkMultiTimer> timerStore = new LinkedHashMap<>();
     private Timer updateTimer = null;
     
     public Benchmark() {}
