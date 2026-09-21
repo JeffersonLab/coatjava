@@ -75,7 +75,7 @@ public class ReconUtil {
         String d = ClasUtilsFile.getResourceDir("CLAS12DIR", "etc/bankdefs/hipo4");
         if (yaml != null && yaml.getSchemaDirectory() != null)
             d = yaml.getSchemaDirectory();
-        if (opt != null)
+        if (opt.stringValue() != null)
             d = opt.stringValue();
         return d;
     }
