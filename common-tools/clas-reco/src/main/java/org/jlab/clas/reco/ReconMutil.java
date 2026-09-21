@@ -214,13 +214,6 @@ final class ReconMutil {
         if (thread == 0) updateHelicity();
     }
 
-    void stopProcessing() {
-        ReconUtil.cancel(decoThreads);
-        ReconUtil.cancel(procThreads);
-        decoQueue.clear();
-        procQueue.clear();
-    }
-    
     /**
      * The data processor thread.
      * @param thread thread number 
@@ -460,6 +453,16 @@ final class ReconMutil {
         taggedEvents.set(0);
     }
 
+    /**
+     * Stop processing cleanly.
+     */
+    void stopProcessing() {
+        ReconUtil.cancel(decoThreads);
+        ReconUtil.cancel(procThreads);
+        decoQueue.clear();
+        procQueue.clear();
+    }
+    
     /**
      * Initialize ReconMutil.
      * @param parser 
