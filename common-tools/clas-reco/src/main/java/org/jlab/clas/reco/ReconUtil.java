@@ -8,6 +8,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.jlab.clara.engine.EngineData;
@@ -130,6 +132,19 @@ public class ReconUtil {
             System.getLogger(ReconMutil.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
         }
         return lines;
+    }
+    
+    static boolean isDone(ConcurrentLinkedQueue<CompletableFuture> queue) {
+        for (CompletableFuture f : queue)
+            if (!f.isDone()) return false;
+        return true;
+    }
+
+    static void cancel(ConcurrentLinkedQueue<CompletableFuture> queue) {
+        for (CompletableFuture f : queue) {
+            f.cancel(true);
+            queue.remove(f);
+        }
     }
     
 }

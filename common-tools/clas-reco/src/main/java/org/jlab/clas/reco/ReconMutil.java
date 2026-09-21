@@ -302,11 +302,11 @@ final class ReconMutil {
             final int j = i;
             decoThreads.offer(CompletableFuture.runAsync(() -> { decoder(j); }));
         }
-        while (writeEvents < 100 || !isDone(decoThreads))
+        while (writeEvents < 100 || !ReconUtil.isDone(decoThreads))
             ReconUtil.sleep(1000);
         System.out.println("recon-mutil::  ~~~~~~~~~ rethreading primed ~~~~~~~~~");
         for (int i=0; i<threads.length; i++) {
-            cancel(procThreads);
+            ReconUtil.cancel(procThreads);
             benchmark = new Benchmark();
             for (int j=0; j<threads[i]; j++) {
                 final int k = j;
@@ -526,19 +526,6 @@ final class ReconMutil {
         r.launch(Arrays.stream(o.getOption("-t").stringValue().split(",")).mapToInt(Integer::parseInt).toArray(), 
                 o.getOption("-o").stringValue(),
                 o.getInputList().stream().toArray(String[]::new));
-    }
-    
-    static boolean isDone(ConcurrentLinkedQueue<CompletableFuture> queue) {
-        for (CompletableFuture f : queue)
-            if (!f.isDone()) return false;
-        return true;
-    }
-
-    static void cancel(ConcurrentLinkedQueue<CompletableFuture> queue) {
-        for (CompletableFuture f : queue) {
-            f.cancel(true);
-            queue.remove(f);
-        }
     }
     
 }
