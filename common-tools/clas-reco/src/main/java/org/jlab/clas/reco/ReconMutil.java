@@ -380,7 +380,7 @@ final class ReconMutil {
     HipoWriterSorted open(String filename, ClaraYaml yaml) {
         HipoWriterSorted writer = new HipoWriterSorted();
         writer.setCompressionType(2);
-        SchemaFactory s = ReconUtil.getSchemaFactory(parser, yaml);
+        SchemaFactory s = ReconUtil.getSchemaFactory(parser.getOption("-S"), yaml);
         writer.getSchemaFactory().copy(s);
         schemaBankList = ReconUtil.getBankList(s, yaml);
         writer.open(filename);
@@ -514,13 +514,12 @@ final class ReconMutil {
      * Periodically print the thread, queue, and event states.
      * @param seconds 
      */
-    public Timer showPeriodic(int seconds){
-        TimerTask timerTask = new TimerTask() { 
-            @Override
-            public void run() { show(); }
-        };
+    public Timer showPeriodic(int seconds) {
         Timer t = new Timer("Benchmark", true);
-        t.scheduleAtFixedRate(timerTask, 0, 1000*seconds);
+        t.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() { show() ;}
+        }, 0, 1000*seconds);
         return t;
     }
 
@@ -529,7 +528,7 @@ final class ReconMutil {
      * @param args command-line arguments
      */
     public static void main(String[] args) {
-        OptionParser o = EngineProcessor.getParser();
+        OptionParser o = ReconUtil.getParser();
         o.removeOption("-i");
         o.removeOption("-o");
         o.removeOption("-c");
