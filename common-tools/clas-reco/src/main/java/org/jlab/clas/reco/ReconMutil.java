@@ -7,10 +7,13 @@ import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.jlab.coda.jevio.EvioException;
 import org.jlab.detector.decode.CLASDecoder;
@@ -108,16 +111,17 @@ final class ReconMutil {
             procThreads.offer(CompletableFuture.runAsync(() -> { processer(j); }));
         }
 
+        showPeriodic(10);
+        
         // perform scaling test:
         CompletableFuture rethreadThread = threads.length < 2 ? null :
             CompletableFuture.runAsync(() -> { rethreader(BENCH_SECONDS,threads); });
 
         // wait for finish:
         while ((rethreadThread == null || !rethreadThread.isDone()) && !writerThread.isDone() ) {
+            ReconUtil.sleep(100);
             for (CompletableFuture f : decoThreads) if (f.isDone()) decoThreads.remove(f);
             for (CompletableFuture f : procThreads) if (f.isDone()) procThreads.remove(f);
-            ReconUtil.sleep(1000);
-            show();
         }
     }
 
@@ -487,7 +491,21 @@ final class ReconMutil {
                 decoQueue.size(), procQueue.size(), writeQueue.size());
         String s3 = String.format(" events(r/w/t/f)=(%d/%d/%d/%d)",
                 readEvents, writeEvents, taggedEvents.get(), failEvents);
-        System.out.println("recon-mutil::  "+s1+" "+s2+" "+s3);
+        Logger.getLogger(ReconMutil.class.getName()).log(Level.INFO, s1+" "+s2+" "+s3);
+    }
+   
+    /**
+     * Periodically print the thread, queue, and event states.
+     * @param seconds 
+     */
+    public Timer showPeriodic(int seconds){
+        TimerTask timerTask = new TimerTask() { 
+            @Override
+            public void run() { show(); }
+        };
+        Timer t = new Timer("Benchmark", true);
+        t.scheduleAtFixedRate(timerTask, 0, 1000*seconds);
+        return t;
     }
 
     /**
