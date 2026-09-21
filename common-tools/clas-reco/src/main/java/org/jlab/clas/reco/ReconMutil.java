@@ -491,7 +491,7 @@ final class ReconMutil {
                 decoQueue.size(), procQueue.size(), writeQueue.size());
         String s3 = String.format(" events(r/w/t/f)=(%d/%d/%d/%d)",
                 readEvents, writeEvents, taggedEvents.get(), failEvents);
-        Logger.getLogger(ReconMutil.class.getName()).log(Level.INFO, s1+" "+s2+" "+s3);
+        Logger.getLogger(ReconMutil.class.getName()).log(Level.INFO, () -> s1+" "+s2+" "+s3);
     }
    
     /**
