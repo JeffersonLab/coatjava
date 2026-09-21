@@ -17,6 +17,7 @@ import org.jlab.clara.engine.EngineDataType;
 import org.jlab.jnp.hipo4.data.Bank;
 import org.jlab.jnp.hipo4.data.SchemaFactory;
 import org.jlab.utils.ClaraYaml;
+import org.jlab.utils.benchmark.Benchmark;
 import org.jlab.utils.options.OptionParser;
 import org.jlab.utils.system.ClasUtilsFile;
 import org.json.JSONObject;
@@ -122,6 +123,11 @@ public class ReconUtil {
         catch (InterruptedException ex) {}
     }
 
+    /**
+     * Just get the contents of a text file resource.
+     * @param resource
+     * @return 
+     */
     static List<String> readResourceLines(String resource) {
         List<String> lines = new ArrayList<>();
         InputStream is = ReconMutil.class.getClassLoader().getResourceAsStream(resource);
@@ -133,11 +139,9 @@ public class ReconUtil {
         }
         return lines;
     }
-    
+   
     static boolean isDone(ConcurrentLinkedQueue<CompletableFuture> queue) {
-        for (CompletableFuture f : queue)
-            if (!f.isDone()) return false;
-        return true;
+        return queue.stream().filter(f -> !f.isDone()).toList().isEmpty();
     }
 
     static void cancel(ConcurrentLinkedQueue<CompletableFuture> queue) {
@@ -146,5 +150,5 @@ public class ReconUtil {
             queue.remove(f);
         }
     }
-    
+   
 }

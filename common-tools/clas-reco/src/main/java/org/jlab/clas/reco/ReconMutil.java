@@ -42,7 +42,7 @@ final class ReconMutil {
 
     // Performance parameters:
     final int BENCH_SECONDS = 30;
-    final int EVENTS_PER_CHUNK = 10;
+    final int EVENTS_PER_CHUNK = 20;
 
     // Static parameters:
     int maxEvents;
@@ -81,7 +81,7 @@ final class ReconMutil {
     volatile int writeEvents;
     volatile AtomicInteger taggedEvents = new AtomicInteger();
     volatile ProgressPrintout progress = new ProgressPrintout();
-    volatile Benchmark benchmark = new Benchmark();
+    volatile Benchmark benchmark = new Benchmark(new String[]{"evio","deco","serial","post","write"});
 
     // Control flags:
     final AtomicBoolean serialPause = new AtomicBoolean(true);
@@ -118,10 +118,10 @@ final class ReconMutil {
             CompletableFuture.runAsync(() -> { rethreader(BENCH_SECONDS,threads); });
 
         // wait for finish:
-        while ((rethreadThread == null || !rethreadThread.isDone()) && !writerThread.isDone() ) {
+        while (!writerThread.isDone() && (rethreadThread == null || !rethreadThread.isDone())) {
             ReconUtil.sleep(100);
-            for (CompletableFuture f : decoThreads) if (f.isDone()) decoThreads.remove(f);
-            for (CompletableFuture f : procThreads) if (f.isDone()) procThreads.remove(f);
+            //for (CompletableFuture f : decoThreads) if (f.isDone()) decoThreads.remove(f);
+            //for (CompletableFuture f : procThreads) if (f.isDone()) procThreads.remove(f);
         }
     }
 
@@ -214,6 +214,13 @@ final class ReconMutil {
         if (thread == 0) updateHelicity();
     }
 
+    void stopProcessing() {
+        ReconUtil.cancel(decoThreads);
+        ReconUtil.cancel(procThreads);
+        decoQueue.clear();
+        procQueue.clear();
+    }
+    
     /**
      * The data processor thread.
      * @param thread thread number 
@@ -221,7 +228,7 @@ final class ReconMutil {
     void processer(int thread) {
         while (true) {
             if (maxEvents > 0 && writeEvents > maxEvents+taggedEvents.get()) {
-                readerThread.cancel(true);
+                stopProcessing();
                 break;
             }
             List<HipoDataEvent> input = procQueue.poll();
@@ -297,30 +304,33 @@ final class ReconMutil {
     void rethreader(int seconds, int... threads) {
         System.out.println("recon-mutil::  ~~~~~~~~~ rethreading initiated ~~~~~~~~~");
         progress.setInterval(-1);
-        List<Benchmark> benches = new ArrayList<>();
+        Map<Integer,Benchmark> benches = new LinkedHashMap<>();
         for (int i=threads[0]; i<64; i++) {
             final int j = i;
             decoThreads.offer(CompletableFuture.runAsync(() -> { decoder(j); }));
         }
         while (writeEvents < 100 || !ReconUtil.isDone(decoThreads))
             ReconUtil.sleep(1000);
+        ReconUtil.cancel(procThreads);
         System.out.println("recon-mutil::  ~~~~~~~~~ rethreading primed ~~~~~~~~~");
-        for (int i=0; i<threads.length; i++) {
-            ReconUtil.cancel(procThreads);
-            benchmark = new Benchmark();
-            for (int j=0; j<threads[i]; j++) {
+        for (int thread : threads) {
+            ReconUtil.sleep(1000);
+            benchmark = new Benchmark(new String[]{"evio","deco","serial","post","write"});
+            for (int j=0; j<thread; j++) {
                 final int k = j;
                 procThreads.offer(CompletableFuture.runAsync(() -> { processer(k); }));
             }
             ReconUtil.sleep(seconds*1000);
-            System.out.println(String.format("\nrecon-mutil:: ~~~~~~~~~ rethreading count: %d ~~~~~~~~~\n",threads[i]));
+            ReconUtil.cancel(procThreads);
+            System.out.println(String.format("\nrecon-mutil:: ~~~~~~~~~ rethreading count: %d ~~~~~~~~~\n",thread));
             System.out.println(progress.getUpdateString());
             System.out.println(benchmark);
-            benches.add(benchmark);
-            benchmark = new Benchmark();
+            benches.put(thread, benchmark);
         }
-        for (Benchmark b : benches) {
-            System.out.println(String.join("\n",b.toCSV()));
+        for (int thread : benches.keySet()) {
+            benches.get(thread).sortHeaders();
+            String[] csv = benches.get(thread).toCSV();
+            System.out.println("threads,"+csv[0]+"\n"+thread+","+csv[1]);
         }
     }
 
@@ -355,6 +365,8 @@ final class ReconMutil {
      * @param filename 
      */
     void open(String filename) {
+        if (reader != null && reader instanceof EvioSource)
+            ((EvioSource)reader).close(); 
         fileEvents = 0;
         if (filename.endsWith(".hipo")) {
             reader = new HipoReader();
