@@ -12,7 +12,7 @@ source $COAT/libexec/env.sh
 classPath="${COATJAVA_CLASSPATH}:../lib/*:src/"
 
 # run reconstruction
-$COAT/bin/run-mutil -t 4 -y $COAT/etc/services/kpp.yaml -o rec_twoTrackEvents_809.hipo data/twoTrackEvents_809_raw.evio
+$COAT/bin/recon-mutil -t 4 -y $COAT/etc/services/kpp.yaml -o rec_twoTrackEvents_809.hipo data/twoTrackEvents_809_raw.evio
 [ $? -ne 0 ] && echo "recon-mutil failure" && exit 1
 
 # take a peek
