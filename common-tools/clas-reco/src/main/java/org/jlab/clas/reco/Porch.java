@@ -17,6 +17,11 @@ import org.jlab.io.hipo.HipoDataEvent;
 import org.jlab.utils.benchmark.Benchmark;
 import org.jlab.utils.benchmark.ProgressPrintout;
 
+/**
+ * A parallel orchestrator, pronounced "pork".
+ * 
+ * @author baltzell
+ */
 public abstract class Porch {
     
     // Performance parameters:
@@ -51,15 +56,6 @@ public abstract class Porch {
     volatile ProgressPrintout progress = new ProgressPrintout();
     volatile Benchmark benchmark = new Benchmark(new String[]{"evio","deco","serial","post","write"});
 
-    abstract Object open(String filename);
-    abstract Object read();
-    abstract HipoDataEvent[] decode(int thread, Object event);
-    abstract void process(int thread, HipoDataEvent event);
-    abstract void write(HipoDataEvent event);
-    abstract void readerExit(); 
-    abstract void decoderExit(int thread);
-    abstract void writerExit();
-
     /**
      * The thread launcher and collector.
      * @param threads number of threads
@@ -79,7 +75,7 @@ public abstract class Porch {
             ReconUtil.addAndRemove(decoThreads, CompletableFuture.runAsync(() -> { decoder(j); }));
             ReconUtil.addAndRemove(procThreads, CompletableFuture.runAsync(() -> { processor(j); }));
         }
-       
+
         // start a period status printout:
         showPeriodic(10);
         
@@ -297,4 +293,14 @@ public abstract class Porch {
         procQueue.clear();
         writeQueue.clear();
     }
+    
+    abstract Object open(String filename);
+    abstract Object read();
+    abstract HipoDataEvent[] decode(int thread, Object event);
+    abstract void process(int thread, HipoDataEvent event);
+    abstract void write(HipoDataEvent event);
+    abstract void readerExit(); 
+    abstract void decoderExit(int thread);
+    abstract void writerExit();
+
 }

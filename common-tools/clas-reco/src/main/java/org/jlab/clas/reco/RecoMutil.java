@@ -26,11 +26,31 @@ import org.jlab.utils.options.OptionParser;
 import org.jlab.utils.system.ClasUtilsFile;
 import org.json.JSONObject;
 
-/**
- *
- * @author baltzell
- */
-public class Furniture extends Porch {
+public class RecoMutil extends Porch {
+
+    /**
+     * The command-line entry-point known as "recon-mutil".
+     * @param args command-line arguments
+     */
+    public static void main(String[] args) {
+        OptionParser o = ReconUtil.getParser();
+        o.removeOption("-i");
+        o.removeOption("-o");
+        o.removeOption("-c");
+        o.removeOption("-P");
+        o.addOption("-t","4","number of threads");
+        o.addOption("-o", null, "output file name");
+        o.addOption("-c","2","comma-separated engine list");
+        o.addOption("-f",null,"field scales for torus and solenoid, comma-separated (T,S)");
+        o.setRequiresInputList(true);
+        o.parse(args);
+        RecoMutil f = new RecoMutil(o);
+        if (!o.getOption("-o").isDefault())
+            f.openWriter(o.getOption("-o").stringValue());
+        f.launch(Arrays.stream(o.getOption("-t").stringValue().split(",")).mapToInt(Integer::parseInt).toArray(), 
+                o.getOption("-o").stringValue(),
+                o.getInputList().stream().toArray(String[]::new));
+    }
 
     // Static parameters:
     ClaraYaml yaml;
@@ -58,7 +78,7 @@ public class Furniture extends Porch {
     int reloads = 0;
     int reload = minReload;
     
-    public Furniture(OptionParser parser) {
+    public RecoMutil(OptionParser parser) {
         init(parser);
     }
 
@@ -260,27 +280,4 @@ public class Furniture extends Porch {
         }
     }
 
-    /**
-     * The command-line entry-point known as "recon-mutil".
-     * @param args command-line arguments
-     */
-    public static void main(String[] args) {
-        OptionParser o = ReconUtil.getParser();
-        o.removeOption("-i");
-        o.removeOption("-o");
-        o.removeOption("-c");
-        o.removeOption("-P");
-        o.addOption("-t","4","number of threads");
-        o.addOption("-o", null, "output file name");
-        o.addOption("-c","2","comma-separated engine list");
-        o.addOption("-f",null,"field scales for torus and solenoid, comma-separated (T,S)");
-        o.setRequiresInputList(true);
-        o.parse(args);
-        Furniture f = new Furniture(o);
-        if (!o.getOption("-o").isDefault())
-            f.openWriter(o.getOption("-o").stringValue());
-        f.launch(Arrays.stream(o.getOption("-t").stringValue().split(",")).mapToInt(Integer::parseInt).toArray(), 
-                o.getOption("-o").stringValue(),
-                o.getInputList().stream().toArray(String[]::new));
-    }
 }
