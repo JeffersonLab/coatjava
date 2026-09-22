@@ -109,7 +109,7 @@ final class ReconMutil {
         for (int i=0; i<threads[0]; i++) {
             final int j = i;
             ReconUtil.addAndRemove(decoThreads, CompletableFuture.runAsync(() -> { decoder(j); }));
-            ReconUtil.addAndRemove(procThreads, CompletableFuture.runAsync(() -> { processer(j); }));
+            ReconUtil.addAndRemove(procThreads, CompletableFuture.runAsync(() -> { processor(j); }));
         }
        
         // start a period status printout:
@@ -217,7 +217,7 @@ final class ReconMutil {
      * The data processor thread.
      * @param thread thread number 
      */
-    void processer(int thread) {
+    void processor(int thread) {
         while (true) {
             if (maxEvents > 0 && writeEvents > maxEvents+taggedEvents.get()) {
                 stopProcessing();
@@ -232,7 +232,6 @@ final class ReconMutil {
                 ReconUtil.sleep(100);
             }
             else {
-                //if (rethreadThread != null && !rethreadThread.isDone()) readQueue.offer(o);
                 List<Event> output = new ArrayList<>(input.size());
                 for (int i=0; i<input.size(); i++) {
                     if (input.get(i).getHipoEvent().getEventTag() == 0) {
@@ -309,7 +308,7 @@ final class ReconMutil {
             benchmark = new Benchmark(new String[]{"evio","deco","serial","post","write"});
             for (int j=0; j<thread; j++) {
                 final int k = j;
-                ReconUtil.addAndRemove(procThreads, CompletableFuture.runAsync(() -> { processer(k); }));
+                ReconUtil.addAndRemove(procThreads, CompletableFuture.runAsync(() -> { processor(k); }));
             }
             ReconUtil.sleep(seconds*1000);
             for (CompletableFuture cf : procThreads) cf.cancel(true);
