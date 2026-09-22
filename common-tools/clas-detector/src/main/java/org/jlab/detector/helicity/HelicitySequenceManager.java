@@ -118,6 +118,28 @@ public final class HelicitySequenceManager {
         return this.search(rcfgBank.getInt("run",0),rcfgBank.getLong("timestamp",0),offset);
     }
 
+    /**
+     * @param runno run number
+     * @param timestamp TI timestamp
+     * @param offset number of states offset
+     * @return helicity for given run number and timestamp plus offset
+     */
+    public HelicityBit findClosest(int runno, long timestamp,int offset) {
+        if (seqMap.containsKey(runno)) return seqMap.get(runno).findClosest(timestamp,offset);
+        return HelicityBit.UDF;
+    }
+   
+    /**
+     * @param event HIPO event
+     * @param offset number of states offset
+     * @return helicity for given event plus offset
+     */
+    public HelicityBit findClosest(Event event,int offset) {
+        event.read(this.rcfgBank);
+        if (rcfgBank.getRows()<1) return HelicityBit.UDF;
+        return this.findClosest(rcfgBank.getInt("run",0),rcfgBank.getLong("timestamp",0),offset);
+    }
+
     public HelicityBit predictGenerated(int runno, long timestamp) {
         if (seqMap.containsKey(runno)) return seqMap.get(runno).predictGenerated(timestamp);
         return HelicityBit.UDF;

@@ -134,7 +134,27 @@ public final class HelicitySequenceDelayed extends HelicitySequence {
      * @return the helicity bit
      */
     public HelicityBit search(long timestamp,int offset) {
-        return this.get(super.searchIndex(timestamp)+offset);
+        int index = super.searchIndex(timestamp);
+        if(index>0)
+            return this.get(index+offset);
+        else
+            return HelicityBit.UDF;
+    }
+    
+    /**
+     * Get the delay-corrected state of a TI timestamp by finding the closest 
+     * timestamp in the measured sequence
+     * 
+     * @param timestamp TI-timestamp (i.e. RUN::config.timestamp)
+     * @param offset number of states offset
+     * @return the helicity bit
+     */
+    public HelicityBit findClosest(long timestamp,int offset) {
+        int index = super.findClosestIndex(timestamp);
+        if(index>0)
+            return this.get(index+offset);
+        else
+            return HelicityBit.UDF;
     }
 
     /**

@@ -53,11 +53,11 @@ public class SerialUtil {
             final int offset = bank.getRows() - row - 1 + readoutStateOffset;
 
             // Assign delay-corrected helicity to this HEL::scaler row:
-            bank.putByte("helicity",row,seq.search(event,offset).value());
+            bank.putByte("helicity",row,seq.findClosest(event,offset).value());
             if (seq.getHalfWavePlate(event))
-                bank.putByte("helicityRaw",0,(byte)(-1*seq.search(event,offset).value()));
+                bank.putByte("helicityRaw",0,(byte)(-1*seq.findClosest(event,offset).value()));
             else
-                bank.putByte("helicityRaw",0,seq.search(event,offset).value());
+                bank.putByte("helicityRaw",0,seq.findClosest(event,offset).value());
         }
     }
 
@@ -84,11 +84,11 @@ public class SerialUtil {
             final int offset = bank.getRows() - row - 1 + readoutStateOffset;
 
             // Assign delay-corrected helicity to this HEL::scaler row:
-            bank.putByte("helicity",row,seq.search(timestamp,offset).value());
+            bank.putByte("helicity",row,seq.findClosest(timestamp,offset).value());
             if (seq.getHalfWavePlate())
-                bank.putByte("helicityRaw",0,(byte)(-1*seq.search(timestamp,offset).value()));
+                bank.putByte("helicityRaw",0,(byte)(-1*seq.findClosest(timestamp,offset).value()));
             else
-                bank.putByte("helicityRaw",0,seq.search(timestamp,offset).value());
+                bank.putByte("helicityRaw",0,seq.findClosest(timestamp,offset).value());
         }
     }
 

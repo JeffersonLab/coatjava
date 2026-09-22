@@ -158,6 +158,24 @@ public class HelicitySequence {
         final int n = index<0 ? -index-2 : index;
         return n;
     }
+    
+    /**
+     * Get the state index of a TI timestamp, based on the closest timestamp
+     * within the measured sequence.
+     * This returns invalid (-1) if the timestamp is not contained within
+     * the range of measured states.
+     * @param timestamp TI timestamp (i.e. RUN::config.timestamp)
+     * @return index
+     */
+    protected final int findClosestIndex(long timestamp) {
+        int index = this.searchIndex(timestamp);
+        if(index<0 || index==this.size()-1)
+            return -1;
+        if(timestamp<(this.getTimestamp(index)+this.getTimestamp(index+1))/2)
+            return index;
+        else
+            return index+1;
+    }
    
     /**
      * Get the state index of a TI timestamp, based only on the first measured
@@ -224,9 +242,21 @@ public class HelicitySequence {
      * @return the helicity state, null if timestamp is outside of measured range
      */
     public HelicityBit search(long timestamp,int offset) {
-        final int index = this.searchIndex(timestamp)+offset;
+        final int index = this.searchIndex(timestamp);
         if (index < 0) return HelicityBit.UDF;
-        else return this.getState(index).getHelicity();
+        else return this.get(index+offset);
+    }
+
+    /**
+     * Find the state corresponding to a given timestamp in the measured sequence.
+     * @param timestamp TI timestamp (i.e. RUN::config.timestamp)
+     * @param offset number of states offset
+     * @return the helicity state, null if timestamp is outside of measured range
+     */
+    public HelicityBit findClosest(long timestamp,int offset) {
+        final int index = this.findClosestIndex(timestamp);
+        if (index < 0) return HelicityBit.UDF;
+        else return this.get(index+offset);
     }
 
     /**
