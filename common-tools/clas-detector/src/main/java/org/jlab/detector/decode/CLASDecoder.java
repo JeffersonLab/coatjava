@@ -802,7 +802,7 @@ public class CLASDecoder {
     }
 
     public HipoDataEvent getDecodedDataEvent(EvioDataEvent rawEvent, Double torus, Double solenoid) {
-        return new HipoDataEvent(getDecodedEvent(rawEvent, -1, -1, torus, solenoid));
+        return new HipoDataEvent(getDecodedEvent(rawEvent, -1, -1, torus, solenoid), schemaFactory);
     }
 
 }
