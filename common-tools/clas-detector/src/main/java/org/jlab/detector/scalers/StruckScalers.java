@@ -121,7 +121,7 @@ public class StruckScalers extends ArrayList<StruckScaler> {
         // ignore banks with more than the tegular 4 ( (tsettle+tstable) x (gated+ungated) ) readings 
         // or unbalance between gated/ungated readngs (allow difference by 1)
         if(this.size()>(Interval.values().length-1)*StruckScaler.NSLOT ||
-          Math.abs(this.count(StruckScaler.SLOT_GATED)-count(StruckScaler.SLOT_UNGATED))<=1)
+          Math.abs(this.count(StruckScaler.SLOT_GATED)-count(StruckScaler.SLOT_UNGATED))>1)
             this.clear();
     }
 
