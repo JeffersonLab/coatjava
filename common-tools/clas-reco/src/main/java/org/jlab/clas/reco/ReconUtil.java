@@ -168,22 +168,11 @@ public class ReconUtil {
     }
 
     /**
-     * Forcefully cancel and remove all given futures from their queue.
-     * @param queue
-     */
-    static void cancel(ConcurrentLinkedQueue<CompletableFuture> queue) {
-        for (CompletableFuture f : queue) {
-            f.cancel(true);
-            queue.remove(f);
-        }
-    }
-  
-    /**
      * Add a thread to the queue and make it remove itself when done.
      * @param queue
      * @param future 
      */
-    static void add(ConcurrentLinkedQueue<CompletableFuture> queue, CompletableFuture future) {
+    static void addAndRemove(ConcurrentLinkedQueue<CompletableFuture> queue, CompletableFuture future) {
         future.whenCompleteAsync((result,exception) -> { queue.remove(future); });
         queue.offer(future);
     }

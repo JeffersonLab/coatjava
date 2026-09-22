@@ -49,7 +49,7 @@ final class ReconMutil {
     int skipEvents;
     ClaraYaml yaml;
     OptionParser parser;
-    double[] fields;
+    double[] fields = null;
 
     // File I/O:
     Object reader;
@@ -108,8 +108,8 @@ final class ReconMutil {
         writerThread = CompletableFuture.runAsync(() -> { writer(output); });
         for (int i=0; i<threads[0]; i++) {
             final int j = i;
-            ReconUtil.add(decoThreads, CompletableFuture.runAsync(() -> { decoder(j); }));
-            ReconUtil.add(procThreads, CompletableFuture.runAsync(() -> { processer(j); }));
+            ReconUtil.addAndRemove(decoThreads, CompletableFuture.runAsync(() -> { decoder(j); }));
+            ReconUtil.addAndRemove(procThreads, CompletableFuture.runAsync(() -> { processer(j); }));
         }
        
         // start a period status printout:
@@ -298,21 +298,21 @@ final class ReconMutil {
         Map<Integer,Benchmark> benches = new LinkedHashMap<>();
         for (int i=threads[0]; i<64; i++) {
             final int j = i;
-            decoThreads.offer(CompletableFuture.runAsync(() -> { decoder(j); }));
+            ReconUtil.addAndRemove(decoThreads, CompletableFuture.runAsync(() -> { decoder(j); }));
         }
         while (writeEvents < 100 || !ReconUtil.isDone(decoThreads))
             ReconUtil.sleep(1000);
-        ReconUtil.cancel(procThreads);
+        for (CompletableFuture cf : procThreads) cf.cancel(true);
         System.out.println("recon-mutil::  ~~~~~~~~~ rethreading primed ~~~~~~~~~");
         for (int thread : threads) {
             ReconUtil.sleep(1000);
             benchmark = new Benchmark(new String[]{"evio","deco","serial","post","write"});
             for (int j=0; j<thread; j++) {
                 final int k = j;
-                procThreads.offer(CompletableFuture.runAsync(() -> { processer(k); }));
+                ReconUtil.addAndRemove(procThreads, CompletableFuture.runAsync(() -> { processer(k); }));
             }
             ReconUtil.sleep(seconds*1000);
-            ReconUtil.cancel(procThreads);
+            for (CompletableFuture cf : procThreads) cf.cancel(true);
             System.out.println(String.format("\nrecon-mutil:: ~~~~~~~~~ rethreading count: %d ~~~~~~~~~\n",thread));
             System.out.println(progress.getUpdateString());
             System.out.println(benchmark);
@@ -346,9 +346,9 @@ final class ReconMutil {
         benchmark.pause(thread, "evio");
         benchmark.resume(thread, "deco");
         CLASDecoder d = decoders.poll();
-        HipoDataEvent hipo = fields != null ?
-                d.getDecodedDataEvent(evio, fields[0], fields[1]) :
-                d.getDecodedDataEvent(evio);
+        HipoDataEvent hipo = fields == null ?
+                d.getDecodedDataEvent(evio) :
+                d.getDecodedDataEvent(evio, fields[0], fields[1]);
         decoders.offer(d);
         benchmark.pause(thread, "deco");
         return hipo;
@@ -438,8 +438,8 @@ final class ReconMutil {
      */
     void reset() {
         serialPause.set(true);
-        ReconUtil.cancel(decoThreads);
-        ReconUtil.cancel(procThreads);
+        for (CompletableFuture cf : decoThreads) cf.cancel(true);
+        for (CompletableFuture cf : procThreads) cf.cancel(true);
         if (readerThread != null) readerThread.cancel(true);
         if (writerThread != null) {
             writerThread.cancel(true);
@@ -459,8 +459,8 @@ final class ReconMutil {
      */
     void stopProcessing() {
         if (readerThread != null) readerThread.cancel(true);
-        ReconUtil.cancel(decoThreads);
-        ReconUtil.cancel(procThreads);
+        for (CompletableFuture cf : decoThreads) cf.cancel(true);
+        for (CompletableFuture cf : procThreads) cf.cancel(true);
         decoQueue.clear();
         procQueue.clear();
         writeQueue.clear();
@@ -502,7 +502,10 @@ final class ReconMutil {
                 fields = Arrays.stream(parser.getOption("-f").stringValue()
                 .split(",")).mapToDouble(s -> Double.parseDouble(s)).toArray();
             }
-            catch (Exception e) { System.err.println("invalid -f:  "+parser.getOption("-f").stringValue()); }
+            catch (Exception e) {
+                Logger.getLogger(ReconMutil.class.getName()).log(Level.SEVERE, () -> "invalid field option:  -f "+parser.getOption("-f").stringValue());
+                System.exit(22);
+            }
         }
     }
 
@@ -545,7 +548,7 @@ final class ReconMutil {
         o.addOption("-t","4","number of threads");
         o.addOption("-o", null, "output file name");
         o.addOption("-c","2","comma-separated engine list");
-        o.addOption("-f",null,"solenoid and torus field scales, comma-separated");
+        o.addOption("-f",null,"field scales for torus and solenoid, comma-separated (T,S)");
         o.setRequiresInputList(true);
         o.parse(args);
         ReconMutil r = new ReconMutil(o);
