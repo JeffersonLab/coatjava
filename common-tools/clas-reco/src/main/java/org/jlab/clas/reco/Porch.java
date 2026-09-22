@@ -58,7 +58,6 @@ public abstract class Porch {
     /**
      * The thread launcher and collector.
      * @param threads number of threads
-     * @param output name of output file to write
      * @param input names of input files to read
      */
     public final void launch(int[] threads, String... input) {
