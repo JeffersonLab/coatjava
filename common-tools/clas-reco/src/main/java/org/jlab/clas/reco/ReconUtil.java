@@ -22,6 +22,10 @@ import org.jlab.utils.options.OptionValue;
 import org.jlab.utils.system.ClasUtilsFile;
 import org.json.JSONObject;
 
+/**
+ * Static utility methods.
+ *
+ */
 public class ReconUtil {
 
     static OptionParser getParser() {
