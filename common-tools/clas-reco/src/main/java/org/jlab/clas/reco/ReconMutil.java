@@ -108,10 +108,11 @@ final class ReconMutil {
         writerThread = CompletableFuture.runAsync(() -> { writer(output); });
         for (int i=0; i<threads[0]; i++) {
             final int j = i;
-            decoThreads.offer(CompletableFuture.runAsync(() -> { decoder(j); }));
-            procThreads.offer(CompletableFuture.runAsync(() -> { processer(j); }));
+            ReconUtil.add(decoThreads, CompletableFuture.runAsync(() -> { decoder(j); }));
+            ReconUtil.add(procThreads, CompletableFuture.runAsync(() -> { processer(j); }));
         }
-
+       
+        // start a period status printout:
         showPeriodic(10);
         
         // perform scaling test:
@@ -510,7 +511,7 @@ final class ReconMutil {
      */
     void show() {
         String s1 = String.format("threads(r/d/p/w)=(%b/%b:%d/%b:%d/%b)",
-                !readerThread.isDone(), !ReconUtil.isDone(decoThreads),decoThreads.size(), !ReconUtil.isDone(procThreads),procThreads.size(), !writerThread.isDone());
+                !readerThread.isDone(), !ReconUtil.isDone(decoThreads), decoThreads.size(), !ReconUtil.isDone(procThreads), procThreads.size(), !writerThread.isDone());
         String s2 = String.format(" queues(d/p/w)=(%d/%d/%d)",
                 decoQueue.size()*EVENTS_PER_CHUNK, procQueue.size()*EVENTS_PER_CHUNK, writeQueue.size()*EVENTS_PER_CHUNK);
         String s3 = String.format(" events(r/w/t/f)=(%d/%d/%d/%d)",

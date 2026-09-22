@@ -177,5 +177,15 @@ public class ReconUtil {
             queue.remove(f);
         }
     }
-   
+  
+    /**
+     * Add a thread to the queue and make it remove itself when done.
+     * @param queue
+     * @param future 
+     */
+    static void add(ConcurrentLinkedQueue<CompletableFuture> queue, CompletableFuture future) {
+        future.whenCompleteAsync((result,exception) -> { queue.remove(future); });
+        queue.offer(future);
+    }
+
 }
