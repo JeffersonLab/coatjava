@@ -99,6 +99,12 @@ public class Furniture extends Porch {
         return o;
     }
 
+    @Override
+    void readerExit() {
+        if (reader != null && reader instanceof EvioSource)
+            ((EvioSource)reader).close();
+    }
+
     /**
      * 
      * @param thread
@@ -147,11 +153,12 @@ public class Furniture extends Porch {
     }
 
     @Override
-    void write(Event event) {
+    void write(HipoDataEvent dataEvent) {
+        Event event = dataEvent.getHipoEvent();
         while (serialPause.get()) ReconUtil.sleep (100);
         benchmark.resume("post");
         synchronized (serialPause) {
-            serial.process(event);
+            serial.process(dataEvent.getHipoEvent());
         }
         benchmark.pause("post");
         benchmark.resume("write");

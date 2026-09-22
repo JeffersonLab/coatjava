@@ -13,9 +13,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.jlab.io.evio.EvioSource;
 import org.jlab.io.hipo.HipoDataEvent;
-import org.jlab.jnp.hipo4.data.Event;
 import org.jlab.utils.benchmark.Benchmark;
 import org.jlab.utils.benchmark.ProgressPrintout;
 
@@ -41,7 +39,7 @@ public abstract class Porch {
     // Queues:
     ConcurrentLinkedQueue<List<Object>> decoQueue = new ConcurrentLinkedQueue<>();
     ConcurrentLinkedQueue<List<HipoDataEvent>> procQueue = new ConcurrentLinkedQueue<>();
-    ConcurrentLinkedQueue<List<Event>> writeQueue = new ConcurrentLinkedQueue<>();
+    ConcurrentLinkedQueue<List<HipoDataEvent>> writeQueue = new ConcurrentLinkedQueue<>();
 
     // Progress counters:
     volatile int readEvents;
@@ -57,7 +55,8 @@ public abstract class Porch {
     abstract Object read();
     abstract HipoDataEvent[] decode(int thread, Object event);
     abstract void process(int thread, HipoDataEvent event);
-    abstract void write(Event event);
+    abstract void write(HipoDataEvent event);
+    abstract void readerExit(); 
     abstract void decoderExit(int thread);
     abstract void writerExit();
 
@@ -126,7 +125,7 @@ public abstract class Porch {
             readEvents += output.size();
             decoQueue.offer(output);
         }
-        if (reader instanceof EvioSource evio) evio.close();
+        readerExit();
     }
 
     /**
@@ -170,11 +169,11 @@ public abstract class Porch {
                 ReconUtil.sleep(100);
             }
             else {
-                List<Event> output = new ArrayList<>(input.size());
+                List<HipoDataEvent> output = new ArrayList<>(input.size());
                 for (int i=0; i<input.size(); i++) {
                     if (input.get(i).getHipoEvent().getEventTag() == 0)
                         process(thread, input.get(i));
-                    output.add(input.get(i).getHipoEvent());
+                    output.add(input.get(i));
                 }
                 writeQueue.offer(output);
             }
@@ -186,7 +185,7 @@ public abstract class Porch {
      */
     final void writer() {
         while (true) {
-            List<Event> e = writeQueue.poll();
+            List<HipoDataEvent> e = writeQueue.poll();
             if (e == null) {
                 if (decoThreads.isEmpty() && procThreads.isEmpty() && procQueue.isEmpty() && writeQueue.isEmpty())
                     break;
@@ -298,6 +297,4 @@ public abstract class Porch {
         procQueue.clear();
         writeQueue.clear();
     }
-
-
 }
