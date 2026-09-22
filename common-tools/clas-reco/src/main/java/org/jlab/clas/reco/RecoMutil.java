@@ -54,7 +54,6 @@ public class RecoMutil extends Porch {
             f.openWriter(opt.getOption("-S"), opt.getOption("-o").stringValue());
         
         f.launch(Arrays.stream(opt.getOption("-t").stringValue().split(",")).mapToInt(Integer::parseInt).toArray(), 
-                opt.getOption("-o").stringValue(),
                 opt.getInputList().stream().toArray(String[]::new));
     }
 
@@ -75,7 +74,8 @@ public class RecoMutil extends Porch {
 
     // Control flags:
     final AtomicBoolean serialPause = new AtomicBoolean(true);
-    
+   
+    // FIXME: stuff for deciding when to reload helicities
     final int helicityClock = 30;  // Hz
     final int triggerRate = 25000; // Hz
     final int minReload = 2 * triggerRate / helicityClock;
@@ -130,12 +130,6 @@ public class RecoMutil extends Porch {
             ((EvioSource)reader).close();
     }
 
-    /**
-     * 
-     * @param thread
-     * @param input
-     * @return 
-     */
     @Override
     HipoDataEvent[] decode(int thread, Object input) {
         HipoDataEvent event = input instanceof ByteBuffer
@@ -223,11 +217,6 @@ public class RecoMutil extends Porch {
         serialPause.set(false);
     }
 
-    /**
-     * Decode an event.
-     * @param bytes the EVIO byte buffer
-     * @return decoded event
-     */
     HipoDataEvent decode(int thread, ByteBuffer bytes) {
         benchmark.resume(thread, "evio");
         EvioDataEvent evio = new EvioDataEvent(bytes.array(), ByteOrder.LITTLE_ENDIAN);
@@ -242,10 +231,6 @@ public class RecoMutil extends Porch {
         return hipo;
     }
   
-    /**
-     * Initialize ReconMutil.
-     * @param opt 
-     */
     final void init(OptionParser opt) {
         opt.syncLogLevel(Logger.getLogger(ReconMutil.class.getPackage().getName()));
         maxEvents = opt.getOption("-n").intValue();

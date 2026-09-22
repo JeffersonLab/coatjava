@@ -61,7 +61,7 @@ public abstract class Porch {
      * @param output name of output file to write
      * @param input names of input files to read
      */
-    public final void launch(int[] threads, String output, String... input) {
+    public final void launch(int[] threads, String... input) {
 
         reset();
         System.out.println(String.format("recon-mutil::  spawning 2*%d+2 threads",threads[0]));
