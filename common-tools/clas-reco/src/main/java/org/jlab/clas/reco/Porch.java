@@ -188,12 +188,13 @@ public abstract class Porch {
             else {
                 for (int i=0; i<e.size(); i++) {
                     write(e.get(i));
+                    writeEvents++;
                     progress.updateStatus();
                 }
-                writeEvents += e.size();
             }
         }
         writerExit();
+        stop();
     }
 
     /**
