@@ -6,7 +6,30 @@ split_cli $@
 
 export MALLOC_ARENA_MAX=1
 
-java ${JAVA_OPTS-} -Xms10240m -XX:+UseParallelGC ${jvm_options[@]} \
+# get the "-t" threading option:
+for ((i=0; i<${#class_options[@]}; i++)); do
+    arg="${class_options[$i]}"
+    if [[ "$arg" == "-t" ]]; then
+        let i=i+1
+        threads="${class_options[$i]}"
+        break
+    fi
+done
+
+# get maximum number of threads:
+threads=$(echo $threads | awk -F, 'NR==1 {max=$1} { for(i=1; i<=NF; i++) { if($i > max) max=$i } } END {print max}')
+
+# get cpu list for taskset:
+# FIXME:  This picks a random socket, assuming there's two:
+node=$(((RANDOM % 2)))
+# This gets all the cpus for the given socket:
+cpus=$( echo $(numactl -H | grep "^node $node cpus:" | awk -v T="$threads" '{for(i=4;i<NF;++i)print$i}') | sed 's/ /,/g' )
+# FIXME:  This gets only the first, requested number of cpus for the given socket:
+#cpus=$( echo $(numactl -H | grep "^node $node cpus:" | awk -v T="$threads" '{for(i=4;i<T;++i)print$i}') | sed 's/ /,/g' )
+#echo $threads $node $cpus && exit
+
+taskset -c $cpus \
+    java ${JAVA_OPTS-} -XX:MaxRAMPercentage=40.0 -Xms10240m -XX:+UseParallelGC ${jvm_options[@]} \
     -cp ${COATJAVA_CLASSPATH:-''} \
     org.jlab.clas.reco.RecoMutil \
     ${class_options[@]}

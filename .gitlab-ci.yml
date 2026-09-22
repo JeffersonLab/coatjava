@@ -187,9 +187,12 @@ profile:
   extends: .clon
   allow_failure: true
   script:
-    - ./clara/plugins/clas12/libexec/profile -e cpu   run-clara -c ./clara -y ./etc/services/rgd-clarode.yml -o tmp1 -t 16 -l $EVIOFILE
-    - ./clara/plugins/clas12/libexec/profile -e alloc run-clara -c ./clara -y ./etc/services/rgd-clarode.yml -o tmp2 -t 16 -l $EVIOFILE
-    - ./clara/plugins/clas12/libexec/profile -e lock  run-clara -c ./clara -y ./etc/services/rgd-clarode.yml -o tmp3 -t 16 -l $EVIOFILE
+    - ./clara/plugins/clas12/libexec/profile -e cpu   -o _clara run-clara -c ./clara -y ./etc/services/rgd-clarode.yml -o tmp1 -t 16 -l $EVIOFILE
+    - ./clara/plugins/clas12/libexec/profile -e alloc -o _clara run-clara -c ./clara -y ./etc/services/rgd-clarode.yml -o tmp2 -t 16 -l $EVIOFILE
+    - ./clara/plugins/clas12/libexec/profile -e lock  -o _clara run-clara -c ./clara -y ./etc/services/rgd-clarode.yml -o tmp3 -t 16 -l $EVIOFILE
+    - ./clara/plugins/clas12/libexec/profile -e cpu   -o _mutil recon-mutil -y ./etc/services/rgd-clarode.yml -o mutil1.hipo -t 16 -l SEVERE $EVIOFILE
+    - ./clara/plugins/clas12/libexec/profile -e alloc -o _mutil recon-mutil -y ./etc/services/rgd-clarode.yml -o mutil2.hipo -t 16 -l SEVERE $EVIOFILE
+    - ./clara/plugins/clas12/libexec/profile -e lock  -o _mutil recon-mutil -y ./etc/services/rgd-clarode.yml -o mutil3.hipo -t 16 -l SEVERE $EVIOFILE
   artifacts:
     when: always
     expire_in: 1 week
@@ -215,7 +218,7 @@ pages:
     - cp -r pages public
     - mkdir public/perf
     - cp asprof*.html public/perf
-    - cp scaling.svg public/perf
+    - cp scaling*.svg public/perf
   pages: true
   artifacts:
     expire_in: 1 week
