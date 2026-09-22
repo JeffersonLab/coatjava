@@ -23,6 +23,7 @@ import org.jlab.jnp.hipo4.io.HipoReader;
 import org.jlab.jnp.hipo4.io.HipoWriterSorted;
 import org.jlab.utils.ClaraYaml;
 import org.jlab.utils.options.OptionParser;
+import org.jlab.utils.options.OptionValue;
 import org.jlab.utils.system.ClasUtilsFile;
 import org.json.JSONObject;
 
@@ -33,23 +34,25 @@ public class RecoMutil extends Porch {
      * @param args command-line arguments
      */
     public static void main(String[] args) {
-        OptionParser o = ReconUtil.getParser();
-        o.removeOption("-i");
-        o.removeOption("-o");
-        o.removeOption("-c");
-        o.removeOption("-P");
-        o.addOption("-t","4","number of threads");
-        o.addOption("-o", null, "output file name");
-        o.addOption("-c","2","comma-separated engine list");
-        o.addOption("-f",null,"field scales for torus and solenoid, comma-separated (T,S)");
-        o.setRequiresInputList(true);
-        o.parse(args);
-        RecoMutil f = new RecoMutil(o);
-        if (!o.getOption("-o").isDefault())
-            f.openWriter(o.getOption("-o").stringValue());
-        f.launch(Arrays.stream(o.getOption("-t").stringValue().split(",")).mapToInt(Integer::parseInt).toArray(), 
-                o.getOption("-o").stringValue(),
-                o.getInputList().stream().toArray(String[]::new));
+        OptionParser opt = new OptionParser("recon-util");
+        opt.addOption("-t","4","number of threads");
+        opt.addOption("-s","0","number of events to skip");
+        opt.addOption("-n","0","number of events to process");
+        opt.addOption("-y","0","yaml file");
+        opt.addOption("-u","true","update dictionary from writer");
+        opt.addOption("-o",null,"output file name");
+        opt.addOption("-S",null,"schema directory");
+        opt.addOption("-B",null,"background files, comma-separated");
+        opt.addOption("-c",null,"comma-separated engine list");
+        opt.addOption("-f",null,"field scales for torus and solenoid, comma-separated (T,S)");
+        opt.setRequiresInputList(true);
+        opt.parse(args);
+        RecoMutil f = new RecoMutil(opt);
+        if (!opt.getOption("-o").isDefault())
+            f.openWriter(opt.getOption("-S"), opt.getOption("-o").stringValue());
+        f.launch(Arrays.stream(opt.getOption("-t").stringValue().split(",")).mapToInt(Integer::parseInt).toArray(), 
+                opt.getOption("-o").stringValue(),
+                opt.getInputList().stream().toArray(String[]::new));
     }
 
     // Static parameters:
@@ -57,8 +60,8 @@ public class RecoMutil extends Porch {
     OptionParser parser;
     double[] fields = null;
 
+    // I/O
     HipoWriterSorted writer;
-
     List<Bank> schemaBankList;
     static final SchemaFactory fullSchema = new SchemaFactory();
     static { fullSchema.initFromDirectory(ClasUtilsFile.getResourceDir("CLAS12DIR","etc/bankdefs/hipo4")); }
@@ -199,10 +202,10 @@ public class RecoMutil extends Porch {
         }
     }
 
-    HipoWriterSorted openWriter(String filename) {
+    HipoWriterSorted openWriter(OptionValue schema, String filename) {
         writer = new HipoWriterSorted();
         writer.setCompressionType(2);
-        SchemaFactory s = ReconUtil.getSchemaFactory(parser.getOption("-S"), yaml);
+        SchemaFactory s = ReconUtil.getSchemaFactory(schema, yaml);
         writer.getSchemaFactory().copy(s);
         schemaBankList = ReconUtil.getBankList(s, yaml);
         writer.open(filename);

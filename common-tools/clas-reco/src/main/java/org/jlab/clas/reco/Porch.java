@@ -18,9 +18,8 @@ import org.jlab.utils.benchmark.Benchmark;
 import org.jlab.utils.benchmark.ProgressPrintout;
 
 /**
- * A parallel orchestrator, pronounced "pork".
+ * Parallel orchestrator.
  * 
- * @author baltzell
  */
 public abstract class Porch {
     
@@ -32,9 +31,6 @@ public abstract class Porch {
     int maxEvents;
     int skipEvents;
 
-    // File I/O:
-    Object reader;
-    
     // Threads:
     CompletableFuture readerThread;
     CompletableFuture writerThread;
@@ -56,6 +52,9 @@ public abstract class Porch {
     volatile ProgressPrintout progress = new ProgressPrintout();
     volatile Benchmark benchmark = new Benchmark(new String[]{"evio","deco","serial","post","write"});
 
+    // Event reader/source:
+    Object reader;
+    
     /**
      * The thread launcher and collector.
      * @param threads number of threads
