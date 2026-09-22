@@ -1,7 +1,7 @@
 package org.jlab.utils.benchmark;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -12,8 +12,8 @@ import java.util.concurrent.atomic.AtomicLong;
 public class BenchmarkTimer {
 
     public static class BenchmarkMultiTimer extends BenchmarkTimer {
-        HashMap<Integer,Long> timeAtResume = new HashMap<>();
-        HashMap<Integer,Boolean> isPaused = new HashMap<>();
+        ConcurrentHashMap<Integer,Long> timeAtResume = new ConcurrentHashMap<>();
+        ConcurrentHashMap<Integer,Boolean> isPaused = new ConcurrentHashMap<>();
         public BenchmarkMultiTimer(String name) { super(name); }
         public void resume(int thread) {
             if (!isPaused.containsKey(thread) || isPaused.get(thread)) {
@@ -33,16 +33,6 @@ public class BenchmarkTimer {
             super.reset();
             timeAtResume.clear();
             isPaused.clear();
-        }
-    }
-
-    public static class BenchmarkTimerTotal extends BenchmarkMultiTimer {
-        ArrayList<BenchmarkTimer> benchmarks = new ArrayList<>();
-        public BenchmarkTimerTotal(String name) { super(name); }
-        public void add(BenchmarkTimer b) {
-            benchmarks.add(b);
-            totalTime.addAndGet(b.totalTime.get());
-            numberOfCalls.addAndGet(b.numberOfCalls.get());
         }
     }
 
@@ -93,13 +83,14 @@ public class BenchmarkTimer {
         return totalTime.get() / 1.0e9;
     }
     
+    public double getMillisecondsPerCall() {
+        return numberOfCalls.get() > 0 ? getMilliseconds() / numberOfCalls.get() : 0;
+    }
+
     @Override
     public String toString() {
         return String.format("%-15s : #Calls %12d, Total = %12.2f sec, Unit = %12.3f msec",
-            getName(), numberOfCalls.get(), getSeconds(), getTimePerCall());
+            getName(), numberOfCalls.get(), getSeconds(), getMillisecondsPerCall());
     }
 
-    public double getTimePerCall() {
-        return numberOfCalls.get() > 0 ? getMilliseconds() / numberOfCalls.get() : 0;
-    }
 }

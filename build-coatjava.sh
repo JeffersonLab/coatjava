@@ -80,6 +80,7 @@ do
     --https) auxRetrieval=https ;;
     --wipe)  auxRetrieval=wipe  ;;
     --no-aux|--noaux)
+      auxRetrieval=noaux
       auxDownloadMaps=false
       auxDownloadNets=false
       auxDownloadSqlites=false
@@ -107,7 +108,7 @@ do
   esac
 done
 
-echo "---------------------- ARGUMENTS ----------------------"
+echo "------------------ Configuration ----------------------"
 print_arg() {
   printf "  %30s = " "$1"
   shift
@@ -205,6 +206,8 @@ case $auxRetrieval in
     fi
     ;;
   https)
+    ;;
+  noaux)
     ;;
   *)
     echo "ERROR: data retrieval option \`--$auxRetrieval\` is not supported" >&2

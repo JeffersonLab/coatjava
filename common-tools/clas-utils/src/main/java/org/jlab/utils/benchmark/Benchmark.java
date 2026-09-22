@@ -7,7 +7,6 @@ import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 import org.jlab.utils.benchmark.BenchmarkTimer.BenchmarkMultiTimer;
-import org.jlab.utils.benchmark.BenchmarkTimer.BenchmarkTimerTotal;
 
 /**
  *
@@ -19,7 +18,7 @@ public class Benchmark {
     private final Map<String,BenchmarkMultiTimer> timerStore = new LinkedHashMap<>();
     private Timer updateTimer = null;
     
-    private Benchmark() {}
+    public Benchmark() {}
     
     public static Benchmark getInstance(){
         return benchmarkInstance;
@@ -74,13 +73,6 @@ public class Benchmark {
         return timerStore.getOrDefault(name, null);
     }
 
-    public BenchmarkTimer getTotal(String name) {
-        BenchmarkTimerTotal total = new BenchmarkTimerTotal(name);
-        for (BenchmarkTimer b : timerStore.values())
-            total.add(b);
-        return total;
-    }
-
     @Override
     public String toString(){
         StringBuilder s = new StringBuilder();
@@ -100,25 +92,23 @@ public class Benchmark {
                 s.append(b);
                 s.append("   *\n");
             }
-            s.append("*   ");
-            s.append(getTotal(""));
-            s.append("   *\n");
+            s.append(String.format("*   %-15s : #Calls %12.2f, Total = %12.2f sec, Unit = %12.3f msec   *\n",
+                 "TOTAL",
+                 ((float)timers.stream().mapToInt(x -> x.numberOfCalls.get()).sum())/timers.size(),
+                 timers.stream().mapToDouble(x -> x.getSeconds()).sum(),
+                 timers.stream().mapToDouble(x -> x.getMillisecondsPerCall()).sum()));
             s.append(margins);
             s.append("\n");
         }
         return s.toString();
     }
 
-    public static void main(String[] args){
-        Benchmark b = getInstance();
-        b.printTimer(10);
-        int loop = 0;
-        while(true){
-            b.resume("COUNT");
-            loop++;
-            b.pause("COUNT");
-            try { Thread.sleep(2000); }
-            catch (InterruptedException ex) {}
-        }
+    public String[] toCSV() {
+        return new String[]{
+            String.join(",",timerStore.keySet()) + ",TOTAL",
+            String.join(",",timerStore.values().stream().map(x -> String.format("%.2f",x.getMillisecondsPerCall())).toList())
+                + "," + String.format("%.2f",timerStore.values().stream().mapToDouble(x -> x.getMillisecondsPerCall()).sum())
+        };
     }
+
 }
