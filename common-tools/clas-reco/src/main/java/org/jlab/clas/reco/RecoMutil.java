@@ -47,9 +47,12 @@ public class RecoMutil extends Porch {
         opt.addOption("-f",null,"field scales for torus and solenoid, comma-separated (T,S)");
         opt.setRequiresInputList(true);
         opt.parse(args);
+
         RecoMutil f = new RecoMutil(opt);
+
         if (!opt.getOption("-o").isDefault())
             f.openWriter(opt.getOption("-S"), opt.getOption("-o").stringValue());
+        
         f.launch(Arrays.stream(opt.getOption("-t").stringValue().split(",")).mapToInt(Integer::parseInt).toArray(), 
                 opt.getOption("-o").stringValue(),
                 opt.getInputList().stream().toArray(String[]::new));
@@ -57,7 +60,6 @@ public class RecoMutil extends Porch {
 
     // Static parameters:
     ClaraYaml yaml;
-    OptionParser parser;
     double[] fields = null;
 
     // I/O
@@ -242,42 +244,41 @@ public class RecoMutil extends Porch {
   
     /**
      * Initialize ReconMutil.
-     * @param parser 
+     * @param opt 
      */
-    final void init(OptionParser parser) {
-        this.parser = parser;
-        parser.syncLogLevel(Logger.getLogger(ReconMutil.class.getPackage().getName()));
-        maxEvents = parser.getOption("-n").intValue();
-        skipEvents = parser.getOption("-s").intValue();
+    final void init(OptionParser opt) {
+        opt.syncLogLevel(Logger.getLogger(ReconMutil.class.getPackage().getName()));
+        maxEvents = opt.getOption("-n").intValue();
+        skipEvents = opt.getOption("-s").intValue();
         serial = new SerialHoncho(fullSchema);
         engines = new LinkedHashMap<>();
-        if (!parser.getOption("-y").isDefault()) {
-            yaml = new ClaraYaml(parser.getOption("-y").stringValue());
+        if (!opt.getOption("-y").isDefault()) {
+            yaml = new ClaraYaml(opt.getOption("-y").stringValue());
             for (JSONObject service : yaml.services()) {
                 JSONObject cfg = yaml.filter(service.getString("name"));
                 if (cfg.length() > 0) ReconUtil.addEngine(engines, service.getString("name"), service.getString("class"), cfg);
                 else ReconUtil.addEngine(engines, service.getString("name"), service.getString("class"), null);
             }
         }
-        else if (!parser.getOption("-c").isDefault()) {
-            for (String clazz : parser.getOption("-c").stringValue().split(","))
+        else if (!opt.getOption("-c").isDefault()) {
+            for (String clazz : opt.getOption("-c").stringValue().split(","))
                 ReconUtil.addEngine(engines, null, clazz, null);
         }
         else {
             for (String line : ReconUtil.readResourceLines("org/jlab/clas/reco/services.txt"))
                 ReconUtil.addEngine(engines, line.split(" ")[0], line.split(" ")[1], null);
         }
-        if (!parser.getOption("-B").isDefault()) {
+        if (!opt.getOption("-B").isDefault()) {
             ReconstructionEngine bg = ReconUtil.addEngine(engines, "BG", "org.jlab.service.bg.BackgroundEngine", null);
-            bg.engineConfigMap.put("filename",parser.getOption("-B").stringValue());
+            bg.engineConfigMap.put("filename",opt.getOption("-B").stringValue());
         }
-        if (!parser.getOption("-f").isDefault()) {
+        if (!opt.getOption("-f").isDefault()) {
             try {
-                fields = Arrays.stream(parser.getOption("-f").stringValue()
+                fields = Arrays.stream(opt.getOption("-f").stringValue()
                 .split(",")).mapToDouble(s -> Double.parseDouble(s)).toArray();
             }
             catch (Exception e) {
-                Logger.getLogger(ReconMutil.class.getName()).log(Level.SEVERE, () -> "invalid field option:  -f "+parser.getOption("-f").stringValue());
+                Logger.getLogger(ReconMutil.class.getName()).log(Level.SEVERE, () -> "invalid field option:  -f "+opt.getOption("-f").stringValue());
                 System.exit(22);
             }
         }

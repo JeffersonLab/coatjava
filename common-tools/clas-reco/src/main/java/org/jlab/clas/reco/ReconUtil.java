@@ -48,14 +48,14 @@ public class ReconUtil {
 
     /**
      * Get a new schema factory, potentially filtered based on yaml.
-     * @param parser
+     * @param schema
      * @param yaml
      * @return
      */
-    static SchemaFactory getSchemaFactory(OptionValue opt, ClaraYaml yaml) {
+    static SchemaFactory getSchemaFactory(OptionValue schema, ClaraYaml yaml) {
         SchemaFactory ret = new SchemaFactory();
         SchemaFactory stock = new SchemaFactory();
-        stock.initFromDirectory(getSchemaDirectory(opt, yaml));
+        stock.initFromDirectory(getSchemaDirectory(schema, yaml));
         if (yaml == null) {
             ret.copy(stock);
         } else {
