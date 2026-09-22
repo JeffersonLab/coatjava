@@ -25,7 +25,7 @@ public abstract class Porch {
     
     // Performance parameters:
     final int BENCH_SECONDS = 30;
-    final int EVENTS_PER_CHUNK = 20;
+    final int EVENTS_PER_CHUNK = 50;
     
     // Static parameters:
     int maxEvents;
@@ -245,7 +245,7 @@ public abstract class Porch {
                 decoQueue.size()*EVENTS_PER_CHUNK, procQueue.size()*EVENTS_PER_CHUNK, writeQueue.size()*EVENTS_PER_CHUNK);
         String s3 = String.format(" events(r/w/t/f)=(%d/%d/%d/%d)",
                 readEvents, writeEvents, taggedEvents.get(), failEvents);
-        Logger.getLogger(ReconMutil.class.getName()).log(Level.INFO, () -> s1+" "+s2+" "+s3);
+        Logger.getLogger(RecoMutil.class.getName()).log(Level.CONFIG, () -> s1+" "+s2+" "+s3);
     }
    
     /**

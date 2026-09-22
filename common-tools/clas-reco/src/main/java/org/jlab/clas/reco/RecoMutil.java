@@ -232,7 +232,7 @@ public class RecoMutil extends Porch {
     }
   
     final void init(OptionParser opt) {
-        opt.syncLogLevel(Logger.getLogger(ReconMutil.class.getPackage().getName()));
+        opt.syncLogLevel(Logger.getLogger(RecoMutil.class.getPackage().getName()));
         maxEvents = opt.getOption("-n").intValue();
         skipEvents = opt.getOption("-s").intValue();
         serial = new SerialHoncho(fullSchema);
@@ -263,7 +263,7 @@ public class RecoMutil extends Porch {
                 .split(",")).mapToDouble(s -> Double.parseDouble(s)).toArray();
             }
             catch (Exception e) {
-                Logger.getLogger(ReconMutil.class.getName()).log(Level.SEVERE, () -> "invalid field option:  -f "+opt.getOption("-f").stringValue());
+                Logger.getLogger(RecoMutil.class.getName()).log(Level.SEVERE, () -> "invalid field option:  -f "+opt.getOption("-f").stringValue());
                 System.exit(22);
             }
         }
