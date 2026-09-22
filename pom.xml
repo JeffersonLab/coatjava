@@ -356,6 +356,7 @@
               <goal>analyze-only</goal>
             </goals>
             <configuration>
+              <outputFile>${project.build.directory}/dependency-tree.txt</outputFile>
               <failOnWarning>true</failOnWarning>
               <!-- ignore certain "unused but declared" warnings -->
               <ignoredUnusedDeclaredDependencies>
