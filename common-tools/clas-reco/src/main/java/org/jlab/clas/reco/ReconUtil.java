@@ -10,6 +10,8 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.logging.Level;
@@ -204,4 +206,17 @@ public class ReconUtil {
             csv.add(threads+","+benches.get(threads).toCSV()[1]);
         return String.join("\n",csv);
     }
+   
+    /**
+     * Periodically run the print the thread, queue, and event states.
+     * @param seconds 
+     * @param method 
+     * @return  
+     */
+    static Timer runPeriodic(double seconds, TimerTask task) {
+        Timer t = new Timer("timer", true);
+        t.scheduleAtFixedRate(task, 0, (int)(1000*seconds));
+        return t;
+    }
+
 }

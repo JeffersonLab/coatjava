@@ -6,7 +6,6 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -52,7 +51,8 @@ public abstract class Porch {
     volatile int writeEvents;
     volatile AtomicInteger taggedEvents = new AtomicInteger();
     volatile ProgressPrintout progress = new ProgressPrintout();
-    volatile Benchmark benchmark = new Benchmark(BENCHMARK_NAMES);
+    volatile Benchmark benchmark = null;
+    TimerTask statsShow = new TimerTask() { @Override public void run() { show(); } };
 
     // Event reader/source:
     Object reader;
@@ -77,7 +77,7 @@ public abstract class Porch {
         }
 
         // start a period status printout:
-        showPeriodic(10);
+        ReconUtil.runPeriodic(10, statsShow);
         
         // perform scaling test:
         CompletableFuture rethreadThread = threads.length < 2 ? null :
@@ -252,20 +252,6 @@ public abstract class Porch {
     }
    
     /**
-     * Periodically print the thread, queue, and event states.
-     * @param seconds periodicity 
-     * @return new timer
-     */
-    Timer showPeriodic(double seconds) {
-        Timer t = new Timer("timer", true);
-        t.scheduleAtFixedRate(new TimerTask() {
-            @Override
-            public void run() { show() ;}
-        }, 0, (int)(1000*seconds));
-        return t;
-    }
-
-    /**
      * Cancel threads, empty queues, and reset counters. 
      */
     void reset() {
@@ -275,7 +261,7 @@ public abstract class Porch {
             //if (writer != null) writer.close();
             writerThread.cancel(true);
             //if (!parser.getOption("-t").stringValue().contains(","))
-            //    System.out.println(benchmark);
+            //    if (benchmark != null) System.out.println(benchmark);
         }
         readEvents = 0;
         writeEvents = 0;

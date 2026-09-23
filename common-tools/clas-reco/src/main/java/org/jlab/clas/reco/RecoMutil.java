@@ -22,40 +22,13 @@ import org.jlab.jnp.hipo4.data.SchemaFactory;
 import org.jlab.jnp.hipo4.io.HipoReader;
 import org.jlab.jnp.hipo4.io.HipoWriterSorted;
 import org.jlab.utils.ClaraYaml;
+import org.jlab.utils.benchmark.Benchmark;
 import org.jlab.utils.options.OptionParser;
 import org.jlab.utils.options.OptionValue;
 import org.jlab.utils.system.ClasUtilsFile;
 import org.json.JSONObject;
 
 public class RecoMutil extends Porch {
-
-    /**
-     * The command-line entry-point known as "recon-mutil".
-     * @param args command-line arguments
-     */
-    public static void main(String[] args) {
-        OptionParser opt = new OptionParser("recon-util");
-        opt.addOption("-t","4","number of threads");
-        opt.addOption("-s","0","number of events to skip");
-        opt.addOption("-n","0","number of events to process");
-        opt.addOption("-y","0","yaml file");
-        opt.addOption("-u","true","update dictionary from writer");
-        opt.addOption("-o",null,"output file name");
-        opt.addOption("-S",null,"schema directory");
-        opt.addOption("-B",null,"background files, comma-separated");
-        opt.addOption("-c",null,"comma-separated engine list");
-        opt.addOption("-f",null,"field scales for torus and solenoid, comma-separated (T,S)");
-        opt.setRequiresInputList(true);
-        opt.parse(args);
-
-        RecoMutil f = new RecoMutil(opt);
-
-        if (!opt.getOption("-o").isDefault())
-            f.openWriter(opt.getOption("-S"), opt.getOption("-o").stringValue());
-        
-        f.launch(Arrays.stream(opt.getOption("-t").stringValue().split(",")).mapToInt(Integer::parseInt).toArray(), 
-                opt.getInputList().stream().toArray(String[]::new));
-    }
 
     // Static parameters:
     ClaraYaml yaml;
@@ -107,7 +80,7 @@ public class RecoMutil extends Porch {
     
     @Override
     Object read() {
-        benchmark.resume("read");
+        if (benchmark != null) benchmark.resume("read");
         Object o = null;
         if (reader instanceof EvioSource evio) {
             try { o = evio.getEventBuffer(++fileEvents, true); }
@@ -120,7 +93,7 @@ public class RecoMutil extends Porch {
             Event event = new Event();
             o = ((HipoReader)reader).getEvent(event, fileEvents++);
         }
-        benchmark.resume("pause");
+        if (benchmark != null) benchmark.resume("pause");
         return o;
     }
 
@@ -135,7 +108,7 @@ public class RecoMutil extends Porch {
         HipoDataEvent event = input instanceof ByteBuffer
                 ? decode(thread, (ByteBuffer)input)
                 : new HipoDataEvent(((Event)input), fullSchema);
-        benchmark.resume(thread, "serial");
+        if (benchmark != null) benchmark.resume(thread, "serial");
         Event tag;
         synchronized (serialPause) {
             tag = serial.read(event.getHipoEvent());
@@ -147,7 +120,7 @@ public class RecoMutil extends Porch {
             reloads++;
         }
         if (!tag.isEmpty()) taggedEvents.incrementAndGet();
-        benchmark.pause(thread, "serial");
+        if (benchmark != null) benchmark.pause(thread, "serial");
         return tag.isEmpty() ?
                 new HipoDataEvent[]{event} :
                 new HipoDataEvent[]{event, new HipoDataEvent(tag, fullSchema)};
@@ -164,10 +137,10 @@ public class RecoMutil extends Porch {
     @Override
     void process(int thread, HipoDataEvent event) {
         for (Map.Entry<String,ReconstructionEngine> engine : engines.entrySet()) {
-            benchmark.resume(thread, engine.getKey());
+            if (benchmark != null) benchmark.resume(thread, engine.getKey());
             try { engine.getValue().processDataEvent(event); }
             catch (Exception ex) { ex.printStackTrace(); }
-            benchmark.pause(thread, engine.getKey());
+            if (benchmark != null) benchmark.pause(thread, engine.getKey());
         }
     }
 
@@ -175,19 +148,21 @@ public class RecoMutil extends Porch {
     void write(HipoDataEvent dataEvent) {
         Event event = dataEvent.getHipoEvent();
         while (serialPause.get()) ReconUtil.sleep (100);
-        benchmark.resume("post");
+        if (benchmark != null) benchmark.resume("post");
         synchronized (serialPause) {
             serial.process(dataEvent.getHipoEvent());
         }
-        benchmark.pause("post");
-        benchmark.resume("write");
+        if (benchmark != null) {
+            benchmark.pause("post");
+            benchmark.resume("write");
+        }
         if (writer != null) {
             if (event.getEventTag() > 0 || schemaBankList.isEmpty())
                 writer.addEvent(event, event.getEventTag());
             else
                 writer.addEvent(event.reduceEvent(schemaBankList), event.getEventTag());
         }
-        benchmark.pause("write");
+        if (benchmark != null) benchmark.pause("write");
     }
 
     @Override
@@ -218,16 +193,18 @@ public class RecoMutil extends Porch {
     }
 
     HipoDataEvent decode(int thread, ByteBuffer bytes) {
-        benchmark.resume(thread, "evio");
+        if (benchmark != null) benchmark.resume(thread, "evio");
         EvioDataEvent evio = new EvioDataEvent(bytes.array(), ByteOrder.LITTLE_ENDIAN);
-        benchmark.pause(thread, "evio");
-        benchmark.resume(thread, "deco");
+        if (benchmark != null) {
+            benchmark.pause(thread, "evio");
+            benchmark.resume(thread, "deco");
+        }
         CLASDecoder d = decoders.poll();
         HipoDataEvent hipo = fields == null ?
                 d.getDecodedDataEvent(evio) :
                 d.getDecodedDataEvent(evio, fields[0], fields[1]);
         decoders.offer(d);
-        benchmark.pause(thread, "deco");
+        if (benchmark != null) benchmark.pause(thread, "deco");
         return hipo;
     }
   
@@ -267,6 +244,37 @@ public class RecoMutil extends Porch {
                 System.exit(22);
             }
         }
+        if (!opt.getOption("-b").isDefault())
+            benchmark = new Benchmark(BENCHMARK_NAMES);
+    }
+
+    /**
+     * The command-line entry-point known as "recon-mutil".
+     * @param args command-line arguments
+     */
+    public static void main(String[] args) {
+        OptionParser opt = new OptionParser("recon-util");
+        opt.addOption("-t","4","number of threads");
+        opt.addOption("-s","0","number of events to skip");
+        opt.addOption("-n","0","number of events to process");
+        opt.addOption("-y","0","yaml file");
+        opt.addOption("-u","true","update dictionary from writer");
+        opt.addOption("-o",null,"output file name");
+        opt.addOption("-S",null,"schema directory");
+        opt.addOption("-B",null,"background files, comma-separated");
+        opt.addOption("-c",null,"comma-separated engine list");
+        opt.addOption("-f",null,"field scales for torus and solenoid, comma-separated (T,S)");
+        opt.addOption("-b","false","enable benchmarking");
+        opt.setRequiresInputList(true);
+        opt.parse(args);
+
+        RecoMutil f = new RecoMutil(opt);
+
+        if (!opt.getOption("-o").isDefault())
+            f.openWriter(opt.getOption("-S"), opt.getOption("-o").stringValue());
+        
+        f.launch(Arrays.stream(opt.getOption("-t").stringValue().split(",")).mapToInt(Integer::parseInt).toArray(), 
+                opt.getInputList().stream().toArray(String[]::new));
     }
 
 }
