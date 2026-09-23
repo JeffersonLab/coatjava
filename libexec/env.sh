@@ -52,6 +52,30 @@ if [ $# -ge 1 ]; then
   fi
 fi
 
+# get the number of threads from the command line options:
+function get_threads() {
+    # look for a "-t" threading option:
+    for ((i=0; i<${#class_options[@]}; i++)); do
+        if [[ "${class_options[$i]}" == "-t" ]]; then
+            # found it;  if it contains commas, split and get the max:
+            let i=i+1
+            threads=$(echo ${class_options[$i]} | awk -F, 'NR==1 {max=$1} { for(i=1; i<=NF; i++) { if($i > max) max=$i } } END {print max}')
+            break
+        fi
+    done
+    [ -z ${threads+x} ] && echo 0 || echo $threads
+}
+
+# get a cpu list for taskset, of all cpus on a given NUMA node:
+function get_all_numa_cpus() {
+     echo $(numactl -H | grep "^node $1 cpus:" | awk '{for(i=4;i<NF;++i)print$i}') | sed 's/ /,/g'
+}
+
+# get a cpu list for tasket, of the first N cpus on a given NUMA node:
+function get_numa_cpus() {
+    cpus=$( echo $(numactl -H | grep "^node $1 cpus:" | awk -v T="$2" '{for(i=4;i<T;++i)print$i}') | sed 's/ /,/g' )
+}
+
 function split_cli {
     jvm_options=()
     class_options=()
