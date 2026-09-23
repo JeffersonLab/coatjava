@@ -102,6 +102,8 @@ public class StruckScalers extends ArrayList<StruckScaler> {
                     break;
                 case StruckScaler.SLOT_UNGATED:
                     if (Input.equals(Input.FCUP, chan)) {
+                        reading.helicity = HelicityBit.createFromRawBit(bank.getByte("helicity",k));
+                        reading.quartet = HelicityBit.createFromRawBit(bank.getByte("quartet",k));
                         reading.fcup = bank.getLong("value",k);
                     }
                     else if (Input.equals(Input.SLM, chan)) {
@@ -115,6 +117,12 @@ public class StruckScalers extends ArrayList<StruckScaler> {
                     break;
             }
         }
+        
+        // ignore banks with more than the tegular 4 ( (tsettle+tstable) x (gated+ungated) ) readings 
+        // or unbalance between gated/ungated readngs (allow difference by 1)
+        if(this.size()>(Interval.values().length-1)*StruckScaler.NSLOT ||
+          Math.abs(this.count(StruckScaler.SLOT_GATED)-count(StruckScaler.SLOT_UNGATED))>1)
+            this.clear();
     }
 
     /**
@@ -148,18 +156,49 @@ public class StruckScalers extends ArrayList<StruckScaler> {
     }
 
     /**
+     * Counts the number of raw readouts for the selected slot
+     * @param slot the index of the slot
+     * @return the number
+    **/
+    private int count(int slot) {
+        int n = 0;
+        for (StruckScaler ss : this) {
+            switch(slot) {
+                case StruckScaler.SLOT_GATED:
+                    if(ss.gatedClock>=0 && ss.clock<0)
+                        n++;
+                    break;
+                case StruckScaler.SLOT_UNGATED:
+                    if(ss.gatedClock<0 && ss.clock>=0)
+                        n++;
+                    break;
+                default:
+                    break;
+            }
+        }
+        return n;
+    }
+                    
+    
+    /**
      * When there's one interval in a RAW::scaler bank, that interval is 
      * represented by (6) contiguous bank rows.  But when there's multiple
      * intervals, the gated/ungated are interspersed with another interval
      * (and the ungated doesn't contain the helicity bit).  Here we fix.
      */
     private void disentangle() {
+        int n = Interval.values().length-1;
         HashMap<StruckScaler,StruckScaler> d = new HashMap<>();
-        for (int ii=0; ii<this.size()-2; ii++) {
-            if (this.get(ii).interval != this.get(ii+2).interval) continue;
-            if (this.get(ii).clock<0 && this.get(ii+2).clock>0) {
-                if (this.get(ii).gatedClock>=0 && this.get(ii+2).gatedClock<0) {
-                    d.put(this.get(ii+2), this.get(ii));
+        for (int ii=0; ii<this.size()-n; ii++) {
+            if (this.get(ii).interval != this.get(ii+n).interval ||
+                this.get(ii).helicity != this.get(ii+n).helicity ||
+                this.get(ii).quartet  != this.get(ii+n).quartet ) {
+                d.clear(); //give up on matching in case an anomaly is detected
+                return;
+            }
+            if (this.get(ii).clock<0 && this.get(ii+n).clock>0) {
+                if (this.get(ii).gatedClock>=0 && this.get(ii+n).gatedClock<0) {
+                    d.put(this.get(ii+n), this.get(ii));
                 }
             }
         }
