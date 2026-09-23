@@ -68,12 +68,12 @@ function get_threads() {
 
 # get a cpu list for taskset, of all cpus on a given NUMA node:
 function get_all_numa_cpus() {
-     echo $(numactl -H | grep "^node $1 cpus:" | awk '{for(i=4;i<NF;++i)print$i}') | sed 's/ /,/g'
+     echo $(numactl -H | grep "^node $1 cpus:" | awk '{for(i=4;i<=NF;++i)print$i}') | sed 's/ /,/g'
 }
 
 # get a cpu list for tasket, of the first N cpus on a given NUMA node:
 function get_numa_cpus() {
-    cpus=$( echo $(numactl -H | grep "^node $1 cpus:" | awk -v T="$2" '{for(i=4;i<T;++i)print$i}') | sed 's/ /,/g' )
+    echo $(numactl -H | grep "^node $1 cpus:" | awk -v T="$2" '{for(i=4;i<=T;++i)print$i}') | sed 's/ /,/g'
 }
 
 function split_cli {
