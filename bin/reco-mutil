@@ -9,7 +9,6 @@ export MALLOC_ARENA_MAX=1
 threads=$(get_threads)
 node=$(((RANDOM % 2)))
 cpus=$(get_all_numa_cpus $node)
-echo $threads $node $cpus && exit
 
 taskset -c $cpus \
     java ${JAVA_OPTS-} -XX:MaxRAMPercentage=40.0 -Xms10240m -XX:+UseParallelGC ${jvm_options[@]} \
