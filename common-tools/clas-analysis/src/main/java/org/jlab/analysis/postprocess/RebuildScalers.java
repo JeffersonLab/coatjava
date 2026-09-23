@@ -123,7 +123,7 @@ public class RebuildScalers {
                     runScalerBank = ds.createRunBank(writer.getSchemaFactory());
                     helScalerBank = ds.createHelicityBank(writer.getSchemaFactory());
                    
-                    SerialUtil.assignScalerHelicity(event, helScalerBank, helSeq);
+                    SerialUtil.assignScalerHelicity(runConfigBank.getLong("timestamp",0), helScalerBank, helSeq.getSequence(runConfigBank.getInt("run",0)));
 
                     // put modified HEL/RUN::scaler back in the event:
                     event.write(runScalerBank);

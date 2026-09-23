@@ -36,8 +36,9 @@ public class SerialUtil {
      * @param bank the HEL::scaler bank
      * @param seq previously initialized helicity sequence
      */
+    @Deprecated
     public static void assignScalerHelicity(Event event, Bank bank, HelicitySequenceManager seq) {
-
+        
         // Struck (helicity) scaler readout is always slightly after the helicity
         // state change, i.e., as registered in the FADCs, so its true helicity
         // is offset by one state from its event:
@@ -69,10 +70,12 @@ public class SerialUtil {
      */
     public static void assignScalerHelicity(Long timestamp, Bank bank, HelicitySequence seq) {
 
-        // Struck (helicity) scaler readout is always slightly after the helicity
-        // state change, i.e., as registered in the FADCs, so its true helicity
-        // is offset by one state from its event:
-        final int readoutStateOffset = -1;
+        // Struck (helicity) scaler readout is always after the helicity
+        // state change, so its true helicity is offset by one state from its event;
+        // to avoid ambiguities arising from whether the scaler bznk appears before 
+        // the helicity change is registered in the FADCs, shift by half a state:
+        final int readoutTimestampOffset = (int) (-0.5 * HelicitySequence.TIMESTAMP_CLOCK
+                                                       / seq.getHelicityClock());
 
         // Rows in the HEL::scaler bank correspond to the most recent, consecutive,
         // time-ordered, T-stable intervals.  The first row is the earliest in
@@ -81,14 +84,14 @@ public class SerialUtil {
 
             // This is the helicity state offset for this HEL::scaler row, where
             // the last row has an offset of -1:
-            final int offset = bank.getRows() - row - 1 + readoutStateOffset;
+            final int offset = bank.getRows() - row - 1;
 
             // Assign delay-corrected helicity to this HEL::scaler row:
-            bank.putByte("helicity",row,seq.search(timestamp,offset).value());
+            bank.putByte("helicity",row,seq.search(timestamp+readoutTimestampOffset,offset).value());
             if (seq.getHalfWavePlate())
-                bank.putByte("helicityRaw",0,(byte)(-1*seq.search(timestamp,offset).value()));
+                bank.putByte("helicityRaw",0,(byte)(-1*seq.search(timestamp+readoutTimestampOffset,offset).value()));
             else
-                bank.putByte("helicityRaw",0,seq.search(timestamp,offset).value());
+                bank.putByte("helicityRaw",0,seq.search(timestamp+readoutTimestampOffset,offset).value());
         }
     }
 
