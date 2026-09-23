@@ -8,8 +8,7 @@ export MALLOC_ARENA_MAX=1
 
 # get the "-t" threading option:
 for ((i=0; i<${#class_options[@]}; i++)); do
-    arg="${class_options[$i]}"
-    if [[ "$arg" == "-t" ]]; then
+    if [[ "${class_options[$i]}" == "-t" ]]; then
         let i=i+1
         threads="${class_options[$i]}"
         break
