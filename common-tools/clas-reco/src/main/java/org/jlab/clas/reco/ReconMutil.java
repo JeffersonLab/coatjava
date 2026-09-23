@@ -293,7 +293,7 @@ final class ReconMutil {
      */
     void rethreader(int seconds, int... threads) {
         System.out.println("recon-mutil::  ~~~~~~~~~ rethreading initiated ~~~~~~~~~");
-        progress.setInterval(-1);
+        //progress.setInterval(-1);
         Map<Integer,Benchmark> benches = new LinkedHashMap<>();
         for (int i=threads[0]; i<64; i++) {
             final int j = i;
@@ -317,11 +317,9 @@ final class ReconMutil {
             System.out.println(benchmark);
             benches.put(thread, benchmark);
         }
-        for (int thread : benches.keySet()) {
-            benches.get(thread).sortHeaders();
-            String[] csv = benches.get(thread).toCSV();
-            System.out.println("threads,"+csv[0]+"\n"+thread+","+csv[1]);
-        }
+        String csv = ReconUtil.toCSV(benches);
+        System.out.println(csv);
+        ReconUtil.writeFile("scaling.txt", csv);
         stopProcessing();
     }
 

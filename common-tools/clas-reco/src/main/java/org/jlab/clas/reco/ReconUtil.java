@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -17,6 +19,7 @@ import org.jlab.clara.engine.EngineDataType;
 import org.jlab.jnp.hipo4.data.Bank;
 import org.jlab.jnp.hipo4.data.SchemaFactory;
 import org.jlab.utils.ClaraYaml;
+import org.jlab.utils.benchmark.Benchmark;
 import org.jlab.utils.options.OptionParser;
 import org.jlab.utils.options.OptionValue;
 import org.jlab.utils.system.ClasUtilsFile;
@@ -145,6 +148,16 @@ public class ReconUtil {
         catch (InterruptedException ex) {}
     }
 
+    static void writeFile(String filename, String content) {
+        Path p = Path.of(filename);
+        try {
+            Files.writeString(p, content);
+        } catch (IOException ex) {
+            System.getLogger(ReconUtil.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
+        }
+        
+    }
+
     /**
      * Just get the contents of a text file resource.
      * @param resource
@@ -181,4 +194,14 @@ public class ReconUtil {
         queue.offer(future);
     }
 
+    static String toCSV(Map<Integer,Benchmark> benches) {
+        for (Benchmark b : benches.values()) 
+            b.sortHeaders();
+        List<String> csv = new ArrayList<>();
+        String head = (new ArrayList<>(benches.values())).get(0).toCSV()[0];
+        csv.add("threads," + head);
+        for (int threads : benches.keySet())
+            csv.add(threads+","+benches.get(threads).toCSV()[1]);
+        return String.join("\n",csv);
+    }
 }
