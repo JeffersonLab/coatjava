@@ -218,7 +218,7 @@ public abstract class Porch {
         System.out.println("recon-mutil::  ~~~~~~~~~ rethreading primed ~~~~~~~~~");
         for (int thread : threads) {
             ReconUtil.sleep(1000);
-            benchmark = new Benchmark(BENCHMARK_NAMES);
+            benchmark = new Benchmark("Scaling",BENCHMARK_NAMES);
             for (int j=0; j<thread; j++) {
                 final int k = j;
                 ReconUtil.addAndRemove(procThreads, CompletableFuture.runAsync(() -> { processor(k); }));

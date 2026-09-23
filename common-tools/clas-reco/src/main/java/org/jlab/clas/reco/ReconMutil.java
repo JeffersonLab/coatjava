@@ -309,7 +309,7 @@ final class ReconMutil {
         System.out.println("recon-mutil::  ~~~~~~~~~ rethreading primed ~~~~~~~~~");
         for (int thread : threads) {
             ReconUtil.sleep(1000);
-            benchmark = new Benchmark(BENCHMARK_NAMES);
+            benchmark = new Benchmark("ReconMutil",BENCHMARK_NAMES);
             for (int j=0; j<thread; j++) {
                 final int k = j;
                 ReconUtil.addAndRemove(procThreads, CompletableFuture.runAsync(() -> { processor(k); }));
@@ -511,7 +511,7 @@ final class ReconMutil {
             }
         }
         if (!parser.getOption("-b").isDefault() || parser.getOption("-t").stringValue().split(",").length > 1)
-            benchmark = new Benchmark(BENCHMARK_NAMES);
+            benchmark = new Benchmark("ReconMutil",BENCHMARK_NAMES);
     }
 
     /**

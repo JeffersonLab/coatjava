@@ -245,7 +245,7 @@ public class RecoMutil extends Porch {
             }
         }
         if (!opt.getOption("-b").isDefault() || opt.getOption("-t").stringValue().split(",").length > 1)
-            benchmark = new Benchmark(BENCHMARK_NAMES);
+            benchmark = new Benchmark("Reco-Util",BENCHMARK_NAMES);
     }
 
     /**
