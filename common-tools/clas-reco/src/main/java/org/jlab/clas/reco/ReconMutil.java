@@ -431,8 +431,7 @@ final class ReconMutil {
         serial.closure(writer);
         writer.close();
         if (parser.getOption("-t").stringValue().split(",").length == 1)
-            if (benchmark != null)
-                System.out.println(benchmark);
+            if (benchmark != null) System.out.println(benchmark);
         System.out.println(String.format("recon-mutil :: read/write/tagged/diff = %d/%d/%d/%d",
                 readEvents, writeEvents, taggedEvents.get(), writeEvents-readEvents-taggedEvents.get()));
     }
