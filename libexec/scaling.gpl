@@ -1,4 +1,20 @@
 set terminal svg size 1000,700 enhanced font 'Verdana, 14'
+
+# parse command line arguments:
+# (usage:  scaling.gpl [-m] [datafile])
+datafile = 'scaling.txt'
+if (ARGC > 0) {
+    if (ARGV[1] eq "-m") {
+        recoMutil = 1
+        set datafile separator ","
+        if (ARGC > 1) {
+            datafile = ARGV[ARGC]
+        }
+    } else {
+        datafile = ARGV[ARGC]
+    }
+}
+
 set palette maxcolors 8
 set palette defined ( \
     0 '#A6CEE3',\
@@ -42,23 +58,10 @@ set style line 36 pt 6 lt 1 lc rgb '#E31A1C' # dark red
 set style line 37 pt 6 lt 1 lc rgb '#FDBF6F' # light orange
 set style line 38 pt 6 lt 1 lc rgb '#FF7F00' # dark orange
 
-# parse command line arguments:
-datafile = 'scaling.txt'
-if (ARGC > 0) {
-    if (ARGV[1] eq "-u") {
-        uberMode = 1
-        if (ARGC > 1) {
-            datafile = ARGV[ARGC]
-        }
-    } else {
-        datafile = ARGV[ARGC]
-    }
-}
-
 set multiplot layout 2,2
 set datafile columnheaders
+stats datafile nooutput
 set yrange [0:]
-
 set xlabel 'Threads'
 set ylabel 'Event Rate [Hz]'
 set size 0.4,0.45
@@ -67,11 +70,17 @@ set key nobox inside top left
 f(x) = m*x
 m = 2
 
-set fit quiet
-set fit nolog
-fit [0:24] f(x) datafile using 1:(1/$2*1e3) via m
-rate = sprintf('%.1f Hz/CPU',m)
-plot datafile using 1:(1/$2*1e3) pt 7 notitle, f(x) title rate
+set fit quiet nolog
+
+if (exists("recoMutil")) {
+    fit [0:24] f(x) datafile using 1:($1/column($#)*1e3) via m
+    rate = sprintf('%.1f Hz/CPU',m)
+    plot datafile using 1:($1/column($#)*1e3) pt 7 notitle, f(x) title rate
+} else {
+    fit [0:24] f(x) datafile using 1:(1/$2*1e3) via m
+    rate = sprintf('%.1f Hz/CPU',m)
+    plot datafile using 1:(1/$2*1e3) pt 7 notitle, f(x) title rate
+}
 
 set xlabel 'Threads'
 set ylabel 'Event Time [ms]'
@@ -79,25 +88,28 @@ set key nobox outside top center horizontal
 set size 0.4,0.55
 set origin 0.0,0.0
 
-plot datafile \
+set logscale y
+if (exists("recoMutil")) {
+    plot datafile \
+           using 1:((column($#)))        pt 7  with points title 'Total'  ,\
+        '' using 1:((column("write")))   pt 11 with points title 'Writer' ,\
+        '' using 1:((column("read")))    pt 9  with points title 'Reader' ,\
+
+} else {
+    plot datafile \
            using 1:((column($#)))   pt 7  with points title 'Total'  ,\
         '' using 1:(($5*$1))        pt 7  with points title 'N-Readers'  ,\
         '' using 1:($5)             pt 9  with points title 'Reader' ,\
         '' using 1:((column($#-1))) pt 11 with points title 'Writer' ,\
+}
 
+unset logscale y
 set size 0.6,1.0
 set origin 0.4,0.0
 set key outside right vertical
 
-if (exists("uberMode")) {
-    plot datafile \
-           using 1:($6)  pt 7 with points title columnhead(6)  ,\
-        '' using 1:($7)  pt 7 with points title columnhead(7)  ,\
-        '' using 1:($8)  pt 7 with points title columnhead(8)  ,\
-        '' using 1:($9)  pt 7 with points title columnhead(9)  ,\
-        '' using 1:($10) pt 7 with points title columnhead(10) ,\
-        '' using 1:($11) pt 7 with points title columnhead(11) ,\
-        '' using 1:($12) pt 7 with points title columnhead(12) ,\
+if (exists("recoMutil")) {
+    plot for [i=2:STATS_columns-1] datafile using 1:i ls i-1 with points title columnhead(i)
 } else {
     plot datafile \
            using 1:($6)  ls 1  with points title columnhead(6)  ,\
