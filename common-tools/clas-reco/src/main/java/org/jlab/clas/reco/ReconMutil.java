@@ -40,6 +40,8 @@ import org.json.JSONObject;
  */
 final class ReconMutil {
 
+    static final String[] BENCHMARK_NAMES = new String[]{"evio","deco","serial","post","write"};
+    
     // Performance parameters:
     final int BENCH_SECONDS = 30;
     final int EVENTS_PER_CHUNK = 20;
@@ -82,7 +84,7 @@ final class ReconMutil {
     volatile int writeEvents;
     volatile AtomicInteger taggedEvents = new AtomicInteger();
     volatile ProgressPrintout progress = new ProgressPrintout();
-    volatile Benchmark benchmark = new Benchmark(new String[]{"evio","deco","serial","post","write"});
+    volatile Benchmark benchmark = new Benchmark(BENCHMARK_NAMES);
 
     // Control flags:
     final AtomicBoolean serialPause = new AtomicBoolean(true);
@@ -305,7 +307,7 @@ final class ReconMutil {
         System.out.println("recon-mutil::  ~~~~~~~~~ rethreading primed ~~~~~~~~~");
         for (int thread : threads) {
             ReconUtil.sleep(1000);
-            benchmark = new Benchmark(new String[]{"evio","deco","serial","post","write"});
+            benchmark = new Benchmark(BENCHMARK_NAMES);
             for (int j=0; j<thread; j++) {
                 final int k = j;
                 ReconUtil.addAndRemove(procThreads, CompletableFuture.runAsync(() -> { processor(k); }));
