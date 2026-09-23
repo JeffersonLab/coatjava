@@ -17,8 +17,8 @@ def cli():
         cli.error('cannot find CLARA installation via -c or $CLARA_HOME')
     elif shutil.which('run-clara'):
         cfg.run_clara = shutil.which('run-clara')
-    elif os.path.exists(clara_home + '/plugins/clas12/bin/run-clara'):
-        cfg.run_clara = clara_home + '/plugins/clas12/bin/run-clara'
+    elif os.path.exists(cfg.clara + '/plugins/clas12/bin/run-clara'):
+        cfg.run_clara = cfg.clara + '/plugins/clas12/bin/run-clara'
     else:
         cli.error('cannot find run-clara in $PATH or $CLARA_HOME')
     if cfg.cpus:
