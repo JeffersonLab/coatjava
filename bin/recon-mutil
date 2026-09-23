@@ -6,7 +6,12 @@ split_cli $@
 
 export MALLOC_ARENA_MAX=1
 
-java ${JAVA_OPTS-} -Xms10240m -XX:+UseParallelGC ${jvm_options[@]} \
+threads=$(get_threads)
+node=$(((RANDOM % 2)))
+cpus=$(get_all_numa_cpus $node)
+
+taskset -c $cpus \
+    java ${JAVA_OPTS-} -Xms10240m -XX:+UseParallelGC ${jvm_options[@]} \
     -cp ${COATJAVA_CLASSPATH:-''} \
     org.jlab.clas.reco.ReconMutil \
     ${class_options[@]}
