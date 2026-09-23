@@ -244,7 +244,7 @@ public class RecoMutil extends Porch {
                 System.exit(22);
             }
         }
-        if (!opt.getOption("-b").isDefault())
+        if (!opt.getOption("-b").isDefault() || opt.getOption("-t").stringValue().split(",").length > 1)
             benchmark = new Benchmark(BENCHMARK_NAMES);
     }
 

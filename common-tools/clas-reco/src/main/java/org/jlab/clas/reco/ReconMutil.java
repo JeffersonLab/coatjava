@@ -510,7 +510,7 @@ final class ReconMutil {
                 System.exit(22);
             }
         }
-        if (!parser.getOption("-b").isDefault())
+        if (!parser.getOption("-b").isDefault() || parser.getOption("-t").stringValue().split(",").length > 1)
             benchmark = new Benchmark(BENCHMARK_NAMES);
     }
 
