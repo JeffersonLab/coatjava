@@ -18,14 +18,18 @@ import org.jlab.utils.benchmark.BenchmarkTimer.BenchmarkMultiTimer;
  */
 public class Benchmark implements Comparator<String> {
    
-    private static final Benchmark benchmarkInstance = new Benchmark();
+    private static final Benchmark benchmarkInstance = new Benchmark("");
     private Map<String,BenchmarkMultiTimer> timerStore = new LinkedHashMap<>();
     private Timer updateTimer = null;
     private final ArrayList<String> specials = new ArrayList<>();
+    String name;
     
-    public Benchmark() {}
+    public Benchmark(String name) {
+        this.name = name;
+    }
 
-    public Benchmark(String... specials) {
+    public Benchmark(String name, String... specials) {
+        this.name = name;
         this.specials.addAll(Arrays.asList(specials));
     }
 
@@ -90,12 +94,12 @@ public class Benchmark implements Comparator<String> {
             int len = timers.iterator().next().toString().length();
             char[] asterix = new char[len+8];
             Arrays.fill(asterix,'*');
-            String margins = new String(asterix);
+            String margins = new String(asterix) + "\n";
             s.append(margins);
-            s.append("\n");
-            s.append("*     Benchmark  Results \n");
+            s.append("*     ");
+            s.append(name);
+            s.append("Benchmark\n");
             s.append(margins);
-            s.append("\n");
             for (BenchmarkTimer b : timers) {
                 s.append("*   ");
                 s.append(b);
@@ -107,7 +111,6 @@ public class Benchmark implements Comparator<String> {
                  timers.stream().mapToDouble(x -> x.getSeconds()).sum(),
                  timers.stream().mapToDouble(x -> x.getMillisecondsPerCall()).sum()));
             s.append(margins);
-            s.append("\n");
         }
         return s.toString();
     }
