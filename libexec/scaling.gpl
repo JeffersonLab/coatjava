@@ -74,11 +74,11 @@ set fit quiet nolog
 
 if (exists("recoMutil")) {
     fit [0:24] f(x) datafile using 1:($1/column($#)*1e3) via m
-    rate = sprintf('%.1f Hz/CPU',m)
+    rate = sprintf('%.1f Hz/Thread',m)
     plot datafile using 1:($1/column($#)*1e3) pt 7 notitle, f(x) title rate
 } else {
     fit [0:24] f(x) datafile using 1:(1/$2*1e3) via m
-    rate = sprintf('%.1f Hz/CPU',m)
+    rate = sprintf('%.1f Hz/Thread',m)
     plot datafile using 1:(1/$2*1e3) pt 7 notitle, f(x) title rate
 }
 
