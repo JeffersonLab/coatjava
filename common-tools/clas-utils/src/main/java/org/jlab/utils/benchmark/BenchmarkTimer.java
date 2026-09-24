@@ -10,6 +10,8 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public class BenchmarkTimer {
 
+    private static final int WARMUP_CALLS = 100;
+    
     public static class BenchmarkMultiTimer extends BenchmarkTimer {
         ConcurrentHashMap<Integer,Long> timeAtResume = new ConcurrentHashMap<>();
         ConcurrentHashMap<Integer,Boolean> isPaused = new ConcurrentHashMap<>();
@@ -22,8 +24,8 @@ public class BenchmarkTimer {
         }
         public void pause(int thread) {
             if (!isPaused.get(thread)) {
-                numberOfCalls.incrementAndGet();
-                totalTime.addAndGet(System.nanoTime() - timeAtResume.get(thread));
+                if (numberOfCalls.incrementAndGet() > WARMUP_CALLS)
+                    totalTime.addAndGet(System.nanoTime() - timeAtResume.get(thread));
                 isPaused.put(thread, true);
             }
         }
@@ -61,8 +63,8 @@ public class BenchmarkTimer {
     
     public void pause(){
         if(isPaused==false){
-            totalTime.addAndGet(System.nanoTime() - timeAtResume);
-            numberOfCalls.incrementAndGet();
+            if (numberOfCalls.incrementAndGet() > WARMUP_CALLS)
+                totalTime.addAndGet(System.nanoTime() - timeAtResume);
             isPaused = true;
         }
     }
@@ -83,7 +85,7 @@ public class BenchmarkTimer {
     }
     
     public double getMillisecondsPerCall() {
-        return numberOfCalls.get() > 0 ? getMilliseconds() / numberOfCalls.get() : 0;
+        return numberOfCalls.get() > 0 ? getMilliseconds() / (numberOfCalls.get() - WARMUP_CALLS) : 0;
     }
 
     @Override
