@@ -18,11 +18,11 @@ import org.jlab.utils.benchmark.BenchmarkTimer.BenchmarkMultiTimer;
  */
 public class Benchmark implements Comparator<String> {
    
+    String name;
     private static final Benchmark benchmarkInstance = new Benchmark("");
     private Map<String,BenchmarkMultiTimer> timerStore = new LinkedHashMap<>();
     private Timer updateTimer = null;
     private final ArrayList<String> specials = new ArrayList<>();
-    String name;
     
     public Benchmark(String name) {
         this.name = name;
@@ -98,7 +98,7 @@ public class Benchmark implements Comparator<String> {
             s.append(margins);
             s.append("*     ");
             s.append(name);
-            s.append(" Benchmark\n");
+            s.append(" Benchmarks\n");
             s.append(margins);
             for (BenchmarkTimer b : timers) {
                 s.append("*   ");
@@ -123,7 +123,7 @@ public class Benchmark implements Comparator<String> {
         };
     }
 
-    public void sortHeaders() {
+    public void sortByName() {
         List<String> keys = new ArrayList<>(timerStore.keySet());
         Collections.sort(keys, this);
         Map<String,BenchmarkMultiTimer> timers = new LinkedHashMap<>();

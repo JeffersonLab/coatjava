@@ -108,7 +108,7 @@ do
   esac
 done
 
-echo "---------------------- Configuration ----------------------"
+echo "------------------ Configuration ----------------------"
 print_arg() {
   printf "  %30s = " "$1"
   shift

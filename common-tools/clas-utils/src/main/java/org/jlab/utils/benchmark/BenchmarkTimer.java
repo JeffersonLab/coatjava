@@ -85,13 +85,13 @@ public class BenchmarkTimer {
     }
     
     public double getMillisecondsPerCall() {
-        return numberOfCalls.get()-WARMUP_CALLS > 0 ? getMilliseconds() / (numberOfCalls.get() - WARMUP_CALLS) : 0;
+        return numberOfCalls.get() > WARMUP_CALLS ? getMilliseconds() / (numberOfCalls.get() - WARMUP_CALLS) : 0;
     }
 
     @Override
     public String toString() {
         return String.format("%-15s : #Calls %12d, Total = %12.2f sec, Unit = %12.3f msec",
-            getName(), numberOfCalls.get(), getSeconds(), getMillisecondsPerCall());
+            getName(), numberOfCalls.get()-WARMUP_CALLS, getSeconds(), getMillisecondsPerCall());
     }
 
 }
