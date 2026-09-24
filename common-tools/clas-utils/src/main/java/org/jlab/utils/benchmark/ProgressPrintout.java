@@ -54,7 +54,7 @@ public class ProgressPrintout {
         System.out.println("\n\n");        
     }
     
-    public void updateStatus(){        
+    public synchronized void updateStatus(){        
         if (++this.numberOfCalls < WARMUP_CALLS){
             this.previousPrintoutTime = System.currentTimeMillis();
             this.startPrintoutTime = this.previousPrintoutTime;
