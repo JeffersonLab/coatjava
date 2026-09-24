@@ -6,7 +6,6 @@ import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.jlab.coda.jevio.EvioException;
@@ -46,7 +45,7 @@ public class RecoMutil extends Porch {
     Map<String,ReconstructionEngine> engines = new LinkedHashMap<>();
 
     // Control flags:
-    final AtomicBoolean serialPause = new AtomicBoolean(true);
+    final Object serialLock = new Object();
    
     // FIXME: stuff for deciding when to reload helicities
     final int helicityClock = 30;  // Hz
@@ -110,7 +109,7 @@ public class RecoMutil extends Porch {
                 : new HipoDataEvent(((Event)input), fullSchema);
         if (benchmark != null) benchmark.resume(thread, "serial");
         Event tag;
-        synchronized (serialPause) {
+        synchronized (serialLock) {
             tag = serial.read(event.getHipoEvent());
         }
         if (thread == 0 && ++serials > reload) {
@@ -147,9 +146,8 @@ public class RecoMutil extends Porch {
     @Override
     void write(HipoDataEvent dataEvent) {
         Event event = dataEvent.getHipoEvent();
-        while (serialPause.get()) ReconUtil.sleep (100);
         if (benchmark != null) benchmark.resume("post");
-        synchronized (serialPause) {
+        synchronized (serialLock) {
             serial.process(dataEvent.getHipoEvent());
         }
         if (benchmark != null) {
@@ -184,12 +182,9 @@ public class RecoMutil extends Porch {
     }
 
     void updateHelicity() {
-        serialPause.set(true);
-        ReconUtil.sleep(1000);
-        synchronized (serialPause) {
+        synchronized (serialLock) {
             serial.updateHelicitySequence();
         }
-        serialPause.set(false);
     }
 
     HipoDataEvent decode(int thread, ByteBuffer bytes) {

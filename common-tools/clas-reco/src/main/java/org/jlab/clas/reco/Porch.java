@@ -62,30 +62,34 @@ public abstract class Porch {
      * @param threads number of threads
      * @param input names of input files to read
      */
-    public final void launch(int[] threads, String... input) {
+    public void launch(int[] threads, String... input) {
 
         reset();
+
         System.out.println(String.format("recon-mutil::  spawning 2*%d+2 threads",threads[0]));
         
-        // spawn all the threads:
-        readerThread = CompletableFuture.runAsync(() -> { reader(threads[0], input); });
-        writerThread = CompletableFuture.runAsync(() -> { writer(); });
-        for (int i=0; i<threads[0]; i++) {
-            final int j = i;
-            ReconUtil.addAndRemove(decoThreads, CompletableFuture.runAsync(() -> { decoder(j); }));
-            ReconUtil.addAndRemove(procThreads, CompletableFuture.runAsync(() -> { processor(j); }));
-        }
-
         // start a period status printout:
         ReconUtil.runPeriodic(10, statsShow);
         
+        // spawn all the threads:
+        readerThread = CompletableFuture.runAsync(() -> { reader(threads[0], input); });
+        for (int i=0; i<Math.max(8,threads[0]); i++) {
+            final int j = i;
+            ReconUtil.addAndRemove(decoThreads, CompletableFuture.runAsync(() -> { decoder(j); }));
+        }
+        ReconUtil.sleep(1000);
+        for (int i=0; i<threads[0]; i++) {
+            final int j = i;
+            ReconUtil.addAndRemove(procThreads, CompletableFuture.runAsync(() -> { processor(j); }));
+        }
+        writerThread = CompletableFuture.runAsync(() -> { writer(); });
+       
         // perform scaling test:
-        CompletableFuture rethreadThread = threads.length < 2 ? null :
-            CompletableFuture.runAsync(() -> { rethreader(BENCH_SECONDS,threads); });
+        if (threads.length > 1)
+            CompletableFuture.runAsync(() -> { rethreader(BENCH_SECONDS,threads); }).join();
 
         // wait for finish:
         writerThread.join();
-        if (rethreadThread != null) rethreadThread.join();
     }
 
     /**
@@ -204,37 +208,32 @@ public abstract class Porch {
      * @param seconds delay before switching to next thread count
      * @param threads thread counts to use 
      */
-    final void rethreader(int seconds, int... threads) {
+    void rethreader(int seconds, int... threads) {
         System.out.println("recon-mutil::  ~~~~~~~~~ rethreading initiated ~~~~~~~~~");
-        progress.setInterval(-1);
         Map<Integer,Benchmark> benches = new LinkedHashMap<>();
-        for (int i=threads[0]; i<64; i++) {
-            final int j = i;
-            ReconUtil.addAndRemove(decoThreads, CompletableFuture.runAsync(() -> { decoder(j); }));
-        }
         while (writeEvents < 100 || !ReconUtil.isDone(decoThreads))
             ReconUtil.sleep(1000);
         for (CompletableFuture cf : procThreads) cf.cancel(true);
         System.out.println("recon-mutil::  ~~~~~~~~~ rethreading primed ~~~~~~~~~");
         for (int thread : threads) {
-            ReconUtil.sleep(1000);
-            benchmark = new Benchmark("Scaling",BENCHMARK_NAMES);
+            benchmark = null;
             for (int j=0; j<thread; j++) {
                 final int k = j;
                 ReconUtil.addAndRemove(procThreads, CompletableFuture.runAsync(() -> { processor(k); }));
             }
+            ReconUtil.sleep(10000);
+            benchmark = new Benchmark(thread+" Threads Scaling ",BENCHMARK_NAMES);
             ReconUtil.sleep(seconds*1000);
-            for (CompletableFuture cf : procThreads) cf.cancel(true);
-            System.out.println(String.format("\nrecon-mutil:: ~~~~~~~~~ rethreading count: %d ~~~~~~~~~\n",thread));
+            System.out.println(String.format("\nrecon-mutil:: ~~~~~~~~~ rethreading count %d ~~~~~~~~~\n",thread));
             System.out.println(progress.getUpdateString());
             System.out.println(benchmark);
             benches.put(thread, benchmark);
+            for (CompletableFuture cf : procThreads) cf.cancel(true);
         }
-        for (int thread : benches.keySet()) {
-            benches.get(thread).sortHeaders();
-            String[] csv = benches.get(thread).toCSV();
-            System.out.println("threads,"+csv[0]+"\n"+thread+","+csv[1]);
-        }
+        String csv = ReconUtil.toCSV(benches);
+        System.out.println(csv);
+        ReconUtil.writeFile("scaling-mutil.txt", csv);
+        ReconUtil.gnuplot_scaling("scaling-mutil.txt","scaling-mutil.svg");
         stop();
     }
     
@@ -243,14 +242,21 @@ public abstract class Porch {
      */
     void show() {
         String s1 = String.format("threads(r/d/p/w)=(%b/%b:%d/%b:%d/%b)",
-                !readerThread.isDone(), !ReconUtil.isDone(decoThreads), decoThreads.size(), !ReconUtil.isDone(procThreads), procThreads.size(), !writerThread.isDone());
+                readerThread != null ? !readerThread.isDone() : false, 
+                !ReconUtil.isDone(decoThreads),
+                decoThreads.size(),
+                !ReconUtil.isDone(procThreads),
+                procThreads.size(),
+                writerThread != null ? !writerThread.isDone() : false);
         String s2 = String.format(" queues(d/p/w)=(%d/%d/%d)",
-                decoQueue.size()*EVENTS_PER_CHUNK, procQueue.size()*EVENTS_PER_CHUNK, writeQueue.size()*EVENTS_PER_CHUNK);
+                decoQueue.size()*EVENTS_PER_CHUNK,
+                procQueue.size()*EVENTS_PER_CHUNK,
+                writeQueue.size()*EVENTS_PER_CHUNK);
         String s3 = String.format(" events(r/w/t/f)=(%d/%d/%d/%d)",
                 readEvents, writeEvents, taggedEvents.get(), failEvents);
-        Logger.getLogger(RecoMutil.class.getName()).log(Level.CONFIG, () -> s1+" "+s2+" "+s3);
+        Logger.getLogger(ReconMutil.class.getName()).log(Level.CONFIG, () -> s1+" "+s2+" "+s3);
     }
-   
+  
     /**
      * Cancel threads, empty queues, and reset counters. 
      */
