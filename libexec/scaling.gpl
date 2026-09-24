@@ -106,7 +106,7 @@ if (exists("recoMutil")) {
 unset logscale y
 set size 0.6,1.0
 set origin 0.4,0.0
-set key outside right vertical
+set key outside right vertical font ",12"
 
 if (exists("recoMutil")) {
     plot for [i=2:STATS_columns-1] datafile using 1:i ls i-1 with points title columnhead(i)
