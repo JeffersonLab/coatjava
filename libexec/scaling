@@ -122,7 +122,7 @@ def show(benchmarks):
         print(' '.join([str(x) for x in row])) 
 
 def save(benchmarks):
-    with open('scaling.txt','w') as f:
+    with open('scaling-clara.txt','w') as f:
         for row in table(benchmarks):
             f.write(' '.join([str(x) for x in row])+'\n') 
 
@@ -132,9 +132,9 @@ def plot():
         g = os.path.dirname(os.path.abspath(__file__))+'/scaling.gpl'
         r = subprocess.run(['gnuplot',g], capture_output=True, text=True)
         if r.returncode == 0:
-            with open('scaling.svg','w') as f:
+            with open('scaling-clara.svg','w') as f:
                 f.write(r.stdout)
-                print('Info:  created scaling.svg from scaling.txt and scaling.gpl!')
+                print('Info:  created scaling-clara.svg from scaling-clara.txt and coatjava/libexec/scaling.gpl!')
         else:
             print(r.stdout)
             print(r.stderr)
