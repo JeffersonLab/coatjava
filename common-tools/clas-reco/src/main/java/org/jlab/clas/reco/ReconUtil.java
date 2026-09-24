@@ -222,7 +222,7 @@ public class ReconUtil {
      */
     static String toCSV(Map<Integer,Benchmark> benches) {
         List<String> csv = new ArrayList<>();
-        for (Benchmark b : benches.values()) b.sortHeaders();
+        for (Benchmark b : benches.values()) b.sortByName();
         String head = (new ArrayList<>(benches.values())).get(0).toCSV()[0];
         csv.add("threads," + head);
         for (int threads : benches.keySet())
