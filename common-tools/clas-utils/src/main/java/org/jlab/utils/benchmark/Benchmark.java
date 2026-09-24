@@ -98,7 +98,7 @@ public class Benchmark implements Comparator<String> {
             s.append(margins);
             s.append("*     ");
             s.append(name);
-            s.append("Benchmark\n");
+            s.append(" Benchmark\n");
             s.append(margins);
             for (BenchmarkTimer b : timers) {
                 s.append("*   ");
