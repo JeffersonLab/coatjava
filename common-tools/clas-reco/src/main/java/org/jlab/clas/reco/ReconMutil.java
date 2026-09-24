@@ -245,11 +245,6 @@ final class ReconMutil {
                             catch (Exception ex) { ex.printStackTrace(); }
                             if (benchmark != null) benchmark.pause(thread, engine.getKey());
                         }
-                        if (benchmark != null) benchmark.resume("post");
-                        synchronized (serialLock) {
-                            serial.process(input.get(i).getHipoEvent());
-                        }
-                        if (benchmark != null) benchmark.pause("post");
                     }
                     output.add(input.get(i).getHipoEvent());
                     progress.updateStatus();
@@ -276,6 +271,11 @@ final class ReconMutil {
                 for (int i=0; i<e.size(); i++) {
                     if (benchmark != null) benchmark.resume("write");
                     if (writer != null) {
+                        if (benchmark != null) benchmark.resume("post");
+                        synchronized (serialLock) {
+                            serial.process(e.get(i));
+                        }
+                        if (benchmark != null) benchmark.pause("post");
                         if (e.get(i).getEventTag() > 0 || schemaBankList.isEmpty())
                             writer.addEvent(e.get(i), e.get(i).getEventTag());
                         else
