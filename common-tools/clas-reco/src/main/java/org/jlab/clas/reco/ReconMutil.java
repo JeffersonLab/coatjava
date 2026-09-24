@@ -43,7 +43,7 @@ final class ReconMutil {
     
     // Performance parameters:
     final int BENCH_SECONDS = 30;
-    final int EVENTS_PER_CHUNK = 20;
+    final int EVENTS_PER_CHUNK = 100;
 
     // Static parameters:
     int maxEvents;
