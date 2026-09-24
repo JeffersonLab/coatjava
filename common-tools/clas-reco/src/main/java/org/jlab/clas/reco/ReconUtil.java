@@ -1,6 +1,7 @@
 package org.jlab.clas.reco;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -150,16 +151,6 @@ public class ReconUtil {
         catch (InterruptedException ex) {}
     }
 
-    static void writeFile(String filename, String content) {
-        Path p = Path.of(filename);
-        try {
-            Files.writeString(p, content);
-        } catch (IOException ex) {
-            System.getLogger(ReconUtil.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
-        }
-        
-    }
-
     /**
      * Just get the contents of a text file resource.
      * @param resource
@@ -176,7 +167,22 @@ public class ReconUtil {
         }
         return lines;
     }
-  
+ 
+    /**
+     * Write/overwrite a new file.
+     * @param filename
+     * @param content file contents 
+     */
+    static void writeFile(String filename, String content) {
+        Path p = Path.of(filename);
+        try {
+            Files.writeString(p, content);
+        } catch (IOException ex) {
+            System.getLogger(ReconUtil.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
+        }
+        
+    }
+
     /**
      * Check whether any of the given futures are still running.
      * @param queue
@@ -196,17 +202,6 @@ public class ReconUtil {
         queue.offer(future);
     }
 
-    static String toCSV(Map<Integer,Benchmark> benches) {
-        for (Benchmark b : benches.values()) 
-            b.sortHeaders();
-        List<String> csv = new ArrayList<>();
-        String head = (new ArrayList<>(benches.values())).get(0).toCSV()[0];
-        csv.add("threads," + head);
-        for (int threads : benches.keySet())
-            csv.add(threads+","+benches.get(threads).toCSV()[1]);
-        return String.join("\n",csv);
-    }
-   
     /**
      * Periodically run the print the thread, queue, and event states.
      * @param seconds 
@@ -217,6 +212,44 @@ public class ReconUtil {
         Timer t = new Timer("timer", true);
         t.scheduleAtFixedRate(task, 0, (int)(1000*seconds));
         return t;
+    }
+
+    /**
+     * Generate a CSV table for thread-mapped benchmarks.
+     * @param benches
+     * @return 
+     */
+    static String toCSV(Map<Integer,Benchmark> benches) {
+        List<String> csv = new ArrayList<>();
+        for (Benchmark b : benches.values()) b.sortHeaders();
+        String head = (new ArrayList<>(benches.values())).get(0).toCSV()[0];
+        csv.add("threads," + head);
+        for (int threads : benches.keySet())
+            csv.add(threads+","+benches.get(threads).toCSV()[1]);
+        return String.join("\n",csv);
+    }
+   
+    /**
+     * Run gnpulot coatjava/libexec/scaling.gpl
+     * @csvfilename input CSV filename
+     * @svgfilename output SVG filename
+     * @return exit code
+     */
+    static int gnuplot_scaling(String csvfilename, String svgfilename) {
+        ProcessBuilder pb = new ProcessBuilder("gnuplot","-c",
+                ClasUtilsFile.getResourceDir("CLAS12DIR", "libexec/scaling.gpl"),
+                "-m",csvfilename);
+        pb.redirectError(ProcessBuilder.Redirect.INHERIT);
+        pb.redirectOutput(new File(svgfilename));
+        Process proc;
+        try { proc = pb.start(); }
+        catch (IOException ex) {
+            System.getLogger(ReconUtil.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
+            return 42;
+        }
+        try { proc.waitFor(); }
+        catch (InterruptedException ex) { return 0; }
+        return proc.exitValue();
     }
 
 }
