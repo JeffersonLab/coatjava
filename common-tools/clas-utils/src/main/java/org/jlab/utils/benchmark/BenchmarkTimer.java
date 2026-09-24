@@ -86,7 +86,7 @@ public class BenchmarkTimer {
     }
     
     public double getMillisecondsPerCall() {
-        return numberOfCalls.get() > 0 ? getMilliseconds() / (numberOfCalls.get() - WARMUP_CALLS) : 0;
+        return numberOfCalls.get()-WARMUP_CALLS > 0 ? getMilliseconds() / (numberOfCalls.get() - WARMUP_CALLS) : 0;
     }
 
     @Override
