@@ -217,6 +217,7 @@ public abstract class Porch {
         System.out.println("recon-mutil::  ~~~~~~~~~ rethreading primed ~~~~~~~~~");
         for (int thread : threads) {
             benchmark = null;
+            ReconUtil.taskset(0, thread);
             for (int j=0; j<thread; j++) {
                 final int k = j;
                 ReconUtil.addAndRemove(procThreads, CompletableFuture.runAsync(() -> { processor(k); }));
@@ -233,7 +234,7 @@ public abstract class Porch {
         String csv = ReconUtil.toCSV(benches);
         System.out.println(csv);
         ReconUtil.writeFile("scaling-mutil.txt", csv);
-        ReconUtil.gnuplot_scaling("scaling-mutil.txt","scaling-mutil.svg");
+        ReconUtil.gnuplotScaling("scaling-mutil.txt","scaling-mutil.svg");
         stop();
     }
     

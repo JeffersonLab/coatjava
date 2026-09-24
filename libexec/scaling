@@ -7,9 +7,9 @@ def cli():
     cli.add_argument('-c','--clara',  metavar='DIR',help='CLARA_HOME path (default=$CLARA_HOME)',default=os.getenv('CLARA_HOME',None))
     cli.add_argument('-t','--threads',metavar='#',help='threads (default=8,16,24,34,44)',default='8,16,24,34,44')
     cli.add_argument('-e','--events', metavar='#',help='events per thread (default=555)',default=555,type=int)
-    cli.add_argument('-N','--numa',   metavar='#',help='restrict to a NUMA socket (choices=[0,1])',choices=[0,1])
+    cli.add_argument('-N','--numa',   metavar='#',help='restrict to a NUMA socket (choices=[0,1])',choices=[0,1], type=int)
     cli.add_argument('-C','--cpus',   metavar='#',help='restrict to a CPU list (e.g. 0,1,2,3)')
-    cli.add_argument('-T','--cputhr', metavar='#',help='restrict to same number of CPUs as threads')
+    cli.add_argument('-T','--cputhr', help='restrict to same number of CPUs as threads',action='store_true')
     cli.add_argument('datafile', help='input EVIO/HIPO data file')
     cfg = cli.parse_args()
     cfg.threads = cfg.threads.split(',')
@@ -55,7 +55,7 @@ def benchmark(cfg, threads, log):
     # use taskset for thread affinity:
     if cfg.cpus:
         if cfg.cputhr:
-            cmd.extend(['taskset','-c',','.join(cfg.cpus.split(',')[:threads])])
+            cmd.extend(['taskset','-c',','.join(cfg.cpus.split(',')[:int(threads)])])
         else:
             cmd.extend(['taskset','-c',cfg.cpus])
     # add the run-clara command:
@@ -130,7 +130,7 @@ def plot():
     import os,shutil,subprocess
     if shutil.which('gnuplot'):
         g = os.path.dirname(os.path.abspath(__file__))+'/scaling.gpl'
-        r = subprocess.run(['gnuplot',g], capture_output=True, text=True)
+        r = subprocess.run(['gnuplot',g,'scaling-clara.txt'], capture_output=True, text=True)
         if r.returncode == 0:
             with open('scaling-clara.svg','w') as f:
                 f.write(r.stdout)

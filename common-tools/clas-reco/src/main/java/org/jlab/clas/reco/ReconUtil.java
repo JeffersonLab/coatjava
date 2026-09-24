@@ -9,6 +9,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Timer;
@@ -235,21 +236,80 @@ public class ReconUtil {
      * @svgfilename output SVG filename
      * @return exit code
      */
-    static int gnuplot_scaling(String csvfilename, String svgfilename) {
+    static int gnuplotScaling(String csvfilename, String svgfilename) {
         ProcessBuilder pb = new ProcessBuilder("gnuplot","-c",
                 ClasUtilsFile.getResourceDir("CLAS12DIR", "libexec/scaling.gpl"),
                 "-m",csvfilename);
         pb.redirectError(ProcessBuilder.Redirect.INHERIT);
         pb.redirectOutput(new File(svgfilename));
-        Process proc;
-        try { proc = pb.start(); }
-        catch (IOException ex) {
-            System.getLogger(ReconUtil.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
-            return 42;
+        try {
+            Process proc = pb.start();
+            proc.waitFor();
+            return proc.exitValue();
         }
-        try { proc.waitFor(); }
-        catch (InterruptedException ex) { return 0; }
-        return proc.exitValue();
+        catch (IOException ex) { System.getLogger(ReconUtil.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex); }
+        catch (InterruptedException ex) {}
+        return 42;
+    }
+  
+    /**
+     * Get the cpus from a node from the "numactl" command.
+     * @param numaNode numa node index
+     * @param cpuCount maximum number of cpus to get
+     * @return taskset-formatted cpu string
+     */
+    static String getTasksetCpus(int numaNode, int cpuCount) {
+        ProcessBuilder pb = new ProcessBuilder("numactl","-H");
+        pb.redirectError(ProcessBuilder.Redirect.INHERIT);
+        Process proc;
+        try {
+            proc = pb.start();
+            proc.waitFor();
+            for (String line : (new String(proc.getInputStream().readAllBytes(), StandardCharsets.UTF_8)).split("\n")) {
+                if (line.startsWith("node "+numaNode+" cpus:")) {
+                    List<String> cols = Arrays.asList(line.split(" "));
+                    List<String> cpus = cols.subList(3, cols.size());
+                    if (cpuCount > 0 && cpuCount < cpus.size())
+                        cpus = cpus.subList(0, cpuCount);
+                    return String.join(",",cpus);
+                }
+            }
+        }
+        catch (InterruptedException ex) {}
+        catch (IOException ex) { System.getLogger(ReconUtil.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex); }
+        return null;
+    }
+
+    /**
+     * Run the system "taskset" command on this JVM and all its threads.
+     * @param cpus cpu list for taskset
+     * @return taskset exit code 
+     */
+    static int taskset(String cpus) {
+        long pid = ProcessHandle.current().pid();
+        String[] cmd = new String[]{"taskset","-a","-p","-c",cpus,String.valueOf(pid)};
+        System.getLogger(ReconUtil.class.getName()).log(System.Logger.Level.INFO, () -> "running \""+String.join(" ",cmd)+"\"");
+        ProcessBuilder pb = new ProcessBuilder(cmd);
+        try {
+            Process proc = pb.start();
+            proc.waitFor();
+            System.getLogger(ReconUtil.class.getName()).log(System.Logger.Level.INFO, () -> "taskset exit code:  "+proc.exitValue()); 
+            return proc.exitValue();
+        }
+        catch (IOException ex) { System.getLogger(ReconUtil.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex); }
+        catch (InterruptedException ex) {}
+        return 42;
+    }
+
+    /**
+     * Run the system "taskset" command on this JVM, using "numactl" to pick cpus.
+     * @param numaNode numa node index
+     * @param cpuCount maximum number of cpus to get
+     * @return taskset exit code 
+     */
+    static int taskset(int numaNode, int cpuCount) {
+        String cpus = getTasksetCpus(numaNode, cpuCount);
+        return cpus != null ? taskset(cpus) : 42;
     }
 
 }
