@@ -49,7 +49,7 @@ public class ProgressPrintout {
     }
 
     public double getHz() {
-        return (numberOfCalls-WARMUP_CALLS) / (previousPrintoutTime-startPrintoutTime) * 1000;
+        return ((double)(numberOfCalls-WARMUP_CALLS)) / (previousPrintoutTime-startPrintoutTime) * 1000;
     }
     
     public void showStatus(){
