@@ -11,6 +11,7 @@ import java.util.TimerTask;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.jlab.coda.jevio.EvioException;
@@ -29,6 +30,7 @@ import org.jlab.utils.ClaraYaml;
 import org.jlab.utils.benchmark.Benchmark;
 import org.jlab.utils.benchmark.ProgressPrintout;
 import org.jlab.utils.options.OptionParser;
+import org.jlab.utils.options.OptionValue;
 import org.jlab.utils.system.ClasUtilsFile;
 import org.json.JSONObject;
 
@@ -82,12 +84,12 @@ final class ReconMutil {
     volatile int writeEvents;
     volatile AtomicInteger taggedEvents = new AtomicInteger();
     volatile ProgressPrintout progress = new ProgressPrintout();
-    volatile Benchmark benchmark = null;
+    AtomicReference<Benchmark> benchmark = null;
     TimerTask statsShow = new TimerTask() { @Override public void run() { show(); } };
 
     // Control flags:
     final Object serialLock = new Object();
-    
+   
     ReconMutil(OptionParser parser) {
         init(parser);
     }
@@ -194,7 +196,7 @@ final class ReconMutil {
                             ? decode(thread, (ByteBuffer)input.get(i))
                             : new HipoDataEvent(((Event)input.get(i)), fullSchema);
                     output.add(event);
-                    if (benchmark != null) benchmark.resume(thread, "serial");
+                    if (benchmark != null) benchmark.get().resume(thread, "serial");
                     Event tag;
                     synchronized (serialLock) {
                         tag = serial.read(event.getHipoEvent());
@@ -209,7 +211,7 @@ final class ReconMutil {
                         output.add(new HipoDataEvent(tag, fullSchema));
                         taggedEvents.incrementAndGet();
                     }
-                    if (benchmark != null) benchmark.pause(thread, "serial");
+                    if (benchmark != null) benchmark.get().pause(thread, "serial");
                 }
                 procQueue.offer(output);
             }
@@ -240,10 +242,10 @@ final class ReconMutil {
                 for (int i=0; i<input.size(); i++) {
                     if (input.get(i).getHipoEvent().getEventTag() == 0) {
                         for (Map.Entry<String,ReconstructionEngine> engine : engines.entrySet()) {
-                            if (benchmark != null) benchmark.resume(thread, engine.getKey());
+                            if (benchmark != null) benchmark.get().resume(thread, engine.getKey());
                             try { engine.getValue().processDataEvent(input.get(i)); }
                             catch (Exception ex) { ex.printStackTrace(); }
-                            if (benchmark != null) benchmark.pause(thread, engine.getKey());
+                            if (benchmark != null) benchmark.get().pause(thread, engine.getKey());
                         }
                     }
                     output.add(input.get(i).getHipoEvent());
@@ -269,20 +271,21 @@ final class ReconMutil {
             }
             else {
                 for (int i=0; i<e.size(); i++) {
-                    if (benchmark != null) benchmark.resume("write");
+                    if (benchmark != null) benchmark.get().resume("write");
                     if (writer != null) {
-                        if (benchmark != null) benchmark.resume("post");
+                        if (benchmark != null) benchmark.get().resume("post");
                         synchronized (serialLock) {
                             serial.process(e.get(i));
                         }
-                        if (benchmark != null) benchmark.pause("post");
+                        if (benchmark != null) benchmark.get().pause("post");
                         if (e.get(i).getEventTag() > 0 || schemaBankList.isEmpty())
                             writer.addEvent(e.get(i), e.get(i).getEventTag());
                         else
                             writer.addEvent(e.get(i).reduceEvent(schemaBankList), e.get(i).getEventTag());
                     }
-                    if (benchmark != null) benchmark.pause("write");
-                    writeEvents++;
+                    if (benchmark != null) benchmark.get().pause("write");
+                    // GARBAGECOLLECT!
+                    //if (++writeEvents % 1000 == 0) System.gc();
                 }
             }
         }
@@ -302,18 +305,18 @@ final class ReconMutil {
         for (CompletableFuture cf : procThreads) cf.cancel(true);
         System.out.println("recon-mutil::  ~~~~~~~~~ rethreading primed ~~~~~~~~~");
         for (int thread : threads) {
-            benchmark = null;
-            ReconUtil.taskset(0, thread);
+            //ReconUtil.taskset(0, thread);
             for (int j=0; j<thread; j++) {
                 final int k = j;
                 ReconUtil.addAndRemove(procThreads, CompletableFuture.runAsync(() -> { processor(k); }));
             }
-            benchmark = new Benchmark(thread+" Threads Scaling ",BENCHMARK_NAMES);
+            if (benchmark == null) benchmark = new AtomicReference<>(new Benchmark(thread+" Threads Scaling ",BENCHMARK_NAMES));
+            else benchmark.set(new Benchmark(thread+" Threads Scaling ",BENCHMARK_NAMES));
             ReconUtil.sleep(seconds*1000);
             System.out.println(String.format("\nrecon-mutil:: ~~~~~~~~~ rethreading count %d ~~~~~~~~~\n",thread));
             System.out.println(progress.getUpdateString());
             System.out.println(benchmark);
-            benches.put(thread, benchmark);
+            benches.put(thread, benchmark.get());
             for (CompletableFuture cf : procThreads) cf.cancel(true);
         }
         String csv = ReconUtil.toCSV(benches);
@@ -335,18 +338,18 @@ final class ReconMutil {
      * @return decoded event
      */
     HipoDataEvent decode(int thread, ByteBuffer bytes) {
-        if (benchmark != null) benchmark.resume(thread, "evio");
+        if (benchmark != null) benchmark.get().resume(thread, "evio");
         EvioDataEvent evio = new EvioDataEvent(bytes.array(), ByteOrder.LITTLE_ENDIAN);
         if (benchmark != null) {
-            benchmark.pause(thread, "evio");
-            benchmark.resume(thread, "deco");
+            benchmark.get().pause(thread, "evio");
+            benchmark.get().resume(thread, "deco");
         }
         CLASDecoder d = decoders.poll();
         HipoDataEvent hipo = fields == null ?
                 d.getDecodedDataEvent(evio) :
                 d.getDecodedDataEvent(evio, fields[0], fields[1]);
         decoders.offer(d);
-        if (benchmark != null) benchmark.pause(thread, "deco");
+        if (benchmark != null) benchmark.get().pause(thread, "deco");
         return hipo;
     }
   
@@ -392,7 +395,7 @@ final class ReconMutil {
      * @return modified chunk 
      */
     List<Object> read(List<Object> chunk) {
-        if (benchmark != null) benchmark.resume("read");
+        if (benchmark != null) benchmark.get().resume("read");
         Object o = null;
         if (reader instanceof EvioSource evio) {
             try { o = evio.getEventBuffer(++fileEvents, true); }
@@ -413,7 +416,7 @@ final class ReconMutil {
                 chunk = new ArrayList<>(EVENTS_PER_CHUNK);
             }
         }
-        if (benchmark != null) benchmark.pause("read");
+        if (benchmark != null) benchmark.get().pause("read");
         return chunk;
     }
 
@@ -503,7 +506,18 @@ final class ReconMutil {
             }
         }
         if (!parser.getOption("-b").isDefault() || parser.getOption("-t").stringValue().split(",").length > 1)
-            benchmark = new Benchmark("ReconMutil",BENCHMARK_NAMES);
+            benchmark = new AtomicReference<>(new Benchmark("ReconMutil",BENCHMARK_NAMES));
+
+        String thread = parser.getOption("-t").stringValue();
+        if (thread.endsWith("+") || thread.endsWith("-")) {
+            if (thread.contains(","))
+                ReconUtil.taskset(0, Arrays.stream(getThreadCounts(thread)).max().getAsInt());
+            else if (thread.endsWith("-"))
+                ReconUtil.taskset(0, Integer.parseInt(thread.substring(0, thread.length()-1)));
+            else if (thread.endsWith("+"))
+                ReconUtil.taskset(0, 0);
+            parser.getOption("-t").setValue(thread.substring(0, thread.length()-1));
+        }
     }
 
     /**
@@ -525,7 +539,13 @@ final class ReconMutil {
                 readEvents, writeEvents, taggedEvents.get(), failEvents);
         Logger.getLogger(ReconMutil.class.getName()).log(Level.CONFIG, () -> s1+" "+s2+" "+s3);
     }
-  
+ 
+    static int[] getThreadCounts(String threadlist) {
+        return Arrays.stream(threadlist.split(","))
+                .filter(s -> !s.contains("+") && !s.contains("-"))
+                .mapToInt(s -> Integer.parseInt(s)).toArray();
+    }
+    
     /**
      * The command-line entry-point known as "recon-mutil".
      * @param args command-line arguments
@@ -536,7 +556,7 @@ final class ReconMutil {
         o.removeOption("-o");
         o.removeOption("-c");
         o.removeOption("-P");
-        o.addOption("-t","4","number of threads");
+        o.addOption("-t","4","number of threads, suffixed by +/- to taskset node/cpus)");
         o.addOption("-o", null, "output file name");
         o.addOption("-c","2","comma-separated engine list");
         o.addOption("-f",null,"field scales for torus and solenoid, comma-separated (T,S)");
@@ -544,7 +564,7 @@ final class ReconMutil {
         o.setRequiresInputList(true);
         o.parse(args);
         ReconMutil r = new ReconMutil(o);
-        r.launch(Arrays.stream(o.getOption("-t").stringValue().split(",")).mapToInt(Integer::parseInt).toArray(), 
+        r.launch(getThreadCounts(o.getOption("-t").stringValue()),
                 o.getOption("-o").stringValue(),
                 o.getInputList().stream().toArray(String[]::new));
     }

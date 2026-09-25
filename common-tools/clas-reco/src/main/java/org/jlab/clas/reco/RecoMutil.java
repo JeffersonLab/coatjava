@@ -241,6 +241,18 @@ public class RecoMutil extends Porch {
         }
         if (!opt.getOption("-b").isDefault() || opt.getOption("-t").stringValue().split(",").length > 1)
             benchmark = new Benchmark("Reco-Util",BENCHMARK_NAMES);
+        
+        String thread = opt.getOption("-t").stringValue();
+        if (thread.endsWith("+") || thread.endsWith("-")) {
+            if (thread.contains(","))
+                ReconUtil.taskset(0, Arrays.stream(thread.split(","))
+                        .filter(s -> !s.contains("+") && !s.contains("-")).mapToInt(s -> Integer.parseInt(s)).max().getAsInt());
+            else if (thread.endsWith("-"))
+                ReconUtil.taskset(0, Integer.parseInt(thread.substring(0, thread.length()-1)));
+            else if (thread.endsWith("+"))
+                ReconUtil.taskset(0, 0);
+            opt.getOption("-t").setValue(thread.substring(0, thread.length()-1));
+        }
     }
 
     /**

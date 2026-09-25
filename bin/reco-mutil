@@ -6,12 +6,13 @@ split_cli $@
 
 export MALLOC_ARENA_MAX=1
 
-threads=$(get_threads)
-node=$(((RANDOM % 2)))
-cpus=$(get_all_numa_cpus $node)
+#threads=$(get_threads)
+#node=$(((RANDOM % 2)))
+#cpus=$(get_all_numa_cpus $node)
+#cpus=$(get_numa_cpus $node)
+#taskset -c $cpus \
 
-taskset -c $cpus \
-    java ${JAVA_OPTS-} -XX:MaxRAMPercentage=40.0 -Xms10240m -XX:+UseParallelGC ${jvm_options[@]} \
+    java ${JAVA_OPTS-} -XX:MaxRAMPercentage=40.0 -Xms10240m ${jvm_options[@]} \
     -cp ${COATJAVA_CLASSPATH:-''} \
     org.jlab.clas.reco.RecoMutil \
     ${class_options[@]}

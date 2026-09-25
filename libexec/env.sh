@@ -58,6 +58,7 @@ function get_threads() {
     for ((i=0; i<${#class_options[@]}; i++)); do
         if [[ "${class_options[$i]}" == "-t" ]]; then
             # found it;  if it contains commas, split and get the max:
+            # FIXME:  breaks for threads suffixed by +/- for numa tasksetting
             let i=i+1
             threads=$(echo ${class_options[$i]} | awk -F, 'NR==1 {max=$1} { for(i=1; i<=NF; i++) { if($i > max) max=$i } } END {print max}')
             break
