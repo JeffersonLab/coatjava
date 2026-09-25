@@ -44,6 +44,8 @@ public class Seed implements Comparable<Seed>{
     public double percentTruthMatch;
     public double totpercentTruthMatch;
     public int FirstPassIdx;
+    private double purity=0;
+    private double[] effs;// eff for hits on tracks from MC: [0]=BST eff; [1]=BMT eff; [2] = total eff
     
     public Seed() {
     }
@@ -748,6 +750,34 @@ public class Seed implements Comparable<Seed>{
         ovlrem2.addAll(ovlrem);
         
         return ovlrem2;
+    }
+
+    /**
+     * @return the purity
+     */
+    public double getPurity() {
+        return purity;
+    }
+
+    /**
+     * @param purity the purity to set
+     */
+    public void setPurity(double purity) {
+        this.purity = purity;
+    }
+
+    /**
+     * @return the effs
+     */
+    public double[] getEffs() {
+        return effs;
+    }
+
+    /**
+     * @param effs the effs to set
+     */
+    public void setEffs(double[] effs) {
+        this.effs = effs;
     }
     
     public class Key implements Comparable<Key> {
