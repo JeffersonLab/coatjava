@@ -24,6 +24,7 @@ import org.jlab.jnp.hipo4.data.Bank;
 import org.jlab.jnp.hipo4.data.SchemaFactory;
 import org.jlab.utils.ClaraYaml;
 import org.jlab.utils.benchmark.Benchmark;
+import org.jlab.utils.benchmark.ProgressPrintout;
 import org.jlab.utils.options.OptionParser;
 import org.jlab.utils.options.OptionValue;
 import org.jlab.utils.system.ClasUtilsFile;
@@ -220,13 +221,14 @@ public class ReconUtil {
      * @param benches
      * @return 
      */
-    static String toCSV(Map<Integer,Benchmark> benches) {
+    static String toCSV(Map<Integer,ProgressPrintout> progs, Map<Integer,Benchmark> benches) {
         List<String> csv = new ArrayList<>();
         for (Benchmark b : benches.values()) b.sortByName();
         String head = (new ArrayList<>(benches.values())).get(0).toCSV()[0];
-        csv.add("threads," + head);
+        csv.add("threads,rate," + head);
         for (int threads : benches.keySet())
-            csv.add(threads+","+benches.get(threads).toCSV()[1]);
+            csv.add(String.format("%d,%.3f,%s", threads,
+                    progs.get(threads).getHz(), benches.get(threads).toCSV()[1]));
         return String.join("\n",csv);
     }
    

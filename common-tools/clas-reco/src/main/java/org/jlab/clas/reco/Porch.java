@@ -211,6 +211,7 @@ public abstract class Porch {
     void rethreader(int seconds, int... threads) {
         System.out.println("recon-mutil::  ~~~~~~~~~ rethreading initiated ~~~~~~~~~");
         Map<Integer,Benchmark> benches = new LinkedHashMap<>();
+        Map<Integer,ProgressPrintout> progs = new LinkedHashMap<>();
         while (writeEvents < 100 || !ReconUtil.isDone(decoThreads))
             ReconUtil.sleep(1000);
         for (CompletableFuture cf : procThreads) cf.cancel(true);
@@ -229,9 +230,10 @@ public abstract class Porch {
             System.out.println(progress.getUpdateString());
             System.out.println(benchmark);
             benches.put(thread, benchmark);
+            progs.put(thread, progress);
             for (CompletableFuture cf : procThreads) cf.cancel(true);
         }
-        String csv = ReconUtil.toCSV(benches);
+        String csv = ReconUtil.toCSV(progs, benches);
         System.out.println(csv);
         ReconUtil.writeFile("scaling-mutil.txt", csv);
         ReconUtil.gnuplotScaling("scaling-mutil.txt","scaling-mutil.svg");
