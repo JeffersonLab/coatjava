@@ -27,6 +27,7 @@ import org.jlab.jnp.hipo4.io.HipoReader;
 import org.jlab.jnp.hipo4.io.HipoWriterSorted;
 import org.jlab.utils.ClaraYaml;
 import org.jlab.utils.benchmark.Benchmark;
+import org.jlab.utils.benchmark.BenchmarkTimer;
 import org.jlab.utils.benchmark.ProgressPrintout;
 import org.jlab.utils.options.OptionParser;
 import org.jlab.utils.system.ClasUtilsFile;
@@ -57,8 +58,7 @@ final class ReconMutil {
     Object reader;
     HipoWriterSorted writer;
     List<Bank> schemaBankList = new ArrayList<>();
-    static final SchemaFactory fullSchema = new SchemaFactory();
-    static { fullSchema.initFromDirectory(ClasUtilsFile.getResourceDir("CLAS12DIR","etc/bankdefs/hipo4")); }
+    SchemaFactory fullSchema;
     
     // Processors:
     SerialHoncho serial;
@@ -89,6 +89,7 @@ final class ReconMutil {
 
     // Control flags:
     final Object serialLock = new Object();
+    String taskset;
    
     ReconMutil(OptionParser parser) {
         init(parser);
@@ -111,7 +112,7 @@ final class ReconMutil {
         
         // spawn all the threads:
         readerThread = CompletableFuture.runAsync(() -> { reader(threads[0], input); });
-        for (int i=0; i<Math.max(8,threads[0]); i++) {
+        for (int i=0; i<Math.max(16,threads[0]); i++) {
             final int j = i;
             ReconUtil.addAndRemove(decoThreads, CompletableFuture.runAsync(() -> { decoder(j); }));
         }
@@ -300,21 +301,23 @@ final class ReconMutil {
      * @param threads thread counts to use 
      */
     void rethreader(int seconds, int... threads) {
-        System.out.println("recon-mutil::  ~~~~~~~~~ rethreading initiated ~~~~~~~~~");
+        System.out.println("recon-mutil::  ~~~~~~~~~ rethreading launched ~~~~~~~~~");
         Map<Integer,Benchmark> benches = new LinkedHashMap<>();
         Map<Integer,ProgressPrintout> progs = new LinkedHashMap<>();
         while (writeEvents < EVENTS_PER_CHUNK || !ReconUtil.isDone(decoThreads))
-            ReconUtil.sleep(1000);
+            ReconUtil.sleep(100);
         System.out.println("recon-mutil::  ~~~~~~~~~ rethreading primed ~~~~~~~~~");
         for (int thread : threads) {
             procThreads.stream().forEach(p -> p.cancel(true));
-            progress = new ProgressPrintout();
+            if (taskset.equals("-")) ReconUtil.taskset(0, thread);
+            BenchmarkTimer.WARMUP_CALLS = 10*thread+90;
             benchmark = new Benchmark(thread+" Threads Scaling ",BENCHMARK_NAMES);
-            //ReconUtil.taskset(0, thread);
+            progress = new ProgressPrintout(10*thread);
             for (int j=0; j<thread; j++) {
                 final int k = j;
                 ReconUtil.addAndRemove(procThreads, CompletableFuture.runAsync(() -> { processor(k); }));
             }
+            while (!progress.warmedUp()) ReconUtil.sleep(100);
             ReconUtil.sleep(seconds*1000);
             System.out.println(String.format("\nrecon-mutil:: ~~~~~~~~~ rethreading timed %d ~~~~~~~~~\n",thread));
             System.out.println(progress.getUpdateString());
@@ -325,7 +328,8 @@ final class ReconMutil {
         String csv = ReconUtil.toCSV(progs, benches);
         System.out.println(csv);
         ReconUtil.writeFile("scaling-mutil.txt", csv);
-        ReconUtil.gnuplotScaling("scaling-mutil.txt","scaling-mutil.svg");
+        ReconUtil.gnuplotScaling(String.format("scaling-mutil%s.txt",taskset),
+                String.format("scaling-mutil%s.svg",taskset));
         stopProcessing();
     }
 
@@ -472,6 +476,29 @@ final class ReconMutil {
      * @param parser 
      */
     void init(OptionParser parser) {
+
+        String topt = parser.getOption("-t").stringValue();
+        if (topt.contains(",")) {
+            int offset = topt.endsWith("+") || topt.endsWith("-") ? 2 : 1;
+            String extra = topt.endsWith("+") || topt.endsWith("-") ? String.valueOf(topt.charAt(topt.length()-1)) : "";
+            topt = String.join(",",Arrays.stream(topt.substring(0,topt.length()-offset).split(","))
+                    .mapToInt(s -> Integer.parseInt(s)).sorted().mapToObj(i -> String.valueOf(i)).toList())
+                    + extra;
+            parser.getOption("-t").setValue(topt);
+        }
+        taskset = "";
+        if (topt.endsWith("+") || topt.endsWith("-")) {
+            taskset = String.valueOf(topt.charAt(topt.length()-1));
+            if (topt.contains(","))
+                ReconUtil.taskset(0, getThreadCounts(topt)[0]);
+            else if (taskset.equals("-"))
+                ReconUtil.taskset(0, Integer.parseInt(String.valueOf(topt.charAt(0))));
+            else if (taskset.equals("+"))
+                ReconUtil.taskset(0, 0);
+        }
+        
+        fullSchema = new SchemaFactory();
+        fullSchema.initFromDirectory(ClasUtilsFile.getResourceDir("CLAS12DIR","etc/bankdefs/hipo4"));
         this.parser = parser;
         parser.syncLogLevel(Logger.getLogger(ReconMutil.class.getPackage().getName()));
         maxEvents = parser.getOption("-n").intValue();
@@ -510,17 +537,6 @@ final class ReconMutil {
         }
         if (!parser.getOption("-b").isDefault())
             benchmark = new Benchmark("ReconMutil",BENCHMARK_NAMES);
-
-        String thread = parser.getOption("-t").stringValue();
-        if (thread.endsWith("+") || thread.endsWith("-")) {
-            if (thread.contains(","))
-                ReconUtil.taskset(0, Arrays.stream(getThreadCounts(thread)).max().getAsInt());
-            else if (thread.endsWith("-"))
-                ReconUtil.taskset(0, Integer.parseInt(thread.substring(0, thread.length()-1)));
-            else if (thread.endsWith("+"))
-                ReconUtil.taskset(0, 0);
-            parser.getOption("-t").setValue(thread.substring(0, thread.length()-1));
-        }
     }
 
     /**
