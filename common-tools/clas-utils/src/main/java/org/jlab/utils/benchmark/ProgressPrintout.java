@@ -11,16 +11,23 @@ import java.util.logging.Logger;
  */
 public class ProgressPrintout {
 
-    private final int WARMUP_CALLS = 100;
-    
     private TreeMap<String,Object> items   = new TreeMap<>();
     private Long     previousPrintoutTime = (long) 0;
     private Long     startPrintoutTime    = (long) 0;
     private double   printoutIntervalSeconds = 10.0;
     private String   printoutLeadingString   = ">>>>> progress : ";
     private Integer  numberOfCalls           = 0;
-    
+    private int warmupCalls = 100;
+   
+    public boolean warmedUp() { return numberOfCalls > warmupCalls; }
+
     public  ProgressPrintout(){
+        this.previousPrintoutTime = System.currentTimeMillis();
+        this.startPrintoutTime = System.currentTimeMillis();
+    }
+    
+    public  ProgressPrintout(int warmupCalls){
+        this.warmupCalls = warmupCalls;
         this.previousPrintoutTime = System.currentTimeMillis();
         this.startPrintoutTime = System.currentTimeMillis();
     }
@@ -37,9 +44,9 @@ public class ProgressPrintout {
     
     public String getUpdateString(){
         double totalElapsedTime = (this.previousPrintoutTime-this.startPrintoutTime)*1e-3;
-        double averageTime = 1000.0*totalElapsedTime/(this.numberOfCalls-WARMUP_CALLS);
+        double averageTime = 1000.0*totalElapsedTime/(this.numberOfCalls-warmupCalls);
         StringBuilder str = new StringBuilder();
-        str.append(String.format("%s (%12d) : ", this.printoutLeadingString,this.numberOfCalls-WARMUP_CALLS));
+        str.append(String.format("%s (%12d) : ", this.printoutLeadingString,this.numberOfCalls-warmupCalls));
         str.append(String.format(" time : %8.2f (sec) =>>> average time = %9.3f msec", totalElapsedTime,averageTime));
         Set<String> keys = this.items.keySet();
         for(String key : keys){
@@ -49,7 +56,7 @@ public class ProgressPrintout {
     }
 
     public double getHz() {
-        return ((double)(numberOfCalls-WARMUP_CALLS)) / (previousPrintoutTime-startPrintoutTime) * 1000;
+        return ((double)(numberOfCalls-warmupCalls)) / (previousPrintoutTime-startPrintoutTime) * 1000;
     }
     
     public void showStatus(){
@@ -59,7 +66,7 @@ public class ProgressPrintout {
     }
     
     public synchronized void updateStatus(){        
-        if (++this.numberOfCalls < WARMUP_CALLS){
+        if (++this.numberOfCalls < warmupCalls){
             this.previousPrintoutTime = System.currentTimeMillis();
             this.startPrintoutTime = this.previousPrintoutTime;
         }
