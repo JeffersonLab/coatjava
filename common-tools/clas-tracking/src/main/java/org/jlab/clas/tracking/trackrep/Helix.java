@@ -241,6 +241,40 @@ public class Helix {
         return this.getPz(this.getB());
     }
 
+    /** Intersect the helix with the complete plane n.(r-p)=0, including nz. */
+    public double getLAtPlane3D(double px, double py, double pz,
+                                double nx, double ny, double nz,
+                                double xNear, double yNear) {
+        // Start at the point on the helix circle nearest the module. The projected trace of a
+        // nearly tangential plane can miss the circle even when the full 3-D plane intersects it.
+        double phi0 = Math.atan2(_yd - getYc(), _xd - getXc());
+        double phiNear = Math.atan2(yNear - getYc(), xNear - getXc());
+        double dphi = phiNear - phi0;
+        if (dphi >  Math.PI) dphi -= 2.0 * Math.PI;
+        if (dphi < -Math.PI) dphi += 2.0 * Math.PI;
+        double l = dphi / getOmega();
+        if (!Double.isFinite(l)) return Double.NaN;
+
+        final double dl = 1.0e-3;
+        for (int i = 0; i < 12; i++) {
+            double f = nx * (getX(l) - px) + ny * (getY(l) - py)
+                     + nz * (getZ(l) - pz);
+            if (Math.abs(f) < 1.0e-7) return l;
+            double derivative = nx * (getX(l + dl) - getX(l - dl)) / (2 * dl)
+                              + ny * (getY(l + dl) - getY(l - dl)) / (2 * dl)
+                              + nz * (getZ(l + dl) - getZ(l - dl)) / (2 * dl);
+            if (!Double.isFinite(derivative) || Math.abs(derivative) < 1.0e-10)
+                return Double.NaN;
+            double step = f / derivative;
+            if (Math.abs(step) > 100) step = Math.copySign(100, step);
+            l -= step;
+            if (!Double.isFinite(l)) return Double.NaN;
+        }
+        double residual = nx * (getX(l) - px) + ny * (getY(l) - py)
+                        + nz * (getZ(l) - pz);
+        return Math.abs(residual) < 1.0e-5 ? l : Double.NaN;
+    }
+
     public double getLAtPlane(double X1, double Y1, double X2, double Y2, 
             double tolerance) {
         // Find the intersection of the helix circle with the module plane projection in XY which is a line
