@@ -131,7 +131,7 @@
       <dependency>
         <groupId>org.jlab</groupId>
         <artifactId>groot</artifactId>
-        <version>4.0.5</version>
+        <version>4.0.5</version> <!-- WARNING: if changed, check the `net.objecthunter:exp4j` version; see `docs/dependency_conflicts.md` -->
       </dependency>
 
       <dependency>
@@ -234,8 +234,11 @@
         - see `docs/dependency_conflicts.md` for more info
       -->
 
-      <!-- resolve conflict between `org.jlab.jnp:jnp-hipo:jar:2.0-SNAPSHOT` and `org.jlab.jnp:jnp-hipo4:jar:4.5`
-           by choosing the later version of their `net.objecthunter:exp4j` dependency -->
+      <!-- resolve conflicting `net.objecthunter:exp4j` by choosing the latest used by
+          - `org.jlab.jnp:jnp-hipo`
+          - `org.jlab.jnp:jnp-hipo4`
+          - `org.jlab:groot`
+      -->
       <dependency>
         <groupId>net.objecthunter</groupId>
         <artifactId>exp4j</artifactId>
