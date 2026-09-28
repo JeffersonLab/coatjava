@@ -357,7 +357,7 @@ $python etc/bankdefs/util/bankSplit.py $prefix_dir/etc/bankdefs/hipo4 || exit 1
 
 # use maven to copy a CLARA jar to a separate directory:
 mvn org.apache.maven.plugins:maven-dependency-plugin:3.10.0:copy \
-     -Dartifact=org.jlab.coda:jclara:4.3:jar -DoutputDirectory=$prefix_dir/lib/utils -DstripVersion=false
+     -Dartifact=org.jlab.coda:jclara:6.0-SNAPSHOT:jar -DoutputDirectory=$prefix_dir/lib/utils -DstripVersion=false
 
 # build (and test)
 unset CLAS12DIR
