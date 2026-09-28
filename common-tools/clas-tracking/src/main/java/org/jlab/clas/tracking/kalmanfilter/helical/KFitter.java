@@ -223,6 +223,14 @@ public class KFitter extends AKFitter {
     //            System.out.println(dh);
                 //get the projector Matrix
                 double[] H = mv.H(fVec, sv,  mv.measurements.get(k), this.getSwimmer());
+                if (H == null) {
+                    // A perturbed state could not be placed on the measurement surface. A
+                    // nominal-surface substitute would make the derivative geometrically
+                    // inconsistent, so exclude this measurement and retain the incoming state.
+                    this.NDF--;
+                    mv.measurements.get(k).skip = true;
+                    return fVec;
+                }
     //            System.out.println(k + " " + mv.measurements.get(k).layer + " " + H[0] + " " + H[1] + " " + H[2] + " " + H[3] + " " + H[4] + " " +dh );
                 
                 double[][] CaInv =  this.getMatrixOps().filterCovMat(H, fVec.covMat, V);
