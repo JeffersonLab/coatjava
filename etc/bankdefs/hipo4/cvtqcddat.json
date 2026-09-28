@@ -1,9 +1,9 @@
-[ 
+[
  {
-    "name": "CVT::QCDDATHit", 
+    "name": "CVT::QCDDATHit",
     "group": 20500,
     "item" : 71,
-    "info": "reconstructed hits",
+    "info": "reconstructed hits for AmSC Foundation Model and related ML training and validation studies",
     "entries": [
        {"name":"id",            "type":"S", "info":"id of the hit"},
        {"name":"mctid",         "type":"S", "info":"MC track id associated with the hit"},
