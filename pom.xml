@@ -31,10 +31,12 @@
       <id>clas12-xmsg-java</id>
       <url>https://code.jlab.org/api/v4/projects/959/packages/maven</url>
     </repository>
+    <!--
     <repository>
       <id>clas12maven</id>
       <url>https://clasweb.jlab.org/.clas12maven</url>
     </repository>
+    -->
     <repository>
       <id>jnp-maven</id>
       <url>https://clasweb.jlab.org/.jhep/maven</url>
