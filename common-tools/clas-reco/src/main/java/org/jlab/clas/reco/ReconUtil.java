@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.logging.Level;
@@ -195,15 +196,27 @@ public class ReconUtil {
     }
 
     /**
+     * Print exception when complete.
+     * @param future
+     * @return 
+     */
+    static CompletableFuture launch(CompletableFuture future) {
+        return future.whenCompleteAsync((result,exception) -> { 
+            if (exception != null && !(exception instanceof CancellationException))
+                ((Exception)exception).printStackTrace();
+        });
+    }
+    
+    /**
      * Add a thread to the queue and make it remove itself when done.
      * @param queue
      * @param future 
      */
     static void addAndRemove(ConcurrentLinkedQueue<CompletableFuture> queue, CompletableFuture future) {
-        future.whenCompleteAsync((result,exception) -> { queue.remove(future); });
+        launch(future).whenCompleteAsync((result,exception) -> { queue.remove(future); });
         queue.offer(future);
     }
-
+        
     /**
      * Periodically run the print the thread, queue, and event states.
      * @param seconds 

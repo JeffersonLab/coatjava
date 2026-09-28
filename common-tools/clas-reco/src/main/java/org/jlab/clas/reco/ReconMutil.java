@@ -111,7 +111,8 @@ final class ReconMutil {
         ReconUtil.runPeriodic(10, statsShow);
         
         // spawn all the threads:
-        readerThread = CompletableFuture.runAsync(() -> { reader(threads[0], input); });
+        readerThread = ReconUtil.launch(CompletableFuture.runAsync(() -> { reader(threads[0], input); }));
+
         for (int i=0; i<Math.max(16,threads[0]); i++) {
             final int j = i;
             ReconUtil.addAndRemove(decoThreads, CompletableFuture.runAsync(() -> { decoder(j); }));
@@ -121,11 +122,11 @@ final class ReconMutil {
             final int j = i;
             ReconUtil.addAndRemove(procThreads, CompletableFuture.runAsync(() -> { processor(j); }));
         }
-        writerThread = CompletableFuture.runAsync(() -> { writer(output); });
-       
+        writerThread = ReconUtil.launch(CompletableFuture.runAsync(() -> { writer(output); }));
+                
         // perform scaling test:
         if (threads.length > 1)
-            CompletableFuture.runAsync(() -> { rethreader(BENCH_SECONDS,threads); }).join();
+            ReconUtil.launch(CompletableFuture.runAsync(() -> { rethreader(BENCH_SECONDS,threads); })).join();
 
         // wait for finish:
         writerThread.join();
@@ -470,6 +471,33 @@ final class ReconMutil {
         procQueue.clear();
         writeQueue.clear();
     }
+  
+    String parseThreads(String t) {
+        if (t.contains(",")) {
+            int offset = t.endsWith("+") || t.endsWith("-") ? 1 : 0;
+            String extra = t.endsWith("+") || t.endsWith("-") ? String.valueOf(t.charAt(t.length()-1)) : "";
+            t = String.join(",",Arrays.stream(t.substring(0,t.length()-offset).split(","))
+                    .mapToInt(s -> Integer.parseInt(s)).sorted().mapToObj(i -> String.valueOf(i)).toList())
+                    + extra;
+        }
+        taskset = "";
+        if (t.endsWith("+") || t.endsWith("-")) {
+            taskset = String.valueOf(t.charAt(t.length()-1));
+            if (t.contains(","))
+                ReconUtil.taskset(0, getThreadCounts(t)[0]);
+            else if (taskset.equals("-"))
+                ReconUtil.taskset(0, Integer.parseInt(String.valueOf(t.charAt(0))));
+            else if (taskset.equals("+"))
+                ReconUtil.taskset(0, 0);
+        }
+        return t;
+    }
+    
+    static int[] getThreadCounts(String threadlist) {
+        return Arrays.stream(threadlist.split(","))
+                .filter(s -> !s.contains("+") && !s.contains("-"))
+                .mapToInt(s -> Integer.parseInt(s)).toArray();
+    }
     
     /**
      * Initialize ReconMutil.
@@ -477,25 +505,7 @@ final class ReconMutil {
      */
     void init(OptionParser parser) {
 
-        String topt = parser.getOption("-t").stringValue();
-        if (topt.contains(",")) {
-            int offset = topt.endsWith("+") || topt.endsWith("-") ? 2 : 1;
-            String extra = topt.endsWith("+") || topt.endsWith("-") ? String.valueOf(topt.charAt(topt.length()-1)) : "";
-            topt = String.join(",",Arrays.stream(topt.substring(0,topt.length()-offset).split(","))
-                    .mapToInt(s -> Integer.parseInt(s)).sorted().mapToObj(i -> String.valueOf(i)).toList())
-                    + extra;
-            parser.getOption("-t").setValue(topt);
-        }
-        taskset = "";
-        if (topt.endsWith("+") || topt.endsWith("-")) {
-            taskset = String.valueOf(topt.charAt(topt.length()-1));
-            if (topt.contains(","))
-                ReconUtil.taskset(0, getThreadCounts(topt)[0]);
-            else if (taskset.equals("-"))
-                ReconUtil.taskset(0, Integer.parseInt(String.valueOf(topt.charAt(0))));
-            else if (taskset.equals("+"))
-                ReconUtil.taskset(0, 0);
-        }
+        parser.getOption("-t").setValue(parseThreads(parser.getOption("-t").stringValue()));
         
         fullSchema = new SchemaFactory();
         fullSchema.initFromDirectory(ClasUtilsFile.getResourceDir("CLAS12DIR","etc/bankdefs/hipo4"));
@@ -559,12 +569,6 @@ final class ReconMutil {
         Logger.getLogger(ReconMutil.class.getName()).log(Level.CONFIG, () -> s1+" "+s2+" "+s3);
     }
  
-    static int[] getThreadCounts(String threadlist) {
-        return Arrays.stream(threadlist.split(","))
-                .filter(s -> !s.contains("+") && !s.contains("-"))
-                .mapToInt(s -> Integer.parseInt(s)).toArray();
-    }
-    
     /**
      * The command-line entry-point known as "recon-mutil".
      * @param args command-line arguments
