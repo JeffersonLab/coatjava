@@ -88,15 +88,32 @@ public class StateVecs extends AStateVecs {
                 }
                 else {
                     double r = mv.surface.cylinder.baseArc().radius();
-                    Point3D pos = helix.getHelixPointAtR(r);
-                    Vector3D mom = helix.getMomentumAtR(r);
-                    sv.path = helix.getLAtR(r);
-                    sv.x = pos.x();
-                    sv.y = pos.y();
-                    sv.z = pos.z();
-                    sv.px = mom.x();
-                    sv.py = mom.y();
-                    sv.pz = mom.z();
+                    double l = helix.getLAtR(r);
+                    Point3D axisStart = mv.surface.cylinder.getAxis().origin();
+                    Point3D axisEnd = mv.surface.cylinder.getAxis().end();
+
+                    // Preserve the exact closed-form result for an ideal beam-axis cylinder.
+                    // Alignment may displace or tilt the BMT axis; in that case intersect the
+                    // same cylinder used by the measurement surface.
+                    boolean beamAxis = Math.abs(axisStart.x()) < 1.0e-9
+                            && Math.abs(axisStart.y()) < 1.0e-9
+                            && Math.abs(axisEnd.x()) < 1.0e-9
+                            && Math.abs(axisEnd.y()) < 1.0e-9;
+                    if (!beamAxis) {
+                        l = helix.getLAtCylinder3D(
+                                axisStart.x(), axisStart.y(), axisStart.z(),
+                                axisEnd.x() - axisStart.x(),
+                                axisEnd.y() - axisStart.y(),
+                                axisEnd.z() - axisStart.z(), r, l);
+                        if (!Double.isFinite(l)) return false;
+                    }
+                    sv.path = l;
+                    sv.x = helix.getX(l);
+                    sv.y = helix.getY(l);
+                    sv.z = helix.getZ(l);
+                    sv.px = helix.getPx(helix.getB(), l);
+                    sv.py = helix.getPy(helix.getB(), l);
+                    sv.pz = helix.getPz(helix.getB());
                 }
             }
             else {
