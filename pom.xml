@@ -4,7 +4,7 @@
 
   <groupId>org.jlab.clas</groupId>
   <artifactId>coatjava</artifactId>
-  <version>14.2.0-SNAPSHOT</version>
+  <version>14.2.1-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <properties>
@@ -22,6 +22,10 @@
     <repository>
       <id>clas12-hipo-java</id>  <!-- `jnp-hipo4` is now built and published from its own repository, https://code.jlab.org/hallb/clas12/hipo-java. Project 919's package registry is public -->
       <url>https://code.jlab.org/api/v4/projects/919/packages/maven</url>
+    </repository>
+    <repository>
+      <id>clas12-clara-java</id>
+      <url>https://code.jlab.org/api/v4/projects/243/packages/maven</url>
     </repository>
     <repository>
       <id>clas12maven</id>
@@ -456,7 +460,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-deploy-plugin</artifactId>
-          <version>3.1.4</version>
+          <version>3.2.0</version>
           <configuration>
             <!-- Use the minimal GAV POM -->
             <pomFile>${project.build.directory}/.flattened-pom.xml</pomFile>

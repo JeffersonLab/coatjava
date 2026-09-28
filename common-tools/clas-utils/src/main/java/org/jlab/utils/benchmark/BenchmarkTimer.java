@@ -10,8 +10,8 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public class BenchmarkTimer {
 
-    public static int WARMUP_CALLS = 300;
-   
+    private static final int WARMUP_CALLS = 100;
+    
     public static class BenchmarkMultiTimer extends BenchmarkTimer {
         ConcurrentHashMap<Integer,Long> timeAtResume = new ConcurrentHashMap<>();
         ConcurrentHashMap<Integer,Boolean> isPaused = new ConcurrentHashMap<>();

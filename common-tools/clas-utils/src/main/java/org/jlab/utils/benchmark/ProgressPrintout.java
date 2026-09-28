@@ -44,9 +44,9 @@ public class ProgressPrintout {
     
     public String getUpdateString(){
         double totalElapsedTime = (this.previousPrintoutTime-this.startPrintoutTime)*1e-3;
-        double averageTime = 1000.0*totalElapsedTime/(this.numberOfCalls-warmupCalls);
+        double averageTime = 1000.0*totalElapsedTime/(this.numberOfCalls-WARMUP_CALLS);
         StringBuilder str = new StringBuilder();
-        str.append(String.format("%s (%12d) : ", this.printoutLeadingString,this.numberOfCalls-warmupCalls));
+        str.append(String.format("%s (%12d) : ", this.printoutLeadingString,this.numberOfCalls-WARMUP_CALLS));
         str.append(String.format(" time : %8.2f (sec) =>>> average time = %9.3f msec", totalElapsedTime,averageTime));
         Set<String> keys = this.items.keySet();
         for(String key : keys){
@@ -56,7 +56,7 @@ public class ProgressPrintout {
     }
 
     public double getHz() {
-        return ((double)(numberOfCalls-warmupCalls)) / (previousPrintoutTime-startPrintoutTime) * 1000;
+        return ((double)(numberOfCalls-WARMUP_CALLS)) / (previousPrintoutTime-startPrintoutTime) * 1000;
     }
     
     public void showStatus(){
