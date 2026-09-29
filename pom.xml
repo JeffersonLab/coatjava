@@ -36,8 +36,12 @@
       <url>https://code.jlab.org/api/v4/projects/245/packages/maven</url>
     </repository>
     <repository>
-      <id>clas12-evio-java</id> <!-- `jevio` -->
+      <id>clas12-evio</id> <!-- `jevio` -->
       <url>https://code.jlab.org/api/v4/projects/1038/packages/maven</url>
+    </repository>
+    <repository>
+      <id>clas12-et</id> <!-- `et` -->
+      <url>https://code.jlab.org/api/v4/projects/1044/packages/maven</url>
     </repository>
     <repository>
       <id>clasweb-clas12maven</id>
@@ -183,6 +187,12 @@
             <artifactId>proguard</artifactId>
           </exclusion>
         </exclusions>
+      </dependency>
+
+      <dependency>
+        <groupId>org.jlab.coda</groupId>
+        <artifactId>et</artifactId>
+        <version>16.6.1</version>
       </dependency>
 
       <dependency>
@@ -403,6 +413,7 @@
                 <dependencyConvergence>
                   <excludes>
                     <!-- excluding conflicts that may be tricky to resolve -->
+                    <!-- FIXME: can we deal with this??? -->
                     <exclude>com.google.protobuf:protobuf-java</exclude> <!-- `org.jlab.ccdbrcdb:ccdbrcdb` use v3, but `org.jlab.coda.xmsg` uses v2 -->
                   </excludes>
                 </dependencyConvergence>
