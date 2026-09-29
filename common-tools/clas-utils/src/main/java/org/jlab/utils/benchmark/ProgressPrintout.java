@@ -11,6 +11,8 @@ import java.util.logging.Logger;
  */
 public class ProgressPrintout {
 
+    public int WARMUP_CALLS = 100;
+    
     private TreeMap<String,Object> items   = new TreeMap<>();
     private Long     previousPrintoutTime = (long) 0;
     private Long     startPrintoutTime    = (long) 0;
