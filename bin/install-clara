@@ -85,7 +85,6 @@ do
         -f) clara="$2" && shift && shift ;;
         -c) coatjava="$2" && shift && shift ;;
         -g) grapes="$2" && shift && shift ;;
-        -b) build=1 && shift ;;
         -v) let debug=$debug+1 && shift ;;
         -*|--*)  echo -e "$usage\n\nUnknown option:  $1" && exit 1 ;;
         *) args+=("$1") && shift ;;
