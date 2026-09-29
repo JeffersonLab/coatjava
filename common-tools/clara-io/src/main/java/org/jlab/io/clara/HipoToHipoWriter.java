@@ -134,7 +134,7 @@ public class HipoToHipoWriter extends AbstractEventWriterService<HipoWriterSorte
     @Override
     protected void writeEvent(Object event) throws EventWriterException {
         try {
-            if (fullSchemaPrescale <= 0 || (++prescaleEvents % fullSchemaPrescale) == 0)
+            if (fullSchemaPrescale <= 0 || (++prescaleEvents % fullSchemaPrescale) != 0)
                 writeEvent(writer, (Event)event, schemaBankList);
             else
                 writeEvent(writer, (Event)event, null);
