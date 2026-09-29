@@ -25,7 +25,7 @@ done
 shift $((OPTIND-1))
 executable=$1
 arguments=${@:2}
-logfile=asprof$stub.log
+logfile=asprof_$event$stub.log
 
 which asprof >& /dev/null
 [ "$?" -ne 0 ] && echo 'ERROR:  asprof is not in $PATH.' && echo -e $usage2 && exit 3
