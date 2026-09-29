@@ -28,6 +28,7 @@ public class HipoToHipoWriter extends AbstractEventWriterService<HipoWriterSorte
     private static final String CONF_SCHEMA_DIR = "schema_dir";
     private static final String CONF_SCHEMA_FILTER = "schema_filter";
     private static final String CONF_SCHEMA_WILDCARD = "wildcard";
+    private static final String CONF_SCHEMA_PRESCALE = "schema_prescale";
     
     protected final List<Bank> schemaBankList = new ArrayList<Bank>();
     private final StringSubstitutor envSubstitutor = new StringSubstitutor(System.getenv());
@@ -35,8 +36,8 @@ public class HipoToHipoWriter extends AbstractEventWriterService<HipoWriterSorte
     private int compression = 2;
     protected String filename;
 
-    private long prescaleEvents = 0;
-    private int fullSchemaPrescale = 100;
+    private long schemaPrescaleEvents = 0;
+    private int schemaPrescale = 0;
     
     @Override
     protected HipoWriterSorted createWriter(Path file, JSONObject opts) throws EventWriterException {
@@ -52,6 +53,11 @@ public class HipoToHipoWriter extends AbstractEventWriterService<HipoWriterSorte
     }
     
     protected void configure(HipoWriterSorted writer, JSONObject opts) {
+
+        // set prescale:
+        if (opts.has(CONF_SCHEMA_PRESCALE)) {
+            schemaPrescale = opts.getInt(CONF_SCHEMA_PRESCALE);
+        }
 
         // set compression:
         if (opts.has(CONF_COMPRESSION)) {
@@ -134,7 +140,7 @@ public class HipoToHipoWriter extends AbstractEventWriterService<HipoWriterSorte
     @Override
     protected void writeEvent(Object event) throws EventWriterException {
         try {
-            if (fullSchemaPrescale <= 0 || (++prescaleEvents % fullSchemaPrescale) != 0)
+            if (schemaPrescale <= 0 || (++schemaPrescaleEvents % schemaPrescale) != 0)
                 writeEvent(writer, (Event)event, schemaBankList);
             else
                 writeEvent(writer, (Event)event, null);
