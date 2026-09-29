@@ -35,6 +35,9 @@ public class HipoToHipoWriter extends AbstractEventWriterService<HipoWriterSorte
     private int compression = 2;
     protected String filename;
 
+    private long prescaleEvents = 0;
+    private int fullSchemaPrescale = 100;
+    
     @Override
     protected HipoWriterSorted createWriter(Path file, JSONObject opts) throws EventWriterException {
         try {
@@ -49,13 +52,18 @@ public class HipoToHipoWriter extends AbstractEventWriterService<HipoWriterSorte
     }
     
     protected void configure(HipoWriterSorted writer, JSONObject opts) {
-        schemaBankList.clear();
+
+        // set compression:
         if (opts.has(CONF_COMPRESSION)) {
             compression = opts.getInt(CONF_COMPRESSION);
-            System.out.printf("%s service: compression level = %d%n", getName(), compression);
         }
         writer.setCompressionType(compression);
 
+        // create full schema:
+        SchemaFactory fullSchema = new SchemaFactory();
+        fullSchema.initFromDirectory(FileUtils.getEnvironmentPath("CLAS12DIR","etc/bankdefs/hipo4"));
+       
+        // choose user schema directory:
         String schemaDir = FileUtils.getEnvironmentPath("CLAS12DIR", "etc/bankdefs/hipo4");
         if (opts.has(CONF_SCHEMA_DIR)) {
             // Run YAML values throuh env-substitor: 
@@ -67,17 +75,22 @@ public class HipoToHipoWriter extends AbstractEventWriterService<HipoWriterSorte
             System.out.printf("%s service: schema directory = %s%n", getName(), schemaDir);
         }
 
+        // create user schemaa:
         SchemaFactory factory = new SchemaFactory();
         factory.initFromDirectory(schemaDir);
 
+        // set the writer's schema factory:
         if(opts.has(CONF_SCHEMA_WILDCARD)==true){
+            // apply a wildcard reduction on the user's schema:
             String wildcard = opts.getString("wildcard");
             SchemaFactory f2 = factory.reduce(wildcard);
             writer.getSchemaFactory().copy(f2);
         } else {
             writer.getSchemaFactory().copy(factory);
         }
-        
+       
+        // set the bank list for filtering: 
+        schemaBankList.clear();
         if (opts.has(CONF_SCHEMA_DIR)==true||opts.has(CONF_SCHEMA_WILDCARD)==true) {
             boolean useFilter = opts.optBoolean(CONF_SCHEMA_FILTER, true);
             System.out.printf("%s service: schema filter = %b%n", getName(), useFilter);
@@ -89,6 +102,9 @@ public class HipoToHipoWriter extends AbstractEventWriterService<HipoWriterSorte
                 }
             }
         }
+
+        // set the writer's schema factory:
+        writer.getSchemaFactory().copy(fullSchema);
 
         System.out.printf("SERVICE WRITER :: [filter] %s\n",opts.has(HipoToHipoWriter.CONF_SCHEMA_FILTER));
         System.out.printf("SERVICE WRITER :: [dir] %s\n",opts.has(HipoToHipoWriter.CONF_SCHEMA_DIR));
@@ -107,7 +123,7 @@ public class HipoToHipoWriter extends AbstractEventWriterService<HipoWriterSorte
 
     public static void writeEvent(HipoWriterSorted w, Event e, List<Bank> schema) {
         int tag = e.getEventTag();
-        if (tag==1 || schema.isEmpty()) {
+        if (tag==1 || schema == null || schema.isEmpty()) {
             w.addEvent(e,tag);
         }
         else {
@@ -118,7 +134,10 @@ public class HipoToHipoWriter extends AbstractEventWriterService<HipoWriterSorte
     @Override
     protected void writeEvent(Object event) throws EventWriterException {
         try {
-            writeEvent(writer, (Event)event, schemaBankList);
+            if (fullSchemaPrescale <= 0 || (++prescaleEvents % fullSchemaPrescale) == 0)
+                writeEvent(writer, (Event)event, schemaBankList);
+            else
+                writeEvent(writer, (Event)event, null);
         } catch (Exception e) {
             throw new EventWriterException(e);
         }
