@@ -33,8 +33,11 @@ public class Clas12Writer extends HipoToHipoWriter {
     ConstantsManager conman;
     SchemaFactory fullSchema;
     boolean postprocess;
+
     HipoWriterSorted rawWriter;
+    long rawTriggerCount;
     long rawTriggerMask;
+    int rawTriggerPrescale;
 
     private void init(JSONObject opts) {
         fullSchema = new SchemaFactory();
@@ -44,7 +47,8 @@ public class Clas12Writer extends HipoToHipoWriter {
         conman = new ConstantsManager();
         conman.init("/runcontrol/hwp","/runcontrol/helicity");
         postprocess = opts.optBoolean("postprocess", false);
-        rawTriggerMask = opts.optLong("rawTriggerMask", -1);
+        rawTriggerMask = opts.optLong("rawTriggerMask", 0);
+        rawTriggerPrescale = opts.optInt("rawTriggerPrescale", 0);
         if (opts.has("variation")) conman.setVariation(opts.getString("variation"));
         if (opts.has("timestamp")) conman.setTimeStamp(opts.getString("timestamp"));
     }
@@ -72,13 +76,15 @@ public class Clas12Writer extends HipoToHipoWriter {
         Event t = serial.read((Event)event);
         if (!t.isEmpty()) writer.addEvent(t, 1);
         super.writeEvent(event);
+        writeRaw((Event)event, t);
+    }
+
+    void writeRaw(Event physics, Event tagged) {
         if (rawTriggerMask > 0) {
-            if (runConfig.getRows() > 0) {
-                if ((runConfig.getLong("trigger",0) & rawTriggerMask) != 0) {
-                    rawWriter.addEvent((Event)event);
-                }
-            }
-            if (!t.isEmpty()) rawWriter.addEvent(t, 1);
+            if (runConfig.getRows()>0 && (runConfig.getLong("trigger",0) & rawTriggerMask) != 0)
+                if (rawTriggerPrescale<=0 || (++rawTriggerCount % rawTriggerPrescale) == 0)
+                    rawWriter.addEvent(physics);
+            if (!tagged.isEmpty()) rawWriter.addEvent(tagged, tagged.getEventTag());
         }
     }
 
