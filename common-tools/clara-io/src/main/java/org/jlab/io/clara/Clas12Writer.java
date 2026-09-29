@@ -32,16 +32,19 @@ public class Clas12Writer extends HipoToHipoWriter {
     Bank runConfig;
     ConstantsManager conman;
     SchemaFactory fullSchema;
+    SchemaFactory rawSchema;
     boolean postprocess;
 
     HipoWriterSorted rawWriter;
-    long rawTriggerCount;
     long rawTriggerMask;
+    long rawTriggerCount;
     int rawTriggerPrescale;
 
     private void init(JSONObject opts) {
         fullSchema = new SchemaFactory();
         fullSchema.initFromDirectory(FileUtils.getEnvironmentPath("CLAS12DIR","etc/bankdefs/hipo4"));
+        rawSchema = new SchemaFactory();
+        rawSchema.initFromDirectory(FileUtils.getEnvironmentPath("CLAS12DIR","etc/bankdefs/hipo4/singles/raw"));
         serial = new SerialHoncho(fullSchema);
         runConfig = new Bank(fullSchema.getSchema("RUN::config"));
         conman = new ConstantsManager();
@@ -59,12 +62,15 @@ public class Clas12Writer extends HipoToHipoWriter {
             init(opts);
             HipoWriterSorted w = new HipoWriterSorted();
             super.configure(w, opts);
-            w.open(file.toString().endsWith(".hipo") ? file.toString() : file.toString()+".hipo");
+            String dirname = file.getParent().toString();
+            String basename = file.getFileName().toString();
+            if (!basename.endsWith(".hipo")) basename += ".hipo";
             if (rawTriggerMask > 0) {
                 rawWriter = new HipoWriterSorted();
-                rawWriter.getSchemaFactory().copy(fullSchema);
-                rawWriter.open("raw_"+file.toString().substring(file.toString().indexOf("_")));
+                rawWriter.getSchemaFactory().copy(rawSchema);
+                rawWriter.open(dirname + "/tb" + basename.substring(basename.indexOf("_")));
             }
+            w.open(dirname + "/" + basename);
             return w;
         } catch (Exception e) {
             throw new EventWriterException(e);
@@ -81,6 +87,7 @@ public class Clas12Writer extends HipoToHipoWriter {
 
     void writeRaw(Event physics, Event tagged) {
         if (rawTriggerMask > 0) {
+            physics.read(runConfig);
             if (runConfig.getRows()>0 && (runConfig.getLong("trigger",0) & rawTriggerMask) != 0)
                 if (rawTriggerPrescale<=0 || (++rawTriggerCount % rawTriggerPrescale) == 0)
                     rawWriter.addEvent(physics);
