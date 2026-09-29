@@ -36,6 +36,10 @@
       <url>https://code.jlab.org/api/v4/projects/245/packages/maven</url>
     </repository>
     <repository>
+      <id>clas12-evio-java</id> <!-- `jevio` -->
+      <url>https://code.jlab.org/api/v4/projects/1038/packages/maven</url>
+    </repository>
+    <repository>
       <id>clas12maven</id>
       <url>https://clasweb.jlab.org/.clas12maven</url>
     </repository>
@@ -160,7 +164,7 @@
         <groupId>org.jlab.coda</groupId>
         <artifactId>jevio</artifactId>
         <classifier>jar-with-dependencies</classifier>
-        <version>6.2-SNAPSHOT</version>
+        <version>6.2.1</version>
         <exclusions>
           <exclusion>
             <groupId>net.jpountz.lz4</groupId>
