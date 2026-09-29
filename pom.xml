@@ -24,7 +24,7 @@
       <url>https://code.jlab.org/api/v4/projects/919/packages/maven</url>
     </repository>
     <repository>
-      <id>clas12-clara-java</id>
+      <id>clas12-clara-java</id> <!-- `jclara` -->
       <url>https://code.jlab.org/api/v4/projects/243/packages/maven</url>
     </repository>
     <repository>
