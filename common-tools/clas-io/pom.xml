@@ -44,7 +44,6 @@
     <dependency>
       <groupId>org.jlab.coda</groupId>
       <artifactId>et</artifactId>
-      <version>14.0</version>
     </dependency>
 
     <dependency>
