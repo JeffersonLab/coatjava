@@ -123,6 +123,12 @@
       </dependency>
 
       <dependency>
+        <groupId>java3d</groupId>
+        <artifactId>vecmath</artifactId>
+        <version>1.3.1</version>
+      </dependency>
+
+      <dependency>
         <groupId>org.slf4j</groupId>
         <artifactId>slf4j-api</artifactId>
         <version>2.0.19</version>
@@ -138,6 +144,12 @@
         <groupId>org.apache.commons</groupId>
         <artifactId>commons-lang3</artifactId>
         <version>3.20.0</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.commons</groupId>
+        <artifactId>commons-text</artifactId>
+        <version>1.15.0</version>
       </dependency>
 
       <dependency>
@@ -196,6 +208,12 @@
       </dependency>
 
       <dependency>
+        <groupId>org.jlab.coda</groupId>
+        <artifactId>jtools</artifactId>
+        <version>2.2</version>
+      </dependency>
+
+      <dependency>
         <groupId>org.jlab.jnp</groupId>
         <artifactId>jnp-hipo</artifactId>
         <version>2.0-SNAPSHOT</version> <!-- WARNING: if changed, check the `net.objecthunter:exp4j` version; see `docs/dependency_conflicts.md` -->
@@ -205,6 +223,18 @@
         <groupId>org.jlab.jnp</groupId>
         <artifactId>jnp-hipo4</artifactId>
         <version>4.5</version> <!-- from code.jlab.org/hallb/clas12/hipo-java; WARNING: if changed, check the `net.objecthunter:exp4j` version; see `docs/dependency_conflicts.md` -->
+      </dependency>
+
+      <dependency>
+        <groupId>org.jlab.ccdbrcdb</groupId>
+        <artifactId>ccdbrcdb</artifactId>
+        <version>2.1</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.jlab.plugins</groupId>
+        <artifactId>trackfitter</artifactId>
+        <version>1.0</version>
       </dependency>
 
       <dependency>
@@ -223,12 +253,6 @@
         <groupId>j4ml</groupId>
         <artifactId>j4ml-clas12</artifactId>
         <version>0.9-SNAPSHOT</version> <!-- WARNING: if changed, check the `org.ejml:ejml-simple` version; see `docs/dependency_conflicts.md` -->
-      </dependency>
-
-      <dependency>
-        <groupId>org.jlab.ccdbrcdb</groupId>
-        <artifactId>ccdbrcdb</artifactId>
-        <version>2.1</version>
       </dependency>
 
       <dependency>
