@@ -134,10 +134,12 @@ public class Occupancer extends ArrayList<Occupancer.OccupanceTable> {
          * @param weighted
          */
         public void fill(Event event, boolean weighted) {
+            event.show();
+            hitSchema.show();
             System.err.println(hitSchema.getName());
             RawBank bank = new RawBank(hitSchema, 1000, OrderGroups.NODENOISE);
             bank.read(event);
-            System.err.println(bank.getRows()); hitSchema.show();
+            System.err.println(bank.getRows());
             final int rows = bank.rows();
             int[] idx = new int[table.getList().getIndexSize()];
             for (int i=0; i<rows; i++) {
