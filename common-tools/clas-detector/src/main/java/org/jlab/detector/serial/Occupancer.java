@@ -24,7 +24,7 @@ public class Occupancer extends ArrayList<Occupancer.OccupanceTable> {
     
     static final String BANKDIR = ClasUtilsFile.getResourceDir("CLAS12DIR","etc/bankdefs/hipo4/singles/occupancy");
     static final SchemaFactory schema = new SchemaFactory();
-    static { schema.initFromDirectory(BANKDIR); }
+    static { schema.initFromDirectory(ClasUtilsFile.getResourceDir("CLAS12DIR","etc/bankdefs/hipo4")); }
     
     int events;
     int prescale;
@@ -60,10 +60,7 @@ public class Occupancer extends ArrayList<Occupancer.OccupanceTable> {
     }
     
     public void reset() {
-        forEach(t -> {
-            t.reset();
-            events = 0;
-        });
+        forEach(t -> { t.reset(); events = 0; });
     }
     
     public static final class OccupanceTable {
