@@ -22,6 +22,10 @@ import org.jlab.utils.system.ClasUtilsFile;
  */
 public class Occupancer extends ArrayList<Occupancer.OccupanceTable> {
     
+    static final String BANKDIR = ClasUtilsFile.getResourceDir("CLAS12DIR","etc/bankdefs/hipo4/singles/occupancy");
+    static final SchemaFactory schema = new SchemaFactory();
+    static { schema.initFromDirectory(BANKDIR); }
+    
     int events;
     int prescale;
 
@@ -62,13 +66,8 @@ public class Occupancer extends ArrayList<Occupancer.OccupanceTable> {
         });
     }
     
-    static final String BANKDIR = ClasUtilsFile.getResourceDir("CLAS12DIR","etc/bankdefs/hipo4/singles/occupancy");
-    static final SchemaFactory schema = new SchemaFactory();
-    static { schema.initFromDirectory(BANKDIR); }
-    
     public static final class OccupanceTable {
-        String hitBank;
-        String occBank;
+
         Schema occSchema;
         Schema hitSchema;
         IndexedTable table;
@@ -78,10 +77,10 @@ public class Occupancer extends ArrayList<Occupancer.OccupanceTable> {
          * @param hitBank name of the hit bank
          */
         public OccupanceTable(String hitBank) {
-            this.hitBank = hitBank;
-            occBank = "OCC::" + hitBank;
-            occSchema = schema.getSchema(occBank);
             hitSchema = schema.getSchema(hitBank);
+            occSchema = schema.getSchema("OCC::" + hitBank);
+            System.err.println(hitSchema+hitSchema.getName());
+            System.err.println(occSchema+occSchema.getName());
             table = new IndexedTable(3, new String[]{"occ/F"});
         }
         
@@ -91,15 +90,13 @@ public class Occupancer extends ArrayList<Occupancer.OccupanceTable> {
          * @param indexCount number of inidices in the hit bank
          */
         public OccupanceTable(String hitBank, int indexCount) {
-            this.hitBank = hitBank;
-            occBank = "OCC::" + hitBank;
-            occSchema = schema.getSchema(occBank);
             hitSchema = schema.getSchema(hitBank);
+            occSchema = schema.getSchema("OCC::" + hitBank);
             table = new IndexedTable(indexCount, new String[]{"occ/F"});
         }
         
-        public String getHitBank() { return hitBank; }
-        public String getOccBank() { return occBank; }
+        public String getHitBank() { return hitSchema.getName(); }
+        public String getOccBank() { return occSchema.getName(); }
         public final IndexedTable getTable() { return table; }
         
         /**
