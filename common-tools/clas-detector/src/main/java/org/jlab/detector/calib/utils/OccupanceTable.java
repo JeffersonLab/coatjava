@@ -1,11 +1,14 @@
 package org.jlab.detector.calib.utils;
 
 import java.util.Map;
-import org.jlab.io.base.DataBank;
-import org.jlab.io.base.DataEvent;
 import org.jlab.utils.groups.IndexedTable;
 import org.jlab.utils.groups.IndexedTable.IndexedEntry;
-import org.jlab.detector.banks.RawDataBank;
+import org.jlab.detector.banks.RawBank;
+import org.jlab.jnp.hipo4.data.Bank;
+import org.jlab.jnp.hipo4.data.Event;
+import org.jlab.jnp.hipo4.data.Schema;
+import org.jlab.jnp.hipo4.data.SchemaFactory;
+import org.jlab.utils.system.ClasUtilsFile;
 
 /**
  * Occupancy bookkeeper based on IndexedTable, with I/O helpers for indexed banks.
@@ -13,9 +16,14 @@ import org.jlab.detector.banks.RawDataBank;
  * @author baltzell 
  */
 public class OccupanceTable {
+    
+    static final String BANKDIR = ClasUtilsFile.getResourceDir("CLAS12DIR","etc/bankdefs/hipo4/singles/occupancy");
+    static final SchemaFactory schema = new SchemaFactory();
+    static { schema.initFromDirectory(BANKDIR); }
 
     String hitBank;
     String occBank;
+    Schema occSchema;
     IndexedTable table;
 
     /**
@@ -25,6 +33,7 @@ public class OccupanceTable {
     public OccupanceTable(String hitBank) {
         this.hitBank = hitBank;
         occBank = "OCC::" + hitBank;
+        occSchema = schema.getSchema(occBank);
         table = new IndexedTable(3, new String[]{"occ/F"});
     }
 
@@ -84,7 +93,7 @@ public class OccupanceTable {
      * @param bank 
      * @param weighted 
      */
-    public void fill(RawDataBank bank, boolean weighted) {
+    public void fill(RawBank bank, boolean weighted) {
         if (bank != null) {
             final int rows = bank.rows();
             int[] idx = new int[table.getList().getIndexSize()];
@@ -105,17 +114,17 @@ public class OccupanceTable {
      * @param event
      * @return 
      */
-    public synchronized DataBank create(long events, DataEvent event) {
-        DataBank b = event.createBank(occBank, table.getRowCount());
-        int i = 0;
+    public synchronized Bank create(long events, Event event) {
+        Bank b = new Bank(occSchema, table.getRowCount());
         Map<Long,IndexedEntry> m = table.getList().getMap();
+        int i = 0;
         for (long hash : m.keySet()) {
             int[] idx = IndexedTable.DEFAULT_GENERATOR.getIndices(hash, table.getList().getIndexSize());
             for (int j=0; j<table.getList().getIndexSize(); j++) {
-                if (j == 2) b.setShort(j, i, (short)idx[j]);
-                else b.setByte(j, i, (byte)idx[j]);
+                if (j == 2) b.putShort(j, i, (short)idx[j]);
+                else b.putByte(j, i, (byte)idx[j]);
             }
-            b.setFloat(table.getList().getIndexSize(), i, ((float)m.get(hash).getValue(0).intValue())/events);
+            b.putFloat(table.getList().getIndexSize(), i, ((float)m.get(hash).getValue(0).intValue())/events);
             i++;
         }
         return b;

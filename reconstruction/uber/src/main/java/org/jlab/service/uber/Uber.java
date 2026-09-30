@@ -36,7 +36,6 @@ import org.jlab.service.dc.DCHBTrackingAI;
 import org.jlab.service.dc.DCTBEngineAI;
 import org.jlab.service.eb.EBHBAIEngine;
 import org.jlab.service.eb.EBTBAIEngine;
-import org.jlab.calibration.service.OccupanceEngine;
 
 /**
  * A container of engine sequences for shorter YAMLs.
@@ -182,8 +181,7 @@ public class Uber {
             add(new RICHEBEngine(),
                 new RTPCEngine(),
                 new VTXEngine(),
-                new CalibBanksEngine(),
-                new OccupanceEngine());
+                new CalibBanksEngine());
         }
     }
 }

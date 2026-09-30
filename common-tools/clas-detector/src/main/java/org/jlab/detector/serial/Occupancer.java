@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import org.jlab.detector.banks.RawBank.OrderGroups;
 import org.jlab.detector.banks.RawDataBank;
 import org.jlab.detector.calib.utils.OccupanceTable;
-import org.jlab.io.base.DataEvent;
+import org.jlab.jnp.hipo4.data.Event;
 import org.jlab.utils.system.ClasUtilsFile;
 
 public class Occupancer extends ArrayList<OccupanceTable> {
@@ -22,7 +22,7 @@ public class Occupancer extends ArrayList<OccupanceTable> {
         this.prescale = prescale;
     }
 
-    public boolean process(DataEvent event) {
+    public boolean process(Event event) {
         forEach(t -> {
             RawDataBank b = new RawDataBank(t.getHitBank(), 1000, OrderGroups.NODENOISE);
             b.read(event);
@@ -30,8 +30,10 @@ public class Occupancer extends ArrayList<OccupanceTable> {
         });
         if (++events % prescale == 0) {
             forEach(t -> {
-                if (t.getTable().getRowCount() > 0)
-                    event.appendBank(t.create(events, event));
+                if (t.getTable().getRowCount() > 0) {
+                    t.create(events, event);
+                    event.write(t.create(events, event));
+                } 
                 t.reset();
             });
             events = 0;
@@ -39,14 +41,26 @@ public class Occupancer extends ArrayList<OccupanceTable> {
         return true;
     }
 
-    public boolean init() throws IOException {
-        addAll(Files.list(Paths.get(BANKDIR))
-                .filter(Files::isRegularFile)
-                .map(p -> p.getFileName().toString())
-                .map(s -> s.substring(0, s.length()-5))
-                .map(s -> s.substring(5, s.length()))
-                .map(OccupanceTable::new).toList());
-        return true;
+    public boolean init() {
+        try {
+            addAll(Files.list(Paths.get(BANKDIR))
+                    .filter(Files::isRegularFile)
+                    .map(p -> p.getFileName().toString())
+                    .map(s -> s.substring(0, s.length()-5))
+                    .map(s -> s.substring(5, s.length()))
+                    .map(OccupanceTable::new).toList());
+            return true;
+        } catch (IOException ex) {
+            System.getLogger(Occupancer.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
+            return false;
+        }
+    }
+
+    public void reset() {
+        forEach(t -> {
+            t.reset();
+            events = 0;
+        });
     }
 
 }
