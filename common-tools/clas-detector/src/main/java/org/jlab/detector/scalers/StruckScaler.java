@@ -30,6 +30,7 @@ public class StruckScaler extends DaqScaler {
     public HelicityBit getQuartet() { return this.quartet; }
 
     // These slots corrspond to gated/ungated scalers in RAW::scaler.
+    public static final int NSLOT=2;
     public static final int SLOT_GATED=0;
     public static final int SLOT_UNGATED=1;
 
