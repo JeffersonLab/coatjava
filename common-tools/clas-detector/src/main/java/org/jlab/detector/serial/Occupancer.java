@@ -20,6 +20,7 @@ public class Occupancer extends ArrayList<OccupanceTable> {
     public Occupancer(int prescale) {
         super();
         this.prescale = prescale;
+        this.events = 0;
     }
 
     public boolean process(Event event) {

@@ -45,6 +45,7 @@ public class OccupanceTable {
     public OccupanceTable(String hitBank, int indexCount) {
         this.hitBank = hitBank;
         occBank = "OCC::" + hitBank;
+        occSchema = schema.getSchema(occBank);
         table = new IndexedTable(indexCount, new String[]{"occ/F"});
     }
 
