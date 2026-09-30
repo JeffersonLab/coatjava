@@ -413,6 +413,7 @@
                 <dependencyConvergence>
                   <excludes>
                     <!-- excluding conflicts that may be tricky to resolve -->
+                    <!-- FIXME: can we deal with this??? -->
                     <exclude>com.google.protobuf:protobuf-java</exclude> <!-- `org.jlab.ccdbrcdb:ccdbrcdb` use v3, but `org.jlab.coda.xmsg` uses v2 -->
                   </excludes>
                 </dependencyConvergence>
