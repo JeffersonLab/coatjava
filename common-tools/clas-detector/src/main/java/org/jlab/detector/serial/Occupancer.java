@@ -49,7 +49,6 @@ public class Occupancer extends ArrayList<Occupancer.OccupanceTable> {
         forEach(t -> { t.fill(event, false); });
         if (++nevents % prescale == 0) {
             forEach(t -> {
-                System.err.println(t.getTable().getRowCount());
                 if (t.getTable().getRowCount() > 0) {
                     event.write(t.create(nevents, event));
                 }
@@ -137,6 +136,7 @@ public class Occupancer extends ArrayList<Occupancer.OccupanceTable> {
         public void fill(Event event, boolean weighted) {
             RawBank bank = new RawBank(hitSchema, 1000, OrderGroups.NODENOISE);
             bank.read(event);
+            System.err.println(bank.rows());
             final int rows = bank.rows();
             int[] idx = new int[table.getList().getIndexSize()];
             for (int i=0; i<rows; i++) {
