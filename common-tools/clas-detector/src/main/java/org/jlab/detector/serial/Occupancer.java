@@ -5,6 +5,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Map;
+import org.jlab.detector.banks.RawBank;
 import org.jlab.utils.groups.IndexedTable;
 import org.jlab.utils.groups.IndexedTable.IndexedEntry;
 import org.jlab.detector.banks.RawBank.OrderGroups;
@@ -134,7 +135,7 @@ public class Occupancer extends ArrayList<Occupancer.OccupanceTable> {
          * @param weighted
          */
         public void fill(Event event, boolean weighted) {
-            RawDataBank bank = new RawDataBank(hitSchema.getName(), 1000, OrderGroups.DEFAULT);
+            RawBank bank = new RawBank(hitSchema, 1000, OrderGroups.DEFAULT);
             bank.read(event);
             final int rows = bank.rows();
             int[] idx = new int[table.getList().getIndexSize()];
