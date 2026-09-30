@@ -76,8 +76,6 @@ public class Occupancer extends ArrayList<Occupancer.OccupanceTable> {
         public OccupanceTable(String hitBank) {
             hitSchema = schema.getSchema(hitBank);
             occSchema = schema.getSchema("OCC::" + hitBank);
-            System.err.println(hitSchema+hitSchema.getName());
-            System.err.println(occSchema+occSchema.getName());
             table = new IndexedTable(3, new String[]{"occ/F"});
         }
         
