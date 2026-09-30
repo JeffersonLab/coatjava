@@ -37,21 +37,8 @@
     </dependency>
 
     <dependency>
-      <groupId>org.jama</groupId>
-      <artifactId>jamapack</artifactId>
-      <version>1.0</version>
-    </dependency>
-
-    <dependency>
       <groupId>org.jlab.plugins</groupId>
       <artifactId>trackfitter</artifactId>
-      <version>1.0</version>
-    </dependency>
-
-    <dependency>
-      <groupId>org.jlab.plugins</groupId>
-      <artifactId>jMath</artifactId>
-      <version>1.0</version>
     </dependency>
 
     <dependency>
@@ -150,12 +137,6 @@
     </dependency>
 
     <dependency>
-      <groupId>de.erichseifert</groupId>
-      <artifactId>vectorgraphics2d</artifactId>
-      <version>1.0</version>
-    </dependency>
-
-    <dependency>
       <groupId>net.objecthunter</groupId>
       <artifactId>exp4j</artifactId>
     </dependency>
@@ -163,7 +144,7 @@
   </dependencies>
 
   <build>
-  
+
     <resources>
         <resource>
             <directory>src/main/resources</directory>
