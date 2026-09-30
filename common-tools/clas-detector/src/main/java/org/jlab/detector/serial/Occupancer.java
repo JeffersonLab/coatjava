@@ -26,13 +26,13 @@ public class Occupancer extends ArrayList<Occupancer.OccupanceTable> {
     static final SchemaFactory schema = new SchemaFactory();
     static { schema.initFromDirectory(ClasUtilsFile.getResourceDir("CLAS12DIR","etc/bankdefs/hipo4")); }
     
-    int events;
+    int nevents;
     int prescale;
 
     public Occupancer(int prescale) {
         super();
         this.prescale = prescale;
-        this.events = 0;
+        this.nevents = 0;
         try {
             addAll(Files.list(Paths.get(BANKDIR))
                     .filter(Files::isRegularFile)
@@ -47,20 +47,21 @@ public class Occupancer extends ArrayList<Occupancer.OccupanceTable> {
     
     public boolean process(Event event) {
         forEach(t -> { t.fill(event, false); });
-        if (++events % prescale == 0) {
+        if (++nevents % prescale == 0) {
             forEach(t -> {
+                System.err.println(t.getTable().getRowCount());
                 if (t.getTable().getRowCount() > 0) {
-                    event.write(t.create(events, event));
+                    event.write(t.create(nevents, event));
                 }
                 t.reset();
             });
-            events = 0;
+            nevents = 0;
         }
         return true;
     }
     
     public void reset() {
-        forEach(t -> { t.reset(); events = 0; });
+        forEach(t -> { t.reset(); nevents = 0; });
     }
     
     public static final class OccupanceTable {
