@@ -4,7 +4,7 @@
 
   <groupId>org.jlab.clas</groupId>
   <artifactId>coatjava</artifactId>
-  <version>14.2.0-SNAPSHOT</version>
+  <version>14.2.1-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <properties>
@@ -22,6 +22,10 @@
     <repository>
       <id>clas12-hipo-java</id>  <!-- `jnp-hipo4` is now built and published from its own repository, https://code.jlab.org/hallb/clas12/hipo-java. Project 919's package registry is public -->
       <url>https://code.jlab.org/api/v4/projects/919/packages/maven</url>
+    </repository>
+    <repository>
+      <id>clas12-clara-java</id>
+      <url>https://code.jlab.org/api/v4/projects/243/packages/maven</url>
     </repository>
     <repository>
       <id>clas12maven</id>
@@ -105,7 +109,7 @@
       <dependency>
         <groupId>org.slf4j</groupId>
         <artifactId>slf4j-api</artifactId>
-        <version>2.0.18</version>
+        <version>2.0.19</version>
       </dependency>
 
       <dependency>
@@ -208,7 +212,7 @@
       <dependency> <!-- sets version number for all 'ai.djl' dependencies -->
         <groupId>ai.djl</groupId>
         <artifactId>bom</artifactId>
-        <version>0.36.0</version> <!-- WARNING: if changed, check the `com.google.code.gson:gson` version; see `docs/dependency_conflicts.md` -->
+        <version>0.38.0</version> <!-- WARNING: if changed, check the `com.google.code.gson:gson` version; see `docs/dependency_conflicts.md` -->
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -271,7 +275,7 @@
       <plugin>
         <groupId>com.github.spotbugs</groupId>
         <artifactId>spotbugs-maven-plugin</artifactId>
-        <version>4.10.4.0</version>
+        <version>4.10.4.1</version>
         <configuration>
           <excludeFilterFile>spotbugs-exclude.xml</excludeFilterFile>
         </configuration>
@@ -356,6 +360,7 @@
               <goal>analyze-only</goal>
             </goals>
             <configuration>
+              <outputFile>${project.build.directory}/dependency-tree.txt</outputFile>
               <failOnWarning>true</failOnWarning>
               <!-- ignore certain "unused but declared" warnings -->
               <ignoredUnusedDeclaredDependencies>
@@ -455,7 +460,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-deploy-plugin</artifactId>
-          <version>3.1.4</version>
+          <version>3.2.0</version>
           <configuration>
             <!-- Use the minimal GAV POM -->
             <pomFile>${project.build.directory}/.flattened-pom.xml</pomFile>

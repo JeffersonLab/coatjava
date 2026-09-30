@@ -3,8 +3,6 @@ package org.jlab.io.clara;
 import java.io.File;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.TreeMap;
-import java.util.TreeSet;
 import org.jlab.clara.std.services.EventWriterException;
 import org.jlab.detector.calib.utils.ConstantsManager;
 import org.jlab.detector.helicity.HelicitySequenceDelayed;

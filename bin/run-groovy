@@ -1,11 +1,4 @@
 #!/bin/bash
 
 . `dirname $0`/../libexec/env.sh groovy
-
-echo """
-****************************************
-*    Running COATJAVA Groovy Script    *
-****************************************
-"""
-
 groovy -cp "$JYPATH" "$@"

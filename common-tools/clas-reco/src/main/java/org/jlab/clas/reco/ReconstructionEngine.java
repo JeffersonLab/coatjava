@@ -78,6 +78,8 @@ public abstract class ReconstructionEngine implements Engine {
     abstract public boolean init();
     abstract public void detectorChanged(int runNumber);
 
+    final Object detectorChangedLock = new Object();
+    
     public ReconstructionEngine(String name, String author, String version){
         engineName    = name;
         engineAuthor  = author;
@@ -345,16 +347,18 @@ public abstract class ReconstructionEngine implements Engine {
             }
         }
     }
-    
-    public synchronized boolean checkRunNumber(DataEvent event) {
+   
+    public boolean checkRunNumber(DataEvent event) {
         int r = runNumberOverride;
         if (r <= 0 && event.hasBank("RUN::config")) {
             r = event.getBank("RUN::config").getInt("run",0);
         }
         if (r > 0) {
-            if (this.runNumbers.isEmpty() || r != this.runNumbers.get(this.runNumbers.size()-1)) {
-                this.runNumbers.add(r);
-                this.detectorChanged(r);
+            synchronized (detectorChangedLock) {
+                if (this.runNumbers.isEmpty() || r != this.runNumbers.get(this.runNumbers.size()-1)) {
+                    this.runNumbers.add(r);
+                    this.detectorChanged(r);
+                }
             }
         }
         return !this.ignoreInvalidRunNumbers || r>0;
