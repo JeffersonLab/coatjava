@@ -60,7 +60,8 @@ public class FilteredBank {
      * @param evt
      */ 
     public void read(Event evt){
-        evt.read(bank);        
+        evt.read(bank);
+        System.err.println("doggies: "+bank.getRows());
         this.notifyRead();
     }
 
