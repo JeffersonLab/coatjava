@@ -90,8 +90,6 @@ public class Occupancer extends ArrayList<Occupancer.OccupanceTable> {
             table = new IndexedTable(indexCount, new String[]{"occ/F"});
         }
         
-        public String getHitBank() { return hitSchema.getName(); }
-        public String getOccBank() { return occSchema.getName(); }
         public final IndexedTable getTable() { return table; }
         
         /**
