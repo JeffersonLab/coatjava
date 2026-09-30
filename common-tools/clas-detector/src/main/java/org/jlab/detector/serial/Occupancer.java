@@ -31,7 +31,6 @@ public class Occupancer extends ArrayList<OccupanceTable> {
         if (++events % prescale == 0) {
             forEach(t -> {
                 if (t.getTable().getRowCount() > 0) {
-                    t.create(events, event);
                     event.write(t.create(events, event));
                 } 
                 t.reset();
