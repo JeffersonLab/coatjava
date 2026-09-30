@@ -21,6 +21,16 @@ public class Occupancer extends ArrayList<OccupanceTable> {
         super();
         this.prescale = prescale;
         this.events = 0;
+        try {
+            addAll(Files.list(Paths.get(BANKDIR))
+                    .filter(Files::isRegularFile)
+                    .map(p -> p.getFileName().toString())
+                    .map(s -> s.substring(0, s.length()-5))
+                    .map(s -> s.substring(5, s.length()))
+                    .map(OccupanceTable::new).toList());
+        } catch (IOException ex) {
+            System.getLogger(Occupancer.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
+        }
     }
 
     public boolean process(Event event) {
@@ -39,21 +49,6 @@ public class Occupancer extends ArrayList<OccupanceTable> {
             events = 0;
         }
         return true;
-    }
-
-    public boolean init() {
-        try {
-            addAll(Files.list(Paths.get(BANKDIR))
-                    .filter(Files::isRegularFile)
-                    .map(p -> p.getFileName().toString())
-                    .map(s -> s.substring(0, s.length()-5))
-                    .map(s -> s.substring(5, s.length()))
-                    .map(OccupanceTable::new).toList());
-            return true;
-        } catch (IOException ex) {
-            System.getLogger(Occupancer.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
-            return false;
-        }
     }
 
     public void reset() {
