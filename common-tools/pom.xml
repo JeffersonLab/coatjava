@@ -29,6 +29,7 @@
     <module>clara-io</module>
     <module>clas-tracking</module>
     <module>clas-decay-tools</module>
+    <module>clas-qcddat</module>
     <module>coat-libs</module>
   </modules>
 
