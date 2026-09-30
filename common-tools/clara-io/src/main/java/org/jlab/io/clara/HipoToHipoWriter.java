@@ -30,10 +30,9 @@ public class HipoToHipoWriter extends AbstractEventWriterService<HipoWriterSorte
     private static final String CONF_SCHEMA_WILDCARD = "wildcard";
     private static final String CONF_SCHEMA_PRESCALE = "schema_prescale";
     
-    protected final List<Bank> schemaBankList = new ArrayList<Bank>();
+    protected final List<Bank> schemaBankList = new ArrayList<>();
     private final StringSubstitutor envSubstitutor = new StringSubstitutor(System.getenv());
 
-    private int compression = 2;
     protected String filename;
 
     private long schemaPrescaleEvents = 0;
@@ -54,22 +53,18 @@ public class HipoToHipoWriter extends AbstractEventWriterService<HipoWriterSorte
     
     protected void configure(HipoWriterSorted writer, JSONObject opts) {
 
-        // set prescale:
-        if (opts.has(CONF_SCHEMA_PRESCALE)) {
-            schemaPrescale = opts.getInt(CONF_SCHEMA_PRESCALE);
-        }
-
-        // set compression:
-        if (opts.has(CONF_COMPRESSION)) {
-            compression = opts.getInt(CONF_COMPRESSION);
-        }
-        writer.setCompressionType(compression);
+        // set schema prescale factor:
+        schemaPrescale = opts.optInt(CONF_SCHEMA_PRESCALE, 0);
 
         // create full schema:
         SchemaFactory fullSchema = new SchemaFactory();
         fullSchema.initFromDirectory(FileUtils.getEnvironmentPath("CLAS12DIR","etc/bankdefs/hipo4"));
        
-        // choose user schema directory:
+        // set writer compression and schema:
+        writer.setCompressionType(opts.optInt(CONF_COMPRESSION, 2));
+        writer.getSchemaFactory().copy(fullSchema);
+
+        // choose schema directory:
         String schemaDir = FileUtils.getEnvironmentPath("CLAS12DIR", "etc/bankdefs/hipo4");
         if (opts.has(CONF_SCHEMA_DIR)) {
             // Run YAML values throuh env-substitor: 
@@ -81,36 +76,27 @@ public class HipoToHipoWriter extends AbstractEventWriterService<HipoWriterSorte
             System.out.printf("%s service: schema directory = %s%n", getName(), schemaDir);
         }
 
-        // create user schemaa:
+        // create schema from chosen directory:
         SchemaFactory factory = new SchemaFactory();
         factory.initFromDirectory(schemaDir);
 
-        // set the writer's schema factory:
-        if(opts.has(CONF_SCHEMA_WILDCARD)==true){
-            // apply a wildcard reduction on the user's schema:
-            String wildcard = opts.getString("wildcard");
-            SchemaFactory f2 = factory.reduce(wildcard);
-            writer.getSchemaFactory().copy(f2);
-        } else {
-            writer.getSchemaFactory().copy(factory);
+        // filter schema by wildcard:
+        if (opts.has(CONF_SCHEMA_WILDCARD)) {
+            factory = factory.reduce(opts.getString(CONF_SCHEMA_WILDCARD));
         }
-       
+        
         // set the bank list for filtering: 
         schemaBankList.clear();
-        if (opts.has(CONF_SCHEMA_DIR)==true||opts.has(CONF_SCHEMA_WILDCARD)==true) {
+        if (opts.has(CONF_SCHEMA_DIR) || opts.has(CONF_SCHEMA_WILDCARD)) {
             boolean useFilter = opts.optBoolean(CONF_SCHEMA_FILTER, true);
             System.out.printf("%s service: schema filter = %b%n", getName(), useFilter);
-            if(useFilter==true){
-                int schemaSize = writer.getSchemaFactory().getSchemaList().size();
-                for(int i = 0; i < schemaSize; i++){
-                    Bank dataBank = new Bank(writer.getSchemaFactory().getSchemaList().get(i));
-                    schemaBankList.add(dataBank);
+            if (useFilter) {
+                int schemaSize = factory.getSchemaList().size();
+                for (int i = 0; i < schemaSize; i++) {
+                    schemaBankList.add(new Bank(factory.getSchemaList().get(i)));
                 }
             }
         }
-
-        // set the writer's schema factory:
-        writer.getSchemaFactory().copy(fullSchema);
 
         System.out.printf("SERVICE WRITER :: [filter] %s\n",opts.has(HipoToHipoWriter.CONF_SCHEMA_FILTER));
         System.out.printf("SERVICE WRITER :: [dir] %s\n",opts.has(HipoToHipoWriter.CONF_SCHEMA_DIR));
