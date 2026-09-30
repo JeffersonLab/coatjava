@@ -7,7 +7,7 @@ configuration:
   io-services:
     writer:
       schema_dir: dst
-      rawTriggerMask: 0x1f
+      rawTriggerMask: 0x8000000000
       rawTriggerPrescale: 0
   services:
     MAGFIELDS:
