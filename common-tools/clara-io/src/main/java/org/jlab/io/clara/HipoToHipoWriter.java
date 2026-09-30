@@ -31,7 +31,7 @@ public class HipoToHipoWriter extends AbstractEventWriterService<HipoWriterSorte
     private static final String CONF_SCHEMA_PRESCALE = "schema_prescale";
     
     protected final List<Bank> schemaBankList = new ArrayList<>();
-    private final StringSubstitutor envSubstitutor = new StringSubstitutor(System.getenv());
+    private static final StringSubstitutor envSubstitutor = new StringSubstitutor(System.getenv());
 
     protected String filename;
 
@@ -51,6 +51,19 @@ public class HipoToHipoWriter extends AbstractEventWriterService<HipoWriterSorte
         }
     }
     
+    static String chooseSchemaDirectory(JSONObject opts) {
+        String schemaDir = FileUtils.getEnvironmentPath("CLAS12DIR", "etc/bankdefs/hipo4");
+        if (opts.has(CONF_SCHEMA_DIR)) {
+            // Run YAML values throuh env-substitor: 
+            schemaDir = opts.getString(CONF_SCHEMA_DIR).trim();
+            schemaDir = envSubstitutor.replace(schemaDir);
+            // If it's not already an absolute path, assume it's the name of a
+            // stock schema that comes with COATJAVA and get the full path to it:
+            if (!schemaDir.startsWith("/")) schemaDir = ClaraYaml.getStockSchemaDirectory(schemaDir);
+        }
+        return schemaDir;
+    }
+    
     protected void configure(HipoWriterSorted writer, JSONObject opts) {
 
         // set schema prescale factor:
@@ -64,33 +77,18 @@ public class HipoToHipoWriter extends AbstractEventWriterService<HipoWriterSorte
         writer.setCompressionType(opts.optInt(CONF_COMPRESSION, 2));
         writer.getSchemaFactory().copy(fullSchema);
 
-        // choose schema directory:
-        String schemaDir = FileUtils.getEnvironmentPath("CLAS12DIR", "etc/bankdefs/hipo4");
-        if (opts.has(CONF_SCHEMA_DIR)) {
-            // Run YAML values throuh env-substitor: 
-            schemaDir = opts.getString(CONF_SCHEMA_DIR).trim();
-            schemaDir = envSubstitutor.replace(schemaDir);
-            // If it's not already an absolute path, assume it's the name of a
-            // stock schema that comes with COATJAVA and get the full path to it:
-            if (!schemaDir.startsWith("/")) schemaDir = ClaraYaml.getStockSchemaDirectory(schemaDir);
-            System.out.printf("%s service: schema directory = %s%n", getName(), schemaDir);
-        }
-
-        // create schema from chosen directory:
+        // create schema from chosen directory and wildcard reduce:
+        String schemaDir = chooseSchemaDirectory(opts);
         SchemaFactory factory = new SchemaFactory();
         factory.initFromDirectory(schemaDir);
-
-        // filter schema by wildcard:
         if (opts.has(CONF_SCHEMA_WILDCARD)) {
             factory = factory.reduce(opts.getString(CONF_SCHEMA_WILDCARD));
         }
         
-        // set the bank list for filtering: 
+        // set the resulting bank list for filtering: 
         schemaBankList.clear();
         if (opts.has(CONF_SCHEMA_DIR) || opts.has(CONF_SCHEMA_WILDCARD)) {
-            boolean useFilter = opts.optBoolean(CONF_SCHEMA_FILTER, true);
-            System.out.printf("%s service: schema filter = %b%n", getName(), useFilter);
-            if (useFilter) {
+            if (opts.optBoolean(CONF_SCHEMA_FILTER, true)) {
                 int schemaSize = factory.getSchemaList().size();
                 for (int i = 0; i < schemaSize; i++) {
                     schemaBankList.add(new Bank(factory.getSchemaList().get(i)));
@@ -101,10 +99,6 @@ public class HipoToHipoWriter extends AbstractEventWriterService<HipoWriterSorte
         System.out.printf("SERVICE WRITER :: [filter] %s\n",opts.has(HipoToHipoWriter.CONF_SCHEMA_FILTER));
         System.out.printf("SERVICE WRITER :: [dir] %s\n",opts.has(HipoToHipoWriter.CONF_SCHEMA_DIR));
         System.out.printf("SERVICE WRITER :: [wildcard] %s\n",opts.has(HipoToHipoWriter.CONF_SCHEMA_WILDCARD));
-    }
-
-    private Method getSchemaFilterSetter() throws NoSuchMethodException, SecurityException {
-        return HipoWriter.class.getMethod("setSchemaFilter", boolean.class);
     }
 
     @Override
