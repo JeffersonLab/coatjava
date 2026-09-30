@@ -9,7 +9,6 @@ import org.jlab.utils.groups.IndexedTable;
 import org.jlab.utils.groups.IndexedTable.IndexedEntry;
 import org.jlab.detector.banks.RawBank;
 import org.jlab.detector.banks.RawBank.OrderGroups;
-import org.jlab.detector.banks.RawDataBank;
 import org.jlab.jnp.hipo4.data.Bank;
 import org.jlab.jnp.hipo4.data.Event;
 import org.jlab.jnp.hipo4.data.Schema;
@@ -135,7 +134,7 @@ public class Occupancer extends ArrayList<Occupancer.OccupanceTable> {
          * @param weighted
          */
         public void fill(Event event, boolean weighted) {
-            RawDataBank bank = new RawDataBank(hitSchema.getName(), 1000, OrderGroups.NODENOISE);
+            RawBank bank = new RawBank(hitSchema, 1000, OrderGroups.NODENOISE);
             bank.read(event);
             System.err.println(hitSchema.getName() + bank.rows());
             final int rows = bank.rows();
