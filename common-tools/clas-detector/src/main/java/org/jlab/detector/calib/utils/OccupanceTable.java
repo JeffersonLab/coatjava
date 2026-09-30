@@ -105,7 +105,7 @@ public class OccupanceTable {
      * @param event
      * @return 
      */
-    public DataBank create(long events, DataEvent event) {
+    public synchronized DataBank create(long events, DataEvent event) {
         DataBank b = event.createBank(occBank, table.getRowCount());
         int i = 0;
         Map<Long,IndexedEntry> m = table.getList().getMap();
