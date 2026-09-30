@@ -4,6 +4,7 @@ import java.util.Map;
 import org.jlab.utils.groups.IndexedTable;
 import org.jlab.utils.groups.IndexedTable.IndexedEntry;
 import org.jlab.detector.banks.RawBank;
+import org.jlab.detector.banks.RawBank.OrderGroups;
 import org.jlab.jnp.hipo4.data.Bank;
 import org.jlab.jnp.hipo4.data.Event;
 import org.jlab.jnp.hipo4.data.Schema;
@@ -24,6 +25,7 @@ public class OccupanceTable {
     String hitBank;
     String occBank;
     Schema occSchema;
+    Schema hitSchema;
     IndexedTable table;
 
     /**
@@ -34,6 +36,7 @@ public class OccupanceTable {
         this.hitBank = hitBank;
         occBank = "OCC::" + hitBank;
         occSchema = schema.getSchema(occBank);
+        hitSchema = schema.getSchema(hitBank);
         table = new IndexedTable(3, new String[]{"occ/F"});
     }
 
@@ -46,6 +49,7 @@ public class OccupanceTable {
         this.hitBank = hitBank;
         occBank = "OCC::" + hitBank;
         occSchema = schema.getSchema(occBank);
+        hitSchema = schema.getSchema(hitBank);
         table = new IndexedTable(indexCount, new String[]{"occ/F"});
     }
 
@@ -91,21 +95,21 @@ public class OccupanceTable {
     
     /**
      * Fill occupancy table from a user-defined bank. 
-     * @param bank 
+     * @param event
      * @param weighted 
      */
-    public void fill(RawBank bank, boolean weighted) {
-        if (bank != null) {
-            final int rows = bank.rows();
-            int[] idx = new int[table.getList().getIndexSize()];
-            for (int i=0; i<rows; i++) {
-                for (int j=0; j<table.getList().getIndexSize(); j++) {
-                    if (j==2) idx[j] = bank.getShort(j,i);
-                    else idx[j] = bank.getByte(j,i);
-                }
-                if (weighted) fill(bank.getFloat(table.getList().getIndexSize(),i),idx);
-                else fill(1.0f, idx);
+    public void fill(Event event, boolean weighted) {
+        RawBank bank = new RawBank(hitSchema, 1000, OrderGroups.NODENOISE);
+        bank.read(event);
+        final int rows = bank.rows();
+        int[] idx = new int[table.getList().getIndexSize()];
+        for (int i=0; i<rows; i++) {
+            for (int j=0; j<table.getList().getIndexSize(); j++) {
+                if (j==2) idx[j] = bank.getShort(j,i);
+                else idx[j] = bank.getByte(j,i);
             }
+            if (weighted) fill(bank.getFloat(table.getList().getIndexSize(),i),idx);
+            else fill(1.0f, idx);
         }
     }
 

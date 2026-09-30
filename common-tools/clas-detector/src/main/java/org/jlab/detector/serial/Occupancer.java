@@ -4,8 +4,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import org.jlab.detector.banks.RawBank.OrderGroups;
-import org.jlab.detector.banks.RawDataBank;
 import org.jlab.detector.calib.utils.OccupanceTable;
 import org.jlab.jnp.hipo4.data.Event;
 import org.jlab.utils.system.ClasUtilsFile;
@@ -34,11 +32,7 @@ public class Occupancer extends ArrayList<OccupanceTable> {
     }
 
     public boolean process(Event event) {
-        forEach(t -> {
-            RawDataBank b = new RawDataBank(t.getHitBank(), 1000, OrderGroups.NODENOISE);
-            b.read(event);
-            t.fill(b, false);
-        });
+        forEach(t -> { t.fill(event, false); });
         if (++events % prescale == 0) {
             forEach(t -> {
                 if (t.getTable().getRowCount() > 0) {
