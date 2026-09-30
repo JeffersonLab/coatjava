@@ -7,8 +7,8 @@ import java.util.ArrayList;
 import java.util.Map;
 import org.jlab.utils.groups.IndexedTable;
 import org.jlab.utils.groups.IndexedTable.IndexedEntry;
-import org.jlab.detector.banks.RawBank;
 import org.jlab.detector.banks.RawBank.OrderGroups;
+import org.jlab.detector.banks.RawDataBank;
 import org.jlab.jnp.hipo4.data.Bank;
 import org.jlab.jnp.hipo4.data.Event;
 import org.jlab.jnp.hipo4.data.Schema;
@@ -134,12 +134,8 @@ public class Occupancer extends ArrayList<Occupancer.OccupanceTable> {
          * @param weighted
          */
         public void fill(Event event, boolean weighted) {
-            event.show();
-            hitSchema.show();
-            System.err.println(hitSchema.getName());
-            RawBank bank = new RawBank(hitSchema, 1000, OrderGroups.NODENOISE);
+            RawDataBank bank = new RawDataBank(hitSchema.getName(), 1000, OrderGroups.DEFAULT);
             bank.read(event);
-            System.err.println(bank.getRows());
             final int rows = bank.rows();
             int[] idx = new int[table.getList().getIndexSize()];
             for (int i=0; i<rows; i++) {
