@@ -12,7 +12,7 @@ import java.util.Set;
 import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.jlab.ccdb.CcdbPackage;
+import org.jlab.ccdb.CCDB;
 import javax.swing.JFrame;
 import org.jlab.ccdb.Assignment;
 
@@ -144,7 +144,7 @@ public class DatabaseConstantProvider implements ConstantProvider {
         // choose /tmp directory:
         FileSystemExecScan.scan();
 
-        provider = CcdbPackage.createProvider(address);
+        provider = CCDB.createProvider(address);
 
         LOGGER.log(Level.INFO, String.format("[DB] ---> open %s | %s | %s | %s", runNumber, variation, databaseDate, address));
         
