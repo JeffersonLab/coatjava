@@ -71,12 +71,13 @@ trap cleanup EXIT
 # Configure:
 debug=0
 args=()
-usage="Usage:  install-clara [-v] [-c COATJAVA] [-f CLARA] [-g GRAPES] PATH"
+usage="Usage:  install-clara [-v] [-b] [-c COATJAVA] [-f CLARA] [-g GRAPES] PATH"
 info="""
 - The default CLARA / GRAPES versions are $clara / $grapes
 - COATJAVA can also be specified as a local installation directory
 - If the COATJAVA version is not specified, it will try to auto-detect it.
-- [-v adds verbosity and disables cleanup]"""
+- [-v adds verbosity and disables cleanup]
+- [-b builds clara from source]"""
 
 while [[ $# -gt 0 ]]
 do
@@ -85,6 +86,7 @@ do
         -f) clara="$2" && shift && shift ;;
         -c) coatjava="$2" && shift && shift ;;
         -g) grapes="$2" && shift && shift ;;
+        -b) build=1 && shift ;;
         -v) let debug=$debug+1 && shift ;;
         -*|--*)  echo -e "$usage\n\nUnknown option:  $1" && exit 1 ;;
         *) args+=("$1") && shift ;;
@@ -124,8 +126,14 @@ tmp_dir=$(cd $tmp_dir && pwd)
 cd $tmp_dir
 
 # CLARA:
-echo -e "\nBuilding CLARA from source ..."
-build_clara $PWD/clara-cre
+if ! [ -z ${build+x} ]
+then
+    echo -e "\nBuilding CLARA from source ..."
+    build_clara $PWD/clara-cre
+else
+    echo -e "\nRetrieving CLARA version $clara ..."
+    get https://clasweb.jlab.org/clas12offline/distribution/clara/clara-cre-$clara.tar.gz
+fi
 
 # COATJAVA:
 if ! compgen -G "$coatjava/lib/clas/coat-libs-*.jar" > /dev/null

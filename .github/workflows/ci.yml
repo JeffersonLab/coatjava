@@ -72,7 +72,7 @@ jobs:
       - name: build
         run: |
           ./build-coatjava.sh --lfs --no-progress -T${{ env.nthreads }}
-          ./bin/install-clara -c ./coatjava ./clara
+          ./bin/install-clara -b -c ./coatjava ./clara
       - name: tar # tarball to preserve permissions
         run: |
           tar czvf coatjava.tar.gz coatjava
@@ -102,7 +102,7 @@ jobs:
       - name: build
         run: |
           ./build-coatjava.sh --lfs --no-progress -T${{ env.nthreads }}
-          ./bin/install-clara -c ./coatjava ./clara
+          ./bin/install-clara -b -c ./coatjava ./clara
       - name: tar # tarball to preserve permissions
         run: |
           tar czvf coatjava.tar.gz coatjava
