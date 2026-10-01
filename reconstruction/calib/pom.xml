@@ -34,6 +34,6 @@
       <artifactId>clas-reco</artifactId>
       <version>14.2.1-SNAPSHOT</version>
     </dependency>
- 
+
   </dependencies>
 </project>
