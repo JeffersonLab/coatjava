@@ -9,7 +9,6 @@ import org.jlab.detector.banks.RawBank;
 import org.jlab.utils.groups.IndexedTable;
 import org.jlab.utils.groups.IndexedTable.IndexedEntry;
 import org.jlab.detector.banks.RawBank.OrderGroups;
-import org.jlab.detector.banks.RawDataBank;
 import org.jlab.jnp.hipo4.data.Bank;
 import org.jlab.jnp.hipo4.data.Event;
 import org.jlab.jnp.hipo4.data.Schema;
@@ -27,13 +26,21 @@ public class Occupancer extends ArrayList<Occupancer.OccupanceTable> {
     static final SchemaFactory schema = new SchemaFactory();
     static { schema.initFromDirectory(ClasUtilsFile.getResourceDir("CLAS12DIR","etc/bankdefs/hipo4")); }
     
-    int nevents;
-    int prescale;
+    int nevents = 0;
+    int prescale = 1000;
+
+    public Occupancer() {
+        super();
+        init();
+    }
 
     public Occupancer(int prescale) {
         super();
         this.prescale = prescale;
-        this.nevents = 0;
+        init();
+    }
+
+    private void init() {
         try {
             addAll(Files.list(Paths.get(BANKDIR))
                     .filter(Files::isRegularFile)
@@ -64,7 +71,7 @@ public class Occupancer extends ArrayList<Occupancer.OccupanceTable> {
         forEach(t -> { t.reset(); nevents = 0; });
     }
     
-    public static final class OccupanceTable {
+    public static class OccupanceTable {
 
         Schema occSchema;
         Schema hitSchema;

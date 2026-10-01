@@ -44,7 +44,7 @@ public class EngineProcessor {
     private final List<String> schemaExempt = Arrays.asList("RUN::config","DC::tdc");
 
     private final CLASDecoder4 decoder = new CLASDecoder4();
-    private final Occupancer occupancer = new Occupancer(100);
+    private final Occupancer occupancer = new Occupancer();
 
     public EngineProcessor(){}
 

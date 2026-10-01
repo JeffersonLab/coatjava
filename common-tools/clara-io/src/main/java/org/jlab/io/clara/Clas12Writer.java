@@ -37,7 +37,7 @@ public class Clas12Writer extends HipoToHipoWriter {
     boolean postprocess;
 
     private void init(JSONObject opts) {
-        occupancer = new Occupancer(1000);
+        occupancer = new Occupancer();
         fullSchema = new SchemaFactory();
         fullSchema.initFromDirectory(FileUtils.getEnvironmentPath("CLAS12DIR","etc/bankdefs/hipo4"));
         serial = new SerialHoncho(fullSchema);
