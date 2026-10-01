@@ -173,7 +173,7 @@
       <dependency>
         <groupId>org.jlab.coda</groupId>
         <artifactId>xmsg</artifactId>
-        <version>2.5</version>
+        <version>2.5</version> <!-- WARNING: if changed, check the `com.google.protobuf:protobuf-java` version; see `docs/dependency_conflicts.md` -->
       </dependency>
 
       <dependency>
@@ -216,13 +216,13 @@
       <dependency>
         <groupId>org.jlab.jnp</groupId>
         <artifactId>jnp-hipo4</artifactId>
-        <version>4.5</version> <!-- from code.jlab.org/hallb/clas12/hipo-java; WARNING: if changed, check the `net.objecthunter:exp4j` version; see `docs/dependency_conflicts.md` -->
+        <version>4.5</version> <!-- WARNING: if changed, check the `net.objecthunter:exp4j` version; see `docs/dependency_conflicts.md` -->
       </dependency>
 
       <dependency>
         <groupId>org.jlab.ccdbrcdb</groupId>
         <artifactId>ccdbrcdb</artifactId>
-        <version>2.1</version>
+        <version>2.1</version> <!-- WARNING: if changed, check the `com.google.protobuf:protobuf-java` version; see `docs/dependency_conflicts.md` -->
       </dependency>
 
       <dependency>
@@ -279,6 +279,16 @@
         <groupId>net.objecthunter</groupId>
         <artifactId>exp4j</artifactId>
         <version>0.4.8</version> <!-- WARNING: if changed, see `docs/dependency_conflicts.md` -->
+      </dependency>
+
+      <!-- resolve conflicting `com.google.protobuf:protobuf-java` by choosing the latest used by
+          - `org.jlab.ccdbrcdb:ccdbrcdb`
+          - `org.jlab.coda:xmsg`
+      -->
+      <dependency>
+        <groupId>com.google.protobuf</groupId>
+        <artifactId>protobuf-java</artifactId>
+        <version>4.31.1</version> <!-- WARNING: if changed, see `docs/dependency_conflicts.md` -->
       </dependency>
 
       <!-- resolve conflict between `j4ml:j4ml-clas12` and `clas-tracking`
@@ -428,13 +438,7 @@
             </goals>
             <configuration>
               <rules>
-                <dependencyConvergence>
-                  <excludes>
-                    <!-- excluding conflicts that may be tricky to resolve -->
-                    <!-- FIXME: can we deal with this??? -->
-                    <exclude>com.google.protobuf:protobuf-java</exclude> <!-- `org.jlab.ccdbrcdb:ccdbrcdb` use v3, but `org.jlab.coda.xmsg` uses v2 -->
-                  </excludes>
-                </dependencyConvergence>
+                <dependencyConvergence/>
               </rules>
             </configuration>
           </execution>
