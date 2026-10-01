@@ -56,6 +56,7 @@
             { "name":"sector"    , "type":"B", "info":"sector"},
             { "name":"layer"     , "type":"B", "info":"layer"},
             { "name":"component" , "type":"S", "info":"component"},
+            { "name":"order"     , "type":"B", "info":"order"},
             { "name":"hits"      , "type":"F", "info":"number of hits"}
         ]
     },
@@ -68,6 +69,7 @@
             { "name":"sector"    , "type":"B", "info":"sector"},
             { "name":"layer"     , "type":"B", "info":"layer"},
             { "name":"component" , "type":"S", "info":"component"},
+            { "name":"order"     , "type":"B", "info":"order"},
             { "name":"hits"      , "type":"F", "info":"number of hits"}
         ]
     },
@@ -80,6 +82,7 @@
             { "name":"sector"    , "type":"B", "info":"sector"},
             { "name":"layer"     , "type":"B", "info":"layer"},
             { "name":"component" , "type":"S", "info":"component"},
+            { "name":"order"     , "type":"B", "info":"order"},
             { "name":"hits"      , "type":"F", "info":"number of hits"}
         ]
     },
@@ -92,6 +95,7 @@
             { "name":"sector"    , "type":"B", "info":"sector"},
             { "name":"layer"     , "type":"B", "info":"layer"},
             { "name":"component" , "type":"S", "info":"component"},
+            { "name":"order"     , "type":"B", "info":"order"},
             { "name":"hits"      , "type":"F", "info":"number of hits"}
         ]
     },
@@ -248,6 +252,7 @@
             { "name":"sector"    , "type":"B", "info":"sector"},
             { "name":"layer"     , "type":"B", "info":"layer"},
             { "name":"component" , "type":"S", "info":"component"},
+            { "name":"order"     , "type":"B", "info":"order"},
             { "name":"hits"      , "type":"F", "info":"number of hits"}
         ]
     },
@@ -260,6 +265,7 @@
             { "name":"sector"    , "type":"B", "info":"sector"},
             { "name":"layer"     , "type":"B", "info":"layer"},
             { "name":"component" , "type":"S", "info":"component"},
+            { "name":"order"     , "type":"B", "info":"order"},
             { "name":"hits"      , "type":"F", "info":"number of hits"}
         ]
     }
