@@ -126,7 +126,7 @@ public class Occupancer extends ArrayList<Occupancer.OccupanceTable> {
          * @param weight
          * @param index
          */
-        public synchronized final void fill(float weight, int... index) {
+        public final void fill(float weight, int... index) {
             for (int i=0; i<index.length; i++) if (index[i] < 0) return;
             final long hash = IndexedTable.DEFAULT_GENERATOR.hashCode(index);
             if (!table.hasEntryByHash(hash)) {
@@ -162,7 +162,7 @@ public class Occupancer extends ArrayList<Occupancer.OccupanceTable> {
          * @param event
          * @return
          */
-        public synchronized Bank create(long events, Event event) {
+        public Bank create(long events, Event event) {
             Bank b = new Bank(occSchema, table.getRowCount());
             Map<Long,IndexedEntry> m = table.getList().getMap();
             int i = 0;
