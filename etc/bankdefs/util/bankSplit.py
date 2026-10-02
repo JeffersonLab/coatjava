@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 
-import json
-import sys
 import os
+import sys
+import json
+import glob
 
 # print usage
 if len(sys.argv)<2:
@@ -54,6 +55,9 @@ for filename in os.listdir("./"):
 
 print("Single json files saved in " + workdirectory + singledirectory)
 
+# occupancy banks:
+occ = [os.path.basename(x)[:-5] for x in glob.glob('./singles/occupancy/*.json')]
+
 # these should *always* be kept:
 mc = ["MC::Event", "MC::GenMatch", "MC::Header", "MC::Lund", "MC::Particle", "MC::RecMatch", "MC::True"]
 tag1 = ["RUN::config", "RAW::epics", "RAW::scaler", "RUN::scaler", "HEL::scaler", "COAT::config", "HEL::flip", "HEL::online", "HEL::decoder"]
@@ -83,7 +87,7 @@ mon = ["BMT::adc","BMTRec::Clusters","BMTRec::Crosses","BMTRec::Hits","BMTRec::L
 trig = ["RAW::vtp","HTCC::rec","ECAL::adc","ECAL::calib","ECAL::clusters","ECAL::hits","ECAL::moments","ECAL::peaks","ECAL::tdc","ECAL::trigger"]
 
 # accumulate all the DST banks:
-dst = rectbai + rectb + mc + tag1 + dets
+dst = rectbai + rectb + mc + tag1 + occ + dets
 dsthb = dst + rechbai + rechb
 
 # generate the calib and mon schema:
@@ -111,8 +115,6 @@ dchv.extend(["DC::tdc","DC::tot","DC::jitter", "HitBasedTrkg::Clusters", "HitBas
 # Level3 validation schema:
 level3 = list(dst)
 level3.extend(["DC::tdc", "DC::tot", "ECAL::adc", "ECAL::clusters", "FTOF::tdc", "FTOF::adc", "HitBasedTrkg::HBClusters", "HitBasedTrkg::HBTracks", "HTCC::adc", "RF::adc", "RF::tdc", "RUN::rf", "TimeBasedTrkg::TBClusters", "TimeBasedTrkg::TBTracks"])
-
-import glob
 
 rgl = glob.glob('./singles/full/ALERT*.json')
 rgl.extend(glob.glob('./singles/full/AHDC*.json'))

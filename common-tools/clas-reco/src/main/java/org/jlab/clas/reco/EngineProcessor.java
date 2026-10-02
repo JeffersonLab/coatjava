@@ -19,6 +19,7 @@ import org.jlab.clara.engine.EngineDataType;
 import java.util.Arrays;
 import org.jlab.coda.jevio.EvioException;
 import org.jlab.detector.decode.CLASDecoder4;
+import org.jlab.detector.serial.Occupancer;
 import org.jlab.io.evio.EvioDataEvent;
 import org.jlab.io.evio.EvioSource;
 import org.jlab.io.hipo.HipoDataEvent;
@@ -42,7 +43,8 @@ public class EngineProcessor {
     private SchemaFactory banksToKeep = null;
     private final List<String> schemaExempt = Arrays.asList("RUN::config","DC::tdc");
 
-    private CLASDecoder4 decoder = new CLASDecoder4();
+    private final CLASDecoder4 decoder = new CLASDecoder4();
+    private final Occupancer occupancer = new Occupancer();
 
     public EngineProcessor(){}
 
@@ -134,7 +136,7 @@ public class EngineProcessor {
         String[] names = new String[]{
             "MAGFIELDS",
             "DCCR","DCHB","FTOFHB","EC","HTCC","EBHB",
-            "DCTB","FTOFTB","EBTB","VTX"
+            "DCTB","FTOFTB","EBTB","OCC"
         };
 
         String[] services = new String[]{
@@ -148,7 +150,7 @@ public class EngineProcessor {
             "org.jlab.service.dc.DCTBEngine",
             "org.jlab.service.ftof.FTOFTBEngine",
             "org.jlab.service.eb.EBTBEngine",
-            "org.jlab.rec.service.vtx.VTXEngine"
+            "org.jlab.calibration.service.OccupanceEngine",
         };
 
         for(int i = 0; i < names.length; i++){
@@ -164,7 +166,7 @@ public class EngineProcessor {
             "CVTFP","CTOF","CND","BAND",
             "HTCC","LTCC","EBHB",
             "DCTB","FMT","FTOFTB","CVT","EBTB",
-            "RICHEB","RTPC","AHDC","ATOF","ALERT", "MC","VTX"
+            "RICHEB","RTPC","AHDC","ATOF","ALERT", "MC","VTX","OCC"
         };
 
         String[] services = new String[]{
@@ -197,7 +199,8 @@ public class EngineProcessor {
             "org.jlab.service.atof.ATOFEngine",
             "org.jlab.service.alert.ALERTEngine",
             "org.jlab.service.mc.TruthMatch",
-            "org.jlab.rec.service.vtx.VTXEngine"
+            "org.jlab.rec.service.vtx.VTXEngine",
+            "org.jlab.calibration.service.OccupanceEngine",
         };
         if(names.length!=services.length)
             LOGGER.log(Level.SEVERE, "initAll : the list of services does not match the list of service names...  ");
@@ -316,6 +319,7 @@ public class EngineProcessor {
     public void processEvent(DataEvent event, HipoDataSync writer) {
         processEvent(event);
         removeBanks(event);
+        occupancer.process(((HipoDataEvent)event).getHipoEvent());
         writer.writeEvent(event);
     }
 
@@ -390,24 +394,6 @@ public class EngineProcessor {
         }
     }
 
-    protected static OptionParser getParser() {
-        OptionParser parser = new OptionParser("recon-util");
-        parser.addRequired("-o","output.hipo");
-        parser.addRequired("-i","input.evio/hipo");
-        parser.setRequiresInputList(false);
-        parser.addOption("-c","0","use default configuration [0 - no, 1 - yes/default, 2 - all services] ");
-        parser.addOption("-s","0","number of events to skip");
-        parser.addOption("-n","0","number of events to process");
-        parser.addOption("-y","0","yaml file");
-        parser.addOption("-u","true","update dictionary from writer ? ");
-        parser.addOption("-S",null,"schema directory");
-        parser.addOption("-B",null,"background file");
-        parser.addOption("-P",null,"preload file for post-processing");
-        parser.addOption("-R","0","rebuild scalers");
-        parser.addOption("-H","0","restream helicity");
-        return parser;
-    }
-
     protected final void init(OptionParser p) {
         p.syncLogLevel(LOGGER);
 
@@ -449,7 +435,7 @@ public class EngineProcessor {
     }
 
      public static void main(String[] args) {
-        OptionParser parser = EngineProcessor.getParser();
+        OptionParser parser = ReconUtil.getParser();
         parser.parse(args);
         EngineProcessor proc = new EngineProcessor(parser);
         proc.processFile(parser.getOption("-i").stringValue(),

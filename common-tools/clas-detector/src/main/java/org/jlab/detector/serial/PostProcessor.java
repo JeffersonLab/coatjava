@@ -231,6 +231,22 @@ public class PostProcessor {
         }
     }
 
+    public void processFile(String input, String output) {
+        Event event = new Event();
+        HipoReader r = new HipoReader();
+        r.open(input);
+        HipoWriterSorted w = new HipoWriterSorted();
+        w.getSchemaFactory().initFromDirectory(ClasUtilsFile.getResourceDir("CLAS12DIR", "etc/bankdefs/hipo4"));
+        w.setCompressionType(2);
+        w.open(output);
+        while (r.hasNext()) {
+            r.nextEvent(event);
+            processEvent(event);
+            if (w != null) w.addEvent(event);
+        }
+        r.close();
+    }
+
     /**
      * The "postprocess" program.
      * @param args
