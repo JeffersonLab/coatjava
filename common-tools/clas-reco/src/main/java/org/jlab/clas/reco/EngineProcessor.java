@@ -19,6 +19,7 @@ import org.jlab.clara.engine.EngineDataType;
 import java.util.Arrays;
 import org.jlab.coda.jevio.EvioException;
 import org.jlab.detector.decode.CLASDecoder4;
+import org.jlab.detector.serial.Occupancer;
 import org.jlab.io.evio.EvioDataEvent;
 import org.jlab.io.evio.EvioSource;
 import org.jlab.io.hipo.HipoDataEvent;
@@ -42,7 +43,8 @@ public class EngineProcessor {
     private SchemaFactory banksToKeep = null;
     private final List<String> schemaExempt = Arrays.asList("RUN::config","DC::tdc");
 
-    private CLASDecoder4 decoder = new CLASDecoder4();
+    private final CLASDecoder4 decoder = new CLASDecoder4();
+    private final Occupancer occupancer = new Occupancer();
 
     public EngineProcessor(){}
 
@@ -134,7 +136,7 @@ public class EngineProcessor {
         String[] names = new String[]{
             "MAGFIELDS",
             "DCCR","DCHB","FTOFHB","EC","HTCC","EBHB",
-            "DCTB","FTOFTB","EBTB","VTX"
+            "DCTB","FTOFTB","EBTB","OCC"
         };
 
         String[] services = new String[]{
@@ -148,7 +150,7 @@ public class EngineProcessor {
             "org.jlab.service.dc.DCTBEngine",
             "org.jlab.service.ftof.FTOFTBEngine",
             "org.jlab.service.eb.EBTBEngine",
-            "org.jlab.rec.service.vtx.VTXEngine"
+            "org.jlab.calibration.service.OccupanceEngine",
         };
 
         for(int i = 0; i < names.length; i++){
@@ -164,7 +166,7 @@ public class EngineProcessor {
             "CVTFP","CTOF","CND","BAND",
             "HTCC","LTCC","EBHB",
             "DCTB","FMT","FTOFTB","CVT","EBTB",
-            "RICHEB","RTPC","AHDC","ATOF","ALERT", "MC","VTX"
+            "RICHEB","RTPC","AHDC","ATOF","ALERT", "MC","VTX","OCC"
         };
 
         String[] services = new String[]{
@@ -197,7 +199,8 @@ public class EngineProcessor {
             "org.jlab.service.atof.ATOFEngine",
             "org.jlab.service.alert.ALERTEngine",
             "org.jlab.service.mc.TruthMatch",
-            "org.jlab.rec.service.vtx.VTXEngine"
+            "org.jlab.rec.service.vtx.VTXEngine",
+            "org.jlab.calibration.service.OccupanceEngine",
         };
         if(names.length!=services.length)
             LOGGER.log(Level.SEVERE, "initAll : the list of services does not match the list of service names...  ");
@@ -316,6 +319,7 @@ public class EngineProcessor {
     public void processEvent(DataEvent event, HipoDataSync writer) {
         processEvent(event);
         removeBanks(event);
+        occupancer.process(((HipoDataEvent)event).getHipoEvent());
         writer.writeEvent(event);
     }
 
