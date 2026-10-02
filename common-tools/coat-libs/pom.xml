@@ -131,17 +131,6 @@
       <version>14.2.1-SNAPSHOT</version>
     </dependency>
 
-    <dependency>
-      <groupId>org.freehep</groupId>
-      <artifactId>jminuit</artifactId>
-    </dependency>
-
-    <!-- FIXME: can we remove this? it'll make it easier to remove the dependency convergence resolution later -->
-    <dependency>
-      <groupId>net.objecthunter</groupId>
-      <artifactId>exp4j</artifactId>
-    </dependency>
-
   </dependencies>
 
   <build>
