@@ -114,12 +114,6 @@ level3.extend(["DC::tdc", "DC::tot", "ECAL::adc", "ECAL::clusters", "FTOF::tdc",
 
 import glob
 
-data = glob.glob('./singles/data/*.json')
-data.extend(glob.glob('./singles/header/*.json'))
-data.extend(glob.glob('./singles/tag1/*.json'))
-data = [os.path.basename(x)[:-5] for x in data]
-create("raw/", set(data))
-
 rgl = glob.glob('./singles/full/ALERT*.json')
 rgl.extend(glob.glob('./singles/full/AHDC*.json'))
 rgl.extend(glob.glob('./singles/full/ATOF*.json'))
