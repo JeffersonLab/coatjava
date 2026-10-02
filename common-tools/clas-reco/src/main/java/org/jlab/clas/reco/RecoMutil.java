@@ -11,6 +11,7 @@ import java.util.logging.Logger;
 import org.jlab.coda.jevio.EvioException;
 import org.jlab.detector.decode.CLASDecoder;
 import org.jlab.detector.decode.CLASDecoderPool;
+import org.jlab.detector.serial.Occupancer;
 import org.jlab.detector.serial.SerialHoncho;
 import org.jlab.io.evio.EvioDataEvent;
 import org.jlab.io.evio.EvioSource;
@@ -41,6 +42,7 @@ public class RecoMutil extends Porch {
     
     // Processors:
     SerialHoncho serial;
+    Occupancer occupancer = new Occupancer();
     CLASDecoderPool decoders = new CLASDecoderPool(64,"default",null);
     Map<String,ReconstructionEngine> engines = new LinkedHashMap<>();
 
@@ -160,6 +162,7 @@ public class RecoMutil extends Porch {
             else
                 writer.addEvent(event.reduceEvent(schemaBankList), event.getEventTag());
         }
+        occupancer.process(event);
         if (benchmark != null) benchmark.pause("write");
     }
 

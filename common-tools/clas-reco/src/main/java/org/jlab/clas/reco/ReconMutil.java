@@ -16,6 +16,7 @@ import java.util.logging.Logger;
 import org.jlab.coda.jevio.EvioException;
 import org.jlab.detector.decode.CLASDecoder;
 import org.jlab.detector.decode.CLASDecoderPool;
+import org.jlab.detector.serial.Occupancer;
 import org.jlab.detector.serial.SerialHoncho;
 import org.jlab.io.evio.EvioDataEvent;
 import org.jlab.io.evio.EvioSource;
@@ -62,6 +63,7 @@ final class ReconMutil {
     
     // Processors:
     SerialHoncho serial;
+    Occupancer occupancer = new Occupancer();
     CLASDecoderPool decoders = new CLASDecoderPool(64,"default",null);
     Map<String,ReconstructionEngine> engines = new LinkedHashMap<>();
 
@@ -286,6 +288,7 @@ final class ReconMutil {
                             writer.addEvent(e.get(i), e.get(i).getEventTag());
                         else
                             writer.addEvent(e.get(i).reduceEvent(schemaBankList), e.get(i).getEventTag());
+                        occupancer.process(e.get(i));
                         if (benchmark != null) benchmark.pause("write");
                     }
                     // GARBAGECOLLECT!
