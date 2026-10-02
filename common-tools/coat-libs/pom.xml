@@ -136,6 +136,7 @@
       <artifactId>jminuit</artifactId>
     </dependency>
 
+    <!-- FIXME: can we remove this? it'll make it easier to remove the dependency convergence resolution later -->
     <dependency>
       <groupId>net.objecthunter</groupId>
       <artifactId>exp4j</artifactId>
