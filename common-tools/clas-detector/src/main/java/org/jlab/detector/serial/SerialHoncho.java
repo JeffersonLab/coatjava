@@ -67,8 +67,7 @@ public class SerialHoncho {
     }
     
     Event getUnixEvent(Bank config) {
-        Bank unix = new Bank(schema.getSchema("RUN::unix"));
-        unix.setRows(eventUnix.size());
+        Bank unix = new Bank(schema.getSchema("RUN::unix"), eventUnix.size());
         int row = 0;
         for (int evno : eventUnix.keySet()) {
             unix.putInt("event", row, evno);

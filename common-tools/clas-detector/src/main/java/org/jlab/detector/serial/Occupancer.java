@@ -23,11 +23,11 @@ import org.jlab.utils.system.ClasUtilsFile;
 public class Occupancer extends ArrayList<Occupancer.OccupanceTable> {
     
     static final String BANKDIR = ClasUtilsFile.getResourceDir("CLAS12DIR","etc/bankdefs/hipo4/singles/occupancy");
-    static final SchemaFactory schema = new SchemaFactory();
-    static { schema.initFromDirectory(ClasUtilsFile.getResourceDir("CLAS12DIR","etc/bankdefs/hipo4")); }
+    static final SchemaFactory FULL_SCHEMA = new SchemaFactory();
+    static { FULL_SCHEMA.initFromDirectory(ClasUtilsFile.getResourceDir("CLAS12DIR","etc/bankdefs/hipo4")); }
     
-    int nevents = 0;
     int prescale = 1000;
+    int nevents = 0;
 
     public Occupancer() {
         super();
@@ -42,6 +42,8 @@ public class Occupancer extends ArrayList<Occupancer.OccupanceTable> {
 
     private void init() {
         try {
+	    // Initialize OccupanceTable list, by reading occupancy bank filenames
+	    // and stripping ".json" suffix and "OCC::" prefix to get hit bank name:
             addAll(Files.list(Paths.get(BANKDIR))
                     .filter(Files::isRegularFile)
                     .map(p -> p.getFileName().toString())
@@ -82,8 +84,8 @@ public class Occupancer extends ArrayList<Occupancer.OccupanceTable> {
          * @param hitBank name of the hit bank
          */
         public OccupanceTable(String hitBank) {
-            hitSchema = schema.getSchema(hitBank);
-            occSchema = schema.getSchema("OCC::" + hitBank);
+            hitSchema = FULL_SCHEMA.getSchema(hitBank);
+            occSchema = FULL_SCHEMA.getSchema("OCC::" + hitBank);
             table = new IndexedTable(occSchema.hasEntry("order")?4:3, new String[]{"occ/F"});
         }
         
@@ -93,8 +95,8 @@ public class Occupancer extends ArrayList<Occupancer.OccupanceTable> {
          * @param indexCount number of inidices in the hit bank
          */
         public OccupanceTable(String hitBank, int indexCount) {
-            hitSchema = schema.getSchema(hitBank);
-            occSchema = schema.getSchema("OCC::" + hitBank);
+            hitSchema = FULL_SCHEMA.getSchema(hitBank);
+            occSchema = FULL_SCHEMA.getSchema("OCC::" + hitBank);
             table = new IndexedTable(indexCount, new String[]{"occ/F"});
         }
         
