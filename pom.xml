@@ -44,6 +44,10 @@
       <url>https://code.jlab.org/api/v4/projects/1044/packages/maven</url>
     </repository>
     <repository>
+      <id>clas12-groot</id>
+      <url>https://code.jlab.org/api/v4/projects/388/packages/maven</url>
+    </repository>
+    <repository>
       <id>clas12maven</id>
       <url>https://clasweb.jlab.org/.clas12maven</url>
     </repository>
@@ -155,7 +159,7 @@
       <dependency>
         <groupId>org.jlab</groupId>
         <artifactId>groot</artifactId>
-        <version>4.0.5</version> <!-- WARNING: if changed, check the `net.objecthunter:exp4j` version; see `docs/dependency_conflicts.md` -->
+        <version>5.0.0-SNAPSHOT</version> <!-- WARNING: if changed, check the `net.objecthunter:exp4j` version; see `docs/dependency_conflicts.md` -->
       </dependency>
 
       <dependency>
@@ -271,9 +275,9 @@
       -->
 
       <!-- resolve conflicting `net.objecthunter:exp4j` by choosing the latest used by
-          - `org.jlab.jnp:jnp-hipo`
-          - `org.jlab.jnp:jnp-hipo4`
-          - `org.jlab:groot`
+          - `org.jlab.jnp:jnp-hipo`   uses version 0.4.4
+          - `org.jlab.jnp:jnp-hipo4`  uses version 0.4.8
+          - `org.jlab:groot`          uses version 0.4.8
       -->
       <dependency>
         <groupId>net.objecthunter</groupId>
