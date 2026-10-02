@@ -13,14 +13,6 @@
     <version>14.2.1-SNAPSHOT</version>
   </parent>
 
-  <repositories>
-    <repository>
-      <id>freehep-repo-public</id>
-      <url>https://clasweb.jlab.org/.clas12maven/</url>
-      <!--<url>https://srs.slac.stanford.edu/nexus/content/groups/freehep-maven2-public/</url>-->
-    </repository>
-  </repositories>
-
   <dependencies>
 
     <dependency>
@@ -137,17 +129,6 @@
       <groupId>cnuphys</groupId>
       <artifactId>snr</artifactId>
       <version>14.2.1-SNAPSHOT</version>
-    </dependency>
-
-    <dependency>
-      <groupId>org.freehep</groupId>
-      <artifactId>jminuit</artifactId>
-    </dependency>
-
-    <!-- FIXME: can we remove this? it'll make it easier to remove the dependency convergence resolution later -->
-    <dependency>
-      <groupId>net.objecthunter</groupId>
-      <artifactId>exp4j</artifactId>
     </dependency>
 
   </dependencies>
