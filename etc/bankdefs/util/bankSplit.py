@@ -114,6 +114,12 @@ level3.extend(["DC::tdc", "DC::tot", "ECAL::adc", "ECAL::clusters", "FTOF::tdc",
 
 import glob
 
+raw = glob.glob('./singles/data/*.json')
+raw.extend(glob.glob('./singles/header/*.json'))
+raw.extend(glob.glob('./singles/tag1/*.json'))
+raw = [os.path.basename(x)[:-5] for x in raw]
+create("raw/", set(raw))
+
 rgl = glob.glob('./singles/full/ALERT*.json')
 rgl.extend(glob.glob('./singles/full/AHDC*.json'))
 rgl.extend(glob.glob('./singles/full/ATOF*.json'))
@@ -135,4 +141,3 @@ create("dcalign/", set(dcalign))
 create("dchv/", set(dchv))
 create("level3/", set(level3))
 create("trigger/", set(trig))
-
