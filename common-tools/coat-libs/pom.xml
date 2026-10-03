@@ -13,14 +13,6 @@
     <version>14.2.1-SNAPSHOT</version>
   </parent>
 
-  <repositories>
-    <repository>
-      <id>freehep-repo-public</id>
-      <url>https://clasweb.jlab.org/.clas12maven/</url>
-      <!--<url>https://srs.slac.stanford.edu/nexus/content/groups/freehep-maven2-public/</url>-->
-    </repository>
-  </repositories>
-
   <dependencies>
 
     <dependency>
@@ -32,7 +24,6 @@
     <dependency>
       <groupId>org.jlab.coda</groupId>
       <artifactId>et</artifactId>
-      <version>14.0</version>
     </dependency>
 
     <dependency>
@@ -46,21 +37,8 @@
     </dependency>
 
     <dependency>
-      <groupId>org.jama</groupId>
-      <artifactId>jamapack</artifactId>
-      <version>1.0</version>
-    </dependency>
-
-    <dependency>
       <groupId>org.jlab.plugins</groupId>
       <artifactId>trackfitter</artifactId>
-      <version>1.0</version>
-    </dependency>
-
-    <dependency>
-      <groupId>org.jlab.plugins</groupId>
-      <artifactId>jMath</artifactId>
-      <version>1.0</version>
     </dependency>
 
     <dependency>
@@ -153,26 +131,10 @@
       <version>14.2.1-SNAPSHOT</version>
     </dependency>
 
-    <dependency>
-      <groupId>org.freehep</groupId>
-      <artifactId>jminuit</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>de.erichseifert</groupId>
-      <artifactId>vectorgraphics2d</artifactId>
-      <version>1.0</version>
-    </dependency>
-
-    <dependency>
-      <groupId>net.objecthunter</groupId>
-      <artifactId>exp4j</artifactId>
-    </dependency>
-
   </dependencies>
 
   <build>
-  
+
     <resources>
         <resource>
             <directory>src/main/resources</directory>
