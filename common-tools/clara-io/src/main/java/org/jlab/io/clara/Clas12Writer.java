@@ -47,8 +47,8 @@ public class Clas12Writer extends HipoToHipoWriter {
         conman = new ConstantsManager();
         conman.init("/runcontrol/hwp","/runcontrol/helicity");
         postprocess = opts.optBoolean("postprocess", false);
-        paraTriggerMask = opts.optLong("rawTriggerMask", 0);
-        paraTriggerPrescale = opts.optInt("rawTriggerPrescale", 0);
+        paraTriggerMask = opts.optLong("paraTriggerMask", 0);
+        paraTriggerPrescale = opts.optInt("paraTriggerPrescale", 0);
         if (opts.has("variation")) conman.setVariation(opts.getString("variation"));
         if (opts.has("timestamp")) conman.setTimeStamp(opts.getString("timestamp"));
     }
