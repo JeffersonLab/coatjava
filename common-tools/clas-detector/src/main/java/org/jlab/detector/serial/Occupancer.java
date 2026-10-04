@@ -22,7 +22,7 @@ import org.jlab.utils.system.ClasUtilsFile;
  */
 public class Occupancer extends ArrayList<Occupancer.OccupanceTable> {
     
-    static final String BANKDIR = ClasUtilsFile.getResourceDir("CLAS12DIR","etc/bankdefs/hipo4/singles/occupancy");
+    static final String OCC_BANK_DIR = ClasUtilsFile.getResourceDir("CLAS12DIR","etc/bankdefs/hipo4/singles/occupancy");
     static final SchemaFactory FULL_SCHEMA = new SchemaFactory();
     static { FULL_SCHEMA.initFromDirectory(ClasUtilsFile.getResourceDir("CLAS12DIR","etc/bankdefs/hipo4")); }
     
@@ -44,7 +44,7 @@ public class Occupancer extends ArrayList<Occupancer.OccupanceTable> {
         try {
 	    // Initialize OccupanceTable list, by reading occupancy bank filenames
 	    // and stripping ".json" suffix and "OCC::" prefix to get hit bank name:
-            addAll(Files.list(Paths.get(BANKDIR))
+            addAll(Files.list(Paths.get(OCC_BANK_DIR))
                     .filter(Files::isRegularFile)
                     .map(p -> p.getFileName().toString())
                     .map(s -> s.substring(0, s.length()-5))
