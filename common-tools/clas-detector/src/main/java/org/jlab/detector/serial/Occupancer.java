@@ -56,7 +56,7 @@ public class Occupancer extends ArrayList<Occupancer.OccupanceTable> {
     }
     
     public boolean process(Event event) {
-        forEach(t -> { t.fill(event, false); });
+        forEach(t -> { t.fill(event); });
         if (++nevents % prescale == 0) {
             forEach(t -> {
                 if (t.getTable().getRowCount() > 0) {
@@ -125,25 +125,23 @@ public class Occupancer extends ArrayList<Occupancer.OccupanceTable> {
         
         /**
          * Fill the occupancy table.
-         * @param weight
          * @param index
          */
-        public final void fill(float weight, int... index) {
+        public final void fill(int... index) {
             for (int i=0; i<index.length; i++) if (index[i] < 0) return;
             final long hash = IndexedTable.DEFAULT_GENERATOR.hashCode(index);
             if (!table.hasEntryByHash(hash)) {
                 table.addEntry(index);
                 table.setDoubleValueByHash(0.0d, 0, hash);
             }
-            table.setDoubleValueByHash(table.getDoubleValueByHash(0, hash) + weight, 0, hash);
+            table.setDoubleValueByHash(table.getDoubleValueByHash(0, hash) + 1.0, 0, hash);
         }
         
         /**
          * Fill occupancy table from a user-defined bank.
          * @param event
-         * @param weighted
          */
-        public void fill(Event event, boolean weighted) {
+        public void fill(Event event) {
             RawBank bank = new RawBank(hitSchema, 1000, OrderGroups.DEFAULT);
             bank.read(event);
             final int rows = bank.rows();
@@ -153,15 +151,13 @@ public class Occupancer extends ArrayList<Occupancer.OccupanceTable> {
                     if (j==2) idx[j] = bank.getShort(j,i);
                     else idx[j] = bank.getByte(j,i);
                 }
-                if (weighted) fill(bank.getFloat(table.getList().getIndexSize(),i),idx);
-                else fill(1.0f, idx);
+                fill(idx);
             }
         }
         
         /**
          * Get an occupancy bank, normalized by number of events.
          * @param events
-         * @param event
          * @return
          */
         public Bank create(long events) {
