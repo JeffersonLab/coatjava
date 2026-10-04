@@ -60,7 +60,7 @@ public class Occupancer extends ArrayList<Occupancer.OccupanceTable> {
         if (++nevents % prescale == 0) {
             forEach(t -> {
                 if (t.getTable().getRowCount() > 0) {
-                    event.write(t.create(nevents, event));
+                    event.write(t.create(nevents));
                 }
                 t.reset();
             });
@@ -164,7 +164,7 @@ public class Occupancer extends ArrayList<Occupancer.OccupanceTable> {
          * @param event
          * @return
          */
-        public Bank create(long events, Event event) {
+        public Bank create(long events) {
             Bank b = new Bank(occSchema, table.getRowCount());
             Map<Long,IndexedEntry> m = table.getList().getMap();
             int i = 0;
