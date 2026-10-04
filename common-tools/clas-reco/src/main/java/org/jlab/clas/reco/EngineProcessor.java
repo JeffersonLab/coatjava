@@ -150,7 +150,7 @@ public class EngineProcessor {
             "org.jlab.service.dc.DCTBEngine",
             "org.jlab.service.ftof.FTOFTBEngine",
             "org.jlab.service.eb.EBTBEngine",
-            "org.jlab.rec.service.vtx.VTXEngine",
+            "org.jlab.rec.service.vtx.VTXEngine"
         };
 
         for(int i = 0; i < names.length; i++){
@@ -199,7 +199,7 @@ public class EngineProcessor {
             "org.jlab.service.atof.ATOFEngine",
             "org.jlab.service.alert.ALERTEngine",
             "org.jlab.service.mc.TruthMatch",
-            "org.jlab.rec.service.vtx.VTXEngine",
+            "org.jlab.rec.service.vtx.VTXEngine"
         };
         if(names.length!=services.length)
             LOGGER.log(Level.SEVERE, "initAll : the list of services does not match the list of service names...  ");
