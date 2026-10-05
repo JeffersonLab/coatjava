@@ -1,12 +1,26 @@
 package org.jlab.utils;
 
+import org.jlab.jnp.hipo4.data.SchemaFactory;
+
 /**
  *
  * @author gavalian
  * @author kenjo
  */
 public class CLASResources {
-    
+   
+    public static volatile SchemaFactory FULL_SCHEMA = null;
+
+    public static synchronized SchemaFactory getFullSchema() {
+        if (FULL_SCHEMA == null) {
+            FULL_SCHEMA = new SchemaFactory();
+            FULL_SCHEMA.initFromDirectory(getResourcePath("etc/bankdefs/hipo4"));
+        }
+        SchemaFactory s = new SchemaFactory();
+        s.copy(FULL_SCHEMA);
+        return s;
+    }
+
     public static String getResourcePath(String resource){
         String CLAS12DIR = System.getenv("CLAS12DIR");
         String CLAS12DIRPROP = System.getProperty("CLAS12DIR");
@@ -44,4 +58,5 @@ public class CLASResources {
         
         return null;
     }
+
 }
