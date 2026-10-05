@@ -104,6 +104,12 @@ public class RecoMutil extends Porch {
             ((EvioSource)reader).close();
     }
 
+    void updateHelicity() {
+        synchronized (serialLock) {
+            serial.updateHelicitySequence();
+        }
+    }
+
     @Override
     HipoDataEvent[] decode(int thread, Object input) {
         HipoDataEvent event = input instanceof ByteBuffer
@@ -182,12 +188,6 @@ public class RecoMutil extends Porch {
         schemaBankList = ReconUtil.getBankList(s, yaml);
         writer.open(filename);
         return writer;
-    }
-
-    void updateHelicity() {
-        synchronized (serialLock) {
-            serial.updateHelicitySequence();
-        }
     }
 
     HipoDataEvent decode(int thread, ByteBuffer bytes) {

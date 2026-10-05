@@ -23,6 +23,15 @@ import org.jlab.utils.benchmark.ProgressPrintout;
  */
 public abstract class Porch {
     
+    abstract Object open(String filename);
+    abstract Object read();
+    abstract HipoDataEvent[] decode(int thread, Object event);
+    abstract void process(int thread, HipoDataEvent event);
+    abstract void write(HipoDataEvent event);
+    abstract void readerExit(); 
+    abstract void decoderExit(int thread);
+    abstract void writerExit();
+    
     static final String[] BENCHMARK_NAMES = new String[]{"evio","deco","serial","post","write"};
     
     // Performance parameters:
@@ -292,14 +301,4 @@ public abstract class Porch {
         procQueue.clear();
         writeQueue.clear();
     }
-    
-    abstract Object open(String filename);
-    abstract Object read();
-    abstract HipoDataEvent[] decode(int thread, Object event);
-    abstract void process(int thread, HipoDataEvent event);
-    abstract void write(HipoDataEvent event);
-    abstract void readerExit(); 
-    abstract void decoderExit(int thread);
-    abstract void writerExit();
-
 }
