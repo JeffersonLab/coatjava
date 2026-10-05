@@ -11,10 +11,12 @@ public class CLASResources {
    
     private static volatile SchemaFactory FULL_SCHEMA = null;
 
-    public static synchronized SchemaFactory getFullSchema() {
-        if (FULL_SCHEMA == null) {
-            FULL_SCHEMA = new SchemaFactory();
-            FULL_SCHEMA.initFromDirectory(getResourcePath("etc/bankdefs/hipo4"));
+    public static SchemaFactory getFullSchema() {
+        synchronized (FULL_SCHEMA) {
+            if (FULL_SCHEMA == null) {
+                FULL_SCHEMA = new SchemaFactory();
+                FULL_SCHEMA.initFromDirectory(getResourcePath("etc/bankdefs/hipo4"));
+            }
         }
         SchemaFactory s = new SchemaFactory();
         s.copy(FULL_SCHEMA);
