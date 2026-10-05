@@ -48,6 +48,10 @@
       <url>https://code.jlab.org/api/v4/projects/388/packages/maven</url>
     </repository>
     <repository>
+      <id>freehep-repo-public</id>
+      <url>https://srs.slac.stanford.edu/nexus/content/groups/freehep-maven2-public/</url>
+    </repository>
+    <repository>
       <id>clasweb-clas12maven</id>
       <url>https://clasweb.jlab.org/.clas12maven</url>
     </repository>
@@ -166,7 +170,6 @@
         <groupId>org.freehep</groupId>
         <artifactId>freehep-jminuit</artifactId>
         <version>1.0.2</version>
-        <!-- bump this, then add explicit dependence in calcode -->
       </dependency>
 
       <dependency>
