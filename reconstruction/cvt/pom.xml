@@ -86,10 +86,6 @@
       <type>jar</type>
     </dependency>
     <dependency>
-      <groupId>org.jlab.plugins</groupId>
-      <artifactId>trackfitter</artifactId>
-    </dependency>
-    <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
     </dependency>

@@ -1,6 +1,5 @@
 package org.jlab.rec.dc.track.fit.basefit;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /** A least square fitting method
@@ -15,9 +14,9 @@ public class LineFitter {
 	// the constructor
 	public LineFitter() {
 	}
-	private final List<Double> w = new ArrayList<Double>();
+
 	// fit status
-	public boolean fitStatus(List<Double> x, List<Double> y, List<Double> sigma_x, List<Double> sigma_y, int nbpoints) {
+	public boolean fitStatus(double[] x, double[] y, double[] sigma_x, double[] sigma_y, int nbpoints) {
 		boolean fitStat = false;
 		
 		if (nbpoints>=2) {  // must have enough points to do the fit
@@ -25,22 +24,21 @@ public class LineFitter {
 			// initialize weight-sum and moments
 			double Sw, Sx, Sy, Sxx, Sxy;
 			Sw = Sx = Sy = Sxx = Sxy =0.;
+			double[] w = new double[nbpoints];
 			
-			w.clear();
-			((ArrayList<Double>) w).ensureCapacity(nbpoints);
 			
 			for (int i = 0; i<nbpoints; i++) { 
-				if((sigma_y.get(i)*sigma_y.get(i)+sigma_x.get(i)*sigma_x.get(i))==0) {
+				double r = sigma_y[i]*sigma_y[i]+sigma_x[i]*sigma_x[i];
+				if(r==0) {
 					return false;
 				}
-				w.add(i, 1./(sigma_y.get(i)*sigma_y.get(i)+sigma_x.get(i)*sigma_x.get(i)) ); 
-				//w.get(i) = 1./(sigma_x.get(i)*sigma_x.get(i)); 
-				Sw  += w.get(i);
+				w[i] = 1./r;
+				Sw  += w[i];
 				// the moments
-				Sx  += x.get(i)*w.get(i);
-				Sy  += y.get(i)*w.get(i);
-				Sxy += x.get(i)*y.get(i)*w.get(i);
-				Sxx += x.get(i)*x.get(i)*w.get(i); 
+				Sx  += x[i]*w[i];
+				Sy  += y[i]*w[i];
+				Sxy += x[i]*y[i]*w[i];
+				Sxx += x[i]*x[i]*w[i]; 
 			}
 			// the determinant
 			double determ = Sw*Sxx - Sx*Sx;  // the determinant; must be >0
@@ -61,8 +59,8 @@ public class LineFitter {
 				double chi_2 = 0.; 
 				double pointchi_2[] = new double[nbpoints]; //individual chi2 for each fitted point
 				for (int j = 0; j<nbpoints; j++) { 
-					chi_2 += ((y.get(j)-(slopeSol*x.get(j)+intercSol))*(y.get(j)-(slopeSol*x.get(j)+intercSol)))*w.get(j);
-					pointchi_2[j] = ((y.get(j)-(slopeSol*x.get(j)+intercSol))*(y.get(j)-(slopeSol*x.get(j)+intercSol)))*w.get(j);  					
+					chi_2 += ((y[j]-(slopeSol*x[j]+intercSol))*(y[j]-(slopeSol*x[j]+intercSol)))*w[j];
+					pointchi_2[j] = ((y[j]-(slopeSol*x[j]+intercSol))*(y[j]-(slopeSol*x[j]+intercSol)))*w[j];  					
 				}
 				// the number of degrees of freedom
 				int Ndf = nbpoints - 2;
@@ -77,6 +75,17 @@ public class LineFitter {
 		// if there is a fit return true
 		return fitStat;
 	}
+
+        // fit status (overload)
+        public boolean fitStatus(List<Double> x, List<Double> y, List<Double> sigma_x, List<Double> sigma_y, int nbpoints) {
+          return fitStatus(
+              x.stream().mapToDouble(Double::doubleValue).toArray(),
+              y.stream().mapToDouble(Double::doubleValue).toArray(),
+              sigma_x.stream().mapToDouble(Double::doubleValue).toArray(),
+              sigma_y.stream().mapToDouble(Double::doubleValue).toArray(),
+              nbpoints);
+        }
+
 	// return the fit result
 	public LineFitPars getFit() {
 		return _linefitresult;

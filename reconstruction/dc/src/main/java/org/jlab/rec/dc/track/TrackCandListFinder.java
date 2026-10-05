@@ -24,8 +24,8 @@ import org.jlab.rec.dc.trajectory.StateVec;
 import org.jlab.rec.dc.trajectory.Trajectory;
 import org.jlab.rec.dc.trajectory.TrajectoryFinder;
 
-import trackfitter.fitter.LineFitPars;
-import trackfitter.fitter.LineFitter;
+import org.jlab.rec.dc.track.fit.basefit.LineFitter;
+import org.jlab.rec.dc.track.fit.basefit.LineFitPars;
 
 import org.jlab.clas.tracking.kalmanfilter.Surface;
 import org.jlab.clas.tracking.kalmanfilter.zReference.KFitter;

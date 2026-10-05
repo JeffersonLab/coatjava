@@ -6,7 +6,7 @@ import java.util.List;
 import org.jlab.geom.prim.Point3D;
 import org.jlab.geom.prim.Vector3D;
 import org.jlab.rec.cvt.trajectory.Ray;
-import trackfitter.fitter.utilities.ProbChi2perNDF;
+import org.jlab.clas.tracking.utilities.ProbChi2perNDF;
 
 /**
  * A fitter which does sequential fit (for x, y coordinates) and then (for r, z

@@ -7,7 +7,7 @@ import org.jlab.detector.geant4.v2.DCGeant4Factory;
 import org.jlab.geom.prim.Vector3D;
 import org.jlab.rec.dc.Constants;
 import org.jlab.rec.dc.cross.Cross;
-import trackfitter.fitter.LineFitter;
+import org.jlab.rec.dc.track.fit.basefit.LineFitter;
 import Jama.Matrix;
 
 /**

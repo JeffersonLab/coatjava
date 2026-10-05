@@ -37,11 +37,6 @@
     </dependency>
 
     <dependency>
-      <groupId>org.jlab.plugins</groupId>
-      <artifactId>trackfitter</artifactId>
-    </dependency>
-
-    <dependency>
       <groupId>org.jlab.clas</groupId>
       <artifactId>clas-io</artifactId>
       <version>14.2.1-SNAPSHOT</version>

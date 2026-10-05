@@ -13,7 +13,7 @@ import org.jlab.rec.dc.hit.Hit;
 import org.jlab.rec.dc.segment.Segment;
 import org.jlab.rec.dc.track.Track;
 
-import trackfitter.fitter.utilities.*;
+import org.jlab.clas.tracking.utilities.ProbChi2perNDF;
 
 /**
  * A class to fill the reconstructed DC banks

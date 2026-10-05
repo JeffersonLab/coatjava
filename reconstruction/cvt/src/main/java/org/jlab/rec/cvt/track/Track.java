@@ -3,7 +3,6 @@ package org.jlab.rec.cvt.track;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,7 +23,7 @@ import org.jlab.rec.cvt.measurement.MLayer;
 import org.jlab.rec.cvt.trajectory.Helix;
 import org.jlab.rec.cvt.trajectory.StateVec;
 import org.jlab.rec.cvt.trajectory.Trajectory;
-import trackfitter.fitter.utilities.ProbChi2perNDF;
+import org.jlab.clas.tracking.utilities.ProbChi2perNDF;
 
 /**
  * A class representing track candidates in the CVT. A track has a trajectory

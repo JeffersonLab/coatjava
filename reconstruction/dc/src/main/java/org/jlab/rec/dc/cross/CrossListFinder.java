@@ -15,7 +15,7 @@ import org.jlab.rec.dc.hit.FittedHit;
 import org.jlab.rec.dc.segment.Segment;
 import org.jlab.rec.dc.timetodistance.TimeToDistanceEstimator;
 import org.jlab.utils.groups.IndexedTable;
-import trackfitter.fitter.LineFitter;
+import org.jlab.rec.dc.track.fit.basefit.LineFitter;
 
 /**
  * A class with methods used to find lists of crosses.  This is the Pattern Recognition step used in track seeding, to

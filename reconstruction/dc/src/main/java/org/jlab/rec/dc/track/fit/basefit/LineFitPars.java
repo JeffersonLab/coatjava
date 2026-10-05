@@ -1,6 +1,6 @@
 package org.jlab.rec.dc.track.fit.basefit;
 
-import trackfitter.fitter.utilities.ProbChi2perNDF;
+import org.jlab.clas.tracking.utilities.ProbChi2perNDF;
 
 /**
  * The fit parameters of a line fit returned by LineFitter
