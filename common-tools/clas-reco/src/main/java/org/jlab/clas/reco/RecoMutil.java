@@ -279,7 +279,7 @@ public class RecoMutil extends Porch {
      * @param args command-line arguments
      */
     public static void main(String[] args) {
-        OptionParser opt = new OptionParser("recon-util");
+        OptionParser opt = new OptionParser("reco-mutil");
         opt.addOption("-t","4","number of threads");
         opt.addOption("-s","0","number of events to skip");
         opt.addOption("-n","0","number of events to process");
