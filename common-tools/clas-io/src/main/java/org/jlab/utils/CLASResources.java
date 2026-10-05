@@ -9,7 +9,7 @@ import org.jlab.jnp.hipo4.data.SchemaFactory;
  */
 public class CLASResources {
    
-    public static volatile SchemaFactory FULL_SCHEMA = null;
+    private static volatile SchemaFactory FULL_SCHEMA = null;
 
     public static synchronized SchemaFactory getFullSchema() {
         if (FULL_SCHEMA == null) {
