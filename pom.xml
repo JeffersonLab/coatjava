@@ -35,14 +35,14 @@
       <id>clas12-ccdbrcdb-java</id>
       <url>https://code.jlab.org/api/v4/projects/245/packages/maven</url>
     </repository>
-    <repository>
-      <id>clas12-evio</id> <!-- `jevio` -->
-      <url>https://code.jlab.org/api/v4/projects/1038/packages/maven</url>
-    </repository>
-    <repository>
-      <id>clas12-et</id> <!-- `et` -->
-      <url>https://code.jlab.org/api/v4/projects/1044/packages/maven</url>
-    </repository>
+    <!-- <repository> -->
+    <!--   <id>clas12-evio</id> --> <!-- `jevio` -->
+    <!--   <url>https://code.jlab.org/api/v4/projects/1038/packages/maven</url> -->
+    <!-- </repository> -->
+    <!-- <repository> -->
+    <!--   <id>clas12-et</id> --> <!-- `et` -->
+    <!--   <url>https://code.jlab.org/api/v4/projects/1044/packages/maven</url> -->
+    <!-- </repository> -->
     <repository>
       <id>clas12-groot</id>
       <url>https://code.jlab.org/api/v4/projects/388/packages/maven</url>
@@ -185,7 +185,7 @@
         <groupId>org.jlab.coda</groupId>
         <artifactId>jevio</artifactId>
         <classifier>jar-with-dependencies</classifier>
-        <version>6.2.1</version>
+        <version>6.2-SNAPSHOT</version> <!-- FIXME: bump to code.jlab.org version 6.2.1 ? -->
         <exclusions>
           <exclusion>
             <groupId>net.jpountz.lz4</groupId>
@@ -209,7 +209,7 @@
       <dependency>
         <groupId>org.jlab.coda</groupId>
         <artifactId>et</artifactId>
-        <version>16.6.1</version>
+        <version>14.0</version> <!-- FIXME: bump to code.jlab.org version 16.6.1 ? -->
       </dependency>
 
       <dependency>
