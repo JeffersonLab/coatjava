@@ -112,18 +112,24 @@ final class ReconMutil {
         // start a period status printout:
         ReconUtil.runPeriodic(10, statsShow);
         
-        // spawn all the threads:
+        // one reader thread:
         readerThread = ReconUtil.launch(CompletableFuture.runAsync(() -> { reader(threads[0], input); }));
 
-        for (int i=0; i<Math.max(16,threads[0]); i++) {
+        // some decoder threads:
+        for (int i=0; i<Math.max(12,threads[0]); i++) {
             final int j = i;
             ReconUtil.addAndRemove(decoThreads, CompletableFuture.runAsync(() -> { decoder(j); }));
         }
-        ReconUtil.sleep(1000);
+        
+        ReconUtil.sleep(10000);
+
+        // spawn engine threads:
         for (int i=0; i<threads[0]; i++) {
             final int j = i;
             ReconUtil.addAndRemove(procThreads, CompletableFuture.runAsync(() -> { processor(j); }));
         }
+
+        // one writer thread:
         writerThread = ReconUtil.launch(CompletableFuture.runAsync(() -> { writer(output); }));
                 
         // perform scaling test:
@@ -152,8 +158,8 @@ final class ReconMutil {
 
             if (reader != null) {
 
-                // sleep instead of overfilling the read queue (100K events, ~2GB):
-                if (readEvents > 1e5) ReconUtil.sleep(1000);
+                // sleep instead of overfilling the queue (100K events, ~2GB):
+                if (procQueue.size()+decoQueue.size() > 1e5) ReconUtil.sleep(1000);
 
                 // read next event into chunk, and fill queue if chunk full:
                 else output = read(output);
@@ -180,10 +186,13 @@ final class ReconMutil {
      * @param thread thread number
      */
     void decoder(int thread) {
+
+        int serials = 0;
+
+        
         final int helicityClock = 30;  // Hz
         final int triggerRate = 25000; // Hz
         final int minReload = 2 * triggerRate / helicityClock;
-        int serials = 0;
         int reloads = 0;
         int reload = minReload;
         while (true) {
@@ -204,12 +213,12 @@ final class ReconMutil {
                     Event tag;
                     synchronized (serialLock) {
                         tag = serial.read(event.getHipoEvent());
-                    }
-                    if (thread == 0 && ++serials > reload) {
-                        updateHelicity();
-                        serials = 0;
-                        reload += 10 * reloads * minReload;
-                        reloads++;
+                        if (thread == 0 && ++serials > reload) {
+                            serial.updateHelicitySequence();
+                            serials = 0;
+                            reload += 10 * reloads * minReload;
+                            reloads++;
+                        }
                     }
                     if (!tag.isEmpty()) {
                         output.add(new HipoDataEvent(tag, fullSchema));
@@ -220,7 +229,10 @@ final class ReconMutil {
                 procQueue.offer(output);
             }
         }
-        if (thread == 0) updateHelicity();
+        if (thread == 0) {
+            while (decoThreads.size() > 1) ReconUtil.sleep(100);
+            synchronized (serialLock) { serial.updateHelicitySequence(); }
+        }
     }
 
     /**

@@ -104,12 +104,6 @@ public class RecoMutil extends Porch {
             ((EvioSource)reader).close();
     }
 
-    void updateHelicity() {
-        synchronized (serialLock) {
-            serial.updateHelicitySequence();
-        }
-    }
-
     @Override
     HipoDataEvent[] decode(int thread, Object input) {
         HipoDataEvent event = input instanceof ByteBuffer
@@ -121,10 +115,12 @@ public class RecoMutil extends Porch {
             tag = serial.read(event.getHipoEvent());
         }
         if (thread == 0 && ++serials > reload) {
-            updateHelicity();
-            serials = 0;
-            reload += 10 * reloads * minReload;
-            reloads++;
+            synchronized (serialLock) {
+                serial.updateHelicitySequence();
+                serials = 0;
+                reload += 10 * reloads * minReload;
+                reloads++;
+            }
         }
         if (!tag.isEmpty()) taggedEvents.incrementAndGet();
         if (benchmark != null) benchmark.pause(thread, "serial");
@@ -137,7 +133,7 @@ public class RecoMutil extends Porch {
     void decoderExit(int thread) {
         if (thread == 0) {
             while (decoThreads.size() > 1) ReconUtil.sleep(100);
-            updateHelicity();
+            synchronized (serialLock) { serial.updateHelicitySequence(); }
         }
     }
 

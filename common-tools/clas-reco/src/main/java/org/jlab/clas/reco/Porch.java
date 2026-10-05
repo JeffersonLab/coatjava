@@ -114,8 +114,8 @@ public abstract class Porch {
         while ( (maxEvents < 1 || writeEvents < maxEvents+taggedEvents.get()) &&
                 (maxFileEvents < 1 || fileEvents < maxFileEvents) ) {
             if (reader != null) {
-                // sleep instead of overfilling the read queue (100K events, ~2GB):
-                if (readEvents > 1e5) ReconUtil.sleep(1000);
+                // sleep instead of overfilling the queue (100K events, ~2GB):
+                if (decoQueue.size()+procQueue.size() > 1e5) ReconUtil.sleep(1000);
                 else {
                     Object o = read();
                     if (o != null && (skipEvents < 1 || readEvents > skipEvents)) {
