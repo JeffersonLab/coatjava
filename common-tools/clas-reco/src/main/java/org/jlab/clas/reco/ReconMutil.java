@@ -54,6 +54,7 @@ final class ReconMutil {
     ClaraYaml yaml;
     OptionParser parser;
     double[] fields = null;
+    String taskset;
 
     // File I/O:
     Object reader;
@@ -91,7 +92,6 @@ final class ReconMutil {
 
     // Control flags:
     final Object serialLock = new Object();
-    String taskset;
    
     ReconMutil(OptionParser parser) {
         init(parser);

@@ -14,6 +14,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.jlab.io.hipo.HipoDataEvent;
 import org.jlab.utils.benchmark.Benchmark;
+import org.jlab.utils.benchmark.BenchmarkTimer;
 import org.jlab.utils.benchmark.ProgressPrintout;
 
 /**
@@ -31,6 +32,7 @@ public abstract class Porch {
     // Static parameters:
     int maxEvents;
     int skipEvents;
+    String taskset;
 
     // Threads:
     CompletableFuture readerThread;
@@ -82,12 +84,12 @@ public abstract class Porch {
             final int j = i;
             ReconUtil.addAndRemove(procThreads, CompletableFuture.runAsync(() -> { processor(j); }));
         }
-        writerThread = CompletableFuture.runAsync(() -> { writer(); });
-       
+        writerThread = ReconUtil.launch(CompletableFuture.runAsync(() -> { writer(); }));
+                
         // perform scaling test:
         if (threads.length > 1)
-            CompletableFuture.runAsync(() -> { rethreader(BENCH_SECONDS,threads); }).join();
-
+            ReconUtil.launch(CompletableFuture.runAsync(() -> { rethreader(BENCH_SECONDS,threads); })).join();
+        
         // wait for finish:
         writerThread.join();
     }
@@ -209,34 +211,35 @@ public abstract class Porch {
      * @param threads thread counts to use 
      */
     void rethreader(int seconds, int... threads) {
-        System.out.println("recon-mutil::  ~~~~~~~~~ rethreading initiated ~~~~~~~~~");
+        System.out.println("recon-mutil::  ~~~~~~~~~ rethreading launched ~~~~~~~~~");
         Map<Integer,Benchmark> benches = new LinkedHashMap<>();
         Map<Integer,ProgressPrintout> progs = new LinkedHashMap<>();
-        while (writeEvents < 100 || !ReconUtil.isDone(decoThreads))
-            ReconUtil.sleep(1000);
-        for (CompletableFuture cf : procThreads) cf.cancel(true);
+        while (writeEvents < EVENTS_PER_CHUNK || !ReconUtil.isDone(decoThreads))
+            ReconUtil.sleep(100);
         System.out.println("recon-mutil::  ~~~~~~~~~ rethreading primed ~~~~~~~~~");
         for (int thread : threads) {
-            benchmark = null;
-            ReconUtil.taskset(0, thread);
+            procThreads.stream().forEach(p -> p.cancel(true));
+            if (taskset.equals("-")) ReconUtil.taskset(0, thread);
+            BenchmarkTimer.WARMUP_CALLS = 10*thread+90;
+            benchmark = new Benchmark(thread+" Threads Scaling ",BENCHMARK_NAMES);
+            progress = new ProgressPrintout(10*thread);
             for (int j=0; j<thread; j++) {
                 final int k = j;
                 ReconUtil.addAndRemove(procThreads, CompletableFuture.runAsync(() -> { processor(k); }));
             }
-            ReconUtil.sleep(10000);
-            benchmark = new Benchmark(thread+" Threads Scaling ",BENCHMARK_NAMES);
+            while (!progress.warmedUp()) ReconUtil.sleep(100);
             ReconUtil.sleep(seconds*1000);
-            System.out.println(String.format("\nrecon-mutil:: ~~~~~~~~~ rethreading count %d ~~~~~~~~~\n",thread));
+            System.out.println(String.format("\nrecon-mutil:: ~~~~~~~~~ rethreading timed %d ~~~~~~~~~\n",thread));
             System.out.println(progress.getUpdateString());
             System.out.println(benchmark);
             benches.put(thread, benchmark);
             progs.put(thread, progress);
-            for (CompletableFuture cf : procThreads) cf.cancel(true);
         }
         String csv = ReconUtil.toCSV(progs, benches);
         System.out.println(csv);
         ReconUtil.writeFile("scaling-mutil.txt", csv);
-        ReconUtil.gnuplotScaling("scaling-mutil.txt","scaling-mutil.svg");
+        ReconUtil.gnuplotScaling(String.format("scaling-mutil%s.txt",taskset),
+                String.format("scaling-mutil%s.svg",taskset));
         stop();
     }
     

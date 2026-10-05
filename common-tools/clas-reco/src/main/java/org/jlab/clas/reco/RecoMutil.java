@@ -206,56 +206,72 @@ public class RecoMutil extends Porch {
         return hipo;
     }
   
-    final void init(OptionParser opt) {
-        opt.syncLogLevel(Logger.getLogger(RecoMutil.class.getPackage().getName()));
-        maxEvents = opt.getOption("-n").intValue();
-        skipEvents = opt.getOption("-s").intValue();
+    String parseThreads(String t) {
+        if (t.contains(",")) {
+            int offset = t.endsWith("+") || t.endsWith("-") ? 1 : 0;
+            String extra = t.endsWith("+") || t.endsWith("-") ? String.valueOf(t.charAt(t.length()-1)) : "";
+            t = String.join(",",Arrays.stream(t.substring(0,t.length()-offset).split(","))
+                    .mapToInt(s -> Integer.parseInt(s)).sorted().mapToObj(i -> String.valueOf(i)).toList())
+                    + extra;
+        }
+        taskset = "";
+        if (t.endsWith("+") || t.endsWith("-")) {
+            taskset = String.valueOf(t.charAt(t.length()-1));
+            if (t.contains(","))
+                ReconUtil.taskset(0, Arrays.stream(t.split(","))
+                .filter(s -> !s.contains("+") && !s.contains("-"))
+                .mapToInt(s -> Integer.parseInt(s)).toArray()[0]);
+            else if (taskset.equals("-"))
+                ReconUtil.taskset(0, Integer.parseInt(String.valueOf(t.charAt(0))));
+            else if (taskset.equals("+"))
+                ReconUtil.taskset(0, 0);
+        }
+        return t;
+    }
+    
+    /**
+     * Initialize ReconMutil.
+     * @param parser 
+     */
+    void init(OptionParser parser) {
+        parser.getOption("-t").setValue(parseThreads(parser.getOption("-t").stringValue()));
+        parser.syncLogLevel(Logger.getLogger(ReconMutil.class.getPackage().getName()));
+        maxEvents = parser.getOption("-n").intValue();
+        skipEvents = parser.getOption("-s").intValue();
         serial = new SerialHoncho(fullSchema);
         engines = new LinkedHashMap<>();
-        if (!opt.getOption("-y").isDefault()) {
-            yaml = new ClaraYaml(opt.getOption("-y").stringValue());
+        if (!parser.getOption("-y").isDefault()) {
+            yaml = new ClaraYaml(parser.getOption("-y").stringValue());
             for (JSONObject service : yaml.services()) {
                 JSONObject cfg = yaml.filter(service.getString("name"));
                 if (cfg.length() > 0) ReconUtil.addEngine(engines, service.getString("name"), service.getString("class"), cfg);
                 else ReconUtil.addEngine(engines, service.getString("name"), service.getString("class"), null);
             }
         }
-        else if (!opt.getOption("-c").isDefault()) {
-            for (String clazz : opt.getOption("-c").stringValue().split(","))
+        else if (!parser.getOption("-c").isDefault()) {
+            for (String clazz : parser.getOption("-c").stringValue().split(","))
                 ReconUtil.addEngine(engines, null, clazz, null);
         }
         else {
             for (String line : ReconUtil.readResourceLines("org/jlab/clas/reco/services.txt"))
                 ReconUtil.addEngine(engines, line.split(" ")[0], line.split(" ")[1], null);
         }
-        if (!opt.getOption("-B").isDefault()) {
+        if (!parser.getOption("-B").isDefault()) {
             ReconstructionEngine bg = ReconUtil.addEngine(engines, "BG", "org.jlab.service.bg.BackgroundEngine", null);
-            bg.engineConfigMap.put("filename",opt.getOption("-B").stringValue());
+            bg.engineConfigMap.put("filename",parser.getOption("-B").stringValue());
         }
-        if (!opt.getOption("-f").isDefault()) {
+        if (!parser.getOption("-f").isDefault()) {
             try {
-                fields = Arrays.stream(opt.getOption("-f").stringValue()
+                fields = Arrays.stream(parser.getOption("-f").stringValue()
                 .split(",")).mapToDouble(s -> Double.parseDouble(s)).toArray();
             }
             catch (Exception e) {
-                Logger.getLogger(RecoMutil.class.getName()).log(Level.SEVERE, () -> "invalid field option:  -f "+opt.getOption("-f").stringValue());
+                Logger.getLogger(ReconMutil.class.getName()).log(Level.SEVERE, () -> "invalid field option:  -f "+parser.getOption("-f").stringValue());
                 System.exit(22);
             }
         }
-        if (!opt.getOption("-b").isDefault() || opt.getOption("-t").stringValue().split(",").length > 1)
-            benchmark = new Benchmark("Reco-Util",BENCHMARK_NAMES);
-        
-        String thread = opt.getOption("-t").stringValue();
-        if (thread.endsWith("+") || thread.endsWith("-")) {
-            if (thread.contains(","))
-                ReconUtil.taskset(0, Arrays.stream(thread.split(","))
-                        .filter(s -> !s.contains("+") && !s.contains("-")).mapToInt(s -> Integer.parseInt(s)).max().getAsInt());
-            else if (thread.endsWith("-"))
-                ReconUtil.taskset(0, Integer.parseInt(thread.substring(0, thread.length()-1)));
-            else if (thread.endsWith("+"))
-                ReconUtil.taskset(0, 0);
-            opt.getOption("-t").setValue(thread.substring(0, thread.length()-1));
-        }
+        if (!parser.getOption("-b").isDefault())
+            benchmark = new Benchmark("ReconMutil",BENCHMARK_NAMES);
     }
 
     /**
