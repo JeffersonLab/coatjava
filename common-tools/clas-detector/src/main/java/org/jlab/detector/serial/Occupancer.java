@@ -85,7 +85,7 @@ public class Occupancer extends ArrayList<Occupancer.OccupanceTable> {
         IndexedTable table;
 
         /**
-         * A 3-index table, e.g., sector/layer/component.
+         * A 3- or 4-index table, depending on "order".
          * @param hitBank name of the hit bank
          */
         public OccupanceTable(String hitBank) {
