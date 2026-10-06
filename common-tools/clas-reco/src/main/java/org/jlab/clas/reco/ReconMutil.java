@@ -229,10 +229,11 @@ final class ReconMutil {
                 ReconUtil.sleep(1000);
                 // get current number of triggers:
                 int t = serialTrigger.get();
+                // do the protected stuff:
                 synchronized (serialLock) { serial.updateHelicitySequence(); }
                 // remove the same number of triggers:
                 for (int i=0; i<t; i++) serialTrigger.decrementAndGet();
-                // finish the 10-second sleep:
+                // finish a 10-second sleep:
                 ReconUtil.sleep(9000);
             }
             else ReconUtil.sleep(1000);
