@@ -114,14 +114,8 @@ jobs:
           path: |
               coatjava.tar.gz
               clara.tar.gz
-      - uses: actions/upload-artifact@v7
-        with:
-          name: target_ubuntu-latest
-          retention-days: 1
-          path: '**/target'
 
   dependency_info:
-    needs: build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -130,14 +124,15 @@ jobs:
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.java_distribution }}
-          # NOTE: do not use `cache: maven` here, so stale `_remote.repositories` aren't read
-      - uses: actions/download-artifact@v8
-        with:
-          name: target_ubuntu-latest
-      - run: libexec/dependency-info.rb
-      - name: dependency tree
+          # NOTE: do not use `cache: maven` here, so stale `_remote.repositories` data aren't read
+      - name: build
+        run: |
+          ./build-coatjava.sh --no-aux --no-progress --quiet -T${{ env.nthreads }}
+      - name: collect info
+        run: libexec/dependency-info.rb
+      - name: print dependency trees
         run: cat target/info/trees.txt
-      - name: dependency repository sources
+      - name: print dependency repository sources
         run: cat target/info/repos.yaml
 
   # tests
