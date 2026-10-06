@@ -1172,9 +1172,7 @@ public class TrackCandListFinder {
 						
                         kFZRef.runFitter();
                         
-                        if (kFZRef.finalStateVec == null) {
-                            continue;
-                        } else {
+                        if (kFZRef.finalStateVec != null) {
                             if (kFZRef.chi2 < Constants.MAXCHI2) {
                                 
                                 StateVec fitStateVec = new StateVec(kFZRef.finalStateVec.x,
