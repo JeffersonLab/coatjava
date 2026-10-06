@@ -162,19 +162,29 @@ public class RecoMutil extends Porch {
         }
     }
 
+    /**
+     * Do some serial stuff, when triggered.
+     */
     @Override
     void serial() {
+        boolean first = true;
         while (true) {
             if (serialTrigger.get() > 0) {
+                first = false;
+                // sleep to collect more triggers:
                 ReconUtil.sleep(1000);
+                // get current number of triggers:
                 int t = serialTrigger.get();
+                // do the protected stuff:
                 synchronized (serialLock) { serial.updateHelicitySequence(); }
+                // remove the same number of triggers:
                 for (int i=0; i<t; i++) serialTrigger.decrementAndGet();
-                ReconUtil.sleep(9000);
             }
-            else ReconUtil.sleep(1000);
+            else if (first) ReconUtil.sleep(1000);
+            else ReconUtil.sleep(10000);
         }
     }
+    
 
     HipoWriterSorted openWriter(OptionValue schema, String filename) {
         writer = new HipoWriterSorted();
