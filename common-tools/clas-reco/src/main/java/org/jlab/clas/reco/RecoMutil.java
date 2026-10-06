@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.jlab.coda.jevio.EvioException;
@@ -48,15 +49,8 @@ public class RecoMutil extends Porch {
 
     // Control flags:
     final Object serialLock = new Object();
+    AtomicInteger serialTrigger = new AtomicInteger(0);
    
-    // FIXME: stuff for deciding when to reload helicities
-    final int helicityClock = 30;  // Hz
-    final int triggerRate = 25000; // Hz
-    final int minReload = 2 * triggerRate / helicityClock;
-    int serials = 0;
-    int reloads = 0;
-    int reload = minReload;
-    
     public RecoMutil(OptionParser parser) {
         init(parser);
     }
@@ -114,15 +108,10 @@ public class RecoMutil extends Porch {
         synchronized (serialLock) {
             tag = serial.read(event.getHipoEvent());
         }
-        if (thread == 0 && ++serials > reload) {
-            synchronized (serialLock) {
-                serial.updateHelicitySequence();
-                serials = 0;
-                reload += 10 * reloads * minReload;
-                reloads++;
-            }
+        if (!tag.isEmpty()) {
+            if (serial.containsSerial(tag)) serialTrigger.incrementAndGet();
+            taggedEvents.incrementAndGet();
         }
-        if (!tag.isEmpty()) taggedEvents.incrementAndGet();
         if (benchmark != null) benchmark.pause(thread, "serial");
         return tag.isEmpty() ?
                 new HipoDataEvent[]{event} :
@@ -131,10 +120,7 @@ public class RecoMutil extends Porch {
 
     @Override
     void decoderExit(int thread) {
-        if (thread == 0) {
-            while (decoThreads.size() > 1) ReconUtil.sleep(100);
-            synchronized (serialLock) { serial.updateHelicitySequence(); }
-        }
+        serialTrigger.incrementAndGet();
     }
 
     @Override
@@ -173,6 +159,20 @@ public class RecoMutil extends Porch {
         if (writer != null) {
             serial.closure(writer);
             writer.close();
+        }
+    }
+
+    @Override
+    void serial() {
+        while (true) {
+            if (serialTrigger.get() > 0) {
+                ReconUtil.sleep(1000);
+                int t = serialTrigger.get();
+                synchronized (serialLock) { serial.updateHelicitySequence(); }
+                for (int i=0; i<t; i++) serialTrigger.decrementAndGet();
+                ReconUtil.sleep(9000);
+            }
+            else ReconUtil.sleep(1000);
         }
     }
 
@@ -229,7 +229,7 @@ public class RecoMutil extends Porch {
      * Initialize ReconMutil.
      * @param parser 
      */
-    void init(OptionParser parser) {
+    final void init(OptionParser parser) {
         parser.getOption("-t").setValue(parseThreads(parser.getOption("-t").stringValue()));
         parser.syncLogLevel(Logger.getLogger(ReconMutil.class.getPackage().getName()));
         maxEvents = parser.getOption("-n").intValue();

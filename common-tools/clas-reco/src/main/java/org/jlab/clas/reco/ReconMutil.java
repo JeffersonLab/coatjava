@@ -71,7 +71,6 @@ final class ReconMutil {
     // Threads:
     CompletableFuture readerThread;
     CompletableFuture writerThread;
-    CompletableFuture serialThread;
     ConcurrentLinkedQueue<CompletableFuture> decoThreads = new ConcurrentLinkedQueue<>();
     ConcurrentLinkedQueue<CompletableFuture> procThreads = new ConcurrentLinkedQueue<>();
 
@@ -124,7 +123,7 @@ final class ReconMutil {
         }
        
         // one serial thread:
-        serialThread = ReconUtil.launch(CompletableFuture.runAsync(() -> { serial(); }));
+        ReconUtil.launch(CompletableFuture.runAsync(() -> { serial(); }));
         
         ReconUtil.sleep(10000);
 
@@ -226,10 +225,14 @@ final class ReconMutil {
     void serial() {
         while (true) {
             if (serialTrigger.get() > 0) {
+                // sleep to collect more triggers:
                 ReconUtil.sleep(1000);
+                // get current number of triggers:
                 int t = serialTrigger.get();
                 synchronized (serialLock) { serial.updateHelicitySequence(); }
+                // remove the same number of triggers:
                 for (int i=0; i<t; i++) serialTrigger.decrementAndGet();
+                // finish the 10-second sleep:
                 ReconUtil.sleep(9000);
             }
             else ReconUtil.sleep(1000);

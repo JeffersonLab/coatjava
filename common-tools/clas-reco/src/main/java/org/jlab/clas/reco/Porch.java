@@ -31,6 +31,7 @@ public abstract class Porch {
     abstract void readerExit(); 
     abstract void decoderExit(int thread);
     abstract void writerExit();
+    abstract void serial();
     
     static final String[] BENCHMARK_NAMES = new String[]{"evio","deco","serial","post","write"};
     
@@ -88,6 +89,7 @@ public abstract class Porch {
             final int j = i;
             ReconUtil.addAndRemove(decoThreads, CompletableFuture.runAsync(() -> { decoder(j); }));
         }
+        ReconUtil.launch(CompletableFuture.runAsync(() -> { serial(); }));
         ReconUtil.sleep(1000);
         for (int i=0; i<threads[0]; i++) {
             final int j = i;
@@ -160,7 +162,7 @@ public abstract class Porch {
         }
         decoderExit(thread);
     }
-
+    
     /**
      * The data processor thread.
      * @param thread thread number 
