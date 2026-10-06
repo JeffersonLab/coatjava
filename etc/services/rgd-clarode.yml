@@ -7,6 +7,7 @@ configuration:
   io-services:
     writer:
       schema_dir: dst
+      schema_prescale: 100
       rawTriggerMask: 0x8000000000
       rawTriggerPrescale: 0
   services:
