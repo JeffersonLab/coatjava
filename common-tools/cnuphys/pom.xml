@@ -14,11 +14,11 @@
   </parent>
 
   <modules>
+    <module>numRec</module>
     <module>splot</module>
     <module>snr</module>
     <module>magfield</module>
     <module>swimmer</module>
-    <module>numRec</module>
   </modules>
 
 </project>
