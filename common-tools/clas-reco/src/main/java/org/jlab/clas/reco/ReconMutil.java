@@ -510,7 +510,7 @@ final class ReconMutil {
     }
     
     static int[] getThreadCounts(String threadlist) {
-        return Arrays.stream(threadlist.split(","))
+        return Arrays.stream(threadlist.replace("+","").replace("-","").split(","))
                 .filter(s -> !s.contains("+") && !s.contains("-"))
                 .mapToInt(s -> Integer.parseInt(s)).toArray();
     }
@@ -603,7 +603,6 @@ final class ReconMutil {
         o.setRequiresInputList(true);
         o.parse(args);
         ReconMutil r = new ReconMutil(o);
-        System.err.println(o.getOption("-t").stringValue());
         r.launch(getThreadCounts(o.getOption("-t").stringValue()),
                 o.getOption("-o").stringValue(),
                 o.getInputList().stream().toArray(String[]::new));

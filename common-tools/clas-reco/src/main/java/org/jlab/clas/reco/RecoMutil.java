@@ -305,7 +305,7 @@ public class RecoMutil extends Porch {
         if (!opt.getOption("-o").isDefault())
             f.openWriter(opt.getOption("-S"), opt.getOption("-o").stringValue());
         
-        f.launch(Arrays.stream(opt.getOption("-t").stringValue().split(",")).mapToInt(Integer::parseInt).toArray(), 
+        f.launch(Arrays.stream(opt.getOption("-t").stringValue().replace("+","").replace("-","").split(",")).mapToInt(Integer::parseInt).toArray(), 
                 opt.getInputList().stream().toArray(String[]::new));
     }
 
