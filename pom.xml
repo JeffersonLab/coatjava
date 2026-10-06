@@ -20,7 +20,7 @@
 
   <repositories>
     <repository>
-      <id>code.jlab.org-hipo-java</id>  <!-- `jnp-hipo4` is now built and published from its own repository, https://code.jlab.org/hallb/clas12/hipo-java. Project 919's package registry is public -->
+      <id>code.jlab.org-hipo-java</id> <!-- `jnp-hipo4` -->
       <url>https://code.jlab.org/api/v4/projects/919/packages/maven</url>
     </repository>
     <repository>
@@ -28,28 +28,28 @@
       <url>https://code.jlab.org/api/v4/projects/243/packages/maven</url>
     </repository>
     <repository>
-      <id>clas12-xmsg-java</id>
+      <id>code.jlab.org-xmsg-java</id>
       <url>https://code.jlab.org/api/v4/projects/959/packages/maven</url>
     </repository>
     <repository>
-      <id>clas12-ccdbrcdb-java</id>
+      <id>code.jlab.org-ccdbrcdb-java</id>
       <url>https://code.jlab.org/api/v4/projects/245/packages/maven</url>
     </repository>
     <!-- <repository> -->
-    <!--   <id>clas12-evio</id> --> <!-- `jevio` -->
+    <!--   <id>code.jlab.org-evio</id> --> <!-- `jevio` -->
     <!--   <url>https://code.jlab.org/api/v4/projects/1038/packages/maven</url> -->
     <!-- </repository> -->
     <!-- <repository> -->
-    <!--   <id>clas12-et</id> --> <!-- `et` -->
+    <!--   <id>code.jlab.org-et</id> --> <!-- `et` -->
     <!--   <url>https://code.jlab.org/api/v4/projects/1044/packages/maven</url> -->
     <!-- </repository> -->
     <repository>
-      <id>clas12-groot</id>
+      <id>code.jlab.org-groot</id>
       <url>https://code.jlab.org/api/v4/projects/388/packages/maven</url>
     </repository>
     <repository>
-      <id>freehep-repo-public</id>
-      <url>https://srs.slac.stanford.edu/nexus/content/groups/freehep-maven2-public/</url>
+      <id>freehep-SLAC</id>
+      <url>https://srs.slac.stanford.edu/nexus/content/groups/freehep-maven2-public</url>
     </repository>
     <repository>
       <id>clasweb-clas12maven</id>
