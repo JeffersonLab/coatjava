@@ -533,8 +533,6 @@ public class TrackCandListFinder {
             return;
         }
 
-        int status = 99999;
-
         int LR = 0;
         for (Cross crs : cand) {
             Segment s1 = crs.get_Segment1();
@@ -548,8 +546,6 @@ public class TrackCandListFinder {
             }
 
         }
-
-        status = LR;
 
         double xOrFix = Vt[0];
         double yOrFix = Vt[1];
