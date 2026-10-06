@@ -192,7 +192,7 @@ public class SerialHoncho {
             row++;
         }
         Event e = new Event();
-        e.write(runConfig);
+        e.write(config);
         e.write(unix);
         return e;
     }
