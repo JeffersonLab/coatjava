@@ -260,7 +260,6 @@ public class TrackCandListFinder {
                 rk.SwimToZ(sector, initSV, dcSwim, measSurfaces.get(0).wireLine[0].end().z(), new float[3]); 
                 
                 KFitter kFZRef = new KFitter(true, 1, 1, dcSwim, Constants.getInstance().Z, Libr.JNP);
-                Matrix initCMatrix = new Matrix();                       
                 initSV.CM = new Matrix();                 
                 kFZRef.init(measSurfaces, initSV);						
 		
