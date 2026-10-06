@@ -488,7 +488,7 @@ final class ReconMutil {
         writeQueue.clear();
     }
   
-    void taskset(String t) {
+    String parseThreads(String t) {
         if (t.contains(",")) {
             int offset = t.endsWith("+") || t.endsWith("-") ? 1 : 0;
             String extra = t.endsWith("+") || t.endsWith("-") ? String.valueOf(t.charAt(t.length()-1)) : "";
@@ -506,6 +506,7 @@ final class ReconMutil {
             else if (taskset.equals("+"))
                 ReconUtil.taskset(0, 0);
         }
+        return t;
     }
     
     static int[] getThreadCounts(String threadlist) {
@@ -520,7 +521,7 @@ final class ReconMutil {
      */
     void init(OptionParser parser) {
 
-        taskset(parser.getOption("-t").stringValue());
+        parser.getOption("-t").setValue(parseThreads(parser.getOption("-t").stringValue()));
         
         fullSchema = new SchemaFactory();
         fullSchema.initFromDirectory(ClasUtilsFile.getResourceDir("CLAS12DIR","etc/bankdefs/hipo4"));

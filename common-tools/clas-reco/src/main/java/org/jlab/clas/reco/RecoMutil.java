@@ -212,7 +212,7 @@ public class RecoMutil extends Porch {
         return hipo;
     }
   
-    String taskset(String t) {
+    String parseThreads(String t) {
         if (t.contains(",")) {
             int offset = t.endsWith("+") || t.endsWith("-") ? 1 : 0;
             String extra = t.endsWith("+") || t.endsWith("-") ? String.valueOf(t.charAt(t.length()-1)) : "";
@@ -240,7 +240,7 @@ public class RecoMutil extends Porch {
      * @param parser 
      */
     final void init(OptionParser parser) {
-        taskset(parser.getOption("-t").stringValue());
+        parser.getOption("-t").setValue(parseThreads(parser.getOption("-t").stringValue()));
         parser.syncLogLevel(Logger.getLogger(ReconMutil.class.getPackage().getName()));
         maxEvents = parser.getOption("-n").intValue();
         skipEvents = parser.getOption("-s").intValue();
