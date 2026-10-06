@@ -24,7 +24,7 @@ import org.json.JSONObject;
  * 3. Writes HEL::flip, RUN/HEL::scaler, and RUN::unix to new tag-1 events
  * 4. Runs post-processing, writing tag-1 information to all events 
  * 5. Adds .hipo to the output filename, if necessary
- *
+ * 6. Outputs a parallel file of select trigger bits with a raw schema
  * @author baltzell
  */
 public class Clas12Writer extends HipoToHipoWriter {
@@ -36,6 +36,11 @@ public class Clas12Writer extends HipoToHipoWriter {
     SchemaFactory fullSchema;
     boolean postprocess;
 
+    HipoWriterSorted paraWriter;
+    long paraCount;
+    long paraTriggerMask;
+    int paraTriggerPrescale;
+
     private void init(JSONObject opts) {
         occupancer = new Occupancer();
         fullSchema = new SchemaFactory();
@@ -45,6 +50,8 @@ public class Clas12Writer extends HipoToHipoWriter {
         conman = new ConstantsManager();
         conman.init("/runcontrol/hwp","/runcontrol/helicity");
         postprocess = opts.optBoolean("postprocess", false);
+        paraTriggerMask = opts.optLong("paraTriggerMask", 0);
+        paraTriggerPrescale = opts.optInt("paraTriggerPrescale", 0);
         if (opts.has("variation")) conman.setVariation(opts.getString("variation"));
         if (opts.has("timestamp")) conman.setTimeStamp(opts.getString("timestamp"));
     }
@@ -55,7 +62,15 @@ public class Clas12Writer extends HipoToHipoWriter {
             init(opts);
             HipoWriterSorted w = new HipoWriterSorted();
             super.configure(w, opts);
-            w.open(file.toString().endsWith(".hipo") ? file.toString() : file.toString()+".hipo");
+            String dirname = file.getParent().toString();
+            String basename = file.getFileName().toString();
+            if (!basename.endsWith(".hipo")) basename += ".hipo";
+            if (paraTriggerMask > 0) {
+                paraWriter = new HipoWriterSorted();
+                paraWriter.getSchemaFactory().copy(fullSchema);
+                paraWriter.open(dirname + "/tb" + basename.substring(basename.indexOf("_")));
+            }
+            w.open(dirname + "/" + basename);
             return w;
         } catch (Exception e) {
             throw new EventWriterException(e);
@@ -68,6 +83,17 @@ public class Clas12Writer extends HipoToHipoWriter {
         if (!t.isEmpty()) writer.addEvent(t, 1);
         occupancer.process(((Event)event));
         super.writeEvent(event);
+        writeRaw((Event)event, t);
+    }
+
+    void writeRaw(Event physics, Event tagged) {
+        if (paraTriggerMask > 0) {
+            physics.read(runConfig);
+            if (runConfig.getRows()>0 && (runConfig.getLong("trigger",0) & paraTriggerMask) != 0)
+                if (paraTriggerPrescale<=0 || (++paraCount % paraTriggerPrescale) == 0)
+                    paraWriter.addEvent(physics);
+            if (!tagged.isEmpty()) paraWriter.addEvent(tagged, tagged.getEventTag());
+        }
     }
 
     @Override
@@ -76,6 +102,7 @@ public class Clas12Writer extends HipoToHipoWriter {
         super.closeWriter();
         if (postprocess) postprocess();
         serial.clear();
+        if (paraTriggerMask > 0) paraWriter.close();
     }
  
     /**
