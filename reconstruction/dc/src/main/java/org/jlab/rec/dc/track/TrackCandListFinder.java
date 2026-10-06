@@ -1157,9 +1157,8 @@ public class TrackCandListFinder {
                                 cand.get(0).get_Dir().y() / cand.get(0).get_Dir().z());
                         cand.set_StateVecAtReg1MiddlePlane(VecAtReg1MiddlePlane);
                         
-                        
-                        StateVec fitStateVec = null;
                         // prefer to initialize the seed with region 2 cross due to higher background in region 1
+                        
                         int crossIdxinList = 1;
                         if (cand.get(1).isPseudoCross) {
                             crossIdxinList = 0;
@@ -1181,7 +1180,7 @@ public class TrackCandListFinder {
                         } else {
                             if (kFZRef.chi2 < Constants.MAXCHI2) {
                                 
-                                fitStateVec = new StateVec(kFZRef.finalStateVec.x,
+                                StateVec fitStateVec = new StateVec(kFZRef.finalStateVec.x,
                                 		kFZRef.finalStateVec.y, kFZRef.finalStateVec.tx, kFZRef.finalStateVec.ty);
                                 q = (int) Math.signum(kFZRef.finalStateVec.Q);
                                 p = 1. / Math.abs(kFZRef.finalStateVec.Q);
