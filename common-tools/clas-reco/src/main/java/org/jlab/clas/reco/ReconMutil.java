@@ -222,6 +222,9 @@ final class ReconMutil {
         serialTrigger.incrementAndGet();
     }
 
+    /**
+     * Do some serial stuff, when triggered.
+     */
     void serial() {
         while (true) {
             if (serialTrigger.get() > 0) {
@@ -236,7 +239,7 @@ final class ReconMutil {
                 // finish a 10-second sleep:
                 ReconUtil.sleep(9000);
             }
-            else ReconUtil.sleep(1000);
+            else ReconUtil.sleep(10000);
         }
     }
     
