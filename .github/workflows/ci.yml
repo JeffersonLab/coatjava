@@ -114,6 +114,31 @@ jobs:
           path: |
               coatjava.tar.gz
               clara.tar.gz
+      - uses: actions/upload-artifact@v7
+        with:
+          name: target_ubuntu-latest
+          retention-days: 1
+          path: '**/target'
+
+  dependency_info:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Set up JDK
+        uses: actions/setup-java@v6.0.1
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: ${{ env.java_distribution }}
+          # NOTE: do not use `cache: maven` here, so stale `_remote.repositories` aren't read
+      - uses: actions/download-artifact@v8
+        with:
+          name: target_ubuntu-latest
+      - run: libexec/dependency-info.rb
+      - name: dependency tree
+        run: cat target/info/trees.txt
+      - name: dependency repository sources
+        run: cat target/info/repos.yaml
 
   # tests
   #############################################################################

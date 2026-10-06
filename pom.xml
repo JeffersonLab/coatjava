@@ -20,19 +20,19 @@
 
   <repositories>
     <repository>
-      <id>clas12-hipo-java</id>  <!-- `jnp-hipo4` is now built and published from its own repository, https://code.jlab.org/hallb/clas12/hipo-java. Project 919's package registry is public -->
+      <id>code.jlab.org-hipo-java</id>  <!-- `jnp-hipo4` is now built and published from its own repository, https://code.jlab.org/hallb/clas12/hipo-java. Project 919's package registry is public -->
       <url>https://code.jlab.org/api/v4/projects/919/packages/maven</url>
     </repository>
     <repository>
-      <id>clas12-clara-java</id>
+      <id>code.jlab.org-clara-java</id>
       <url>https://code.jlab.org/api/v4/projects/243/packages/maven</url>
     </repository>
     <repository>
-      <id>clas12maven</id>
+      <id>clasweb-clas12maven</id>
       <url>https://clasweb.jlab.org/.clas12maven</url>
     </repository>
     <repository>
-      <id>jnp-maven</id>
+      <id>clasweb-jhep</id>
       <url>https://clasweb.jlab.org/.jhep/maven</url>
     </repository>
   </repositories>
