@@ -23,6 +23,7 @@ import org.jlab.io.evio.EvioSource;
 import org.jlab.io.hipo.HipoDataEvent;
 import org.jlab.jnp.hipo4.data.Bank;
 import org.jlab.jnp.hipo4.data.Event;
+import org.jlab.jnp.hipo4.data.Schema;
 import org.jlab.jnp.hipo4.data.SchemaFactory;
 import org.jlab.jnp.hipo4.io.HipoReader;
 import org.jlab.jnp.hipo4.io.HipoWriterSorted;
@@ -92,6 +93,7 @@ final class ReconMutil {
 
     // Control flags:
     final Object serialLock = new Object();
+    AtomicInteger serialEvents = new AtomicInteger(0);
    
     ReconMutil(OptionParser parser) {
         init(parser);
@@ -186,10 +188,7 @@ final class ReconMutil {
      * @param thread thread number
      */
     void decoder(int thread) {
-
         int serials = 0;
-
-        
         final int helicityClock = 30;  // Hz
         final int triggerRate = 25000; // Hz
         final int minReload = 2 * triggerRate / helicityClock;
@@ -221,6 +220,7 @@ final class ReconMutil {
                         }
                     }
                     if (!tag.isEmpty()) {
+                        if (serial.containsSerial(tag)) serialEvents.incrementAndGet();
                         output.add(new HipoDataEvent(tag, fullSchema));
                         taggedEvents.incrementAndGet();
                     }
@@ -341,18 +341,10 @@ final class ReconMutil {
             benches.put(thread, benchmark);
             progs.put(thread, progress);
         }
-        String csv = ReconUtil.toCSV(progs, benches);
-        System.out.println(csv);
-        ReconUtil.writeFile("scaling-mutil.txt", csv);
-        ReconUtil.gnuplotScaling(String.format("scaling-mutil%s.txt",taskset),
-                String.format("scaling-mutil%s.svg",taskset));
+        String fcsv = String.format("scaling-mutil%s.txt",taskset);
+        ReconUtil.writeFile(fcsv, ReconUtil.toCSV(progs, benches));
+        ReconUtil.gnuplotScaling(fcsv, String.format("scaling-mutil%s.svg",taskset));
         stopProcessing();
-    }
-
-    void updateHelicity() {
-        synchronized (serialLock) {
-            serial.updateHelicitySequence();
-        }
     }
 
     /**

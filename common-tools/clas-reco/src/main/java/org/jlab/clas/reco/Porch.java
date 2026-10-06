@@ -244,14 +244,12 @@ public abstract class Porch {
             benches.put(thread, benchmark);
             progs.put(thread, progress);
         }
-        String csv = ReconUtil.toCSV(progs, benches);
-        System.out.println(csv);
-        ReconUtil.writeFile("scaling-mutil.txt", csv);
-        ReconUtil.gnuplotScaling(String.format("scaling-mutil%s.txt",taskset),
-                String.format("scaling-mutil%s.svg",taskset));
+        String fcsv = String.format("scaling-mutil%s.txt",taskset);
+        ReconUtil.writeFile(fcsv, ReconUtil.toCSV(progs, benches));
+        ReconUtil.gnuplotScaling(fcsv, String.format("scaling-mutil%s.svg",taskset));
         stop();
     }
-    
+
     /**
      * Print the thread, queue, and event states.
      */
