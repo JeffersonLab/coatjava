@@ -21,11 +21,11 @@ import org.jlab.utils.system.ClasUtilsFile;
  * @author baltzell
  */
 public class Occupancer extends ArrayList<Occupancer.OccupanceTable> {
-    
+
     static final String OCC_BANK_DIR = ClasUtilsFile.getResourceDir("CLAS12DIR","etc/bankdefs/hipo4/singles/occupancy");
     static final SchemaFactory FULL_SCHEMA = new SchemaFactory();
     static { FULL_SCHEMA.initFromDirectory(ClasUtilsFile.getResourceDir("CLAS12DIR","etc/bankdefs/hipo4")); }
-    
+
     int prescale = 1000;
     int nevents = 0;
 
@@ -42,8 +42,8 @@ public class Occupancer extends ArrayList<Occupancer.OccupanceTable> {
 
     private void init() {
         try {
-	    // Initialize OccupanceTable list, by reading occupancy bank filenames
-	    // and stripping ".json" suffix and "OCC::" prefix to get hit bank name:
+            // Initialize list, by reading occupancy bank filenames from a directory
+            // and stripping ".json" suffix and "OCC::" prefix to get hit bank name:
             addAll(Files.list(Paths.get(OCC_BANK_DIR))
                     .filter(Files::isRegularFile)
                     .map(p -> p.getFileName().toString())
@@ -54,31 +54,36 @@ public class Occupancer extends ArrayList<Occupancer.OccupanceTable> {
             System.getLogger(Occupancer.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
         }
     }
-    
+
     public boolean process(Event event) {
-        forEach(t -> { t.fill(event); });
+        int size = size();
+        for (int i=0; i<size; i++) get(i).fill(event);
         if (++nevents % prescale == 0) {
-            forEach(t -> {
-                if (t.getTable().getRowCount() > 0) {
-                    event.write(t.create(nevents));
+            for (int i=0; i<size; i++) {
+                if (get(i).getTable().getRowCount() > 0) {
+                    event.write(get(i).create(nevents));
                 }
-                t.reset();
-            });
+                get(i).reset();
+            }
             nevents = 0;
         }
         return true;
     }
-    
+
     public void reset() {
-        forEach(t -> { t.reset(); nevents = 0; });
+        int size = size();
+        for (int i=0; i<size; i++) {
+            get(i).reset();
+            nevents = 0;
+        }
     }
-    
+
     public static class OccupanceTable {
 
         Schema occSchema;
         Schema hitSchema;
         IndexedTable table;
-        
+
         /**
          * A 3-index table, e.g., sector/layer/component.
          * @param hitBank name of the hit bank
@@ -88,7 +93,7 @@ public class Occupancer extends ArrayList<Occupancer.OccupanceTable> {
             occSchema = FULL_SCHEMA.getSchema("OCC::" + hitBank);
             table = new IndexedTable(occSchema.hasEntry("order")?4:3, new String[]{"occ/F"});
         }
-        
+
         /**
          * An N-index table.
          * @param hitBank name of the hit bank
@@ -99,16 +104,16 @@ public class Occupancer extends ArrayList<Occupancer.OccupanceTable> {
             occSchema = FULL_SCHEMA.getSchema("OCC::" + hitBank);
             table = new IndexedTable(indexCount, new String[]{"occ/F"});
         }
-        
+
         public final IndexedTable getTable() { return table; }
-        
+
         /**
          * Zero the occupancy table.
          */
         public final void reset() {
             table = new IndexedTable(table.getList().getIndexSize(), new String[]{"occ/F"});
         }
-        
+
         /**
          * Get the occupancy table, normalized by number of events.
          * @param events
@@ -122,7 +127,7 @@ public class Occupancer extends ArrayList<Occupancer.OccupanceTable> {
             }
             return t;
         }
-        
+
         /**
          * Fill the occupancy table.
          * @param index
@@ -136,7 +141,7 @@ public class Occupancer extends ArrayList<Occupancer.OccupanceTable> {
             }
             table.setDoubleValueByHash(table.getDoubleValueByHash(0, hash) + 1.0, 0, hash);
         }
-        
+
         /**
          * Fill occupancy table from a user-defined bank.
          * @param event
@@ -154,7 +159,7 @@ public class Occupancer extends ArrayList<Occupancer.OccupanceTable> {
                 fill(idx);
             }
         }
-        
+
         /**
          * Get an occupancy bank, normalized by number of events.
          * @param events
