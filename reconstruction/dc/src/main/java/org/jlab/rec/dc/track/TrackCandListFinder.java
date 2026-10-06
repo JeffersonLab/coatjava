@@ -1159,10 +1159,7 @@ public class TrackCandListFinder {
                         
                         // prefer to initialize the seed with region 2 cross due to higher background in region 1
                         
-                        int crossIdxinList = 1;
-                        if (cand.get(1).isPseudoCross) {
-                            crossIdxinList = 0;
-                        }
+                        final int crossIdxinList = cand.get(1).isPseudoCross ? 0 : 1;
 
                         LOGGER.log(Level.FINEST, "Kalman fitter - 2 = " + (System.currentTimeMillis() - startTime));
 
