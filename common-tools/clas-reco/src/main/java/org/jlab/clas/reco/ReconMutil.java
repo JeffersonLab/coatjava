@@ -23,7 +23,6 @@ import org.jlab.io.evio.EvioSource;
 import org.jlab.io.hipo.HipoDataEvent;
 import org.jlab.jnp.hipo4.data.Bank;
 import org.jlab.jnp.hipo4.data.Event;
-import org.jlab.jnp.hipo4.data.Schema;
 import org.jlab.jnp.hipo4.data.SchemaFactory;
 import org.jlab.jnp.hipo4.io.HipoReader;
 import org.jlab.jnp.hipo4.io.HipoWriterSorted;
@@ -72,6 +71,7 @@ final class ReconMutil {
     // Threads:
     CompletableFuture readerThread;
     CompletableFuture writerThread;
+    CompletableFuture serialThread;
     ConcurrentLinkedQueue<CompletableFuture> decoThreads = new ConcurrentLinkedQueue<>();
     ConcurrentLinkedQueue<CompletableFuture> procThreads = new ConcurrentLinkedQueue<>();
 
@@ -93,7 +93,7 @@ final class ReconMutil {
 
     // Control flags:
     final Object serialLock = new Object();
-    AtomicInteger serialEvents = new AtomicInteger(0);
+    AtomicInteger serialTrigger = new AtomicInteger(0);
    
     ReconMutil(OptionParser parser) {
         init(parser);
@@ -122,6 +122,9 @@ final class ReconMutil {
             final int j = i;
             ReconUtil.addAndRemove(decoThreads, CompletableFuture.runAsync(() -> { decoder(j); }));
         }
+       
+        // one serial thread:
+        serialThread = ReconUtil.launch(CompletableFuture.runAsync(() -> { serial(); }));
         
         ReconUtil.sleep(10000);
 
@@ -188,12 +191,6 @@ final class ReconMutil {
      * @param thread thread number
      */
     void decoder(int thread) {
-        int serials = 0;
-        final int helicityClock = 30;  // Hz
-        final int triggerRate = 25000; // Hz
-        final int minReload = 2 * triggerRate / helicityClock;
-        int reloads = 0;
-        int reload = minReload;
         while (true) {
             List<Object> input = decoQueue.poll();
             if (input == null) {
@@ -212,15 +209,9 @@ final class ReconMutil {
                     Event tag;
                     synchronized (serialLock) {
                         tag = serial.read(event.getHipoEvent());
-                        if (thread == 0 && ++serials > reload) {
-                            serial.updateHelicitySequence();
-                            serials = 0;
-                            reload += 10 * reloads * minReload;
-                            reloads++;
-                        }
                     }
                     if (!tag.isEmpty()) {
-                        if (serial.containsSerial(tag)) serialEvents.incrementAndGet();
+                        if (serial.containsSerial(tag)) serialTrigger.incrementAndGet();
                         output.add(new HipoDataEvent(tag, fullSchema));
                         taggedEvents.incrementAndGet();
                     }
@@ -229,12 +220,22 @@ final class ReconMutil {
                 procQueue.offer(output);
             }
         }
-        if (thread == 0) {
-            while (decoThreads.size() > 1) ReconUtil.sleep(100);
-            synchronized (serialLock) { serial.updateHelicitySequence(); }
-        }
+        serialTrigger.incrementAndGet();
     }
 
+    void serial() {
+        while (true) {
+            if (serialTrigger.get() > 0) {
+                ReconUtil.sleep(1000);
+                int t = serialTrigger.get();
+                synchronized (serialLock) { serial.updateHelicitySequence(); }
+                for (int i=0; i<t; i++) serialTrigger.decrementAndGet();
+                ReconUtil.sleep(9000);
+            }
+            else ReconUtil.sleep(1000);
+        }
+    }
+    
     /**
      * The data processor thread.
      * @param thread thread number 
