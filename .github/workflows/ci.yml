@@ -115,6 +115,26 @@ jobs:
               coatjava.tar.gz
               clara.tar.gz
 
+  dependency_info:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Set up JDK
+        uses: actions/setup-java@v6.0.1
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: ${{ env.java_distribution }}
+          # NOTE: do not use `cache: maven` here, so stale `_remote.repositories` data aren't read
+      - name: build
+        run: |
+          ./build-coatjava.sh --no-aux --no-progress --quiet -T${{ env.nthreads }}
+      - name: collect info
+        run: libexec/dependency-info.rb
+      - name: print dependency trees
+        run: cat target/info/trees.txt
+      - name: print dependency repository sources
+        run: cat target/info/repos.yaml
+
   # tests
   #############################################################################
 
