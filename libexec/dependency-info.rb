@@ -59,6 +59,7 @@ jars.each do |jar_path|
   # fill output hash
   repo_lines.each do |repo_line|
     repo_id = repo_line.split('>')[1].split('=')[0]
+    repo_id = repo_id.sub /-\h{32,}\z/, '' # drop the trailing digest (from GitHub `setup-java`'s `settings.xml`)
     repo = case repo_id
            when /code.jlab.org-.*/ then 'code.jlab.org'
            when nil                then REPO_LOCAL
