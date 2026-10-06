@@ -603,6 +603,7 @@ final class ReconMutil {
         o.setRequiresInputList(true);
         o.parse(args);
         ReconMutil r = new ReconMutil(o);
+        System.err.println(o.getOption("-t").stringValue());
         r.launch(getThreadCounts(o.getOption("-t").stringValue()),
                 o.getOption("-o").stringValue(),
                 o.getInputList().stream().toArray(String[]::new));
