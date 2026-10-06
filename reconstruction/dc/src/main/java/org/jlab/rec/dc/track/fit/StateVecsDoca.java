@@ -3,8 +3,6 @@ package org.jlab.rec.dc.track.fit;
 import org.jlab.jnp.matrix.*;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Logger;
-import org.jlab.clas.clas.math.FastMath;
 import org.jlab.clas.pdg.PhysicsConstants;
 import org.jlab.clas.swimtools.Swim;
 import org.jlab.rec.dc.Constants;
@@ -16,15 +14,9 @@ import org.jlab.geom.prim.Point3D;
  */
 public class StateVecsDoca {
 
-    private static final Logger LOGGER = Logger.getLogger(StateVecsDoca.class.getName());
-
-    private final double Bmax = 2.366498; // averaged
-
-    final double speedLight = 0.002997924580;
     public double[] Z;
-   // public List<B> bfieldPoints = new ArrayList<B>();
-    public Map<Integer, StateVec> trackTraj = new HashMap<Integer, StateVec>();
-    public Map<Integer, CovMat> trackCov = new HashMap<Integer, CovMat>();
+    public Map<Integer, StateVec> trackTraj = new HashMap<>();
+    public Map<Integer, CovMat> trackCov = new HashMap<>();
 
 
     public StateVec StateVec;
@@ -32,12 +24,9 @@ public class StateVecsDoca {
     public Matrix F = new Matrix();
     private final Matrix fMS = new Matrix();
     private final Matrix copyMatrix = new Matrix();
-    private final double[] A = new double[2];
-    private final double[] dA = new double[4];
     private final float[] bf = new float[3];
-    private final float[] lbf = new float[3];
-    private Swim dcSwim;
-    private RungeKuttaDoca rk;
+    private final Swim dcSwim;
+    private final RungeKuttaDoca rk;
 
     /**
      * State vector representing the track in the sector coordinate system at the measurement layer
@@ -73,23 +62,15 @@ public class StateVecsDoca {
         fVec.B = iVec.B;
         //fCov.covMat = covMat.covMat;
         Matrix5x5.copy(covMat.covMat, fCov.covMat);
-        double s  = 0;
         double z = Z[i];
         double BatMeas = iVec.B;
 
         while(Math.signum(Zf - Z[i]) *z<Math.signum(Zf - Z[i]) *Zf) {
-            //LOGGER.log(Level.FINEST, " RK step num "+(j+1)+" = "+(float)s+" nSteps = "+nSteps);
-            double x =  fVec.x;
-            double y =  fVec.y;
             z = fVec.z;
             double tx = fVec.tx;
             double ty = fVec.ty;
-            double Q =  fVec.Q;
-            double dPath = fVec.deltaPath;
-            //covMat.covMat = fCov.covMat;
             Matrix5x5.copy(fCov.covMat, covMat.covMat);
-            s= Math.signum(Zf - Z[i]) * stepSize;
-           // LOGGER.log(Level.FINEST, " from "+(float)Z[i]+" to "+(float)Z[f]+" at "+(float)z+" By is "+bf[1]+" B is "+Math.sqrt(bf[0]*bf[0]+bf[1]*bf[1]+bf[2]*bf[2])/Bmax+" stepSize is "+s);
+            double s = Math.signum(Zf - Z[i]) * stepSize;
             if(Math.signum(Zf - Z[i]) *(z+s)>Math.signum(Zf - Z[i]) *Zf)
                 s=Math.signum(Zf - Z[i]) *Math.abs(Zf-z);
             rk.RK4transport(sector, s, dcSwim, covMat, fVec, fCov);
@@ -162,25 +143,16 @@ public class StateVecsDoca {
         fVec.ty = iVec.ty;
         fVec.Q = iVec.Q;
         fVec.B = iVec.B;
-        //fCov.covMat = covMat.covMat;
         Matrix5x5.copy(covMat.covMat, fCov.covMat);
-        double s  = 0;
         double z = Z[i];
         double BatMeas = iVec.B;
 
         while(Math.signum(Z[f] - Z[i]) *z<Math.signum(Z[f] - Z[i]) *Z[f]) {
-            //LOGGER.log(Level.FINEST, " RK step num "+(j+1)+" = "+(float)s+" nSteps = "+nSteps);
-            double x =  fVec.x;
-            double y =  fVec.y;
             z = fVec.z;
             double tx = fVec.tx;
             double ty = fVec.ty;
-            double Q =  fVec.Q;
-            double dPath = fVec.deltaPath;
-            //covMat.covMat = fCov.covMat;
             Matrix5x5.copy(fCov.covMat, covMat.covMat);
-            s= Math.signum(Z[f] - Z[i]) * stepSize;
-           // LOGGER.log(Level.FINEST, " from "+(float)Z[i]+" to "+(float)Z[f]+" at "+(float)z+" By is "+bf[1]+" B is "+Math.sqrt(bf[0]*bf[0]+bf[1]*bf[1]+bf[2]*bf[2])/Bmax+" stepSize is "+s);
+            double s = Math.signum(Z[f] - Z[i]) * stepSize;
             if(Math.signum(Z[f] - Z[i]) *(z+s)>Math.signum(Z[f] - Z[i]) *Z[f])
                 s=Math.signum(Z[f] - Z[i]) *Math.abs(Z[f]-z);
 
@@ -277,18 +249,9 @@ public class StateVecsDoca {
             if (j == nSteps - 1) {
                 s = Math.signum(Z[f] - Z[i]) * Math.abs(z - Z[f]);
             }
-            //LOGGER.log(Level.FINEST, " RK step num "+(j+1)+" = "+(float)s+" nSteps = "+nSteps);
-            double x =  fVec.x;
-            double y =  fVec.y;
             z = fVec.z;
-            double tx = fVec.tx;
-            double ty = fVec.ty;
-            double Q =  fVec.Q;
-            double dPath = fVec.deltaPath;
             covMat.covMat = fCov.covMat;
-
             rk.RK4transport(sector, s, dcSwim, covMat, fVec, fCov);
-
         }
 
         this.trackTraj.put(f, fVec);
