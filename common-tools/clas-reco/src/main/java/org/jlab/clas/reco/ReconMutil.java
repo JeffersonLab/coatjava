@@ -120,6 +120,7 @@ final class ReconMutil {
         for (int i=0; i<Math.max(8,threads[0]); i++) {
             final int j = i;
             ReconUtil.addAndRemove(decoThreads, CompletableFuture.runAsync(() -> { decoder(j); }));
+            ReconUtil.sleep(100);
         }
        
         // one serial thread:
@@ -131,6 +132,7 @@ final class ReconMutil {
         for (int i=0; i<threads[0]; i++) {
             final int j = i;
             ReconUtil.addAndRemove(procThreads, CompletableFuture.runAsync(() -> { processor(j); }));
+            ReconUtil.sleep(100);
         }
 
         // one writer thread:
