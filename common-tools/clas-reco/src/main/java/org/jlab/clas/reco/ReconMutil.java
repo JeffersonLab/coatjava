@@ -514,7 +514,7 @@ final class ReconMutil {
     static int[] getThreadCounts(String threadlist) {
         return Arrays.stream(threadlist.replace("+","").replace("-","").split(","))
                 .filter(s -> !s.contains("+") && !s.contains("-"))
-                .mapToInt(s -> Integer.parseInt(s)).toArray();
+                .mapToInt(s -> Integer.parseInt(s)).sorted().toArray();
     }
     
     /**

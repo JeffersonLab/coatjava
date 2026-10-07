@@ -280,6 +280,12 @@ public class RecoMutil extends Porch {
             benchmark = new Benchmark("ReconMutil",BENCHMARK_NAMES);
     }
 
+    static int[] getThreadCounts(String threadlist) {
+        return Arrays.stream(threadlist.replace("+","").replace("-","").split(","))
+                .filter(s -> !s.contains("+") && !s.contains("-"))
+                .mapToInt(s -> Integer.parseInt(s)).sorted().toArray();
+    }
+    
     /**
      * The command-line entry-point known as "recon-mutil".
      * @param args command-line arguments
@@ -305,7 +311,7 @@ public class RecoMutil extends Porch {
         if (!opt.getOption("-o").isDefault())
             f.openWriter(opt.getOption("-S"), opt.getOption("-o").stringValue());
         
-        f.launch(Arrays.stream(opt.getOption("-t").stringValue().replace("+","").replace("-","").split(",")).mapToInt(Integer::parseInt).toArray(), 
+        f.launch(getThreadCounts(opt.getOption("-t").stringValue()), 
                 opt.getInputList().stream().toArray(String[]::new));
     }
 
