@@ -5,6 +5,7 @@ import org.jlab.clara.std.services.EventWriterException;
 import org.jlab.detector.calib.utils.ConstantsManager;
 import org.jlab.detector.serial.SerialHoncho;
 import org.jlab.detector.serial.Occupancer;
+import org.jlab.jnp.hipo4.data.Bank;
 import org.jlab.jnp.hipo4.data.Event;
 import org.jlab.jnp.hipo4.data.SchemaFactory;
 import org.jlab.jnp.hipo4.io.HipoWriterSorted;
@@ -26,6 +27,7 @@ public class Clas12Writer extends HipoToHipoWriter {
     SerialHoncho serial;
     ConstantsManager conman;
     SchemaFactory fullSchema;
+    Bank runConfig;
 
     HipoWriterSorted paraWriter;
     long paraCount;
@@ -38,6 +40,7 @@ public class Clas12Writer extends HipoToHipoWriter {
         fullSchema.initFromDirectory(FileUtils.getEnvironmentPath("CLAS12DIR","etc/bankdefs/hipo4"));
         serial = new SerialHoncho(fullSchema);
         conman = new ConstantsManager();
+        runConfig = new Bank(fullSchema.getSchema("RUN::config"));
         conman.init("/runcontrol/hwp","/runcontrol/helicity");
         paraTriggerMask = opts.optLong("paraTriggerMask", 0);
         paraTriggerPrescale = opts.optInt("paraTriggerPrescale", 0);
