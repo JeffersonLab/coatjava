@@ -225,9 +225,9 @@ public class RecoMutil extends Porch {
             taskset = String.valueOf(t.charAt(t.length()-1));
             if (t.contains(",")) {
                 if (taskset.equals("+"))
-                    ReconUtil.taskset(0, Arrays.stream(getThreadCounts(t)).sorted().max().getAsInt());
+                    ReconUtil.taskset(0, Arrays.stream(getThreads(t)).sorted().max().getAsInt());
                 else
-                    ReconUtil.taskset(0, Arrays.stream(getThreadCounts(t)).sorted().min().getAsInt());
+                    ReconUtil.taskset(0, Arrays.stream(getThreads(t)).sorted().min().getAsInt());
             }
             else if (taskset.equals("-"))
                 ReconUtil.taskset(0, Integer.parseInt(String.valueOf(t.charAt(0))));
@@ -238,16 +238,62 @@ public class RecoMutil extends Porch {
     }
     
     /**
+     * Sort and preserve +/- suffix.
+     * @param threads
+     * @return 
+     */
+    static String sortThreads(String threads) {
+        if (threads.contains(",")) {
+            String suffix = "";
+            if (threads.endsWith("+") || threads.endsWith("-"))
+                suffix = String.valueOf(threads.charAt(threads.length()-1)); 
+            threads = String.join(",",Arrays.stream(threads.replace("+","").replace("-","").split(","))
+                .mapToInt(s -> Integer.parseInt(s)).sorted().boxed().map(i -> String.valueOf(i)).toList());
+            threads += suffix;
+        }
+        return threads;
+    }
+  
+    static int[] getThreads(String threadlist) {
+        return Arrays.stream(threadlist.replace("+","").replace("-","").split(","))
+                .mapToInt(s -> Integer.parseInt(s)).sorted().toArray();
+    }
+    
+    String taskset(String threads) {
+        taskset = "";
+        if (threads.endsWith("+") || threads.endsWith("-")) {
+            taskset = String.valueOf(threads.charAt(threads.length()-1));
+            if (threads.contains(",")) {
+                if (taskset.equals("+"))
+                    ReconUtil.taskset(0, 0);
+                else
+                    ReconUtil.taskset(0, Arrays.stream(getThreads(threads)).min().getAsInt());
+            }
+            else if (taskset.equals("-"))
+                ReconUtil.taskset(0, Integer.parseInt(String.valueOf(threads.charAt(0))));
+            else if (taskset.equals("+"))
+                ReconUtil.taskset(0, 0);
+        }
+        return threads;
+    }
+    
+    /**
      * Initialize ReconMutil.
      * @param parser 
      */
     final void init(OptionParser parser) {
-        parser.getOption("-t").setValue(parseThreads(parser.getOption("-t").stringValue()));
+
+        parser.getOption("-t").setValue(sortThreads(parser.getOption("-t").stringValue()));
+
+        taskset(parser.getOption("-t").stringValue());
+
         parser.syncLogLevel(Logger.getLogger(ReconMutil.class.getPackage().getName()));
+        
         maxEvents = parser.getOption("-n").intValue();
         skipEvents = parser.getOption("-s").intValue();
         serial = new SerialHoncho(fullSchema);
         engines = new LinkedHashMap<>();
+       
         if (!parser.getOption("-y").isDefault()) {
             yaml = new ClaraYaml(parser.getOption("-y").stringValue());
             for (JSONObject service : yaml.services()) {
@@ -282,12 +328,6 @@ public class RecoMutil extends Porch {
             benchmark = new Benchmark("ReconMutil",BENCHMARK_NAMES);
     }
 
-    static int[] getThreadCounts(String threadlist) {
-        return Arrays.stream(threadlist.replace("+","").replace("-","").split(","))
-                .filter(s -> !s.contains("+") && !s.contains("-"))
-                .mapToInt(s -> Integer.parseInt(s)).sorted().toArray();
-    }
-    
     /**
      * The command-line entry-point known as "recon-mutil".
      * @param args command-line arguments
@@ -313,7 +353,7 @@ public class RecoMutil extends Porch {
         if (!opt.getOption("-o").isDefault())
             f.openWriter(opt.getOption("-S"), opt.getOption("-o").stringValue());
         
-        f.launch(getThreadCounts(opt.getOption("-t").stringValue()), 
+        f.launch(getThreads(opt.getOption("-t").stringValue()), 
                 opt.getInputList().stream().toArray(String[]::new));
     }
 

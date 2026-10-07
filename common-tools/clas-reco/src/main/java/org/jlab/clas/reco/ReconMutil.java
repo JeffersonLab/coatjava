@@ -489,35 +489,44 @@ final class ReconMutil {
         procQueue.clear();
         writeQueue.clear();
     }
-  
-    String parseThreads(String t) {
-        if (t.contains(",")) {
-            int offset = t.endsWith("+") || t.endsWith("-") ? 1 : 0;
-            String extra = t.endsWith("+") || t.endsWith("-") ? String.valueOf(t.charAt(t.length()-1)) : "";
-            t = String.join(",",Arrays.stream(t.substring(0,t.length()-offset).split(","))
-                    .mapToInt(s -> Integer.parseInt(s)).sorted().mapToObj(i -> String.valueOf(i)).toList())
-                    + extra;
+
+    /**
+     * Sort and preserve +/- suffix.
+     * @param threads
+     * @return 
+     */
+    static String sortThreads(String threads) {
+        if (threads.contains(",")) {
+            String suffix = "";
+            if (threads.endsWith("+") || threads.endsWith("-"))
+                suffix = String.valueOf(threads.charAt(threads.length()-1)); 
+            threads = String.join(",",Arrays.stream(threads.replace("+","").replace("-","").split(","))
+                .mapToInt(s -> Integer.parseInt(s)).sorted().boxed().map(i -> String.valueOf(i)).toList());
+            threads += suffix;
         }
+        return threads;
+    }
+  
+    String taskset(String threads) {
         taskset = "";
-        if (t.endsWith("+") || t.endsWith("-")) {
-            taskset = String.valueOf(t.charAt(t.length()-1));
-            if (t.contains(",")) {
+        if (threads.endsWith("+") || threads.endsWith("-")) {
+            taskset = String.valueOf(threads.charAt(threads.length()-1));
+            if (threads.contains(",")) {
                 if (taskset.equals("+"))
-                    ReconUtil.taskset(0, Arrays.stream(getThreadCounts(t)).sorted().max().getAsInt());
+                    ReconUtil.taskset(0, 0);
                 else
-                    ReconUtil.taskset(0, Arrays.stream(getThreadCounts(t)).sorted().min().getAsInt());
+                    ReconUtil.taskset(0, Arrays.stream(getThreads(threads)).min().getAsInt());
             }
             else if (taskset.equals("-"))
-                ReconUtil.taskset(0, Integer.parseInt(String.valueOf(t.charAt(0))));
+                ReconUtil.taskset(0, Integer.parseInt(String.valueOf(threads.charAt(0))));
             else if (taskset.equals("+"))
                 ReconUtil.taskset(0, 0);
         }
-        return t;
+        return threads;
     }
     
-    static int[] getThreadCounts(String threadlist) {
+    static int[] getThreads(String threadlist) {
         return Arrays.stream(threadlist.replace("+","").replace("-","").split(","))
-                .filter(s -> !s.contains("+") && !s.contains("-"))
                 .mapToInt(s -> Integer.parseInt(s)).sorted().toArray();
     }
     
@@ -527,8 +536,10 @@ final class ReconMutil {
      */
     void init(OptionParser parser) {
 
-        parser.getOption("-t").setValue(parseThreads(parser.getOption("-t").stringValue()));
-        
+        parser.getOption("-t").setValue(sortThreads(parser.getOption("-t").stringValue()));
+
+        taskset(parser.getOption("-t").stringValue());
+
         fullSchema = new SchemaFactory();
         fullSchema.initFromDirectory(ClasUtilsFile.getResourceDir("CLAS12DIR","etc/bankdefs/hipo4"));
         this.parser = parser;
@@ -609,7 +620,7 @@ final class ReconMutil {
         o.setRequiresInputList(true);
         o.parse(args);
         ReconMutil r = new ReconMutil(o);
-        r.launch(getThreadCounts(o.getOption("-t").stringValue()),
+        r.launch(getThreads(o.getOption("-t").stringValue()),
                 o.getOption("-o").stringValue(),
                 o.getInputList().stream().toArray(String[]::new));
     }
