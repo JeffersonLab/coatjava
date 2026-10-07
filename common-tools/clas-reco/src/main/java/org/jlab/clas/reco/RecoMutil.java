@@ -283,8 +283,6 @@ public class RecoMutil extends Porch {
      */
     final void init(OptionParser parser) {
 
-        parser.getOption("-t").setValue(sortThreads(parser.getOption("-t").stringValue()));
-
         taskset(parser.getOption("-t").stringValue());
 
         parser.syncLogLevel(Logger.getLogger(ReconMutil.class.getPackage().getName()));
@@ -333,7 +331,13 @@ public class RecoMutil extends Porch {
      * @param args command-line arguments
      */
     public static void main(String[] args) {
-        OptionParser opt = new OptionParser("reco-mutil");
+        OptionParser opt = new OptionParser("reco-mutil"){
+            @Override
+            public void parse(String[] args) {
+                super.parse(args);
+                getOption("-t").setValue(sortThreads(getOption("-t").stringValue()));
+            }
+        };
         opt.addOption("-t","4","number of threads");
         opt.addOption("-s","0","number of events to skip");
         opt.addOption("-n","0","number of events to process");
