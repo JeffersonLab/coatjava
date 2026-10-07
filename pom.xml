@@ -248,17 +248,20 @@
         - see `docs/dependency_conflicts.md` for more info
       -->
 
-      <!-- resolve conflict between `org.jlab.jnp:jnp-hipo:jar:2.0-SNAPSHOT` and `org.jlab.jnp:jnp-hipo4:jar:4.5`
-           by choosing the later version of their `net.objecthunter:exp4j` dependency -->
+      <!--
+        resolve conflict between `org.jlab.jnp:jnp-hipo:jar:2.0-SNAPSHOT` and `org.jlab.jnp:jnp-hipo4:jar:4.5`
+        by choosing the later version of their `net.objecthunter:exp4j` dependency
+      -->
       <dependency>
         <groupId>net.objecthunter</groupId>
         <artifactId>exp4j</artifactId>
         <version>0.4.8</version> <!-- WARNING: if changed, see `docs/dependency_conflicts.md` -->
       </dependency>
 
-      <!-- resolve conflict between `org.jlab.coda:jclara` and `ai.djl:api`
-           by choosing the later version of their `com.google.code.gson:gson` dependency
-           - `djl`'s `gson` version is here: https://github.com/deepjavalibrary/djl/blob/master/gradle/libs.versions.toml
+      <!--
+        resolve conflict between `org.jlab.coda:jclara` and `ai.djl:api`
+        by choosing the later version of their `com.google.code.gson:gson` dependency
+        - `djl`'s `gson` version is here: https://github.com/deepjavalibrary/djl/blob/master/gradle/libs.versions.toml
       -->
       <dependency>
         <groupId>com.google.code.gson</groupId>
@@ -266,8 +269,10 @@
         <version>2.13.1</version> <!-- WARNING: if changed, see `docs/dependency_conflicts.md` -->
       </dependency>
 
-      <!-- resolve conflict between `j4ml:j4ml-clas12` and `clas-tracking`
-           by using the version of `org.ejml:ejml-simple` used by `j4ml:j4ml-clas12:jar:0.9-SNAPSHOT` -->
+      <!--
+        resolve conflict between `j4ml:j4ml-clas12` and `clas-tracking`
+        by using the version of `org.ejml:ejml-simple` used by `j4ml:j4ml-clas12:jar:0.9-SNAPSHOT`
+      -->
       <dependency>
         <groupId>org.ejml</groupId>
         <artifactId>ejml-simple</artifactId>
