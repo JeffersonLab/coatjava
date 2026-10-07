@@ -94,7 +94,7 @@ public class Clas12Writer extends HipoToHipoWriter {
 
     @Override
     protected void closeWriter() {
-        serial.finish(writer);
+        serial.closure(writer);
         super.closeWriter();
         if (postprocess) postprocess();
         serial.clear();
