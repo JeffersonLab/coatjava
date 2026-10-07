@@ -39,7 +39,6 @@ public class Clas12Writer extends HipoToHipoWriter {
         serial = new SerialHoncho(fullSchema);
         conman = new ConstantsManager();
         conman.init("/runcontrol/hwp","/runcontrol/helicity");
-        postprocess = opts.optBoolean("postprocess", false);
         paraTriggerMask = opts.optLong("paraTriggerMask", 0);
         paraTriggerPrescale = opts.optInt("paraTriggerPrescale", 0);
         if (opts.has("variation")) conman.setVariation(opts.getString("variation"));
