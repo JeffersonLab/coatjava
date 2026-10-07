@@ -45,7 +45,7 @@
       <groupId>org.jlab.clas12.detector</groupId>
       <artifactId>clas12detector-ai</artifactId>
       <version>14.2.1-SNAPSHOT</version>
-    </dependency>    
+    </dependency>
     <dependency>
       <groupId>org.jlab.clas</groupId>
       <artifactId>clas-jcsg</artifactId>
