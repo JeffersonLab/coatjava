@@ -36,7 +36,7 @@ public class SerialHoncho {
     Schema runScaler;
     Schema rawScaler;
     Schema epics;
-    ConstantsManager conman;
+    volatile ConstantsManager conman;
     volatile TreeMap<Integer,Integer> eventUnix;
     volatile HelicitySequence helicitySequence;
     volatile TreeSet<HelicityState> helicities;
