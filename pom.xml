@@ -125,6 +125,12 @@
       </dependency>
 
       <dependency>
+        <groupId>org.apache.commons</groupId>
+        <artifactId>commons-text</artifactId>
+        <version>1.15.0</version>
+      </dependency>
+
+      <dependency>
         <groupId>org.jlab</groupId>
         <artifactId>groot</artifactId>
         <version>4.0.5</version>
@@ -134,6 +140,12 @@
         <groupId>org.freehep</groupId>
         <artifactId>jminuit</artifactId>
         <version>1.0</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.jlab.coda</groupId>
+        <artifactId>xmsg</artifactId>
+        <version>2.3</version>
       </dependency>
 
       <dependency>
@@ -165,6 +177,12 @@
             <artifactId>proguard</artifactId>
           </exclusion>
         </exclusions>
+      </dependency>
+
+      <dependency>
+        <groupId>org.jlab.coda</groupId>
+        <artifactId>et</artifactId>
+        <version>14.0</version>
       </dependency>
 
       <dependency>
@@ -207,6 +225,12 @@
         <groupId>gov.nist.math</groupId>
         <artifactId>jama</artifactId>
         <version>1.0.3</version>
+      </dependency>
+
+      <dependency>
+        <groupId>java3d</groupId>
+        <artifactId>vecmath</artifactId>
+        <version>1.3.1</version>
       </dependency>
 
       <dependency> <!-- sets version number for all 'ai.djl' dependencies -->
