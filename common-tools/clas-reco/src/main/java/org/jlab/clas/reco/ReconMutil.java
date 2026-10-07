@@ -117,7 +117,7 @@ final class ReconMutil {
         readerThread = ReconUtil.launch(CompletableFuture.runAsync(() -> { reader(threads[0], input); }));
 
         // some decoder threads:
-        for (int i=0; i<Math.max(12,threads[0]); i++) {
+        for (int i=0; i<Math.max(8,threads[0]); i++) {
             final int j = i;
             ReconUtil.addAndRemove(decoThreads, CompletableFuture.runAsync(() -> { decoder(j); }));
         }
