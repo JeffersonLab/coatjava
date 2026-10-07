@@ -193,12 +193,11 @@ public class SerialHoncho {
      * @return 
      */
     Event getUnixEvent(Bank runConfig) {
-        Bank unix = new Bank(schema.getSchema("RUN::unix"));
-        unix.setRows(eventUnix.size());
+        Bank unix = new Bank(schema.getSchema("RUN::unix"), eventUnix.size());
         int row = 0;
         for (int evno : eventUnix.keySet()) {
             unix.putInt("event", row, evno);
-            unix.putInt("unixtime",row, eventUnix.get(evno));
+            unix.putInt("unixtime", row, eventUnix.get(evno));
             row++;
         }
         Event e = new Event();

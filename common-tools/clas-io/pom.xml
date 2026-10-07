@@ -18,7 +18,6 @@
     <dependency>
       <groupId>org.jlab.coda</groupId>
       <artifactId>xmsg</artifactId>
-      <version>2.3</version>
     </dependency>
 
     <dependency>
@@ -45,7 +44,6 @@
     <dependency>
       <groupId>org.jlab.coda</groupId>
       <artifactId>et</artifactId>
-      <version>14.0</version>
     </dependency>
 
     <dependency>
@@ -73,7 +71,7 @@
             <configuration>
               <target>
                 <exec executable="python3">
-                    <arg value="./bank-schema-enums"/>
+                  <arg value="./bank-schema-enums"/>
                 </exec>
               </target>
             </configuration>
