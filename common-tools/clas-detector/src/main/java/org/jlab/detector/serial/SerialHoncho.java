@@ -106,7 +106,7 @@ public class SerialHoncho {
      */
     public void closure(HipoWriterSorted writer) {
         Bank cfg = new Bank(runConfig, 1);
-        cfg.putInt("run",0,run);
+        cfg.putInt("run",0,run); 
         writer.addEvent(getUnixEvent(cfg),1);
         if (helicitySequence == null) updateHelicitySequence();
         helicitySequence.writeFlips(writer, 1);
@@ -137,7 +137,7 @@ public class SerialHoncho {
     public SchemaFactory getSchemaFactory() {
         return schema;
     }
- 
+  
     /**
      * Recreate the HelicitySequence from the TreeSet of helicity states.
      */
