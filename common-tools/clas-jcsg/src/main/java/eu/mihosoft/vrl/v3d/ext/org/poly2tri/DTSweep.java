@@ -66,14 +66,9 @@ import static eu.mihosoft.vrl.v3d.ext.org.poly2tri.TriangulationUtil.orient2d;
 import static eu.mihosoft.vrl.v3d.ext.org.poly2tri.TriangulationUtil.smartIncircle;
 
 import java.util.List;
+import java.util.logging.Logger;
 
-import eu.mihosoft.vrl.v3d.ext.org.poly2tri.TriangulationMode;
-import eu.mihosoft.vrl.v3d.ext.org.poly2tri.TriangulationPoint;
 import eu.mihosoft.vrl.v3d.ext.org.poly2tri.TriangulationUtil.Orientation;
-import eu.mihosoft.vrl.v3d.ext.org.poly2tri.DelaunayTriangle;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Sweep-line, Constrained Delauney Triangulation (CDT) See: Domiter, V. and
@@ -86,7 +81,7 @@ import org.slf4j.LoggerFactory;
  */
 class DTSweep {
 
-    private final static Logger logger = LoggerFactory.getLogger(DTSweep.class);
+    private final static Logger logger = Logger.getLogger(DTSweep.class.getName());
 
     private final static double PI_div2 = Math.PI / 2;
     private final static double PI_3div4 = 3 * Math.PI / 4;
@@ -359,7 +354,7 @@ class DTSweep {
 
             edgeEvent(tcx, edge.p, edge.q, node.triangle, edge.q);
         } catch (PointOnEdgeException e) {
-            logger.warn("Skipping edge: {}", e.getMessage());
+            logger.warning(() -> "Skipping edge: "+e.getMessage());
         }
     }
 
