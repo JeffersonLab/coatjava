@@ -224,9 +224,7 @@ public class RecoMutil extends Porch {
         if (t.endsWith("+") || t.endsWith("-")) {
             taskset = String.valueOf(t.charAt(t.length()-1));
             if (t.contains(","))
-                ReconUtil.taskset(0, Arrays.stream(t.split(","))
-                .filter(s -> !s.contains("+") && !s.contains("-"))
-                .mapToInt(s -> Integer.parseInt(s)).toArray()[0]);
+                ReconUtil.taskset(0, Arrays.stream(getThreadCounts(t)).sorted().max().getAsInt());
             else if (taskset.equals("-"))
                 ReconUtil.taskset(0, Integer.parseInt(String.valueOf(t.charAt(0))));
             else if (taskset.equals("+"))

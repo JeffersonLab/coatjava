@@ -502,7 +502,7 @@ final class ReconMutil {
         if (t.endsWith("+") || t.endsWith("-")) {
             taskset = String.valueOf(t.charAt(t.length()-1));
             if (t.contains(","))
-                ReconUtil.taskset(0, getThreadCounts(t)[0]);
+                ReconUtil.taskset(0, Arrays.stream(getThreadCounts(t)).sorted().max().getAsInt());
             else if (taskset.equals("-"))
                 ReconUtil.taskset(0, Integer.parseInt(String.valueOf(t.charAt(0))));
             else if (taskset.equals("+"))
