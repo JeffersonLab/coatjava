@@ -133,7 +133,7 @@
       <dependency>
         <groupId>org.jlab</groupId>
         <artifactId>groot</artifactId>
-        <version>4.0.5</version>
+        <version>4.0.5</version> <!-- WARNING: if changed, check the `net.objecthunter:exp4j` version; see `docs/dependency_conflicts.md` -->
       </dependency>
 
       <dependency>
@@ -194,7 +194,7 @@
       <dependency>
         <groupId>org.jlab.jnp</groupId>
         <artifactId>jnp-hipo4</artifactId>
-        <version>4.5</version> <!-- from code.jlab.org/hallb/clas12/hipo-java; WARNING: if changed, check the `net.objecthunter:exp4j` version; see `docs/dependency_conflicts.md` -->
+        <version>4.5</version> <!-- WARNING: if changed, check the `net.objecthunter:exp4j` version; see `docs/dependency_conflicts.md` -->
       </dependency>
 
       <dependency>
@@ -241,16 +241,12 @@
         <scope>import</scope>
       </dependency>
 
-      <!-- BEGIN DEPENDENCY CONFLICT RESOLUTION -->
       <!--
-        the following dependency versions are specified to resolve dependency tree conflicts
-        - see also exclusions in `maven-enforcer-plugin`
+        resolve convergence conflict of `net.objecthunter:exp4j` by choosing the latest used by
+        - `org.jlab:groot:5.0.0`                 uses version 0.4.8
+        - `org.jlab.jnp:jnp-hipo4:4.5`           uses version 0.4.8
+        - `org.jlab.jnp:jnp-hipo:2.0-SNAPSHOT`   uses version 0.4.4
         - see `docs/dependency_conflicts.md` for more info
-      -->
-
-      <!--
-        resolve conflict between `org.jlab.jnp:jnp-hipo:jar:2.0-SNAPSHOT` and `org.jlab.jnp:jnp-hipo4:jar:4.5`
-        by choosing the later version of their `net.objecthunter:exp4j` dependency
       -->
       <dependency>
         <groupId>net.objecthunter</groupId>
@@ -259,9 +255,10 @@
       </dependency>
 
       <!--
-        resolve conflict between `org.jlab.coda:jclara` and `ai.djl:api`
+        resolve convergence conflict between `org.jlab.coda:jclara` and `ai.djl:api`
         by choosing the later version of their `com.google.code.gson:gson` dependency
         - `djl`'s `gson` version is here: https://github.com/deepjavalibrary/djl/blob/master/gradle/libs.versions.toml
+        - see `docs/dependency_conflicts.md` for more info
       -->
       <dependency>
         <groupId>com.google.code.gson</groupId>
@@ -270,16 +267,15 @@
       </dependency>
 
       <!--
-        resolve conflict between `j4ml:j4ml-clas12` and `clas-tracking`
+        resolve convergence conflict between `j4ml:j4ml-clas12` and `clas-tracking`
         by using the version of `org.ejml:ejml-simple` used by `j4ml:j4ml-clas12:jar:0.9-SNAPSHOT`
+        - see `docs/dependency_conflicts.md` for more info
       -->
       <dependency>
         <groupId>org.ejml</groupId>
         <artifactId>ejml-simple</artifactId>
         <version>0.40</version> <!-- WARNING: if changed, see `docs/dependency_conflicts.md` -->
       </dependency>
-
-      <!-- END DEPENDENCY CONFLICT RESOLUTION -->
 
     </dependencies>
   </dependencyManagement>
