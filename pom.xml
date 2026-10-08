@@ -20,12 +20,16 @@
 
   <repositories>
     <repository>
-      <id>code.jlab.org-hipo-java</id>  <!-- `jnp-hipo4` is now built and published from its own repository, https://code.jlab.org/hallb/clas12/hipo-java. Project 919's package registry is public -->
+      <id>code.jlab.org-hipo-java</id> <!-- for `jnp-hipo4` -->
       <url>https://code.jlab.org/api/v4/projects/919/packages/maven</url>
     </repository>
     <repository>
       <id>code.jlab.org-clara-java</id>
       <url>https://code.jlab.org/api/v4/projects/243/packages/maven</url>
+    </repository>
+    <repository>
+      <id>freehep-SLAC</id> <!-- for `jminuit` -->
+      <url>https://srs.slac.stanford.edu/nexus/content/groups/freehep-maven2-public</url>
     </repository>
     <repository>
       <id>clasweb-clas12maven</id>
@@ -138,8 +142,8 @@
 
       <dependency>
         <groupId>org.freehep</groupId>
-        <artifactId>jminuit</artifactId>
-        <version>1.0</version>
+        <artifactId>freehep-jminuit</artifactId>
+        <version>1.0.2</version>
       </dependency>
 
       <dependency>
