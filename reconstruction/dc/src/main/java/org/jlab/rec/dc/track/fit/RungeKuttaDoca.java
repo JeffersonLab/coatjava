@@ -1,6 +1,5 @@
 package org.jlab.rec.dc.track.fit;
 
-import java.util.ArrayList;
 import org.jlab.jnp.matrix.*;
 import org.jlab.clas.swimtools.Swim;
 
@@ -21,12 +20,11 @@ public class RungeKuttaDoca {
         swim.Bfield(sector, vec.x, vec.y, vec.z, bf);
 
         vec.B = Math.sqrt(bf[0]*bf[0] + bf[1]*bf[1] + bf[2]*bf[2]);
-        double s = vec.B;
         final double travelSign = Math.signum(z0 - vec.z);
         double BatMeas = 0;
 
         while(travelSign * vec.z < travelSign * z0) {
-            s = travelSign * stepSize;
+            double s = travelSign * stepSize;
             if (travelSign*(vec.z+s) > travelSign*z0) s = travelSign*Math.abs(z0-vec.z);
 
             this.RK4transport(sector, s, swim, vec);
