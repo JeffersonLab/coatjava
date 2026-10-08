@@ -1,8 +1,8 @@
 package org.jlab.rec.alert.AI;
 
-import org.apache.commons.lang3.mutable.MutableBoolean;
-
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * The TrackConstruction class is responsible for constructing all possible track 
@@ -81,18 +81,18 @@ public class TrackCandidatesGenerator {
      * @param number_of_track_candidates The current count of track candidates.
      * @return A list of all possible combinations of integers from {@code v1} and {@code v2}.
      */
-    private ArrayList<ArrayList<Integer>> cartesianProduct(ArrayList<ArrayList<Integer>> v1, ArrayList<Integer> v2, MutableBoolean too_much_track_candidates, int number_of_track_candidates) {
+    private ArrayList<ArrayList<Integer>> cartesianProduct(ArrayList<ArrayList<Integer>> v1, ArrayList<Integer> v2, AtomicBoolean too_much_track_candidates, int number_of_track_candidates) {
         ArrayList<ArrayList<Integer>> result = new ArrayList<>();
         for (ArrayList<Integer> i : v1) {
-            if (too_much_track_candidates.booleanValue()) break;
+            if (too_much_track_candidates.get()) break;
             for (int j : v2) {
-                if (too_much_track_candidates.booleanValue()) break;
+                if (too_much_track_candidates.get()) break;
                 ArrayList<Integer> n = new ArrayList<>(i);
                 n.add(j);
                 result.add(n);
 
                 if (number_of_track_candidates + result.size() >= MAX_NUMBER_OF_TRACK_CANDIDATES) {
-                    too_much_track_candidates.setValue(true);
+                    too_much_track_candidates.set(true);
                     break;
                 }
             }
@@ -155,8 +155,7 @@ public class TrackCandidatesGenerator {
                     superpreclusters_s5.add(all_superpreclusters.get(i));
             }
 
-            MutableBoolean too_much_track_candidates = new MutableBoolean(); // Need to be a mutable boolean to be able to change it in the cartesian_product method
-            too_much_track_candidates.setFalse();
+            AtomicBoolean too_much_track_candidates = new AtomicBoolean(false); // Needs to be mutable so cartesianProduct can set it
 
             // Find all possible combinations of superpreclusters on different superlayers
             ArrayList<ArrayList<Integer>> combinations_s1_s2 = cartesianProduct(new ArrayList<>(List.of(superpreclusters_s1)), superpreclusters_s2, too_much_track_candidates, number_of_track_candidates);
@@ -166,7 +165,7 @@ public class TrackCandidatesGenerator {
             
             // Keep track of the number of track candidates
             number_of_track_candidates += combinations_s1_s2_s3_s4_s5.size();
-            if (too_much_track_candidates.booleanValue()) sucess = false; // If the number of track candidates exceeds the maximum limit, set success to false
+            if (too_much_track_candidates.get()) sucess = false; // If the number of track candidates exceeds the maximum limit, set success to false
             
             // Add all track candidates to the list of all track candidates
             // And switch back from index to superprecluster
