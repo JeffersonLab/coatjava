@@ -19,18 +19,26 @@
   </modules>
 
   <repositories>
+    <!-- code.jlab.org package registries -->
     <repository>
-      <id>code.jlab.org-hipo-java</id> <!-- for `jnp-hipo4` -->
+      <!-- git repo:  https://code.jlab.org/hallb/clas12/hipo-java -->
+      <!-- artifacts: jnp-hipo4 -->
+      <id>code.jlab.org-hipo-java</id>
       <url>https://code.jlab.org/api/v4/projects/919/packages/maven</url>
     </repository>
     <repository>
+      <!-- git repo:  https://code.jlab.org/hallb/clas12/coatjava/clara-java -->
+      <!-- artifacts: jclara -->
       <id>code.jlab.org-clara-java</id>
       <url>https://code.jlab.org/api/v4/projects/243/packages/maven</url>
     </repository>
     <repository>
-      <id>freehep-SLAC</id> <!-- for `jminuit` -->
-      <url>https://srs.slac.stanford.edu/nexus/content/groups/freehep-maven2-public</url>
+      <!-- git repo:  https://code.jlab.org/hallb/clas12/jminuit-maven-mirror -->
+      <!-- artifacts: freehep-jminuit -->
+      <id>code.jlab.org-freehep-jminuit</id>
+      <url>https://code.jlab.org/api/v4/projects/1079/packages/maven</url>
     </repository>
+    <!-- clasweb repositories -->
     <repository>
       <id>clasweb-clas12maven</id>
       <url>https://clasweb.jlab.org/.clas12maven</url>
