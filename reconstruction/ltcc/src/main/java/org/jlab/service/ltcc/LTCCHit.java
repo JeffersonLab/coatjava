@@ -7,7 +7,6 @@ import org.jlab.utils.groups.IndexedTable;
 
 import java.util.LinkedList;
 import java.util.List;
-import jakarta.annotation.Nullable;
 import org.jlab.detector.banks.RawDataBank;
 import org.jlab.geom.prim.Vector3D;
 
@@ -86,9 +85,9 @@ public final class LTCCHit {
     
     LTCCHit(RawDataBank bank, 
             int index, 
-            @Nullable IndexedTable spe, 
-            @Nullable IndexedTable timing_offset,
-            @Nullable IndexedTable status_table) {
+            IndexedTable spe, 
+            IndexedTable timing_offset,
+            IndexedTable status_table) {
        this.sector = bank.getByte("sector", index);
        this.segment = bank.getShort("component", index);
        this.side = bank.trueOrder(index) + 1;
