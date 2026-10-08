@@ -1,3 +1,27 @@
+
+configuration:
+  services:
+    MAGFIELDS:
+      magfieldSolenoidMap: Symm_solenoid_r601_phi1_z1201_13June2018.dat
+      magfieldTorusMap: Symm_torus_r2501_phi16_z251_24Apr2018.dat
+    DCCR:
+      dcT2DFunc: "Exponential"  
+      rawBankGroup: "NODENOISE"
+    DCHB:
+      dcT2DFunc: "Exponential"  
+    DCTB:
+      dcT2DFunc: "Exponential"  
+    DCTAI:
+      dcT2DFunc: "Exponential"
+      outputBankPrefix: "AI"
+    DCHTAI:
+      outputBankPrefix: "AI"
+    EBTAI:
+      outputBankPrefix: "RECAI"
+      
+mime-types:
+  - binary/data-hipo
+
 io-services:
   reader:
     class: org.jlab.io.clara.Clas12Reader
@@ -5,6 +29,8 @@ io-services:
   writer:
     class: org.jlab.io.clara.Clas12Writer
     name: Clas12Writer
+
+
 services:
   - class: org.jlab.clas.reco.DecoderEngine
     name: DECO
@@ -20,18 +46,16 @@ services:
     name: FTEB
   - class: org.jlab.service.raster.RasterEngine
     name: RASTER
-# DC clustering: nominal algoritm, filled the cluster bank for ai and conventional tracking
+  - class: org.jlab.service.ai.DCDenoiseEngine
+    name: DCDN    
   - class: org.jlab.service.dc.DCHBClustering
     name: DCCR
-# This is where the AI plugin would go.  THe AI code reads the HB clusters.  
-  - class: org.jlab.service.mltn.MLTDEngine
-    name: MLTD
-# DC using clustering: regular HB tracking
+  - class: org.jlab.service.ai.DCClsComboEngine
+    name: DCCC
   - class: org.jlab.service.dc.DCHBPostClusterConv
     name: DCHB
-# DC using clustering on AI hits: NN assisted HB tracking
-  - class: org.jlab.service.dc.DCHBPostClusterAI
-    name: DCHAI
+  - class: org.jlab.service.dc.DCHBTrackingAI
+    name: DCHTAI
   - class: org.jlab.service.ftof.FTOFHBEngine
     name: FTOFHB
   - class: org.jlab.service.ec.ECEngine
@@ -72,36 +96,10 @@ services:
     name: RICH
   - class: org.jlab.service.rtpc.RTPCEngine
     name: RTPC
+  - class: org.jlab.rec.service.vtx.VTXEngine
+    name: VTX
   - class: org.jlab.calibration.service.CalibBanksEngine
     name: CALIB
-configuration:
-  services:
-    MAGFIELDS:
-      magfieldSolenoidMap: Symm_solenoid_r601_phi1_z1201_13June2018.dat
-      magfieldTorusMap: Symm_torus_r2501_phi16_z251_24Apr2018.dat
-# examples of yaml settings for magfields 
-#      magfieldSolenoidShift: "0.0"
-#      magfieldTorusXShift: "0.0"
-#      magfieldTorusYShift: "0.0"
-#      magfieldTorusZShift: "0.0"
-# examples of yaml settings for DC services 
-#    DCRC:
-#      dcGeometryVariation: rga_spring2018
-#      dcT2DFunc: "Polynomial"
-#      dcWireDistortion: "true"
-# example of how to set variation and timestamp for a service, uncomment to use
-#    EBTB:
-#      variation: default
-#      timestamp: 08/22/2018
-    DCCR:
-      dcT2DFunc: "Exponential"  
-    DCHB:
-      dcT2DFunc: "Exponential"  
-    DCHAI:
-      dcT2DFunc: "Exponential"  
-    DCTB:
-      dcT2DFunc: "Exponential"  
-    DCTAI:
-      dcT2DFunc: "Exponential"  
+
 mime-types:
   - binary/data-hipo
