@@ -198,24 +198,6 @@
       </dependency>
 
       <dependency>
-        <groupId>j4ml</groupId>
-        <artifactId>j4ml-neuroph</artifactId>
-        <version>0.9-SNAPSHOT</version>
-      </dependency>
-
-      <dependency>
-        <groupId>j4ml</groupId>
-        <artifactId>j4ml-data</artifactId>
-        <version>0.9-SNAPSHOT</version>
-      </dependency>
-
-      <dependency>
-        <groupId>j4ml</groupId>
-        <artifactId>j4ml-clas12</artifactId>
-        <version>0.9-SNAPSHOT</version> <!-- WARNING: if changed, check the `org.ejml:ejml-simple` version; see `docs/dependency_conflicts.md` -->
-      </dependency>
-
-      <dependency>
         <groupId>org.jlab.ccdbrcdb</groupId>
         <artifactId>ccdbrcdb</artifactId>
         <version>2.0</version>
