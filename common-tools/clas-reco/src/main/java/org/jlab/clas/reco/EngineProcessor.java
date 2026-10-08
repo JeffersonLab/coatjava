@@ -19,6 +19,7 @@ import org.jlab.clara.engine.EngineDataType;
 import java.util.Arrays;
 import org.jlab.coda.jevio.EvioException;
 import org.jlab.detector.decode.CLASDecoder4;
+import org.jlab.detector.serial.Occupancer;
 import org.jlab.io.evio.EvioDataEvent;
 import org.jlab.io.evio.EvioSource;
 import org.jlab.io.hipo.HipoDataEvent;
@@ -42,7 +43,8 @@ public class EngineProcessor {
     private SchemaFactory banksToKeep = null;
     private final List<String> schemaExempt = Arrays.asList("RUN::config","DC::tdc");
 
-    private CLASDecoder4 decoder = new CLASDecoder4();
+    private final CLASDecoder4 decoder = new CLASDecoder4();
+    private final Occupancer occupancer = new Occupancer();
 
     public EngineProcessor(){}
 
@@ -316,6 +318,7 @@ public class EngineProcessor {
     public void processEvent(DataEvent event, HipoDataSync writer) {
         processEvent(event);
         removeBanks(event);
+        occupancer.process(((HipoDataEvent)event).getHipoEvent());
         writer.writeEvent(event);
     }
 

@@ -8,6 +8,7 @@ import org.jlab.detector.calib.utils.ConstantsManager;
 import org.jlab.detector.helicity.HelicitySequenceDelayed;
 import org.jlab.detector.serial.SerialHoncho;
 import org.jlab.detector.serial.PostProcessor;
+import org.jlab.detector.serial.Occupancer;
 import org.jlab.jnp.hipo4.data.Bank;
 import org.jlab.jnp.hipo4.data.Event;
 import org.jlab.jnp.hipo4.data.SchemaFactory;
@@ -28,6 +29,7 @@ import org.json.JSONObject;
  */
 public class Clas12Writer extends HipoToHipoWriter {
 
+    Occupancer occupancer;
     SerialHoncho serial;
     Bank runConfig;
     ConstantsManager conman;
@@ -40,6 +42,7 @@ public class Clas12Writer extends HipoToHipoWriter {
     int paraTriggerPrescale;
 
     private void init(JSONObject opts) {
+        occupancer = new Occupancer();
         fullSchema = new SchemaFactory();
         fullSchema.initFromDirectory(FileUtils.getEnvironmentPath("CLAS12DIR","etc/bankdefs/hipo4"));
         serial = new SerialHoncho(fullSchema);
@@ -78,6 +81,7 @@ public class Clas12Writer extends HipoToHipoWriter {
     protected void writeEvent(Object event) throws EventWriterException {
         Event t = serial.read((Event)event);
         if (!t.isEmpty()) writer.addEvent(t, 1);
+        occupancer.process(((Event)event));
         super.writeEvent(event);
         writeRaw((Event)event, t);
     }
