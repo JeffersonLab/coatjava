@@ -60,20 +60,16 @@ package eu.mihosoft.vrl.v3d.ext.org.poly2tri;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 import java.util.ArrayDeque;
 import java.util.Collections;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-
+import java.util.logging.Logger;
 
 /**
  * @author Thomas ??? (thahlen@gmail.com)
  */
 class DTSweepContext extends TriangulationContext<DTSweepDebugContext>
 {
-    private final static Logger logger = LoggerFactory.getLogger( DTSweepContext.class );
+    private final static Logger logger = Logger.getLogger( DTSweepContext.class.getName() );
 
     // Inital triangle factor, seed triangle will extend 30% of 
     // PointSet width to both left and right.
