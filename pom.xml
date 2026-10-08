@@ -124,14 +124,8 @@
 
       <dependency>
         <groupId>org.apache.commons</groupId>
-        <artifactId>commons-lang3</artifactId>
-        <version>3.20.0</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.apache.commons</groupId>
         <artifactId>commons-text</artifactId>
-        <version>1.15.0</version>
+        <version>1.15.0</version> <!-- WARNING: if changed, check the `org.apache.commons:commons-lang3` version; see `docs/dependency_conflicts.md` -->
       </dependency>
 
       <dependency>
@@ -203,7 +197,7 @@
 
       <dependency>
         <groupId>j4ml</groupId>
-        <artifactId>j4ml-neuroph</artifactId>
+        <artifactId>j4ml-neuroph</artifactId> <!-- WARNING: if changed, check the `org.apache.commons:commons-lang3` version; see `docs/dependency_conflicts.md` -->
         <version>0.9-SNAPSHOT</version>
       </dependency>
 
@@ -279,6 +273,18 @@
         <groupId>org.ejml</groupId>
         <artifactId>ejml-simple</artifactId>
         <version>0.40</version> <!-- WARNING: if changed, see `docs/dependency_conflicts.md` -->
+      </dependency>
+
+      <!--
+        resolve convergence conflict of `org.apache.commons:commons-lang3` by choosing the latest used by
+        - j4ml:j4ml-neuroph:0.9-SNAPSHOT consumes com.github.neuroph:neuroph-core:2.98 which uses version 3.3.2
+        - org.apache.commons:commons-text:1.15.0 uses version 3.20.0
+        - see `docs/dependency_conflicts.md` for more info
+      -->
+      <dependency>
+        <groupId>org.apache.commons</groupId>
+        <artifactId>commons-lang3</artifactId>
+        <version>3.20.0</version> <!-- WARNING: if changed, see `docs/dependency_conflicts.md` -->
       </dependency>
 
     </dependencies>
