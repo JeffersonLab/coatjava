@@ -99,12 +99,6 @@
       </dependency>
 
       <dependency>
-        <groupId>org.slf4j</groupId>
-        <artifactId>slf4j-api</artifactId>
-        <version>2.0.19</version>
-      </dependency>
-
-      <dependency>
         <groupId>org.apache.commons</groupId>
         <artifactId>commons-math3</artifactId>
         <version>3.6.1</version>
@@ -185,8 +179,12 @@
 
       <dependency>
         <groupId>j4ml</groupId>
-        <artifactId>j4ml-neuroph</artifactId> <!-- WARNING: if changed, check the `org.apache.commons:commons-lang3` version; see `docs/dependency_conflicts.md` -->
-        <version>0.9-SNAPSHOT</version>
+        <artifactId>j4ml-neuroph</artifactId>
+        <version>0.9-SNAPSHOT</version> <!-- WARNING: if changed:
+          - check the `org.slf4j:slf4j-api` version
+          - check the `org.apache.commons:commons-lang3` version
+          - see `docs/dependency_conflicts.md` for more info
+        -->
       </dependency>
 
       <dependency>
@@ -273,6 +271,19 @@
         <groupId>org.apache.commons</groupId>
         <artifactId>commons-lang3</artifactId>
         <version>3.20.0</version> <!-- WARNING: if changed, see `docs/dependency_conflicts.md` -->
+      </dependency>
+
+      <!--
+        resolve convergence conflict of `org.slf4j:slf4j-api` inherent in dependencies consumed by
+        `j4ml:j4ml-neuroph:jar:0.9-SNAPSHOT` by choosing the latest version:
+        - com.github.neuroph:neuroph-core:2.98 uses version 1.7.5
+        - com.github.neuroph:neuroph-core:2.98 also consumes ch.qos.logback:logback-classic:1.1.2, which uses version 1.7.6
+        - see `docs/dependency_conflicts.md` for more info
+      -->
+      <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-api</artifactId>
+        <version>1.7.6</version> <!-- WARNING: if changed, see `docs/dependency_conflicts.md` -->
       </dependency>
 
     </dependencies>
