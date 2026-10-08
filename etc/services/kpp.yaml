@@ -1,4 +1,3 @@
-
 configuration:
   services:
     MAGFIELDS:
@@ -18,18 +17,6 @@ configuration:
       outputBankPrefix: "AI"
     EBTAI:
       outputBankPrefix: "RECAI"
-      
-mime-types:
-  - binary/data-hipo
-
-io-services:
-  reader:
-    class: org.jlab.io.clara.Clas12Reader
-    name: Clas12Reader
-  writer:
-    class: org.jlab.io.clara.Clas12Writer
-    name: Clas12Writer
-
 
 services:
   - class: org.jlab.clas.reco.DecoderEngine
@@ -100,6 +87,14 @@ services:
     name: VTX
   - class: org.jlab.calibration.service.CalibBanksEngine
     name: CALIB
+
+io-services:
+  reader:
+    class: org.jlab.io.clara.Clas12Reader
+    name: Clas12Reader
+  writer:
+    class: org.jlab.io.clara.Clas12Writer
+    name: Clas12Writer
 
 mime-types:
   - binary/data-hipo
