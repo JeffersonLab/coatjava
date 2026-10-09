@@ -12,7 +12,6 @@ import org.jlab.rec.dc.Constants;
 import org.jlab.rec.dc.banks.Banks;
 import org.jlab.clas.tracking.kalmanfilter.zReference.KFitter;
 import org.jlab.clas.tracking.kalmanfilter.zReference.DAFilter;
-import org.jlab.rec.ai.dcHBTrackState.HBTrackStateEstimator;
 
 public class DCEngine extends ReconstructionEngine {
 
@@ -218,7 +217,7 @@ public class DCEngine extends ReconstructionEngine {
             this.getBanks().init(outBankPrefix);
         if(inBankPrefix!=null && outBankPrefix!=null) 
             this.getBanks().init(inBankPrefix, outBankPrefix);
-        LOGGER.log(Level.INFO,"["+this.getName()+"] bank names set for " + this.getBanks().toString());       
+        LOGGER.log(Level.INFO, () -> "["+this.getName()+"] bank names set for " + this.getBanks().toString());       
     }
 
     public Banks getBanks() {
@@ -238,7 +237,7 @@ public class DCEngine extends ReconstructionEngine {
             return 0;
         }
         DataBank bank = event.getBank("RUN::config");
-        LOGGER.log(Level.FINEST,"["+this.getName()+"] EVENT "+bank.getInt("event", 0));       
+        LOGGER.log(Level.FINEST, () -> "["+this.getName()+"] EVENT "+bank.getInt("event", 0));       
         
         int run = bank.getInt("run", 0);
         return run;

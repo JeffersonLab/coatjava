@@ -148,11 +148,11 @@ public class HitReader {
         if(dcrbjitters!=null && reverseTT!=null) {
             long hash = IndexedTable.DEFAULT_GENERATOR.hashCode(sector, layer, wire, order);
             if(!reverseTT.hasEntryByHash(hash))
-                LOGGER.log(Level.SEVERE, "Missing TT entry for slco = " + sector + " " + layer + " " + wire + " " + order);
+                LOGGER.log(Level.SEVERE, () -> "Missing TT entry for slco = " + sector + " " + layer + " " + wire + " " + order);
             int crate = reverseTT.getIntValueByHash("crate", hash);
             int slot  = reverseTT.getIntValueByHash("slot",  hash);
             if(!dcrbjitters.hasEntry(crate, slot))
-                LOGGER.log(Level.SEVERE, "Missing DC::jitter entry for crate/slot = " + crate + "/" + slot);
+                LOGGER.log(Level.SEVERE, () -> "Missing DC::jitter entry for crate/slot = " + crate + "/" + slot);
             jitter = dcrbjitters.getIntValue("jitter", crate, slot);
         }    
         return jitter;
@@ -315,7 +315,7 @@ public class HitReader {
         String pointName   = bankNames.getInputIdsBank();
         String recBankName = bankNames.getRecEventBank();
         
-        LOGGER.log(Level.FINEST,"Reading hb banks for "+ bankName + ", " + pointName + " " + recBankName);
+        LOGGER.log(Level.FINEST, () -> "Reading hb banks for "+ bankName + ", " + pointName + " " + recBankName);
         
         _HBHits = new ArrayList<>();
 
@@ -439,7 +439,7 @@ public class HitReader {
             //if(hit.betaFlag == 0)
             if(passHit(hit.betaFlag)) {
                 this._HBHits.add(hit);        
-                LOGGER.log(Level.FINEST, "Passing "+hit.printInfo()+" for "+ bankNames.getHitsBank());            
+                LOGGER.log(Level.FINEST, () -> "Passing "+hit.printInfo()+" for "+ bankNames.getHitsBank());            
             }
         }
     }
@@ -512,7 +512,7 @@ public class HitReader {
                         hit.NNTrkP      = this.aimatch.get(clusterID)[0];
                         hit.NNTrkTheta  = this.aimatch.get(clusterID)[1];
                         hit.NNTrkPhi    = this.aimatch.get(clusterID)[2];
-                        LOGGER.log(Level.FINEST, "NN"+hit.printInfo());
+                        LOGGER.log(Level.FINEST, () -> "NN"+hit.printInfo());
                         this._DCHits.add(hit);
                     }
                 }

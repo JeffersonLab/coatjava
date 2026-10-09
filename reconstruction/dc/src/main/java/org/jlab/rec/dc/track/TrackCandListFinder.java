@@ -719,9 +719,9 @@ public class TrackCandListFinder {
 
     public void removeOverlappingTracksOld(List<Track> trkcands) {
         if(Constants.DEBUG) {
-            LOGGER.log(Level.FINEST, "Found "+trkcands.size()+" HB seeds ");
+            LOGGER.log(Level.FINEST, () -> "Found "+trkcands.size()+" HB seeds ");
             for(int i = 0; i< trkcands.size(); i++) {
-                LOGGER.log(Level.FINEST, "cand "+i);
+                LOGGER.log(Level.FINEST, "cand {0}", i);
                 for(Cross c : trkcands.get(i)) {
                     LOGGER.log(Level.FINEST, c.printInfo());
                 }
@@ -747,9 +747,9 @@ public class TrackCandListFinder {
             trkcands.add(entry.getValue());
         });
         if(Constants.DEBUG) {
-            LOGGER.log(Level.FINEST, "After Overlap Remvr "+trkcands.size()+" HB seeds ");
+            LOGGER.log(Level.FINEST, () -> "After Overlap Remvr "+trkcands.size()+" HB seeds ");
             for(int i = 0; i< trkcands.size(); i++) {
-                LOGGER.log(Level.FINEST, "cand "+i);
+                LOGGER.log(Level.FINEST, "cand {0}", i);
                 for(Cross c : trkcands.get(i)) {
                     LOGGER.log(Level.FINEST, c.printInfo());
                 }
@@ -760,9 +760,9 @@ public class TrackCandListFinder {
     
     public void removeOverlappingTracks(List<Track> trkcands) {
         if(Constants.DEBUG) {
-            LOGGER.log(Level.FINEST, "Found "+trkcands.size()+" HB seeds ");
+            LOGGER.log(Level.FINEST, () -> "Found "+trkcands.size()+" HB seeds ");
             for(int i = 0; i< trkcands.size(); i++) {
-                LOGGER.log(Level.FINEST, "cand "+i);
+                LOGGER.log(Level.FINEST, "cand {0}", i);
                 for(Cross c : trkcands.get(i)) {
                     LOGGER.log(Level.FINEST, c.printInfo());
                 }
