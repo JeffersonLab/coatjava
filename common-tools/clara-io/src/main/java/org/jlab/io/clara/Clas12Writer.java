@@ -7,7 +7,6 @@ import org.jlab.clara.std.services.EventWriterException;
 import org.jlab.detector.calib.utils.ConstantsManager;
 import org.jlab.detector.helicity.HelicitySequenceDelayed;
 import org.jlab.detector.serial.SerialHoncho;
-import org.jlab.detector.serial.PostProcessor;
 import org.jlab.jnp.hipo4.data.Bank;
 import org.jlab.jnp.hipo4.data.Event;
 import org.jlab.jnp.hipo4.data.SchemaFactory;
@@ -32,7 +31,6 @@ public class Clas12Writer extends HipoToHipoWriter {
     Bank runConfig;
     ConstantsManager conman;
     SchemaFactory fullSchema;
-    boolean postprocess;
 
     HipoWriterSorted paraWriter;
     long paraCount;
@@ -46,7 +44,6 @@ public class Clas12Writer extends HipoToHipoWriter {
         runConfig = new Bank(fullSchema.getSchema("RUN::config"));
         conman = new ConstantsManager();
         conman.init("/runcontrol/hwp","/runcontrol/helicity");
-        postprocess = opts.optBoolean("postprocess", false);
         paraTriggerMask = opts.optLong("paraTriggerMask", 0);
         paraTriggerPrescale = opts.optInt("paraTriggerPrescale", 0);
         if (opts.has("variation")) conman.setVariation(opts.getString("variation"));
@@ -96,7 +93,6 @@ public class Clas12Writer extends HipoToHipoWriter {
     protected void closeWriter() {
         serial.closure(writer);
         super.closeWriter();
-        if (postprocess) postprocess();
         serial.clear();
         if (paraTriggerMask > 0) paraWriter.close();
     }
@@ -116,28 +112,6 @@ public class Clas12Writer extends HipoToHipoWriter {
                 return runConfig.getInt("run",0);
         }
         return 0;
-    }
-
-    /**
-     * Copy helicity/charge tag-1 information to all events.
-     */
-    private void postprocess() {
-        int d = conman.getConstants(getRunNumber(), "/runcontrol/helicity").getIntValue("delay",0,0,0);
-        HelicitySequenceDelayed helicity = new HelicitySequenceDelayed(d);
-        helicity.addStream(serial.getHelicities());
-        PostProcessor p = new PostProcessor(List.of(filename), fullSchema, helicity, serial.getScalers());
-        HipoReader r = new HipoReader();
-        r.open(filename);
-        Event e = new Event();
-        writer.open("pp_"+filename);
-        while (r.hasNext()) {
-            r.nextEvent(e);
-            p.processEvent(e);
-            HipoToHipoWriter.writeEvent(writer, e, schemaBankList);
-        }
-        writer.close();
-        new File(filename).delete();
-        new File("pp_"+filename).renameTo(new File(filename));
     }
 
 }
