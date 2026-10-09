@@ -96,11 +96,13 @@ public class KFitter extends AKFitter {
         if(mode==1) {
             double chi2 = 0;
             for(int k = 1; k< mv.measurements.size(); k++) {
-                if(!mv.measurements.get(k).skip) {
-                    double dh    = mv.dh(k, sv.smoothed().get(k));
-                    double error = mv.measurements.get(k).error;
-                    chi2 += dh*dh / error/error;
-                }
+                if(mv.measurements.get(k).skip) continue;
+                // same rule as AKFitter.calc_chi2: a null smoothed state contributes nothing,
+                // rather than the NaN dh() returns for it, which would make this chi2 NaN
+                if(sv.smoothed().get(k)==null && !LEGACY_NULL_SMOOTH_FAIL) continue;
+                double dh    = mv.dh(k, sv.smoothed().get(k));
+                double error = mv.measurements.get(k).error;
+                chi2 += dh*dh / error/error;
             }
             return chi2;           
         }
