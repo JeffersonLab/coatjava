@@ -719,9 +719,9 @@ public class TrackCandListFinder {
 
     public void removeOverlappingTracksOld(List<Track> trkcands) {
         if(Constants.DEBUG) {
-            LOGGER.log(Level.FINEST, "Found "+trkcands.size()+" HB seeds ");
+            LOGGER.log(Level.FINEST, () -> "Found "+trkcands.size()+" HB seeds ");
             for(int i = 0; i< trkcands.size(); i++) {
-                LOGGER.log(Level.FINEST, "cand "+i);
+                LOGGER.log(Level.FINEST, "cand {0}", i);
                 for(Cross c : trkcands.get(i)) {
                     LOGGER.log(Level.FINEST, c.printInfo());
                 }
@@ -747,9 +747,9 @@ public class TrackCandListFinder {
             trkcands.add(entry.getValue());
         });
         if(Constants.DEBUG) {
-            LOGGER.log(Level.FINEST, "After Overlap Remvr "+trkcands.size()+" HB seeds ");
+            LOGGER.log(Level.FINEST, () -> "After Overlap Remvr "+trkcands.size()+" HB seeds ");
             for(int i = 0; i< trkcands.size(); i++) {
-                LOGGER.log(Level.FINEST, "cand "+i);
+                LOGGER.log(Level.FINEST, "cand {0}", i);
                 for(Cross c : trkcands.get(i)) {
                     LOGGER.log(Level.FINEST, c.printInfo());
                 }
@@ -760,9 +760,9 @@ public class TrackCandListFinder {
     
     public void removeOverlappingTracks(List<Track> trkcands) {
         if(Constants.DEBUG) {
-            LOGGER.log(Level.FINEST, "Found "+trkcands.size()+" HB seeds ");
+            LOGGER.log(Level.FINEST, () -> "Found "+trkcands.size()+" HB seeds ");
             for(int i = 0; i< trkcands.size(); i++) {
-                LOGGER.log(Level.FINEST, "cand "+i);
+                LOGGER.log(Level.FINEST, "cand {0}", i);
                 for(Cross c : trkcands.get(i)) {
                     LOGGER.log(Level.FINEST, c.printInfo());
                 }
@@ -969,7 +969,7 @@ public class TrackCandListFinder {
                 startTime = System.currentTimeMillis();
             }
             Trajectory traj = trjFind.findTrajectory(aCrossList, DcDetector, dcSwim);
-            LOGGER.log(Level.FINEST, "Trajectory finding = " + (System.currentTimeMillis() - startTime));
+            LOGGER.log(Level.FINEST, () -> "Trajectory finding = " + (System.currentTimeMillis() - startTime));
             
 
             if (traj == null) {
@@ -991,7 +991,7 @@ public class TrackCandListFinder {
                             cand.get(0).get_Dir().y() / cand.get(0).get_Dir().z());
                     cand.set_StateVecAtReg1MiddlePlane(VecAtReg1MiddlePlane);
 
-                    LOGGER.log(Level.FINEST, "Kalman fitter - 2 = " + (System.currentTimeMillis() - startTime));
+                    LOGGER.log(Level.FINEST, () -> "Kalman fitter - 2 = " + (System.currentTimeMillis() - startTime));
 
                     KFitterStraight kFZRef = new KFitterStraight(true, 1, 1, dcSwim, Constants.getInstance().Z, Libr.JNP);
                     List<Surface> measSurfaces = getMeasSurfaces(cand, DcDetector);
@@ -1070,7 +1070,7 @@ public class TrackCandListFinder {
             }
             Trajectory traj = trjFind.findTrajectory(aCrossList, DcDetector, dcSwim);
             
-            LOGGER.log(Level.FINEST, "Trajectory finding = " + (System.currentTimeMillis() - startTime));
+            LOGGER.log(Level.FINEST, () -> "Trajectory finding = " + (System.currentTimeMillis() - startTime));
             
 
             if (traj == null) {
@@ -1138,7 +1138,7 @@ public class TrackCandListFinder {
                         }
                         int q = this.calcInitTrkQ(traj.getA(), TORSCALE);
                         
-                        LOGGER.log(Level.FINEST, "calcInitTrkQ = " + (System.currentTimeMillis() - startTime));
+                        LOGGER.log(Level.FINEST, () -> "calcInitTrkQ = " + (System.currentTimeMillis() - startTime));
 
                         if (p > 11) {
                             p = 11;
@@ -1161,7 +1161,7 @@ public class TrackCandListFinder {
                         
                         final int crossIdxinList = cand.get(1).isPseudoCross ? 0 : 1;
 
-                        LOGGER.log(Level.FINEST, "Kalman fitter - 2 = " + (System.currentTimeMillis() - startTime));
+                        LOGGER.log(Level.FINEST, () -> "Kalman fitter - 2 = " + (System.currentTimeMillis() - startTime));
 
                         KFitter kFZRef = new KFitter(true, 10, 1, dcSwim, Constants.getInstance().Z, Libr.JNP);
                         List<Surface> measSurfaces = getMeasSurfaces(cand, DcDetector);

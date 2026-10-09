@@ -1,7 +1,6 @@
 package org.jlab.rec.dc.trajectory;
 
 import java.util.Random;
-//import org.apache.commons.math3.util.FastMath;
 import org.jlab.clas.clas.math.FastMath;
 import org.jlab.clas.swimtools.Swim;
 import org.jlab.geom.prim.Line3D;

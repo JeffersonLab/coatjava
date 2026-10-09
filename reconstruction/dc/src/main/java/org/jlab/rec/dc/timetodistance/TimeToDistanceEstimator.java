@@ -1,7 +1,5 @@
 package org.jlab.rec.dc.timetodistance;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.jlab.rec.dc.Constants;
 import static org.jlab.rec.dc.timetodistance.TableLoader.BfieldValues;
 import static org.jlab.rec.dc.timetodistance.TableLoader.calc_Time;
