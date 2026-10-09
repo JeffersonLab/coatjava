@@ -58,3 +58,6 @@ hs_err_pid*
 
 bin/evio2hipotest
 export.sh
+
+*.txt
+

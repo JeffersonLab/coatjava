@@ -33,6 +33,9 @@ public class SerialHoncho {
     Schema recEvent;
     Schema helScaler;
     Schema helicityAdc;
+    Schema runScaler;
+    Schema rawScaler;
+    Schema epics;
     volatile ConstantsManager conman;
     volatile TreeMap<Integer,Integer> eventUnix;
     volatile HelicitySequence helicitySequence;
@@ -48,12 +51,19 @@ public class SerialHoncho {
         recEvent = schema.getSchema("REC::Event");
         helicityAdc = schema.getSchema("HEL::adc");
         helScaler = schema.getSchema("HEL::scaler");
+        runScaler = schema.getSchema("RUN::scaler");
+        rawScaler = schema.getSchema("RAW::scaler");
+        epics = schema.getSchema("RAW::epics");
         scalers = new DaqScalersSequence(schema);
         helicities = new TreeSet<>();
         eventUnix = new TreeMap<>();
         tag1banks = new Schema[TAG1BANKS.length];
         for (int i=0; i<tag1banks.length; ++i)
             tag1banks[i] = schema.getSchema(TAG1BANKS[i]);
+    }
+
+    public boolean containsSerial(Event e) {
+        return e.isEmpty() ? false : e.hasBank(rawScaler) || e.hasBank(epics);
     }
 
     /**
@@ -182,16 +192,16 @@ public class SerialHoncho {
      * @param runConfig
      * @return 
      */
-    Event getUnixEvent(Bank config) {
+    Event getUnixEvent(Bank runConfig) {
         Bank unix = new Bank(schema.getSchema("RUN::unix"), eventUnix.size());
         int row = 0;
         for (int evno : eventUnix.keySet()) {
             unix.putInt("event", row, evno);
-            unix.putInt("unixtime",row, eventUnix.get(evno));
+            unix.putInt("unixtime", row, eventUnix.get(evno));
             row++;
         }
         Event e = new Event();
-        e.write(config);
+        e.write(runConfig);
         e.write(unix);
         return e;
     }

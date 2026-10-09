@@ -1,0 +1,627 @@
+package org.jlab.clas.reco;
+
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.TimerTask;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import org.jlab.coda.jevio.EvioException;
+import org.jlab.detector.decode.CLASDecoder;
+import org.jlab.detector.decode.CLASDecoderPool;
+import org.jlab.detector.serial.Occupancer;
+import org.jlab.detector.serial.SerialHoncho;
+import org.jlab.io.evio.EvioDataEvent;
+import org.jlab.io.evio.EvioSource;
+import org.jlab.io.hipo.HipoDataEvent;
+import org.jlab.jnp.hipo4.data.Bank;
+import org.jlab.jnp.hipo4.data.Event;
+import org.jlab.jnp.hipo4.data.SchemaFactory;
+import org.jlab.jnp.hipo4.io.HipoReader;
+import org.jlab.jnp.hipo4.io.HipoWriterSorted;
+import org.jlab.utils.ClaraYaml;
+import org.jlab.utils.benchmark.Benchmark;
+import org.jlab.utils.benchmark.BenchmarkTimer;
+import org.jlab.utils.benchmark.ProgressPrintout;
+import org.jlab.utils.options.OptionParser;
+import org.jlab.utils.system.ClasUtilsFile;
+import org.json.JSONObject;
+
+/**
+ * 
+ * @author baltzell
+ */
+final class ReconMutil {
+
+    static final boolean COLLECT_GARBAGE = false;
+
+    static final String[] BENCHMARK_NAMES = new String[]{"evio","deco","serial","post","write"};
+    
+    // Performance parameters:
+    final int BENCH_SECONDS = 30;
+    final int EVENTS_PER_CHUNK = 100;
+
+    // Static parameters:
+    int maxEvents;
+    int skipEvents;
+    ClaraYaml yaml;
+    OptionParser parser;
+    double[] fields = null;
+    String taskset;
+
+    // File I/O:
+    Object reader;
+    HipoWriterSorted writer;
+    List<Bank> schemaBankList = new ArrayList<>();
+    SchemaFactory fullSchema;
+    
+    // Processors:
+    SerialHoncho serial;
+    Occupancer occupancer = new Occupancer();
+    CLASDecoderPool decoders = new CLASDecoderPool(64,"default",null);
+    Map<String,ReconstructionEngine> engines = new LinkedHashMap<>();
+
+    // Threads:
+    CompletableFuture readerThread;
+    CompletableFuture writerThread;
+    ConcurrentLinkedQueue<CompletableFuture> decoThreads = new ConcurrentLinkedQueue<>();
+    ConcurrentLinkedQueue<CompletableFuture> procThreads = new ConcurrentLinkedQueue<>();
+
+    // Queues:
+    ConcurrentLinkedQueue<List<Object>> decoQueue = new ConcurrentLinkedQueue<>();
+    ConcurrentLinkedQueue<List<HipoDataEvent>> procQueue = new ConcurrentLinkedQueue<>();
+    ConcurrentLinkedQueue<List<Event>> writeQueue = new ConcurrentLinkedQueue<>();
+
+    // Progress counters:
+    volatile int readEvents;
+    volatile int failEvents;
+    volatile int fileEvents;
+    volatile int maxFileEvents;
+    volatile int writeEvents;
+    volatile AtomicInteger taggedEvents = new AtomicInteger();
+    volatile ProgressPrintout progress = new ProgressPrintout();
+    volatile Benchmark benchmark = null;
+    TimerTask statsShow = new TimerTask() { @Override public void run() { show(); } };
+
+    // Control flags:
+    final Object serialLock = new Object();
+    AtomicInteger serialTrigger = new AtomicInteger(0);
+   
+    ReconMutil(OptionParser parser) {
+        init(parser);
+    }
+
+    /**
+     * The thread launcher and collector.
+     * @param threads number of threads
+     * @param output name of output file to write
+     * @param input names of input files to read
+     */
+    void launch(int[] threads, String output, String... input) {
+
+        reset();
+
+        System.out.println(String.format("recon-mutil::  spawning 2*%d+2 threads",threads[0]));
+        
+        // start a period status printout:
+        ReconUtil.runPeriodic(10, statsShow);
+        
+        // one reader thread:
+        readerThread = ReconUtil.launch(CompletableFuture.runAsync(() -> { reader(threads[0], input); }));
+
+        // some decoder threads:
+        for (int i=0; i<Math.max(8,threads[0]); i++) {
+            final int j = i;
+            ReconUtil.addAndRemove(decoThreads, CompletableFuture.runAsync(() -> { decoder(j); }));
+            ReconUtil.sleep(100);
+        }
+       
+        // one serial thread:
+        ReconUtil.launch(CompletableFuture.runAsync(this::serial));
+
+        // one writer thread:
+        writerThread = ReconUtil.launch(CompletableFuture.runAsync(() -> { writer(output); }));
+
+        // let decoding get warmed up:
+        ReconUtil.sleep(10000);
+
+        // perform scaling test:
+        if (threads.length > 1)
+            ReconUtil.launch(CompletableFuture.runAsync(() -> { rethreader(threads); })).join();
+
+        // spawn engine threads:
+        else for (int i=0; i<threads[0]; i++) {
+                final int j = i;
+                ReconUtil.addAndRemove(procThreads, CompletableFuture.runAsync(() -> { processor(j); }));
+                ReconUtil.sleep(100);
+        }
+
+        // wait for finish:
+        writerThread.join();
+    }
+
+    /**
+     * The reader thread.
+     * @param input input filenames 
+     */
+    void reader(int threads, String... input) {
+
+        // convert input filenames to a list:
+        List<String> inputs = new ArrayList<>(Arrays.asList(input));
+
+        // initialize the event chunk:
+        List<Object> output = new ArrayList<>(EVENTS_PER_CHUNK);
+
+        // loop over input events:
+        while ( (maxEvents < 1 || writeEvents < maxEvents+taggedEvents.get()) &&
+                (maxFileEvents < 1 || fileEvents < maxFileEvents) ) {
+
+            if (reader != null) {
+
+                // sleep instead of overfilling the queue (100K events, ~2GB):
+                if (procQueue.size()+decoQueue.size() > 1e5) ReconUtil.sleep(1000);
+
+                // read next event into chunk, and fill queue if chunk full:
+                else output = read(output);
+            }
+
+            // open the next input file:
+            else if (!inputs.isEmpty()) open(inputs.removeFirst());
+
+            // no more events to read:
+            else break;
+        }
+
+        // write leftover, partial chunk:
+        if (!output.isEmpty()) {
+            readEvents += output.size();
+            decoQueue.offer(output);
+        }
+
+        if (reader instanceof EvioSource evio) evio.close();
+    }
+
+    /**
+     * The decoder thread.
+     * @param thread thread number
+     */
+    void decoder(int thread) {
+        while (true) {
+            List<Object> input = decoQueue.poll();
+            if (input == null) {
+                if (decoQueue.isEmpty() && readerThread.isDone() && decoQueue.isEmpty())
+                    break;
+                ReconUtil.sleep(100);
+            }
+            else {
+                List<HipoDataEvent> output = new ArrayList<>(input.size());
+                for (int i=0; i<input.size(); i++) {
+                    HipoDataEvent event = input.get(i) instanceof ByteBuffer
+                            ? decode(thread, (ByteBuffer)input.get(i))
+                            : new HipoDataEvent(((Event)input.get(i)), fullSchema);
+                    output.add(event);
+                    if (benchmark != null) benchmark.resume(thread, "serial");
+                    Event tag;
+                    synchronized (serialLock) {
+                        tag = serial.read(event.getHipoEvent());
+                    }
+                    if (!tag.isEmpty()) {
+                        if (serial.containsSerial(tag)) serialTrigger.incrementAndGet();
+                        output.add(new HipoDataEvent(tag, fullSchema));
+                        taggedEvents.incrementAndGet();
+                    }
+                    if (benchmark != null) benchmark.pause(thread, "serial");
+                }
+                procQueue.offer(output);
+            }
+        }
+        serialTrigger.incrementAndGet();
+    }
+
+    /**
+     * Do some serial stuff, when triggered.
+     */
+    void serial() {
+        boolean first = true;
+        while (true) {
+            if (serialTrigger.get() > 0) {
+                first = false;
+                // sleep to collect more triggers:
+                ReconUtil.sleep(1000);
+                // get current number of triggers:
+                int t = serialTrigger.get();
+                // do the protected stuff:
+                synchronized (serialLock) { serial.updateHelicitySequence(); }
+                // remove the same number of triggers:
+                for (int i=0; i<t; i++) serialTrigger.decrementAndGet();
+            }
+            else if (first) ReconUtil.sleep(1000);
+            else ReconUtil.sleep(10000);
+        }
+    }
+    
+    /**
+     * The data processor thread.
+     * @param thread thread number 
+     */
+    void processor(int thread) {
+        while (true) {
+            if (maxEvents > 0 && writeEvents > maxEvents+taggedEvents.get()) {
+                stopProcessing();
+                break;
+            }
+            List<HipoDataEvent> input = procQueue.poll();
+            if (input == null) {
+                if (procQueue.isEmpty() && decoThreads.isEmpty() && procQueue.isEmpty()) {
+                    if (writeEvents+skipEvents+failEvents >= readEvents+taggedEvents.get())
+                        break;
+                }
+                ReconUtil.sleep(100);
+            }
+            else {
+                List<Event> output = new ArrayList<>(input.size());
+                for (int i=0; i<input.size(); i++) {
+                    if (input.get(i).getHipoEvent().getEventTag() == 0) {
+                        for (Map.Entry<String,ReconstructionEngine> engine : engines.entrySet()) {
+                            if (benchmark != null) benchmark.resume(thread, engine.getKey());
+                            try { engine.getValue().processDataEvent(input.get(i)); }
+                            catch (Exception ex) { ex.printStackTrace(); }
+                            if (benchmark != null) benchmark.pause(thread, engine.getKey());
+                        }
+                    }
+                    output.add(input.get(i).getHipoEvent());
+                    progress.updateStatus();
+                }
+                writeQueue.offer(output);
+            }
+        }
+    }
+
+    /**
+     * The writer thread.
+     * @param output output filename
+     */
+    void writer(String output) {
+        if (output != null) writer = open(output, yaml);
+        while (true) {
+            List<Event> e = writeQueue.poll();
+            if (e == null) {
+                if (decoThreads.isEmpty() && procThreads.isEmpty() && procQueue.isEmpty() && writeQueue.isEmpty())
+                    break;
+                ReconUtil.sleep(1000);
+            }
+            else {
+                for (int i=0; i<e.size(); i++) {
+                    if (writer != null) {
+                        if (benchmark != null) benchmark.resume("post");
+                        synchronized (serialLock) {
+                            serial.process(e.get(i));
+                        }
+                        if (benchmark != null) {
+                            benchmark.pause("post");
+                            benchmark.resume("write");
+                        }
+                        if (e.get(i).getEventTag() > 0 || schemaBankList.isEmpty())
+                            writer.addEvent(e.get(i), e.get(i).getEventTag());
+                        else
+                            writer.addEvent(e.get(i).reduceEvent(schemaBankList), e.get(i).getEventTag());
+                        occupancer.process(e.get(i));
+                        if (benchmark != null) benchmark.pause("write");
+                    }
+                    if (++writeEvents % 1000 == 0 && COLLECT_GARBAGE) System.gc();
+                }
+            }
+        }
+        close();
+    }
+
+    /**
+     * The rethreader thread.
+     *
+     * @param threads thread counts to use
+     */
+    void rethreader(int... threads) {
+        System.out.println("recon-mutil::  ~~~~~~~~~ rethreading launched ~~~~~~~~~");
+        Map<Integer,Benchmark> benches = new LinkedHashMap<>();
+        Map<Integer,ProgressPrintout> progs = new LinkedHashMap<>();
+        while (!ReconUtil.isDone(decoThreads)) ReconUtil.sleep(100);
+        System.out.println("recon-mutil::  ~~~~~~~~~ rethreading primed ~~~~~~~~~");
+        for (int thread : threads) {
+            if (taskset.equals("-")) ReconUtil.taskset(0, thread);
+            BenchmarkTimer.WARMUP_CALLS = 10*thread+90;
+            benchmark = new Benchmark(thread+" Threads Scaling ",BENCHMARK_NAMES);
+            progress = new ProgressPrintout(10*thread);
+            for (int j=0; j<thread; j++) {
+                final int k = j;
+                ReconUtil.addAndRemove(procThreads, CompletableFuture.runAsync(() -> { processor(k); }));
+            }
+            while (!progress.warmedUp() && !procQueue.isEmpty()) ReconUtil.sleep(100);
+            ReconUtil.sleep(BENCH_SECONDS *1000);
+            System.out.printf("\nrecon-mutil:: ~~~~~~~~~ rethreading timed %d ~~~~~~~~~\n%n",thread);
+            System.out.println(progress.getUpdateString());
+            System.out.println(benchmark);
+            benches.put(thread, benchmark);
+            progs.put(thread, progress);
+            procThreads.forEach(p -> p.cancel(true));
+        }
+        String fcsv = String.format("scaling-mutil%s.txt",taskset);
+        ReconUtil.writeFile(fcsv, ReconUtil.toCSV(progs, benches));
+        ReconUtil.gnuplotScaling(fcsv, String.format("scaling-mutil%s.svg",taskset));
+        stopProcessing();
+    }
+
+    /**
+     * Decode an event.
+     * @param bytes the EVIO byte buffer
+     * @return decoded event
+     */
+    HipoDataEvent decode(int thread, ByteBuffer bytes) {
+        if (benchmark != null) benchmark.resume(thread, "evio");
+        EvioDataEvent evio = new EvioDataEvent(bytes.array(), ByteOrder.LITTLE_ENDIAN);
+        if (benchmark != null) {
+            benchmark.pause(thread, "evio");
+            benchmark.resume(thread, "deco");
+        }
+        CLASDecoder d = decoders.poll();
+        HipoDataEvent hipo = fields == null ?
+                d.getDecodedDataEvent(evio) :
+                d.getDecodedDataEvent(evio, fields[0], fields[1]);
+        decoders.offer(d);
+        if (benchmark != null) benchmark.pause(thread, "deco");
+        return hipo;
+    }
+  
+    /**
+     * Open a new input HIPO/EVIO event file.
+     * @param filename 
+     */
+    void open(String filename) {
+        if (reader != null && reader instanceof EvioSource)
+            ((EvioSource)reader).close(); 
+        fileEvents = 0;
+        if (filename.endsWith(".hipo")) {
+            reader = new HipoReader();
+            ((HipoReader)reader).open(filename);
+            maxFileEvents = ((HipoReader)reader).getEventCount();
+        }
+        else {
+            reader = new EvioSource();
+            ((EvioSource)reader).open(filename);
+            maxFileEvents = ((EvioSource)reader).getEventCount();
+        }
+    }
+
+    /**
+     * Open a new writer and initialize its schema.
+     * @param filename output filename
+     * @param yaml the configuration
+     */
+    HipoWriterSorted open(String filename, ClaraYaml yaml) {
+        HipoWriterSorted writer = new HipoWriterSorted();
+        writer.setCompressionType(2);
+        SchemaFactory s = ReconUtil.getSchemaFactory(parser.getOption("-S"), yaml);
+        writer.getSchemaFactory().copy(s);
+        schemaBankList = ReconUtil.getBankList(s, yaml);
+        writer.open(filename);
+        return writer;
+    }
+ 
+    /**
+     * Read the next event into the chunk, and, if it's full, queue the chunk
+     * and make a new one.
+     * @param chunk
+     * @return modified chunk 
+     */
+    List<Object> read(List<Object> chunk) {
+        if (benchmark != null) benchmark.resume("read");
+        Object o = null;
+        if (reader instanceof EvioSource evio) {
+            try { o = evio.getEventBuffer(++fileEvents, true); }
+            catch (EvioException ex) {
+                failEvents++;
+                ex.printStackTrace();
+            }
+        }
+        else {
+            Event event = new Event();
+            o = ((HipoReader)reader).getEvent(event, fileEvents++);
+        }
+        if (o != null && (skipEvents < 1 || readEvents > skipEvents)) {
+            chunk.add(o);
+            if (chunk.size() >= EVENTS_PER_CHUNK) {
+                decoQueue.offer(chunk);
+                readEvents += chunk.size();
+                chunk = new ArrayList<>(EVENTS_PER_CHUNK);
+            }
+        }
+        if (benchmark != null) benchmark.pause("read");
+        return chunk;
+    }
+
+    /**
+     * Close the output file.
+     */
+    void close() {
+        serial.closure(writer);
+        writer.close();
+        if (parser.getOption("-t").stringValue().split(",").length == 1)
+            if (benchmark != null) System.out.println(benchmark);
+        System.out.println(String.format("recon-mutil :: read/write/tagged/diff = %d/%d/%d/%d",
+                readEvents, writeEvents, taggedEvents.get(), writeEvents-readEvents-taggedEvents.get()));
+    }
+
+    /**
+     * Forcefully shutdown all threads, close files, and reset queues and counters.
+     */
+    void reset() {
+        for (CompletableFuture cf : decoThreads) cf.cancel(true);
+        for (CompletableFuture cf : procThreads) cf.cancel(true);
+        if (readerThread != null) readerThread.cancel(true);
+        if (writerThread != null) {
+            writerThread.cancel(true);
+            close();
+        }
+        decoQueue = new ConcurrentLinkedQueue<>();
+        writeQueue = new ConcurrentLinkedQueue<>();
+        procThreads = new ConcurrentLinkedQueue();
+        readEvents = 0;
+        writeEvents = 0;
+        failEvents = 0;
+        taggedEvents.set(0);
+    }
+
+    /**
+     * Stop processing, somewhat cleanly.
+     */
+    void stopProcessing() {
+        if (readerThread != null) readerThread.cancel(true);
+        for (CompletableFuture cf : decoThreads) cf.cancel(true);
+        for (CompletableFuture cf : procThreads) cf.cancel(true);
+        decoQueue.clear();
+        procQueue.clear();
+        writeQueue.clear();
+    }
+
+    /**
+     * Sort and preserve +/- suffix.
+     * @param threads
+     * @return 
+     */
+    static String sortThreads(String threads) {
+        if (threads.contains(",")) {
+            String suffix = "";
+            if (threads.endsWith("+") || threads.endsWith("-"))
+                suffix = String.valueOf(threads.charAt(threads.length()-1)); 
+            threads = String.join(",",Arrays.stream(threads.replace("+","").replace("-","").split(","))
+                .mapToInt(s -> Integer.parseInt(s)).sorted().boxed().map(i -> String.valueOf(i)).toList());
+            threads += suffix;
+        }
+        return threads;
+    }
+  
+    String taskset(String threads) {
+        taskset = "";
+        if (threads.endsWith("+") || threads.endsWith("-")) {
+            taskset = String.valueOf(threads.charAt(threads.length()-1));
+            if (threads.contains(",")) {
+                if (taskset.equals("+"))
+                    ReconUtil.taskset(0, 0);
+                else
+                    ReconUtil.taskset(0, Arrays.stream(getThreads(threads)).min().getAsInt());
+            }
+            else if (taskset.equals("-"))
+                ReconUtil.taskset(0, Integer.parseInt(String.valueOf(threads.charAt(0))));
+            else if (taskset.equals("+"))
+                ReconUtil.taskset(0, 0);
+        }
+        return threads;
+    }
+    
+    static int[] getThreads(String threadlist) {
+        return Arrays.stream(threadlist.replace("+","").replace("-","").split(","))
+                .mapToInt(s -> Integer.parseInt(s)).sorted().toArray();
+    }
+    
+    /**
+     * Initialize ReconMutil.
+     * @param parser 
+     */
+    void init(OptionParser parser) {
+
+        parser.getOption("-t").setValue(sortThreads(parser.getOption("-t").stringValue()));
+
+        taskset(parser.getOption("-t").stringValue());
+
+        fullSchema = new SchemaFactory();
+        fullSchema.initFromDirectory(ClasUtilsFile.getResourceDir("CLAS12DIR","etc/bankdefs/hipo4"));
+        this.parser = parser;
+        parser.syncLogLevel(Logger.getLogger(ReconMutil.class.getPackage().getName()));
+        maxEvents = parser.getOption("-n").intValue();
+        skipEvents = parser.getOption("-s").intValue();
+        serial = new SerialHoncho(fullSchema);
+        engines = new LinkedHashMap<>();
+        if (!parser.getOption("-y").isDefault()) {
+            yaml = new ClaraYaml(parser.getOption("-y").stringValue());
+            for (JSONObject service : yaml.services()) {
+                JSONObject cfg = yaml.filter(service.getString("name"));
+                if (cfg.length() > 0) ReconUtil.addEngine(engines, service.getString("name"), service.getString("class"), cfg);
+                else ReconUtil.addEngine(engines, service.getString("name"), service.getString("class"), null);
+            }
+        }
+        else if (!parser.getOption("-c").isDefault()) {
+            for (String clazz : parser.getOption("-c").stringValue().split(","))
+                ReconUtil.addEngine(engines, null, clazz, null);
+        }
+        else {
+            for (String line : ReconUtil.readResourceLines("org/jlab/clas/reco/services.txt"))
+                ReconUtil.addEngine(engines, line.split(" ")[0], line.split(" ")[1], null);
+        }
+        if (!parser.getOption("-B").isDefault()) {
+            ReconstructionEngine bg = ReconUtil.addEngine(engines, "BG", "org.jlab.service.bg.BackgroundEngine", null);
+            bg.engineConfigMap.put("filename",parser.getOption("-B").stringValue());
+        }
+        if (!parser.getOption("-f").isDefault()) {
+            try {
+                fields = Arrays.stream(parser.getOption("-f").stringValue()
+                .split(",")).mapToDouble(s -> Double.parseDouble(s)).toArray();
+            }
+            catch (Exception e) {
+                Logger.getLogger(ReconMutil.class.getName()).log(Level.SEVERE, () -> "invalid field option:  -f "+parser.getOption("-f").stringValue());
+                System.exit(22);
+            }
+        }
+        if (!parser.getOption("-b").isDefault())
+            benchmark = new Benchmark("ReconMutil",BENCHMARK_NAMES);
+    }
+
+    /**
+     * Print the thread, queue, and event states.
+     */
+    void show() {
+        String s1 = String.format("threads(r/d/p/w)=(%b/%b:%d/%b:%d/%b)",
+                readerThread != null ? !readerThread.isDone() : false, 
+                !ReconUtil.isDone(decoThreads),
+                decoThreads.size(),
+                !ReconUtil.isDone(procThreads),
+                procThreads.size(),
+                writerThread != null ? !writerThread.isDone() : false);
+        String s2 = String.format(" queues(d/p/w)=(%d/%d/%d)",
+                decoQueue.size()*EVENTS_PER_CHUNK,
+                procQueue.size()*EVENTS_PER_CHUNK,
+                writeQueue.size()*EVENTS_PER_CHUNK);
+        String s3 = String.format(" events(r/w/t/f)=(%d/%d/%d/%d)",
+                readEvents, writeEvents, taggedEvents.get(), failEvents);
+        Logger.getLogger(ReconMutil.class.getName()).log(Level.CONFIG, () -> s1+" "+s2+" "+s3);
+    }
+ 
+    /**
+     * The command-line entry-point known as "recon-mutil".
+     * @param args command-line arguments
+     */
+    public static void main(String[] args) {
+        OptionParser o = ReconUtil.getParser();
+        o.removeOption("-i");
+        o.removeOption("-o");
+        o.removeOption("-c");
+        o.removeOption("-P");
+        o.addOption("-t","4","number of threads, suffixed by +/- to taskset node/cpus)");
+        o.addOption("-o", null, "output file name");
+        o.addOption("-c","2","comma-separated engine list");
+        o.addOption("-f",null,"field scales for torus and solenoid, comma-separated (T,S)");
+        o.addOption("-b","false","enable benchmarking");
+        o.setRequiresInputList(true);
+        o.parse(args);
+        ReconMutil r = new ReconMutil(o);
+        r.launch(getThreads(o.getOption("-t").stringValue()),
+                o.getOption("-o").stringValue(),
+                o.getInputList().stream().toArray(String[]::new));
+    }
+    
+}

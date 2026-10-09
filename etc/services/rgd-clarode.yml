@@ -1,5 +1,3 @@
-mime-types:
-  - binary/data-hipo
 configuration:
   global:
     dcrbJitter: "true"
@@ -14,24 +12,10 @@ configuration:
     MAGFIELDS:
       magfieldSolenoidMap: Symm_solenoid_r601_phi1_z1201_13June2018.dat
       magfieldTorusMap: Full_torus_r251_phi181_z251_25Jan2021.dat
-    DCCR:
-      rawBankGroup: "NOISE1"
-    MLTD:
-      run: "18305"
-    DCHAI:
-      outputBankPrefix: "HB"
-io-services:
-  reader:
-    class: org.jlab.io.clara.Clas12Reader
-    name: Clas12Reader
-  writer:
-    class: org.jlab.io.clara.Clas12Writer
-    name: Clas12Writer
+
 services:
   - class: org.jlab.clas.reco.DecoderEngine
     name: DECO
-  - class: org.jlab.service.ai.DCDenoiseEngine
-    name: DCDN
   - class: org.jlab.clas.swimtools.MagFieldsEngine
     name: MAGFIELDS
   - class: org.jlab.rec.ft.cal.FTCALEngine
@@ -44,12 +28,18 @@ services:
     name: FTEB
   - class: org.jlab.service.raster.RasterEngine
     name: RASTER
+# DC denoising    
+  - class: org.jlab.service.ai.DCDenoiseEngine
+    name: DCDN    
+# DC clustering: nominal algoritm, filled the cluster bank for ai and conventional tracking
   - class: org.jlab.service.dc.DCHBClustering
     name: DCCR
-  - class: org.jlab.service.mltn.MLTDEngine
-    name: MLTD
-  - class: org.jlab.service.dc.DCHBPostClusterAI
-    name: DCHAI
+# This is where the AI plugin would go.  THe AI code reads the HB clusters.  
+  - class: org.jlab.service.ai.DCClsComboEngine
+    name: DCCC
+# DC using clustering on AI hits: NN assisted HB tracking
+  - class: org.jlab.service.dc.DCHBTrackingAI
+    name: DCHTAI
   - class: org.jlab.service.ftof.FTOFHBEngine
     name: FTOFHB
   - class: org.jlab.service.ec.ECEngine
@@ -86,3 +76,13 @@ services:
     name: VTX
   - class: org.jlab.calibration.service.CalibBanksEngine
     name: CALIB
+io-services:
+  reader:
+    class: org.jlab.io.clara.Clas12Reader
+    name: Clas12Reader
+  writer:
+    class: org.jlab.io.clara.Clas12Writer
+    name: Clas12Writer
+
+mime-types:
+  - binary/data-hipo
