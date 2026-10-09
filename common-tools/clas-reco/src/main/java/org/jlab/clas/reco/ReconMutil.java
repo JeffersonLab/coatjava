@@ -344,7 +344,7 @@ final class ReconMutil {
                 final int k = j;
                 ReconUtil.addAndRemove(procThreads, CompletableFuture.runAsync(() -> { processor(k); }));
             }
-            while (!progress.warmedUp()) ReconUtil.sleep(100);
+            while (!progress.warmedUp() && !procQueue.isEmpty()) ReconUtil.sleep(100);
             ReconUtil.sleep(seconds*1000);
             System.out.println(String.format("\nrecon-mutil:: ~~~~~~~~~ rethreading timed %d ~~~~~~~~~\n",thread));
             System.out.println(progress.getUpdateString());
