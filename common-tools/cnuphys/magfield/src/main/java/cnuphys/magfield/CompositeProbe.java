@@ -4,7 +4,7 @@ import java.util.ArrayList;
 
 public class CompositeProbe extends FieldProbe {
 
-	protected ArrayList<FieldProbe> probes = new ArrayList<FieldProbe>();
+	protected ArrayList<FieldProbe> probes = new ArrayList<>();
 
 	/**
 	 * Create a composite probe from a composite field.
@@ -43,8 +43,9 @@ public class CompositeProbe extends FieldProbe {
 		z = result[2];
 
 		float bx = 0, by = 0, bz = 0;
-		for (IField probe : probes) {
-			probe.field(x, y, z, result);
+		int size = probes.size();
+		for (int i=0; i<size; i++) {
+			probes.get(i).field(x, y, z, result);
 			bx += result[0];
 			by += result[1];
 			bz += result[2];
@@ -61,8 +62,9 @@ public class CompositeProbe extends FieldProbe {
 		float by = 0;
 		float bz = 0;
 
-		for (IField probe : probes) {
-			probe.field(x, y, z, result);
+		int size = probes.size();
+		for (int i=0; i<size; i++) {
+			probes.get(i).field(x, y, z, result);
 			bx += result[0];
 			by += result[1];
 			bz += result[2];
@@ -80,8 +82,9 @@ public class CompositeProbe extends FieldProbe {
 	 */
 	@Override
 	public boolean isZeroField() {
-		for (IField probe : probes) {
-			if (!probe.isZeroField()) {
+		int size = probes.size();
+		for (int i=0; i<size; i++) {
+			if (!probes.get(i).isZeroField()) {
 				return false;
 			}
 		}
@@ -103,8 +106,9 @@ public class CompositeProbe extends FieldProbe {
 	@Override
 	public void gradient(float x, float y, float z, float result[]) {
 		float bx = 0, by = 0, bz = 0;
-		for (IField probe : probes) {
-			probe.gradient(x, y, z, result);
+		int size = probes.size();
+		for (int i=0; i<size; i++) {
+			probes.get(i).gradient(x, y, z, result);
 			bx += result[0];
 			by += result[1];
 			bz += result[2];
@@ -120,8 +124,9 @@ public class CompositeProbe extends FieldProbe {
 	 * @return <code>true</code> if we have a torus
 	 */
 	public boolean hasTorus() {
-		for (IField probe : probes) {
-			if (probe instanceof TorusProbe) {
+		int size = probes.size();
+		for (int i=0; i<size; i++) {
+			if (probes.get(i) instanceof TorusProbe) {
 				return true;
 			}
 		}
@@ -135,8 +140,9 @@ public class CompositeProbe extends FieldProbe {
 	 * @return <code>true</code> if we have a solenoid
 	 */
 	public boolean hasSolenoid() {
-		for (IField probe : probes) {
-			if (probe instanceof SolenoidProbe) {
+		int size = probes.size();
+		for (int i=0; i<size; i++) {
+			if (probes.get(i) instanceof SolenoidProbe) {
 				return true;
 			}
 		}
