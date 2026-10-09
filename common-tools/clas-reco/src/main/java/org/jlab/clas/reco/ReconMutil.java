@@ -124,23 +124,24 @@ final class ReconMutil {
         }
        
         // one serial thread:
-        ReconUtil.launch(CompletableFuture.runAsync(() -> { serial(); }));
-        
-        ReconUtil.sleep(10000);
-
-        // spawn engine threads:
-        for (int i=0; i<threads[0]; i++) {
-            final int j = i;
-            ReconUtil.addAndRemove(procThreads, CompletableFuture.runAsync(() -> { processor(j); }));
-            ReconUtil.sleep(100);
-        }
+        ReconUtil.launch(CompletableFuture.runAsync(this::serial));
 
         // one writer thread:
         writerThread = ReconUtil.launch(CompletableFuture.runAsync(() -> { writer(output); }));
-                
+
+        // let decoding get warmed up:
+        ReconUtil.sleep(10000);
+
         // perform scaling test:
         if (threads.length > 1)
-            ReconUtil.launch(CompletableFuture.runAsync(() -> { rethreader(BENCH_SECONDS,threads); })).join();
+            ReconUtil.launch(CompletableFuture.runAsync(() -> { rethreader(threads); })).join();
+
+        // spawn engine threads:
+        else for (int i=0; i<threads[0]; i++) {
+                final int j = i;
+                ReconUtil.addAndRemove(procThreads, CompletableFuture.runAsync(() -> { processor(j); }));
+                ReconUtil.sleep(100);
+        }
 
         // wait for finish:
         writerThread.join();
@@ -314,7 +315,6 @@ final class ReconMutil {
                         occupancer.process(e.get(i));
                         if (benchmark != null) benchmark.pause("write");
                     }
-                    // GARBAGECOLLECT!
                     if (++writeEvents % 1000 == 0 && COLLECT_GARBAGE) System.gc();
                 }
             }
@@ -324,18 +324,16 @@ final class ReconMutil {
 
     /**
      * The rethreader thread.
-     * @param seconds delay before switching to next thread count
-     * @param threads thread counts to use 
+     *
+     * @param threads thread counts to use
      */
-    void rethreader(int seconds, int... threads) {
+    void rethreader(int... threads) {
         System.out.println("recon-mutil::  ~~~~~~~~~ rethreading launched ~~~~~~~~~");
         Map<Integer,Benchmark> benches = new LinkedHashMap<>();
         Map<Integer,ProgressPrintout> progs = new LinkedHashMap<>();
-        while (writeEvents < EVENTS_PER_CHUNK || !ReconUtil.isDone(decoThreads))
-            ReconUtil.sleep(100);
+        while (!ReconUtil.isDone(decoThreads)) ReconUtil.sleep(100);
         System.out.println("recon-mutil::  ~~~~~~~~~ rethreading primed ~~~~~~~~~");
         for (int thread : threads) {
-            procThreads.stream().forEach(p -> p.cancel(true));
             if (taskset.equals("-")) ReconUtil.taskset(0, thread);
             BenchmarkTimer.WARMUP_CALLS = 10*thread+90;
             benchmark = new Benchmark(thread+" Threads Scaling ",BENCHMARK_NAMES);
@@ -345,12 +343,13 @@ final class ReconMutil {
                 ReconUtil.addAndRemove(procThreads, CompletableFuture.runAsync(() -> { processor(k); }));
             }
             while (!progress.warmedUp() && !procQueue.isEmpty()) ReconUtil.sleep(100);
-            ReconUtil.sleep(seconds*1000);
-            System.out.println(String.format("\nrecon-mutil:: ~~~~~~~~~ rethreading timed %d ~~~~~~~~~\n",thread));
+            ReconUtil.sleep(BENCH_SECONDS *1000);
+            System.out.printf("\nrecon-mutil:: ~~~~~~~~~ rethreading timed %d ~~~~~~~~~\n%n",thread);
             System.out.println(progress.getUpdateString());
             System.out.println(benchmark);
             benches.put(thread, benchmark);
             progs.put(thread, progress);
+            procThreads.forEach(p -> p.cancel(true));
         }
         String fcsv = String.format("scaling-mutil%s.txt",taskset);
         ReconUtil.writeFile(fcsv, ReconUtil.toCSV(progs, benches));
