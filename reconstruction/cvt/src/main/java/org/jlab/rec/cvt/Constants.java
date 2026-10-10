@@ -41,7 +41,7 @@ public class Constants {
             }
             return instance;
     }
-    
+
     private static boolean ConstantsLoaded;
 
     // parameters configurable from yaml
@@ -316,8 +316,8 @@ public class Constants {
         }
         return scaledMatrix;
     }
-    
-    
+
+
     private static final double D0     = 10;                    // 10 mm
     private static final double DPHI0  = Math.toRadians(10);    // 10 deg
     private static final double DRHO   = 0.01;                  // ~6-7 on kappa, i.e. 150 MeV on pt

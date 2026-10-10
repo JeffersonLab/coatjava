@@ -380,7 +380,7 @@ public class Cross extends ArrayList<Cluster> implements Comparable<Cross> {
      * Sets the cross parameters: the position and direction unit vector
      */
     public void updateBMTCross(Point3D trackPos, Vector3D trackDir) {
-        
+
         if(this.getDetector()!=DetectorType.BMT) return;
 
         Point3D  crossPoint = this.getBMTCrossPoint(trackPos);
@@ -590,7 +590,7 @@ public class Cross extends ArrayList<Cluster> implements Comparable<Cross> {
     public String printInfo() {
         String s = " cross:  " + this.getDetector() + " " + this.getType() + " ID " + this.getId() + " Sector " + this.getSector() 
                 + " Region " + this.getRegion() + " sort "+this.getOrderedRegion()+" cosmic region "+this.getSVTCosmicsRegion();
-        if(this.getPoint0()!=null) s += " Point " + this.getPoint().toString();
+        if(this.getPoint()!=null)  s += " Point " + this.getPoint().toString();
         if(this.getPoint0()!=null) s += " Point0 " + this.getPoint0().toString();
         if(this.getDir()!=null)    s += " Direction "+ this.getDir().toString();
         return s;

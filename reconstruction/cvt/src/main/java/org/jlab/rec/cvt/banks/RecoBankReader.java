@@ -30,14 +30,14 @@ import org.jlab.rec.cvt.trajectory.Helix;
 public class RecoBankReader {
     
        
-    public static List<Hit> readBSTHitBank(DataEvent event) {
+    public static List<Hit> readBSTHitBank(DataEvent event, String bankname) {
         
-        if(!event.hasBank("BST::Hits"))
+        if(!event.hasBank(bankname))
             return null;
         else {
             List<Hit> hits = new ArrayList<>();        
             
-            DataBank bank = event.getBank("BST::Hits");
+            DataBank bank = event.getBank(bankname);
             for(int i = 0; i < bank.rows(); i++) {
                 int id     = bank.getShort("ID", i);
                 int sector = bank.getByte("sector", i);
@@ -67,14 +67,14 @@ public class RecoBankReader {
         }
     }
             
-    public static List<Hit>  readBMTHitBank(DataEvent event) {
+    public static List<Hit>  readBMTHitBank(DataEvent event, String bankname) {
         
-        if(!event.hasBank("BMT::Hits"))
+        if(!event.hasBank(bankname))
             return null;
         else {
             List<Hit> hits = new ArrayList<>();        
             
-            DataBank bank = event.getBank("BMT::Hits");
+            DataBank bank = event.getBank(bankname);
             for(int i = 0; i < bank.rows(); i++) {
                 int id     = bank.getShort("ID", i);
                 int sector = bank.getByte("sector", i);
@@ -100,14 +100,14 @@ public class RecoBankReader {
         }
     }
                         
-    public static Map<Integer, Cluster> readBSTClusterBank(DataEvent event, List<Hit> svthits) {
+    public static Map<Integer, Cluster> readBSTClusterBank(DataEvent event, String bankname, List<Hit> svthits) {
         
-        if(!event.hasBank("BST::Clusters"))
+        if(!event.hasBank(bankname))
             return null;
         else {
             Map<Integer, Cluster> clusters = new HashMap<>();        
             
-            DataBank bank = event.getBank("BST::Clusters");
+            DataBank bank = event.getBank(bankname);
             for(int i = 0; i < bank.rows(); i++) {
                 int id     = bank.getShort("ID", i);
                 int tid    = bank.getShort("trkID", i);
@@ -168,14 +168,15 @@ public class RecoBankReader {
     }
         
         
-    public static Map<Integer, Cluster> readBMTClusterBank(DataEvent event, List<Hit> bmthits) {
+    public static Map<Integer, Cluster> readBMTClusterBank(DataEvent event, String bankname, List<Hit> bmthits) {
+
         
-        if(!event.hasBank("BMT::Clusters"))
+        if(!event.hasBank(bankname))
             return null;
         else {
             Map<Integer, Cluster> clusters = new HashMap<>();       
             
-            DataBank bank = event.getBank("BMT::Clusters");
+            DataBank bank = event.getBank(bankname);
             for(int i = 0; i < bank.rows(); i++) {
                 int id     = bank.getShort("ID", i);
                 int tid    = bank.getShort("trkID", i);
@@ -218,7 +219,7 @@ public class RecoBankReader {
                     Line3D ln = new Line3D(ax1,ay1,az1, ax2,ay2,az2);
                     Point3D  origin = new Point3D(x1,y1,z1);
                     Point3D  center = ln.distance(origin).origin();
-                    Vector3D normal = ln.direction();
+                    Vector3D normal = ln.direction().asUnit();
                     Arc3D arc = new Arc3D(origin, center, normal, theta);
                     cls.setArc(arc);
                     cls.setCentroidValue(centroidValue*10);
@@ -259,14 +260,16 @@ public class RecoBankReader {
 
     
     
-    public static Map<Integer, Cross> readBSTCrossBank(DataEvent event, Map<Integer, Cluster> bstClusters) {
+
+    public static Map<Integer, Cross> readBSTCrossBank(DataEvent event, String bankname, Map<Integer, Cluster> bstClusters) {
+
         
-        if(!event.hasBank("BST::Crosses"))
+        if(!event.hasBank(bankname))
             return null;
         else {
             Map<Integer, Cross> crosses = new HashMap<>();        
     
-            DataBank bank = event.getBank("BST::Crosses");        
+            DataBank bank = event.getBank(bankname);        
             for(int i = 0; i < bank.rows(); i++) {
                 int id     = bank.getShort("ID", i);
                 int tid    = bank.getShort("trkID", i);
@@ -306,14 +309,14 @@ public class RecoBankReader {
         }
     }
         
-    public static Map<Integer, Cross> readBMTCrossBank(DataEvent event, Map<Integer, Cluster> bmtClusters) {
+    public static Map<Integer, Cross> readBMTCrossBank(DataEvent event, String bankname, Map<Integer, Cluster> bmtClusters) {
         
-        if(!event.hasBank("BMT::Crosses"))
+        if(!event.hasBank(bankname))
             return null;
         else {
             Map<Integer, Cross> crosses = new HashMap<>();         
     
-            DataBank bank = event.getBank("BMT::Crosses");
+            DataBank bank = event.getBank(bankname);
             for(int i = 0; i < bank.rows(); i++) {
                 int id     = bank.getShort("ID", i);
                 int tid    = bank.getShort("trkID", i);
@@ -353,14 +356,14 @@ public class RecoBankReader {
         }
     }
     //sets seeds from first pass tracks
-    public static Map<Integer, Seed> readCVTSeedsBank(DataEvent event, double xb, double yb, Map<Integer, Cross> svtCrosses, Map<Integer, Cross> bmtCrosses) {
+    public static Map<Integer, Seed> readCVTSeedsBank(DataEvent event, String bankname, double xb, double yb, Map<Integer, Cross> svtCrosses, Map<Integer, Cross> bmtCrosses) {
         
-        if(!event.hasBank("CVT::Seeds") || svtCrosses==null)
+        if(!event.hasBank(bankname) || svtCrosses==null)
             return null;
         else {
             Map<Integer, Seed> seeds = new HashMap<>();        
     
-            DataBank bank = event.getBank("CVT::Seeds");
+            DataBank bank = event.getBank(bankname);
             for(int i = 0; i < bank.rows(); i++) {
                 int    tid    = bank.getShort("ID", i);
                 double pt     = bank.getFloat("pt", i);
@@ -428,15 +431,15 @@ public class RecoBankReader {
         }
     }    
     
-    public static Map<Integer, Seed> readCVTTracksBank(DataEvent event, double xb, double yb, Map<Integer, Seed> cvtSeeds,
+    public static Map<Integer, Seed> readCVTTracksBank(DataEvent event, String bankname, double xb, double yb, Map<Integer, Seed> cvtSeeds,
             Map<Integer, Cross> svtCrosses, Map<Integer, Cross> bmtCrosses) {
         
-        if(!event.hasBank("CVT::Tracks"))
+        if(!event.hasBank(bankname))
             return null;
         else {
             Map<Integer, Seed> seeds = new HashMap<>();          
     
-            DataBank bank = event.getBank("CVT::Tracks");
+            DataBank bank = event.getBank(bankname);
             for(int i = 0; i < bank.rows(); i++) {
                 int    tid    = bank.getShort("ID", i);
                 double pt     = bank.getFloat("pt", i);

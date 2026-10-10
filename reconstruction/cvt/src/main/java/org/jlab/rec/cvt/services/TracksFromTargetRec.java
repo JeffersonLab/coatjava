@@ -37,7 +37,7 @@ import org.jlab.rec.cvt.track.TrackSeederSVTLinker;
  * @author ziegler
  */
 public class TracksFromTargetRec {
-
+    
     private final RecUtilities recUtil = new RecUtilities();
     
     private List<Hit> SVThits;
@@ -416,9 +416,10 @@ public class TracksFromTargetRec {
     public List<Seed> getSeedsFromBanks(DataEvent event) {
         
         this.init();
+                
+        SVThits = RecoBankReader.readBSTHitBank(event, "BST::Hits");
+        BMThits = RecoBankReader.readBMTHitBank(event, "BMT::Hits");
         
-        SVThits = RecoBankReader.readBSTHitBank(event);
-        BMThits = RecoBankReader.readBMTHitBank(event);
         if(SVThits!= null) {
             Collections.sort(SVThits);
         }
@@ -430,19 +431,19 @@ public class TracksFromTargetRec {
         }
 
         
-        SVTclustersHM = RecoBankReader.readBSTClusterBank(event, SVThits);
-        BMTclustersHM = RecoBankReader.readBMTClusterBank(event, BMThits);
+     SVTclustersHM = RecoBankReader.readBSTClusterBank(event, "BST::Clusters", SVThits);
+        BMTclustersHM = RecoBankReader.readBMTClusterBank(event, "BMT::Clusters", BMThits);
         
         
-        SVTcrossesHM = RecoBankReader.readBSTCrossBank(event, SVTclustersHM);
-        BMTcrossesHM = RecoBankReader.readBMTCrossBank(event, BMTclustersHM);
+        SVTcrossesHM = RecoBankReader.readBSTCrossBank(event, "BST::Crosses", SVTclustersHM);
+        BMTcrossesHM = RecoBankReader.readBMTCrossBank(event, "BMT::Crosses", BMTclustersHM);
         
                        
-        CVTseedsHM = RecoBankReader.readCVTSeedsBank(event, xb, yb, SVTcrossesHM, BMTcrossesHM);
+        CVTseedsHM = RecoBankReader.readCVTSeedsBank(event, "CVT::Seeds", xb, yb, SVTcrossesHM, BMTcrossesHM);
         if(CVTseedsHM == null) {
             return null;
         } else {
-            CVTseedsHMOK = RecoBankReader.readCVTTracksBank(event, xb, yb, CVTseedsHM, SVTcrossesHM, BMTcrossesHM);
+            CVTseedsHMOK = RecoBankReader.readCVTTracksBank(event, "CVT::Tracks", xb, yb, CVTseedsHM, SVTcrossesHM, BMTcrossesHM);
             if(CVTseedsHMOK == null) {
                 return null;
             } else {
