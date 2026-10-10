@@ -34,8 +34,8 @@ public class CircleFitter {
     private double _dca;    // the distance of closest approach to the origin
     private double _chi2;   // the chi^2 value of the fit
 
-    private double _xpca;	// x coord. of the point of closest approach to the origin
-    private double _ypca;   // y coord. of the point of closest approach to the origin
+    //private double _xpca;	// x coord. of the point of closest approach to the origin
+    //private double _ypca;   // y coord. of the point of closest approach to the origin
 
     private double[] _covr; // the elements of the symmetric 3x3 covariance matrix of the parameters rho, phi, dca
 
@@ -231,8 +231,8 @@ public class CircleFitter {
         _rho = rhoFit + Delta_rho;
         _phi = phiFit + Delta_phi;
         _dca = docaFit + Delta_doca;
-        _xpca = _xx0 + _dca * Math.sin(phiFit);
-        _ypca = _yy0 - _dca * Math.cos(phiFit);
+        //_xpca = _xx0 + _dca * Math.sin(phiFit);
+        //_ypca = _yy0 - _dca * Math.cos(phiFit);
         if(_rho==0 || Double.isNaN(_rho))
             return false;
         
@@ -320,8 +320,8 @@ public class CircleFitter {
             _phi += 2. * Math.PI;
         }
         // update parameters
-        _xpca = _xref + _dca * Math.sin(_phi);
-        _ypca = _yref - _dca * Math.cos(_phi);
+        //_xpca = _xref + _dca * Math.sin(_phi);
+        //_ypca = _yref - _dca * Math.cos(_phi);
     }
 
     public CircleFitPars getFit() {
