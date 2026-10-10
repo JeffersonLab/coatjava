@@ -9,6 +9,14 @@ import org.jlab.geom.prim.Arc3D;
 import org.jlab.geom.prim.Line3D;
 import org.jlab.geom.prim.Point3D;
 import org.jlab.geom.prim.Vector3D;
+import org.jlab.io.banks.BMT_Clusters;
+import org.jlab.io.banks.BMT_Crosses;
+import org.jlab.io.banks.BMT_Hits;
+import org.jlab.io.banks.BST_Clusters;
+import org.jlab.io.banks.BST_Crosses;
+import org.jlab.io.banks.BST_Hits;
+import org.jlab.io.banks.CVT_Seeds;
+import org.jlab.io.banks.CVT_Tracks;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 import org.jlab.rec.cvt.Constants;
@@ -39,17 +47,17 @@ public class RecoBankReader {
             
             DataBank bank = event.getBank("BST::Hits");
             for(int i = 0; i < bank.rows(); i++) {
-                int id     = bank.getShort("ID", i);
-                int sector = bank.getByte("sector", i);
-                int layer  = bank.getByte("layer", i);
-                int strip  = bank.getShort("strip", i);
-                double energy      = bank.getFloat("energy", i);
-                double time        = bank.getFloat("time", i);
-                double fitResidual = bank.getFloat("fitResidual", i)*10;
-                int clusterId  = bank.getShort("clusterID", i);
-                int trackId    = bank.getShort("trkID", i);
-                int trkStatus  = bank.getByte("trkingStat", i);
-                int status     = bank.getByte("status", i);
+                int id     = bank.getShort(BST_Hits.ID, i);
+                int sector = bank.getByte(BST_Hits.sector, i);
+                int layer  = bank.getByte(BST_Hits.layer, i);
+                int strip  = bank.getShort(BST_Hits.strip, i);
+                double energy      = bank.getFloat(BST_Hits.energy, i);
+                double time        = bank.getFloat(BST_Hits.time, i);
+                double fitResidual = bank.getFloat(BST_Hits.fitResidual, i)*10;
+                int clusterId  = bank.getShort(BST_Hits.clusterID, i);
+                int trackId    = bank.getShort(BST_Hits.trkID, i);
+                int trkStatus  = bank.getByte(BST_Hits.trkingStat, i);
+                int status     = bank.getByte(BST_Hits.status, i);
                 Hit hit = new Hit(DetectorType.BST, BMTType.UNDEFINED, sector, layer, new Strip(strip, energy, time));
                 hit.getStrip().setLine(Geometry.getInstance().getSVT().getStrip(layer, sector, strip));
                 hit.getStrip().setModule(Geometry.getInstance().getSVT().getModule(layer, sector));
@@ -76,17 +84,17 @@ public class RecoBankReader {
             
             DataBank bank = event.getBank("BMT::Hits");
             for(int i = 0; i < bank.rows(); i++) {
-                int id     = bank.getShort("ID", i);
-                int sector = bank.getByte("sector", i);
-                int layer  = bank.getByte("layer", i);
-                int strip  = bank.getShort("strip", i);
-                double energy      = bank.getFloat("energy", i);
-                double time        = bank.getFloat("time", i);
-                double fitResidual = bank.getFloat("fitResidual", i)*10;
-                int clusterId  = bank.getShort("clusterID", i);
-                int trackId    = bank.getShort("trkID", i);
-                int trkStatus  = bank.getByte("trkingStat", i);
-                int status     = bank.getByte("status", i);
+                int id     = bank.getShort(BMT_Hits.ID, i);
+                int sector = bank.getByte(BMT_Hits.sector, i);
+                int layer  = bank.getByte(BMT_Hits.layer, i);
+                int strip  = bank.getShort(BMT_Hits.strip, i);
+                double energy      = bank.getFloat(BMT_Hits.energy, i);
+                double time        = bank.getFloat(BMT_Hits.time, i);
+                double fitResidual = bank.getFloat(BMT_Hits.fitResidual, i)*10;
+                int clusterId  = bank.getShort(BMT_Hits.clusterID, i);
+                int trackId    = bank.getShort(BMT_Hits.trkID, i);
+                int trkStatus  = bank.getByte(BMT_Hits.trkingStat, i);
+                int status     = bank.getByte(BMT_Hits.status, i);
                 Hit hit = new Hit(DetectorType.BMT, BMTGeometry.getDetectorType(layer), sector, layer, new Strip(strip, energy, time));
                 hit.getStrip().setStatus(status);
                 hit.setId(id);
@@ -109,32 +117,32 @@ public class RecoBankReader {
             
             DataBank bank = event.getBank("BST::Clusters");
             for(int i = 0; i < bank.rows(); i++) {
-                int id     = bank.getShort("ID", i);
-                int tid    = bank.getShort("trkID", i);
-                int sector = bank.getByte("sector", i);
-                int layer  = bank.getByte("layer", i);
-                double etot          = bank.getFloat("ETot", i);
-                double time          = bank.getFloat("time", i);
-                double centroid      = bank.getFloat("centroid", i);
-                double resolution    = bank.getFloat("e", i)*10;
-                double x1 = bank.getFloat("x1",   i)*10;
-                double y1 = bank.getFloat("y1",   i)*10;
-                double z1 = bank.getFloat("z1",   i)*10;
-                double x2 = bank.getFloat("x2",   i)*10;
-                double y2 = bank.getFloat("y2",   i)*10;
-                double z2 = bank.getFloat("z2",   i)*10;
-                double cx = bank.getFloat("cx",   i)*10;
-                double cy = bank.getFloat("cy",   i)*10;
-                double cz = bank.getFloat("cz",   i)*10;
-                double lx = bank.getFloat("lx",   i);
-                double ly = bank.getFloat("ly",   i);
-                double lz = bank.getFloat("lz",   i);
-                double nx = bank.getFloat("nx",   i);
-                double ny = bank.getFloat("ny",   i);
-                double nz = bank.getFloat("nz",   i);
-                double sx = bank.getFloat("sx",   i);
-                double sy = bank.getFloat("sy",   i);
-                double sz = bank.getFloat("sz",   i);
+                int id     = bank.getShort(BST_Clusters.ID, i);
+                int tid    = bank.getShort(BST_Clusters.trkID, i);
+                int sector = bank.getByte(BST_Clusters.sector, i);
+                int layer  = bank.getByte(BST_Clusters.layer, i);
+                double etot          = bank.getFloat(BST_Clusters.ETot, i);
+                double time          = bank.getFloat(BST_Clusters.time, i);
+                double centroid      = bank.getFloat(BST_Clusters.centroid, i);
+                double resolution    = bank.getFloat(BST_Clusters.e, i)*10;
+                double x1 = bank.getFloat(BST_Clusters.x1,   i)*10;
+                double y1 = bank.getFloat(BST_Clusters.y1,   i)*10;
+                double z1 = bank.getFloat(BST_Clusters.z1,   i)*10;
+                double x2 = bank.getFloat(BST_Clusters.x2,   i)*10;
+                double y2 = bank.getFloat(BST_Clusters.y2,   i)*10;
+                double z2 = bank.getFloat(BST_Clusters.z2,   i)*10;
+                double cx = bank.getFloat(BST_Clusters.cx,   i)*10;
+                double cy = bank.getFloat(BST_Clusters.cy,   i)*10;
+                double cz = bank.getFloat(BST_Clusters.cz,   i)*10;
+                double lx = bank.getFloat(BST_Clusters.lx,   i);
+                double ly = bank.getFloat(BST_Clusters.ly,   i);
+                double lz = bank.getFloat(BST_Clusters.lz,   i);
+                double nx = bank.getFloat(BST_Clusters.nx,   i);
+                double ny = bank.getFloat(BST_Clusters.ny,   i);
+                double nz = bank.getFloat(BST_Clusters.nz,   i);
+                double sx = bank.getFloat(BST_Clusters.sx,   i);
+                double sy = bank.getFloat(BST_Clusters.sy,   i);
+                double sz = bank.getFloat(BST_Clusters.sz,   i);
 
                 Cluster cls = new Cluster(DetectorType.BST, BMTType.UNDEFINED, sector, layer, id);
                 cls.setAssociatedTrackID(tid);         
@@ -177,40 +185,40 @@ public class RecoBankReader {
             
             DataBank bank = event.getBank("BMT::Clusters");
             for(int i = 0; i < bank.rows(); i++) {
-                int id     = bank.getShort("ID", i);
-                int tid    = bank.getShort("trkID", i);
-                int sector = bank.getByte("sector", i);
-                int layer  = bank.getByte("layer", i);
-                double etot          = bank.getFloat("ETot", i);
-                double time          = bank.getFloat("time", i);
-                double centroid      = bank.getFloat("centroid", i);
-                double centroidValue = bank.getFloat("centroidValue", i);
-                double centroidError = bank.getFloat("centroidError", i);
-                double resolution    = bank.getFloat("e", i)*10;
-                double x1 = bank.getFloat("x1",   i)*10;
-                double y1 = bank.getFloat("y1",   i)*10;
-                double z1 = bank.getFloat("z1",   i)*10;
-                double x2 = bank.getFloat("x2",   i)*10;
-                double y2 = bank.getFloat("y2",   i)*10;
-                double z2 = bank.getFloat("z2",   i)*10;
-                double cx = bank.getFloat("cx",   i)*10;
-                double cy = bank.getFloat("cy",   i)*10;
-                double ax1 = bank.getFloat("ax1",   i)*10;
-                double ay1 = bank.getFloat("ay1",   i)*10;
-                double az1 = bank.getFloat("az1",   i)*10;
-                double ax2 = bank.getFloat("ax2",   i)*10;
-                double ay2 = bank.getFloat("ay2",   i)*10;
-                double az2 = bank.getFloat("az2",   i)*10;
-                double cz = bank.getFloat("cz",   i)*10;
-                double lx = bank.getFloat("lx",   i);
-                double ly = bank.getFloat("ly",   i);
-                double lz = bank.getFloat("lz",   i);
-                double nx = bank.getFloat("nx",   i);
-                double ny = bank.getFloat("ny",   i);
-                double nz = bank.getFloat("nz",   i);
-                double sx = bank.getFloat("sx",   i);
-                double sy = bank.getFloat("sy",   i);
-                double sz = bank.getFloat("sz",   i);   
+                int id     = bank.getShort(BMT_Clusters.ID, i);
+                int tid    = bank.getShort(BMT_Clusters.trkID, i);
+                int sector = bank.getByte(BMT_Clusters.sector, i);
+                int layer  = bank.getByte(BMT_Clusters.layer, i);
+                double etot          = bank.getFloat(BMT_Clusters.ETot, i);
+                double time          = bank.getFloat(BMT_Clusters.time, i);
+                double centroid      = bank.getFloat(BMT_Clusters.centroid, i);
+                double centroidValue = bank.getFloat(BMT_Clusters.centroidValue, i);
+                double centroidError = bank.getFloat(BMT_Clusters.centroidError, i);
+                double resolution    = bank.getFloat(BMT_Clusters.e, i)*10;
+                double x1 = bank.getFloat(BMT_Clusters.x1,   i)*10;
+                double y1 = bank.getFloat(BMT_Clusters.y1,   i)*10;
+                double z1 = bank.getFloat(BMT_Clusters.z1,   i)*10;
+                double x2 = bank.getFloat(BMT_Clusters.x2,   i)*10;
+                double y2 = bank.getFloat(BMT_Clusters.y2,   i)*10;
+                double z2 = bank.getFloat(BMT_Clusters.z2,   i)*10;
+                double cx = bank.getFloat(BMT_Clusters.cx,   i)*10;
+                double cy = bank.getFloat(BMT_Clusters.cy,   i)*10;
+                double ax1 = bank.getFloat(BMT_Clusters.ax1,   i)*10;
+                double ay1 = bank.getFloat(BMT_Clusters.ay1,   i)*10;
+                double az1 = bank.getFloat(BMT_Clusters.az1,   i)*10;
+                double ax2 = bank.getFloat(BMT_Clusters.ax2,   i)*10;
+                double ay2 = bank.getFloat(BMT_Clusters.ay2,   i)*10;
+                double az2 = bank.getFloat(BMT_Clusters.az2,   i)*10;
+                double cz = bank.getFloat(BMT_Clusters.cz,   i)*10;
+                double lx = bank.getFloat(BMT_Clusters.lx,   i);
+                double ly = bank.getFloat(BMT_Clusters.ly,   i);
+                double lz = bank.getFloat(BMT_Clusters.lz,   i);
+                double nx = bank.getFloat(BMT_Clusters.nx,   i);
+                double ny = bank.getFloat(BMT_Clusters.ny,   i);
+                double nz = bank.getFloat(BMT_Clusters.nz,   i);
+                double sx = bank.getFloat(BMT_Clusters.sx,   i);
+                double sy = bank.getFloat(BMT_Clusters.sy,   i);
+                double sz = bank.getFloat(BMT_Clusters.sz,   i);   
                 // cluster
                 Cluster cls = new Cluster(DetectorType.BMT, BMTGeometry.getDetectorType(layer), sector, layer, id);
                 if(cls.getType()==BMTType.C) { 
@@ -268,27 +276,27 @@ public class RecoBankReader {
     
             DataBank bank = event.getBank("BST::Crosses");        
             for(int i = 0; i < bank.rows(); i++) {
-                int id     = bank.getShort("ID", i);
-                int tid    = bank.getShort("trkID", i);
-                int sector = bank.getByte("sector", i);
-                int region = bank.getByte("region", i);
-                double x   = bank.getFloat("x", i)*10;
-                double y   = bank.getFloat("y", i)*10;
-                double z   = bank.getFloat("z", i)*10;
-                double err_x = bank.getFloat("err_x", i)*10;
-                double err_y = bank.getFloat("err_y", i)*10;
-                double err_z = bank.getFloat("err_z", i)*10;
-                double x0  = bank.getFloat("x0", i)*10;
-                double y0  = bank.getFloat("y0", i)*10;
-                double z0  = bank.getFloat("z0", i)*10;
-                double err_x0 = bank.getFloat("err_x0", i)*10;
-                double err_y0 = bank.getFloat("err_y0", i)*10;
-                double err_z0 = bank.getFloat("err_z0", i)*10;
-                double ux = bank.getFloat("ux", i);
-                double uy = bank.getFloat("uy", i);
-                double uz = bank.getFloat("uz", i);
-                int clid1 = bank.getShort("Cluster1_ID", i);
-                int clid2 = bank.getShort("Cluster2_ID", i);
+                int id     = bank.getShort(BST_Crosses.ID, i);
+                int tid    = bank.getShort(BST_Crosses.trkID, i);
+                int sector = bank.getByte(BST_Crosses.sector, i);
+                int region = bank.getByte(BST_Crosses.region, i);
+                double x   = bank.getFloat(BST_Crosses.x, i)*10;
+                double y   = bank.getFloat(BST_Crosses.y, i)*10;
+                double z   = bank.getFloat(BST_Crosses.z, i)*10;
+                double err_x = bank.getFloat(BST_Crosses.err_x, i)*10;
+                double err_y = bank.getFloat(BST_Crosses.err_y, i)*10;
+                double err_z = bank.getFloat(BST_Crosses.err_z, i)*10;
+                double x0  = bank.getFloat(BST_Crosses.x0, i)*10;
+                double y0  = bank.getFloat(BST_Crosses.y0, i)*10;
+                double z0  = bank.getFloat(BST_Crosses.z0, i)*10;
+                double err_x0 = bank.getFloat(BST_Crosses.err_x0, i)*10;
+                double err_y0 = bank.getFloat(BST_Crosses.err_y0, i)*10;
+                double err_z0 = bank.getFloat(BST_Crosses.err_z0, i)*10;
+                double ux = bank.getFloat(BST_Crosses.ux, i);
+                double uy = bank.getFloat(BST_Crosses.uy, i);
+                double uz = bank.getFloat(BST_Crosses.uz, i);
+                int clid1 = bank.getShort(BST_Crosses.Cluster1_ID, i);
+                int clid2 = bank.getShort(BST_Crosses.Cluster2_ID, i);
                 Cross cr = new Cross(DetectorType.BST, BMTType.UNDEFINED, sector, region, id);
                 cr.setAssociatedTrackID(tid); 
                 cr.isInSeed=true;
@@ -315,27 +323,27 @@ public class RecoBankReader {
     
             DataBank bank = event.getBank("BMT::Crosses");
             for(int i = 0; i < bank.rows(); i++) {
-                int id     = bank.getShort("ID", i);
-                int tid    = bank.getShort("trkID", i);
-                int sector = bank.getByte("sector", i);
-                int region = bank.getByte("region", i);
-                int layer  = bank.getByte("layer", i);
-                double x   = bank.getFloat("x", i)*10;
-                double y   = bank.getFloat("y", i)*10;
-                double z   = bank.getFloat("z", i)*10;
-                double err_x = bank.getFloat("err_x", i)*10;
-                double err_y = bank.getFloat("err_y", i)*10;
-                double err_z = bank.getFloat("err_z", i)*10;
-                double x0  = bank.getFloat("x0", i)*10;
-                double y0  = bank.getFloat("y0", i)*10;
-                double z0  = bank.getFloat("z0", i)*10;
-                double err_x0 = bank.getFloat("err_x0", i)*10;
-                double err_y0 = bank.getFloat("err_y0", i)*10;
-                double err_z0 = bank.getFloat("err_z0", i)*10;
-                double ux = bank.getFloat("ux", i);
-                double uy = bank.getFloat("uy", i);
-                double uz = bank.getFloat("uz", i);
-                int clid1 = bank.getShort("Cluster1_ID", i);
+                int id     = bank.getShort(BMT_Crosses.ID, i);
+                int tid    = bank.getShort(BMT_Crosses.trkID, i);
+                int sector = bank.getByte(BMT_Crosses.sector, i);
+                int region = bank.getByte(BMT_Crosses.region, i);
+                int layer  = bank.getByte(BMT_Crosses.layer, i);
+                double x   = bank.getFloat(BMT_Crosses.x, i)*10;
+                double y   = bank.getFloat(BMT_Crosses.y, i)*10;
+                double z   = bank.getFloat(BMT_Crosses.z, i)*10;
+                double err_x = bank.getFloat(BMT_Crosses.err_x, i)*10;
+                double err_y = bank.getFloat(BMT_Crosses.err_y, i)*10;
+                double err_z = bank.getFloat(BMT_Crosses.err_z, i)*10;
+                double x0  = bank.getFloat(BMT_Crosses.x0, i)*10;
+                double y0  = bank.getFloat(BMT_Crosses.y0, i)*10;
+                double z0  = bank.getFloat(BMT_Crosses.z0, i)*10;
+                double err_x0 = bank.getFloat(BMT_Crosses.err_x0, i)*10;
+                double err_y0 = bank.getFloat(BMT_Crosses.err_y0, i)*10;
+                double err_z0 = bank.getFloat(BMT_Crosses.err_z0, i)*10;
+                double ux = bank.getFloat(BMT_Crosses.ux, i);
+                double uy = bank.getFloat(BMT_Crosses.uy, i);
+                double uz = bank.getFloat(BMT_Crosses.uz, i);
+                int clid1 = bank.getShort(BMT_Crosses.Cluster1_ID, i);
                 if(layer==0) continue;
                 Cross cr = new Cross(DetectorType.BMT, BMTGeometry.getDetectorType(layer), sector, region, id);
                 cr.setAssociatedTrackID(tid); 
@@ -362,35 +370,35 @@ public class RecoBankReader {
     
             DataBank bank = event.getBank("CVT::Seeds");
             for(int i = 0; i < bank.rows(); i++) {
-                int    tid    = bank.getShort("ID", i);
-                double pt     = bank.getFloat("pt", i);
-                double phi0   = bank.getFloat("phi0", i);
-                double tandip = bank.getFloat("tandip", i);
-                double z0     = bank.getFloat("z0", i)*10;
-                double d0     = bank.getFloat("d0", i)*10;
-                int    q      = bank.getByte("q", i);
-                int    type   = bank.getByte("fittingMethod", i);
-//                double xb     = bank.getFloat("xb", i);
-//                double yb     = bank.getFloat("yb", i);
+                int    tid    = bank.getShort(CVT_Seeds.ID, i);
+                double pt     = bank.getFloat(CVT_Seeds.pt, i);
+                double phi0   = bank.getFloat(CVT_Seeds.phi0, i);
+                double tandip = bank.getFloat(CVT_Seeds.tandip, i);
+                double z0     = bank.getFloat(CVT_Seeds.z0, i)*10;
+                double d0     = bank.getFloat(CVT_Seeds.d0, i)*10;
+                int    q      = bank.getByte(CVT_Seeds.q, i);
+                int    type   = bank.getByte(CVT_Seeds.fittingMethod, i);
+//                double xb     = bank.getFloat(CVT_Seeds.xb, i);
+//                double yb     = bank.getFloat(CVT_Seeds.yb, i);
                 Helix helix = new Helix( pt, d0, phi0, z0, tandip, q, xb, yb);
                 double[][] covmatrix = new double[5][5];
-                covmatrix[0][0] = bank.getFloat("cov_d02", i)*10*10;
-                covmatrix[0][1] = bank.getFloat("cov_d0phi0", i)*10 ;
-                covmatrix[0][2] = bank.getFloat("cov_d0rho", i);
-                covmatrix[1][0] = bank.getFloat("cov_d0phi0", i)*10 ;
-                covmatrix[1][1] = bank.getFloat("cov_phi02", i);
-                covmatrix[1][2] = bank.getFloat("cov_phi0rho", i)/10 ;
-                covmatrix[2][0] = bank.getFloat("cov_d0rho", i);
-                covmatrix[2][1] = bank.getFloat("cov_phi0rho", i)/10 ;
-                covmatrix[2][2] = bank.getFloat("cov_rho2", i)/10/10;
-                covmatrix[3][3] = bank.getFloat("cov_z02", i)*10*10;
-                covmatrix[3][4] = bank.getFloat("cov_z0tandip", i)*10;
-                covmatrix[4][3] = bank.getFloat("cov_z0tandip", i)*10;
-                covmatrix[4][4] = bank.getFloat("cov_tandip2", i);
-                double circleChi2 = bank.getFloat("circlefit_chi2_per_ndf", i);
-                double lineChi2   = bank.getFloat("linefit_chi2_per_ndf", i);
-                double chi2       = bank.getFloat("chi2", i);
-                int    ndf        = bank.getShort("ndf", i);
+                covmatrix[0][0] = bank.getFloat(CVT_Seeds.cov_d02, i)*10*10;
+                covmatrix[0][1] = bank.getFloat(CVT_Seeds.cov_d0phi0, i)*10 ;
+                covmatrix[0][2] = bank.getFloat(CVT_Seeds.cov_d0rho, i);
+                covmatrix[1][0] = bank.getFloat(CVT_Seeds.cov_d0phi0, i)*10 ;
+                covmatrix[1][1] = bank.getFloat(CVT_Seeds.cov_phi02, i);
+                covmatrix[1][2] = bank.getFloat(CVT_Seeds.cov_phi0rho, i)/10 ;
+                covmatrix[2][0] = bank.getFloat(CVT_Seeds.cov_d0rho, i);
+                covmatrix[2][1] = bank.getFloat(CVT_Seeds.cov_phi0rho, i)/10 ;
+                covmatrix[2][2] = bank.getFloat(CVT_Seeds.cov_rho2, i)/10/10;
+                covmatrix[3][3] = bank.getFloat(CVT_Seeds.cov_z02, i)*10*10;
+                covmatrix[3][4] = bank.getFloat(CVT_Seeds.cov_z0tandip, i)*10;
+                covmatrix[4][3] = bank.getFloat(CVT_Seeds.cov_z0tandip, i)*10;
+                covmatrix[4][4] = bank.getFloat(CVT_Seeds.cov_tandip2, i);
+                double circleChi2 = bank.getFloat(CVT_Seeds.circlefit_chi2_per_ndf, i);
+                double lineChi2   = bank.getFloat(CVT_Seeds.linefit_chi2_per_ndf, i);
+                double chi2       = bank.getFloat(CVT_Seeds.chi2, i);
+                int    ndf        = bank.getShort(CVT_Seeds.ndf, i);
                 Seed seed = new Seed();
                 seed.setId(tid);
                 seed.setHelix(helix);
@@ -400,8 +408,8 @@ public class RecoBankReader {
                 seed.setLineFitChi2PerNDF(lineChi2);
                 seed.setChi2(chi2);
                 seed.setNDF(ndf);
-                seed.percentTruthMatch = bank.getFloat("fracmctru", i);
-                seed.totpercentTruthMatch = bank.getFloat("fracmcmatch", i);
+                seed.percentTruthMatch = bank.getFloat(CVT_Seeds.fracmctru, i);
+                seed.totpercentTruthMatch = bank.getFloat(CVT_Seeds.fracmcmatch, i);
                 
                 List<Cross> crossesOnTrk = new ArrayList<>();
                 for (int j = 0; j < 9; j++) {
@@ -438,36 +446,36 @@ public class RecoBankReader {
     
             DataBank bank = event.getBank("CVT::Tracks");
             for(int i = 0; i < bank.rows(); i++) {
-                int    tid    = bank.getShort("ID", i);
-                double pt     = bank.getFloat("pt", i);
-                double phi0   = bank.getFloat("phi0", i);
-                double tandip = bank.getFloat("tandip", i);
-                double z0     = bank.getFloat("z0", i)*10;
-                double d0     = bank.getFloat("d0", i)*10;
-                int    q      = bank.getByte("q", i);
-//                double xb     = bank.getFloat("xb", i);
-//                double yb     = bank.getFloat("yb", i);
+                int    tid    = bank.getShort(CVT_Tracks.ID, i);
+                double pt     = bank.getFloat(CVT_Tracks.pt, i);
+                double phi0   = bank.getFloat(CVT_Tracks.phi0, i);
+                double tandip = bank.getFloat(CVT_Tracks.tandip, i);
+                double z0     = bank.getFloat(CVT_Tracks.z0, i)*10;
+                double d0     = bank.getFloat(CVT_Tracks.d0, i)*10;
+                int    q      = bank.getByte(CVT_Tracks.q, i);
+//                double xb     = bank.getFloat(CVT_Tracks.xb, i);
+//                double yb     = bank.getFloat(CVT_Tracks.yb, i);
                 Helix helix = new Helix( pt, d0, phi0, z0, tandip, q, xb, yb);
                 double[][] covmatrix = new double[5][5];
-                covmatrix[0][0] = bank.getFloat("cov_d02", i)*10*10;
-                covmatrix[0][1] = bank.getFloat("cov_d0phi0", i)*10 ;
-                covmatrix[0][2] = bank.getFloat("cov_d0rho", i);
-                covmatrix[1][0] = bank.getFloat("cov_d0phi0", i)*10 ;
-                covmatrix[1][1] = bank.getFloat("cov_phi02", i);
-                covmatrix[1][2] = bank.getFloat("cov_phi0rho", i)/10 ;
-                covmatrix[2][0] = bank.getFloat("cov_d0rho", i);
-                covmatrix[2][1] = bank.getFloat("cov_phi0rho", i)/10 ;
-                covmatrix[2][2] = bank.getFloat("cov_rho2", i)/10/10;
-                covmatrix[3][3] = bank.getFloat("cov_z02", i)*10*10;
-                covmatrix[3][4] = bank.getFloat("cov_z0tandip", i)*10;
-                covmatrix[4][3] = bank.getFloat("cov_z0tandip", i)*10;
-                covmatrix[4][4] = bank.getFloat("cov_tandip2", i);
-            //    int    status   = bank.getShort("status", i);
-            //    double chi2     = bank.getFloat("chi2", i);
-            //    int    ndf      = bank.getShort("ndf", i);
-            //    int    pid      = bank.getInt("pid", i);
-                int    seedId   = bank.getShort("seedID", i);
-                int    status   = Math.abs(bank.getShort("status", i));
+                covmatrix[0][0] = bank.getFloat(CVT_Tracks.cov_d02, i)*10*10;
+                covmatrix[0][1] = bank.getFloat(CVT_Tracks.cov_d0phi0, i)*10 ;
+                covmatrix[0][2] = bank.getFloat(CVT_Tracks.cov_d0rho, i);
+                covmatrix[1][0] = bank.getFloat(CVT_Tracks.cov_d0phi0, i)*10 ;
+                covmatrix[1][1] = bank.getFloat(CVT_Tracks.cov_phi02, i);
+                covmatrix[1][2] = bank.getFloat(CVT_Tracks.cov_phi0rho, i)/10 ;
+                covmatrix[2][0] = bank.getFloat(CVT_Tracks.cov_d0rho, i);
+                covmatrix[2][1] = bank.getFloat(CVT_Tracks.cov_phi0rho, i)/10 ;
+                covmatrix[2][2] = bank.getFloat(CVT_Tracks.cov_rho2, i)/10/10;
+                covmatrix[3][3] = bank.getFloat(CVT_Tracks.cov_z02, i)*10*10;
+                covmatrix[3][4] = bank.getFloat(CVT_Tracks.cov_z0tandip, i)*10;
+                covmatrix[4][3] = bank.getFloat(CVT_Tracks.cov_z0tandip, i)*10;
+                covmatrix[4][4] = bank.getFloat(CVT_Tracks.cov_tandip2, i);
+            //    int    status   = bank.getShort(CVT_Tracks.status, i);
+            //    double chi2     = bank.getFloat(CVT_Tracks.chi2, i);
+            //    int    ndf      = bank.getShort(CVT_Tracks.ndf, i);
+            //    int    pid      = bank.getInt(CVT_Tracks.pid, i);
+                int    seedId   = bank.getShort(CVT_Tracks.seedID, i);
+                int    status   = Math.abs(bank.getShort(CVT_Tracks.status, i));
                 int type = status - (int) (status/10) * 10; 
                 Seed seed = cvtSeeds.get(seedId);
                 seed.setId(tid);
@@ -502,79 +510,5 @@ public class RecoBankReader {
             return seeds;
         }
     }
-    
-    /*
-    public static Map<Integer, Seed> readCVTTracksBank(DataEvent event, double xb, double yb, Map<Integer, Seed> cvtSeeds,
-            Map<Integer, Cross> svtCrosses, Map<Integer, Cross> bmtCrosses) {
-        
-        if(!event.hasBank("CVT::Tracks"))
-            return null;
-        else {
-            Map<Integer, Seed> seeds = new HashMap<>();          
-    
-            DataBank bank = event.getBank("CVT::Tracks");
-            for(int i = 0; i < bank.rows(); i++) {
-                int    tid    = bank.getShort("ID", i);
-                double pt     = bank.getFloat("pt", i);
-                double phi0   = bank.getFloat("phi0", i);
-                double tandip = bank.getFloat("tandip", i);
-                double z0     = bank.getFloat("z0", i)*10;
-                double d0     = bank.getFloat("d0", i)*10;
-                int    q      = bank.getByte("q", i);
-//                double xb     = bank.getFloat("xb", i);
-//                double yb     = bank.getFloat("yb", i);
-                Helix helix = new Helix( pt, d0, phi0, z0, tandip, q, xb, yb);
-                double[][] covmatrix = new double[5][5];
-                covmatrix[0][0] = bank.getFloat("cov_d02", i)*10*10;
-                covmatrix[0][1] = bank.getFloat("cov_d0phi0", i)*10 ;
-                covmatrix[0][2] = bank.getFloat("cov_d0rho", i);
-                covmatrix[1][0] = bank.getFloat("cov_d0phi0", i)*10 ;
-                covmatrix[1][1] = bank.getFloat("cov_phi02", i);
-                covmatrix[1][2] = bank.getFloat("cov_phi0rho", i)/10 ;
-                covmatrix[2][0] = bank.getFloat("cov_d0rho", i);
-                covmatrix[2][1] = bank.getFloat("cov_phi0rho", i)/10 ;
-                covmatrix[2][2] = bank.getFloat("cov_rho2", i)/10/10;
-                covmatrix[3][3] = bank.getFloat("cov_z02", i)*10*10;
-                covmatrix[3][4] = bank.getFloat("cov_z0tandip", i)*10;
-                covmatrix[4][3] = bank.getFloat("cov_z0tandip", i)*10;
-                covmatrix[4][4] = bank.getFloat("cov_tandip2", i);
-            //    int    status   = bank.getShort("status", i);
-            //    double chi2     = bank.getFloat("chi2", i);
-            //    int    ndf      = bank.getShort("ndf", i);
-            //    int    pid      = bank.getInt("pid", i);
-                int    seedId   = bank.getShort("seedID", i);
-                int    type   = bank.getByte("fittingMethod", i);
-                
-                Seed seed = cvtSeeds.get(seedId);
-                seed.setId(tid);
-                seed.setHelix(helix);
-                seed.getHelix().setCovMatrix(covmatrix);
-                seed.setStatus(type);
-                seed.FirstPassIdx = i;
-                List<Cross> crossesOnTrk = new ArrayList<>();
-                for (int j = 0; j < 9; j++) {
-                    String hitStrg = "Cross";
-                    hitStrg += (j + 1);
-                    hitStrg += "_ID";  
-                    int cid = (int) bank.getShort(hitStrg, i);
-                    if(svtCrosses.containsKey(cid)) { 
-                        crossesOnTrk.add(svtCrosses.get(cid));
-                        
-                    }
-                    if(bmtCrosses!=null) {
-                        if(bmtCrosses.containsKey(cid)) { 
-                            crossesOnTrk.add(bmtCrosses.get(cid));
-                        }        
-                    }
-                }
-                
-                seed.setCrosses(crossesOnTrk);
-               
-                seeds.put(tid, seed);
-            }
-            return seeds;
-        }
-    }
-    */
     
 }
