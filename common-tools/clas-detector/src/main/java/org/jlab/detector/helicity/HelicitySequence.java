@@ -68,6 +68,10 @@ public class HelicitySequence {
         return this.halfWavePlate;
     }
 
+    public double getHelicityClock() {
+        return helicityClock;
+    }
+
     /**
      * Get the the number of states in the sequence.
      * @return the number of states
