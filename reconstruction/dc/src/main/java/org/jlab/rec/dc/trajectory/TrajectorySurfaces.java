@@ -59,9 +59,8 @@ public class TrajectorySurfaces {
         Constants.getInstance().Z[11]= dcDetector.getWireMidpoint(0, 5, 0, 0).z;
         Constants.getInstance().Z[12]= dcDetector.getWireMidpoint(0, 5, 5, 0).z;
         //DcDetector.getWireMidpoint(this.get_Sector()-1, this.get_Superlayer()-1, this.get_Layer()-1, this.get_Wire()-1).z;
-        
-        double d = 0;
-        Vector3D n,P;
+        Vector3D n;
+
         for(int isector =0; isector<6; isector++) {
             
             int sector = isector+1;
