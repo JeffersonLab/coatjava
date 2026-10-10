@@ -38,7 +38,7 @@ public class Dsc2Scaler extends DaqScaler{
      * @param seconds dwell time, provided in case the clock rolls over
      */
     public Dsc2Scaler(Bank bank, IndexedTable fcupTable, IndexedTable slmTable, double seconds) {
-        this.clockFreq=1e6;
+        this.clockFreq=125e6; // for RG-A spring 2018 6.4 GeV data
         this.read(bank);
         this.calibrate(fcupTable,slmTable,seconds);
     }
@@ -50,7 +50,7 @@ public class Dsc2Scaler extends DaqScaler{
      * @param dscTable /daq/config/scalers/dsc1 CCDB table
      */
     public Dsc2Scaler(Bank bank, IndexedTable fcupTable, IndexedTable slmTable, IndexedTable dscTable) {
-        this.clockFreq = dscTable.getIntValue("frequency", 0,0,0);
+        this.clockFreq = 125e6; // for RG-A spring 2018 6.4 GeV data // dscTable.getIntValue("frequency", 0,0,0);
         this.read(bank);
         this.calibrate(fcupTable,slmTable);
     }
