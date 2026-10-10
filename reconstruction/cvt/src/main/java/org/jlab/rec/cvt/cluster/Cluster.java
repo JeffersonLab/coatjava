@@ -8,10 +8,10 @@ import org.jlab.rec.cvt.hit.Hit;
 import java.util.Collections;
 import org.jlab.clas.tracking.kalmanfilter.AKFitter.HitOnTrack;
 import org.jlab.clas.tracking.kalmanfilter.Surface;
+import org.jlab.detector.base.DetectorDescriptor;
 import org.jlab.detector.base.DetectorType;
 import org.jlab.geom.prim.Arc3D;
 import org.jlab.geom.prim.Cylindrical3D;
-import org.jlab.geom.prim.Plane3D;
 import org.jlab.geom.prim.Transformation3D;
 import org.jlab.rec.cvt.Geometry;
 import org.jlab.rec.cvt.bmt.BMTType;
@@ -27,10 +27,8 @@ public class Cluster extends ArrayList<Hit> implements Comparable<Cluster> {
 
     private static final long serialVersionUID = 9153980362683755204L;
 
-    private DetectorType _Detector;		//  The detector SVT or BMT
+    private DetectorDescriptor _Descriptor;
     private BMTType  _Type;                   //   The detector type  for BMT C or Z
-    private int _Sector;      		//	sector[1...]
-    private int _Layer;    	 		//	layer [1,...]
     private int _Tlayer;                // layer in tracker comprising 6 svt layers and 6 bmt layer [1...12]
     private int _Id;			//	cluster Id
     private double _Centroid; 		// after LC (Lorentz Correction)
@@ -63,13 +61,47 @@ public class Cluster extends ArrayList<Hit> implements Comparable<Cluster> {
     private Vector3D _s; //svt vector perpendicular to cluster pseudo-strip direction in the module plane or bmt vector perpendicular to cluster pseudo-strip in direction tangential to the cluster surface in the middle of the arc
     private Vector3D _n; //svt vector normal to the cluster module plane or bmt vector normal to the cluster surface in the middle of the arc
     public boolean flagForExclusion = false;
-    
+   
+    public Cluster(ArrayList<Hit> hits, int id) {
+        super(hits.size());
+        this._Id = id;
+        this._Descriptor = hits.get(0).getDescriptor();
+        this._Type = hits.get(0).getType();
+        this._Tlayer = hits.get(0).getLayer();
+        if(this._Descriptor.getType() == DetectorType.BMT) 
+            this._Tlayer+=6;
+        this.addAll(hits);
+    }
 
-    public Cluster(DetectorType detector, BMTType type, int sector, int layer, int cid) {
-        this._Detector = detector;
+    public Cluster(int size, Hit hit, int id) {
+        super(size);
+        this._Id = id;
+        this._Descriptor = hit.getDescriptor();
+        this._Type = hit.getType();
+        this._Tlayer = hit.getLayer();
+        if(this._Descriptor.getType() == DetectorType.BMT) 
+            this._Tlayer+=6;
+    }
+    
+    public Cluster(int size, DetectorType detector, BMTType type, int sector, int layer, int cid) {
+        super(size);
+        this._Descriptor = new DetectorDescriptor();
+        this._Descriptor.setType(detector);
+        this._Descriptor.setSector(sector);
+        this._Descriptor.setLayer(layer);
         this._Type = type;
-        this._Sector = sector;
-        this._Layer = layer;
+        this._Id = cid;
+        this._Tlayer = layer;
+        if(detector==DetectorType.BMT) 
+            this._Tlayer+=6;
+    }
+    
+    public Cluster(DetectorType detector, BMTType type, int sector, int layer, int cid) {
+        this._Descriptor = new DetectorDescriptor();
+        this._Descriptor.setType(detector);
+        this._Descriptor.setSector(sector);
+        this._Descriptor.setLayer(layer);
+        this._Type = type;
         this._Id = cid;
         this._Tlayer = layer;
         if(detector==DetectorType.BMT) 
@@ -84,15 +116,15 @@ public class Cluster extends ArrayList<Hit> implements Comparable<Cluster> {
      * number.
      */
     public Cluster newCluster(Hit hit, int cid) {
-        return new Cluster(hit.getDetector(), hit.getType(), hit.getSector(), hit.getLayer(), cid);
+        return new Cluster(0, hit.getDetector(), hit.getType(), hit.getSector(), hit.getLayer(), cid);
     }
 
     public DetectorType getDetector() {
-        return _Detector;
+        return _Descriptor.getType();
     }
 
     public void setDetector(DetectorType _Detector) {
-        this._Detector = _Detector;
+        this._Descriptor.setType(_Detector);
     }
 
     public BMTType getType() {
@@ -108,7 +140,7 @@ public class Cluster extends ArrayList<Hit> implements Comparable<Cluster> {
      * @return the sector of the cluster
      */
     public int getSector() {
-        return _Sector;
+        return this._Descriptor.getSector();
     }
 
     /**
@@ -116,7 +148,7 @@ public class Cluster extends ArrayList<Hit> implements Comparable<Cluster> {
      * @param _Sector sector of the cluster
      */
     public void setSector(int _Sector) {
-        this._Sector = _Sector;
+        this._Descriptor.setSector(_Sector);
     }
 
     /**
@@ -124,7 +156,7 @@ public class Cluster extends ArrayList<Hit> implements Comparable<Cluster> {
      * @return the layer of the cluster
      */
     public int getLayer() {
-        return _Layer;
+        return this._Descriptor.getLayer();
     }
 
     /**
@@ -132,7 +164,7 @@ public class Cluster extends ArrayList<Hit> implements Comparable<Cluster> {
      * @param _Layer the layer of the cluster
      */
     public void setLayer(int _Layer) {
-        this._Layer = _Layer;
+        this._Descriptor.setLayer(_Layer);
     }
 
     /**
@@ -170,7 +202,7 @@ public class Cluster extends ArrayList<Hit> implements Comparable<Cluster> {
      * @return region (1...4)
      */
     public int getRegion() {
-        return (int) (this._Layer + 1) / 2;
+        return (int) (this.getLayer() + 1) / 2;
     }
 
     /**
@@ -178,7 +210,7 @@ public class Cluster extends ArrayList<Hit> implements Comparable<Cluster> {
      * @return superlayer 1 or 2 in region (1...4)
      */
     public int getRegionSlayer() {
-        return (this._Layer + 1) % 2 + 1;
+        return (this.getLayer() + 1) % 2 + 1;
     }
 
     /**
@@ -235,7 +267,6 @@ public class Cluster extends ArrayList<Hit> implements Comparable<Cluster> {
         double weightedZ1 = 0;                  // SVT/BMT strip centroid positions of endpoints
         double weightedZ2 = 0;                  // SVT/BMT strip centroid positions of endpoints
         double weightedZC = 0;                  // BMT strip centroid positions of strip midpoint
-        double weightedZ0 = 0;                  // BMT strip centroid positions of strip midpoint with no LC
         
         int nbhits = this.size();
         //sort for bmt detector
@@ -323,7 +354,6 @@ public class Cluster extends ArrayList<Hit> implements Comparable<Cluster> {
                 weightedZC += strpEn * stCent.z();
                 weightedX0 += strpEn * stCent0.x();
                 weightedY0 += strpEn * stCent0.y();
-                weightedZ0 += strpEn * stCent0.z();
                 weightedStrp += strpEn * (double) strpNb;
                 weightedStrp0 += strpEn * (double) strpNb0;
                 
@@ -341,7 +371,7 @@ public class Cluster extends ArrayList<Hit> implements Comparable<Cluster> {
 
             }
             if (totEn == 0) {
-                System.err.println(" Cluster energy is null .... exit "+this._Detector+" "+this._Type);
+                System.err.println(" Cluster energy is null .... exit "+this._Descriptor.getType()+" "+this._Type);
                 
                 return;
             }
@@ -364,7 +394,6 @@ public class Cluster extends ArrayList<Hit> implements Comparable<Cluster> {
             weightedZC /= totEn;
             weightedX0 /= totEn;
             weightedY0 /= totEn;
-            weightedZ0 /= totEn;
             weightedZ /= totEn;
             weightedPhi  = Math.atan2(weightedYC, weightedXC);
             weightedPhi0 = Math.atan2(weightedY0, weightedX0);
@@ -695,12 +724,12 @@ public class Cluster extends ArrayList<Hit> implements Comparable<Cluster> {
         Surface surface = null;
         
         if(this.getDetector()==DetectorType.BST) {
-            Point3D endPt1 = this.getLine().origin();
-            Point3D endPt2 = this.getLine().end();
+            //Point3D endPt1 = this.getLine().origin();
+            //Point3D endPt2 = this.getLine().end();
 //            org.jlab.clas.tracking.objects.Strip strp = new org.jlab.clas.tracking.objects.Strip(this.getId(), this.getCentroid(), 
 //                                                                                                 endPt1.x(), endPt1.y(), endPt1.z(),
 //                                                                                                 endPt2.x(), endPt2.y(), endPt2.z());
-            Plane3D plane = new Plane3D(endPt1, this.getN());
+            //Plane3D plane = new Plane3D(endPt1, this.getN());
             surface = Geometry.getInstance().getSVT().getSurface(this.getLayer(), this.getSector(), this.getId(), 
                                                        this.getCentroid(), this.getLine());
             surface.hemisphere = Math.signum(this.center().y());
@@ -766,15 +795,13 @@ public class Cluster extends ArrayList<Hit> implements Comparable<Cluster> {
         double arg_phi  = arg.getPhi0();
 
         int CompPhi = this_phi < arg_phi ? -1 : this_phi == arg_phi ? 0 : 1;
-        int CompLay = this._Layer < arg._Layer ? -1 : this._Layer == arg._Layer ? 0 : 1;
+        int CompLay = this.getLayer() < arg.getLayer() ? -1 : this.getLayer() == arg.getLayer() ? 0 : 1;
         int CompId = this.getSeedStrip().getStrip()< arg.getSeedStrip().getStrip() ? -1 : this.getSeedStrip().getStrip() == arg.getSeedStrip().getStrip() ? 0 : 1;
 
         int return_val1 = ((CompLay == 0) ? CompId : CompLay);
         int return_val = ((CompPhi == 0) ? return_val1 : CompPhi);
 
         return return_val;
-        
-        
     }
 
     private double PhiInRange(double phi) {
@@ -836,22 +863,22 @@ public class Cluster extends ArrayList<Hit> implements Comparable<Cluster> {
 
     public void update(int trackId, HitOnTrack traj) {
         
-        Point3D  trackPos = new Point3D(traj.x, traj.y, traj.z);
-        Vector3D trackDir = new Vector3D(traj.px, traj.py, traj.pz).asUnit();
+        Point3D trackPos = new Point3D(traj.x, traj.y, traj.z);
                 
         this.setAssociatedTrackID(trackId);
         this.setCentroidResidual(traj.residual);
         this.setSeedResidual(trackPos); 
         this.setTrakInters(trackPos);
-
         
-        if(this.getDetector()==DetectorType.BMT && this.getType()==BMTType.C) {  
-            this.setS(this.getAxis().direction().asUnit());
-            this.setN(this.getAxis().distance(trackPos).direction().asUnit());
-            this.setL(this.getS().cross(this.getN()).asUnit());
-        }
-        if(this.getDetector()==DetectorType.BMT && this.getType()==BMTType.Z) {  
-            this.setCentroidResidual(traj.residual*this.getTile().baseArc().radius());    
+        if(this.getDetector() == DetectorType.BMT) {
+            if (this.getType() == BMTType.C) {  
+                this.setS(this.getAxis().direction().asUnit());
+                this.setN(this.getAxis().distance(trackPos).direction().asUnit());
+                this.setL(this.getS().cross(this.getN()).asUnit());
+            }
+            else if (this.getType() == BMTType.Z) {  
+                this.setCentroidResidual(traj.residual*this.getTile().baseArc().radius());
+            }
         }
         
         for (Hit hit : this) {
