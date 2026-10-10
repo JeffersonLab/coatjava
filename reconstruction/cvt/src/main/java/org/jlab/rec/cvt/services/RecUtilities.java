@@ -495,7 +495,7 @@ public class RecUtilities {
             if(fitStatus) {
                 CircleFitPars pars = circlefit.getFit();
                 seed.getHelix().setCurvature(pars.rho());           
-                seed.getHelix().setDCA(-pars.doca());
+                seed.getHelix().setDCA(pars.doca());
                 seed.getHelix().setPhiAtDCA(pars.phi());
                 seed.update_Crosses(xb,yb);
             }

@@ -132,7 +132,7 @@ public class TracksFromTargetRec {
             if(Constants.getInstance().seedingDebugMode) {
                 System.out.println("Before overlap remover");
                 System.out.println(s.toString());
-            }       
+            } 
             s.setKey(s.new Key(s));
         }
         if(Constants.getInstance().removeOverlappingSeeds) 
@@ -169,7 +169,7 @@ public class TracksFromTargetRec {
             for(Seed s : ovlrm) {
                 s.setId(s.getId()*-1);
             }
-        }
+        }        
         
         this.CVTseeds = seeds;
         // Got seeds;
