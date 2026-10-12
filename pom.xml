@@ -272,7 +272,7 @@
       <dependency>
         <groupId>org.apache.commons</groupId>
         <artifactId>commons-lang3</artifactId>
-        <version>3.20.0</version> <!-- WARNING: if changed, see `docs/dependency_conflicts.md` -->
+        <version>3.21.0</version> <!-- WARNING: if changed, see `docs/dependency_conflicts.md` -->
       </dependency>
 
       <!--
