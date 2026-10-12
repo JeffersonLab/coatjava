@@ -221,8 +221,8 @@
           <exclusion>
             <!--
               protobuf is transitive via `mysql-connector-j` and is only needed for
-              the X DevAPI (MySQL X Protocol); it also conflicts with the version
-              used by `xmsg`, so we exclude it here
+              the X DevAPI (MySQL X Protocol), unused here; it also conflicts with
+              the version used by `xmsg`, so we exclude it here
             -->
             <groupId>com.google.protobuf</groupId>
             <artifactId>protobuf-java</artifactId>
