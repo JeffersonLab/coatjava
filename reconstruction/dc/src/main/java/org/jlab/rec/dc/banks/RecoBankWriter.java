@@ -13,7 +13,7 @@ import org.jlab.rec.dc.hit.Hit;
 import org.jlab.rec.dc.segment.Segment;
 import org.jlab.rec.dc.track.Track;
 
-import trackfitter.fitter.utilities.*;
+import org.jlab.clas.tracking.utilities.ProbChi2perNDF;
 
 /**
  * A class to fill the reconstructed DC banks
@@ -36,8 +36,8 @@ public class RecoBankWriter {
 
     public void updateListsWithClusterInfo(List<FittedHit> fhits,
             List<FittedCluster> clusters) {
-        ArrayList rmHits = new ArrayList<FittedHit>();
-        ArrayList addHits = new ArrayList<FittedHit>();
+        List<FittedHit> rmHits = new ArrayList<>();
+        List<FittedHit> addHits = new ArrayList<>();
         for (int i = 0; i < clusters.size(); i++) {
             clusters.get(i).set_Id(i + 1);
             for (int j = 0; j < clusters.get(i).size(); j++) {
@@ -204,8 +204,6 @@ public DataBank fillHBClustersBank(DataEvent event, List<FittedCluster> cluslist
     DataBank bank = event.createBank(name, cluslist.size());
 
     int[] hitIdxArray = new int[12];
-    if(cluslist==null)
-        return bank;
     for (int i = 0; i < cluslist.size(); i++) {
         if (cluslist.get(i) == null || cluslist.get(i).get_Id() == -1) {
             continue;
