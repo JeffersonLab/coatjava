@@ -6,7 +6,7 @@ import java.util.List;
 import org.jlab.geom.prim.Point3D;
 import org.jlab.geom.prim.Vector3D;
 import org.jlab.rec.cvt.trajectory.Ray;
-import trackfitter.fitter.utilities.ProbChi2perNDF;
+import org.jlab.clas.tracking.utilities.ProbChi2perNDF;
 
 /**
  * A fitter which does sequential fit (for x, y coordinates) and then (for r, z
@@ -21,7 +21,6 @@ public class CosmicFitter {
     private CosmicFitPars _rayfitoutput;
     
     private LineFitPars _linefitparsRhoZ;
-    private LineFitPars _linefitparsYX;
     /**
      * Status of the HelicalTrackFit
      */
@@ -164,7 +163,7 @@ public class CosmicFitter {
 
         //Line fits
         _linefitYX = new LineFitter();
-        boolean linefitstatusXYOK = _linefitYX.fitStatus(Y, X, errRt, new ArrayList<>(X.size()), X.size());
+        _linefitYX.fitStatus(Y, X, errRt, new ArrayList<>(X.size()), X.size());
 
         _linefitRhoZ = new LineFitter();
         boolean linefitstatusOK = _linefitRhoZ.fitStatus(Rho, Z, errRho, ErrZ, Z.size());
@@ -174,7 +173,6 @@ public class CosmicFitter {
         }
         //  Get the results of the fits
         _linefitparsRhoZ = _linefitRhoZ.getFit();
-        _linefitparsYX = _linefitYX.getFit();
 
         double fit_tandip = _linefitparsRhoZ.slope();
         double fit_Z0 = _linefitparsRhoZ.intercept();
