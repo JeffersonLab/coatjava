@@ -2,6 +2,7 @@ package org.jlab.rec.dc.trajectory;
 
 import Jama.*;
 import org.jlab.rec.dc.Constants;
+
 /**
  * Describes a track pars in the DC.  
  * @author ziegler
