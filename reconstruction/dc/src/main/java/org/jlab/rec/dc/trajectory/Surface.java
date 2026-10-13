@@ -1,7 +1,6 @@
 package org.jlab.rec.dc.trajectory;
 
 import org.jlab.detector.base.DetectorType;
-import org.jlab.geom.prim.Arc3D;
 import org.jlab.geom.prim.Line3D;
 import org.jlab.geom.prim.Plane3D;
 import org.jlab.geom.prim.Point3D;

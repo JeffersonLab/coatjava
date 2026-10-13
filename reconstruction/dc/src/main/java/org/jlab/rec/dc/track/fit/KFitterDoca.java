@@ -2,8 +2,6 @@ package org.jlab.rec.dc.track.fit;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Logger;
-
 import org.jlab.clas.swimtools.Swim;
 import org.jlab.detector.geant4.v2.DCGeant4Factory;
 import org.jlab.rec.dc.track.Track;
@@ -16,8 +14,6 @@ import org.jlab.jnp.matrix.*;
  */
 public class KFitterDoca {
 
-    private static final Logger LOGGER = Logger.getLogger(KFitterDoca.class.getName());
-    
     public boolean setFitFailed = false;
 
     private StateVecsDoca sv;
@@ -29,10 +25,8 @@ public class KFitterDoca {
     private CovMat initialCovMat;
     public List<org.jlab.rec.dc.trajectory.StateVec> kfStateVecsAlongTrajectory;
     public int totNumIter = 30;
-    private double newChisq = Double.POSITIVE_INFINITY;
     public boolean filterOn = true;
     public double chi2 = 0;
-    private double chi2kf = 0;
     public int NDF = 0;
     public int ConvStatus = 1;
 
@@ -77,7 +71,6 @@ public class KFitterDoca {
         sv.init(trk, sv.Z[0], this, c);
     }
     public int interNum = 0;
-    double initChi2 = Double.POSITIVE_INFINITY;
     public void runFitter(int sector) {
         this.chi2 = Double.POSITIVE_INFINITY;
         double initChi2 = Double.POSITIVE_INFINITY;
@@ -85,7 +78,6 @@ public class KFitterDoca {
         int svzLength = sv.Z.length;
 
         if(TBT==true) {
-            this.chi2kf = 0;
             // Get the input parameters
             for (int k = 0; k < svzLength - 1; k++) {
                     sv.transport(sector, k, k + 1,
@@ -106,7 +98,6 @@ public class KFitterDoca {
     //        IntStream.range(1,totNumIter ).parallel().forEach(i -> {
         for (int i = 1; i <= totNumIter; i++) {
             interNum = i;
-            this.chi2kf = 0;
 
             if (i > 1) {
                 //get new state vec at 1st measurement after propagating back from the last filtered state
@@ -226,7 +217,7 @@ public class KFitterDoca {
         
         return result_inv;
     }
-    private double KFScale = 4;
+    private final double KFScale = 4;
     private void filter(int k) {
         if(Double.isNaN(sv.trackTraj.get(k).x) || Double.isNaN(sv.trackTraj.get(k).y) 
                 || Double.isNaN(sv.trackTraj.get(k).tx) ||Double.isNaN(sv.trackTraj.get(k).ty )
@@ -274,8 +265,6 @@ public class KFitterDoca {
             }
             //if(this.interNum>1)
             //    signMeas = Math.signum(h);
-            double c2 = ((signMeas*Math.abs(mv.measurements.get(k).doca[0]) - sign*Math.abs(h)) 
-                    * (signMeas*Math.abs(mv.measurements.get(k).doca[0]) - sign*Math.abs(h)) / V);
             //if(signMeas!=Math.signum(h) && this.interNum>1) LOGGER.log(Level.FINEST, sv.trackTraj.get(k).printInfo()+" h "+(float)h);
             double x_filt = sv.trackTraj.get(k).x + K[0] * (signMeas*Math.abs(mv.measurements.get(k).doca[0]) - sign*Math.abs(h));
             double y_filt = sv.trackTraj.get(k).y + K[1] * (signMeas*Math.abs(mv.measurements.get(k).doca[0]) - sign*Math.abs(h));
@@ -315,12 +304,8 @@ public class KFitterDoca {
                 tx_filt += K[2] * (signMeas*Math.abs(mv.measurements.get(k).doca[1]) - sign*Math.abs(h));
                 ty_filt += K[3] * (signMeas*Math.abs(mv.measurements.get(k).doca[1]) - sign*Math.abs(h));
                 Q_filt += K[4] * (signMeas*Math.abs(mv.measurements.get(k).doca[1]) - sign*Math.abs(h));
-              
-                c2 += ((signMeas*Math.abs(mv.measurements.get(k).doca[1]) - sign*Math.abs(h)) 
-                        * (signMeas*Math.abs(mv.measurements.get(k).doca[1]) - sign*Math.abs(h)) / V);
             } 
             
-            chi2kf += c2;
             if(filterOn) {
                 sv.trackTraj.get(k).x = x_filt;
                 sv.trackTraj.get(k).y = y_filt;

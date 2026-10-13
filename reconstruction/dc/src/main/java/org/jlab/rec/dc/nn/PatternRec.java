@@ -12,7 +12,6 @@ import org.jlab.detector.geant4.v2.DCGeant4Factory;
 import org.jlab.rec.dc.Constants;
 import org.jlab.rec.dc.cluster.Cluster;
 import org.jlab.rec.dc.cluster.ClusterCleanerUtilities;
-import org.jlab.rec.dc.cluster.ClusterFinder;
 import org.jlab.rec.dc.cluster.ClusterFitter;
 import org.jlab.rec.dc.cluster.ClusterFitter.CoordSys;
 import org.jlab.rec.dc.cluster.FittedCluster;
@@ -32,7 +31,6 @@ public class PatternRec {
     
     private static final Logger LOGGER = Logger.getLogger(PatternRec.class.getName());
 
-    private final ClusterFinder clf = new ClusterFinder();
     private final ClusterCleanerUtilities ct = new ClusterCleanerUtilities();
     private final ClusterFitter cf = new ClusterFitter();
     private final CrossMaker crf = new CrossMaker();
@@ -114,7 +112,7 @@ public class PatternRec {
             if(entry.getValue().size()==3)
                 crossList.add(entry.getValue()); 
             for(Cross c : entry.getValue()) 
-                LOGGER.log(Level.FINEST, "AI"+c.printInfo()+c.get_Segment1().printInfo()+c.get_Segment2().printInfo());
+                LOGGER.log(Level.FINEST, () -> "AI"+c.printInfo()+c.get_Segment1().printInfo()+c.get_Segment2().printInfo());
         }
         return crossList;
     }

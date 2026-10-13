@@ -1,6 +1,6 @@
 package org.jlab.analysis.postprocess;
 
-import org.jlab.detector.serial.PostProcessor;
+import java.util.List;
 import java.util.TreeMap;
 import java.util.logging.Logger;
 import org.jlab.clas.reco.ReconstructionEngine;
@@ -34,6 +34,31 @@ import org.jlab.utils.options.OptionParser;
 public class Tag1ToEvent {
 
     static final Logger LOGGER = Logger.getLogger(Tag1ToEvent.class.getName());
+
+    /**
+     * Load the mapping from event number to unix time
+     * @param schema
+     * @param files
+     * @return map 
+     */
+    public static TreeMap<Integer,Integer> getEventUnixMap(SchemaFactory schema, List<String> files) {
+        TreeMap<Integer,Integer> m = new TreeMap<>();
+        Event e = new Event();
+        Bank b = schema.getBank("RUN::unix");//new Bank(schema.getSchema("RUN::unix"));
+        for (String f : files) {
+            HipoReader r = new HipoReader();
+            r.setTags(1);
+            r.open(f);
+            while (r.hasNext()) {
+                r.nextEvent(e);
+                e.read(b);
+                int size = b.getRows();
+                for (int i=0; i<size; i++) m.put(b.getInt("event",i), b.getInt("unixtime",i));
+            }
+            r.close();
+        }
+        return m;
+    }
 
     public static void main(String[] args) {
 
@@ -104,7 +129,7 @@ public class Tag1ToEvent {
             }
 
             // Initialize the unix-event map:
-            TreeMap<Integer,Integer> eventUnix = PostProcessor.getEventUnixMap(schema, parser.getInputList());
+            TreeMap<Integer,Integer> eventUnix = getEventUnixMap(schema, parser.getInputList());
             
             // Loop over the input HIPO files:
             LOGGER.info("\n>>> Starting post-processing ...\n");

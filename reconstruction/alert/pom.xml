@@ -132,7 +132,7 @@
             </goals>
             <configuration>
               <outputDirectory>${project.build.directory}/lib/services</outputDirectory>
-              <includeGroupIds>ai.djl</includeGroupIds>
+              <includeGroupIds>ai.djl,com.google.code.gson</includeGroupIds>
             </configuration>
           </execution>
         </executions>

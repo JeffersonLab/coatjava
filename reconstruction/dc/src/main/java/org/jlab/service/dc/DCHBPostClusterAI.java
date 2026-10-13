@@ -100,11 +100,11 @@ public class DCHBPostClusterAI extends DCEngine {
         CrossList crosslist = pr.RecomposeCrossList(segments, Constants.getInstance().dcDetector);
         crosses = new ArrayList<>();
         
-        LOGGER.log(Level.FINEST, "num cands = "+crosslist.size());
+        LOGGER.log(Level.FINEST, () -> "num cands = "+crosslist.size());
         for (List<Cross> clist : crosslist) {
             crosses.addAll(clist); 
             for(Cross c : clist)
-                LOGGER.log(Level.FINEST, "Pass Cross"+c.printInfo());
+                LOGGER.log(Level.FINEST, () -> "Pass Cross"+c.printInfo());
         }
         if (crosses.isEmpty()) {
             for(Segment seg : segments) {
