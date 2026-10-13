@@ -613,6 +613,7 @@ public class HitReader {
                         bank.getShort("pindex", i));
                 pz = event.getBank(partBankName).getFloat("pz",
                         bank.getShort("pindex", i));
+                break;
             }
         }
         
@@ -640,6 +641,7 @@ public class HitReader {
                     bank.getShort("index", i) == trkId - 1) {
                 _beta = event.getBank(partBankName).getFloat("beta",
                         bank.getShort("pindex", i));
+                break;
             }
         }
         //if(_beta>1.0)
