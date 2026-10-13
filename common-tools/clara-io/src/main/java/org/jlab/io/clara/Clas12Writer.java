@@ -1,11 +1,8 @@
 package org.jlab.io.clara;
 
-import java.io.File;
 import java.nio.file.Path;
-import java.util.List;
 import org.jlab.clara.std.services.EventWriterException;
 import org.jlab.detector.calib.utils.ConstantsManager;
-import org.jlab.detector.helicity.HelicitySequenceDelayed;
 import org.jlab.detector.serial.SerialHoncho;
 import org.jlab.detector.serial.Occupancer;
 import org.jlab.jnp.hipo4.data.Bank;
@@ -40,7 +37,7 @@ public class Clas12Writer extends HipoToHipoWriter {
     int paraTriggerPrescale;
 
     private void init(JSONObject opts) {
-        occupancer = new Occupancer();
+        occupancer = new Occupancer((long)1<<39,100);
         fullSchema = new SchemaFactory();
         fullSchema.initFromDirectory(FileUtils.getEnvironmentPath("CLAS12DIR","etc/bankdefs/hipo4"));
         serial = new SerialHoncho(fullSchema);

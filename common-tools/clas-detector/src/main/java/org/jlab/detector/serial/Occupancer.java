@@ -26,21 +26,25 @@ public class Occupancer extends ArrayList<Occupancer.OccupanceTable> {
     static final SchemaFactory FULL_SCHEMA = new SchemaFactory();
     static { FULL_SCHEMA.initFromDirectory(ClasUtilsFile.getResourceDir("CLAS12DIR","etc/bankdefs/hipo4")); }
 
-    int prescale = 1000;
+    long triggerMask;
+    int prescale;
     int nevents = 0;
+    Schema cfgSchema;
 
-    public Occupancer() {
+    /**
+     * 
+     * @param triggerMask
+     * @param prescale 
+     */
+    public Occupancer(long triggerMask, int prescale) {
         super();
-        init();
-    }
-
-    public Occupancer(int prescale) {
-        super();
+        this.triggerMask = triggerMask;
         this.prescale = prescale;
         init();
     }
 
     private void init() {
+        cfgSchema = FULL_SCHEMA.getSchema("RUN::config");
         try {
             // Initialize list, by reading occupancy bank filenames from a directory
             // and stripping ".json" suffix and "OCC::" prefix to get hit bank name:
@@ -56,16 +60,20 @@ public class Occupancer extends ArrayList<Occupancer.OccupanceTable> {
     }
 
     public boolean process(Event event) {
-        int size = size();
-        for (int i=0; i<size; i++) get(i).fill(event);
-        if (++nevents % prescale == 0) {
-            for (int i=0; i<size; i++) {
-                if (get(i).getTable().getRowCount() > 0) {
-                    event.write(get(i).create(nevents));
+        Bank cfgBank = event.read(new Bank(cfgSchema, 1));
+        boolean passTrigger = cfgBank.getRows() > 0 && 0 != (triggerMask & cfgBank.getLong("trigger",0));
+        if (triggerMask <= 0 || passTrigger) {
+            int size = size();
+            for (int i=0; i<size; i++) get(i).fill(event);
+            if (++nevents % prescale == 0) {
+                for (int i=0; i<size; i++) {
+                    if (get(i).getTable().getRowCount() > 0) {
+                        event.write(get(i).create(nevents));
+                    }
+                    get(i).reset();
                 }
-                get(i).reset();
+                nevents = 0;
             }
-            nevents = 0;
         }
         return true;
     }
