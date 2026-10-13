@@ -7,7 +7,6 @@ import org.jlab.clara.std.services.EventWriterException;
 import org.jlab.detector.calib.utils.ConstantsManager;
 import org.jlab.detector.helicity.HelicitySequenceDelayed;
 import org.jlab.detector.serial.SerialHoncho;
-import org.jlab.detector.serial.PostProcessor;
 import org.jlab.detector.serial.Occupancer;
 import org.jlab.jnp.hipo4.data.Bank;
 import org.jlab.jnp.hipo4.data.Event;
