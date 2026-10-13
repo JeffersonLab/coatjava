@@ -884,6 +884,7 @@ public class MagneticFields {
 	 *                                              Will proceed as long as one path
 	 *                                              is not null.
 	 */
+	@Deprecated
 	public void initializeMagneticFields(String dataDir, String torusName, String solenoidName, String transverseSolenoidName)
 			throws FileNotFoundException, MagneticFieldInitializationException {
 		
