@@ -95,5 +95,22 @@ public class Clas12Writer extends HipoToHipoWriter {
         serial.clear();
         if (paraTriggerMask > 0) paraWriter.close();
     }
+ 
+    /**
+     * Get the first valid run number from a RUN::config bank.
+     * @return run
+     */
+    private int getRunNumber() {
+        Event e = new Event();
+        HipoReader r = new HipoReader();
+        r.open(filename);
+        while (r.hasNext()) {
+            r.nextEvent(e);
+            e.read(runConfig);
+            if (runConfig.getRows()>0 && runConfig.getInt("run",0)>0)
+                return runConfig.getInt("run",0);
+        }
+        return 0;
+    }
 
 }

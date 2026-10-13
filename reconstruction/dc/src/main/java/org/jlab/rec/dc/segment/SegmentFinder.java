@@ -2,7 +2,6 @@ package org.jlab.rec.dc.segment;
 
 import java.util.ArrayList;
 import java.util.List;
-import org.jlab.clas.clas.math.FastMath;
 import org.jlab.detector.geant4.v2.DCGeant4Factory;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;

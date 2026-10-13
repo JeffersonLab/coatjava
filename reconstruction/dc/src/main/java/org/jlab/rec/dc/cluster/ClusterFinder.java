@@ -41,7 +41,6 @@ public class ClusterFinder {
     public ClusterFinder() {
 
     }
-    private static final Logger LOGGER = Logger.getLogger(ClusterFinder.class.getName());
 
     // cluster finding algorithm
     // the loop is done over sector and superlayers
