@@ -29,12 +29,19 @@ public class Hit implements Comparable<Hit> {
     private int _TrkgStatus = -1;           // TrkgStatusFlag factor (-1: no fit; 0: global helical fit; 1: KF fit)
     public double _QualityFac;	            // a quality factor depending on the hit status and goodness of fit
     private int _AssociatedClusterID = -1;  // the cluster ID associated with that hit
+    private int AssociatedSeedID = -1;      // the seed ID associated with that hit
     private int AssociatedTrackID = -1;     // the track ID associated with that hit
 
     public boolean newClustering = false;
     public int MCstatus = -1;
     public boolean isCorrupted;
-
+    private int _seedBankRow=-1;
+    private int _trackBankRow=-1;
+    private int associateMCTrkId=-1;
+    
+    private double cweight = 0; //normalized difference to associated cluster centroid
+    private double sweight = 0; //normalized difference to associated cluster seed
+    
     // constructor
     public Hit(DetectorType detector, BMTType type, int sector, int layer, Strip strip) {
         this._Detector = detector;     // 0 = SVT, 1 = BMT
@@ -284,6 +291,86 @@ public class Hit implements Comparable<Hit> {
 
     public void setAssociatedTrackID(int associatedTrackID) {
         AssociatedTrackID = associatedTrackID;
+    }
+
+    public int getAssociatedSeedID() {
+        return AssociatedSeedID;
+    }
+    
+
+    public void setAssociatedSeedID(int associatedSeedID) {
+        this.AssociatedSeedID = associatedSeedID;
+    }
+
+    
+    /**
+     * @return the associateMCTrkId
+     */
+    public int getAssociateMCTrkId() {
+        return associateMCTrkId;
+    }
+
+    /**
+     * @param associateMCTrkId the associateMCTrkId to set
+     */
+    public void setAssociateMCTrkId(int associateMCTrkId) {
+        this.associateMCTrkId = associateMCTrkId;
+    }
+
+    /**
+     * @return the _seedBankRow
+     */
+    public int getSeedBankRow() {
+        return _seedBankRow;
+    }
+
+    /**
+     * @param _seedBankRow the _seedBankRow to set
+     */
+    public void setSeedBankRow(int _seedBankRow) {
+        this._seedBankRow = _seedBankRow;
+    }
+
+    /**
+     * @return the _trackBankRow
+     */
+    public int getTrackBankRow() {
+        return _trackBankRow;
+    }
+
+    /**
+     * @param _trackBankRow the _trackBankRow to set
+     */
+    public void setTrackBankRow(int _trackBankRow) {
+        this._trackBankRow = _trackBankRow;
+    }
+
+    /**
+     * @return the cweight
+     */
+    public double getCweight() {
+        return cweight;
+    }
+
+    /**
+     * @param cweight the cweight to set
+     */
+    public void setCweight(double cweight) {
+        this.cweight = cweight;
+    }
+
+    /**
+     * @return the sweight
+     */
+    public double getSweight() {
+        return sweight;
+    }
+
+    /**
+     * @param sweight the sweight to set
+     */
+    public void setSweight(double sweight) {
+        this.sweight = sweight;
     }
 
     public String toString() {

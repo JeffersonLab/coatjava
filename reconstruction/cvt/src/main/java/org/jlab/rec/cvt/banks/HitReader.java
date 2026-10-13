@@ -117,7 +117,11 @@ public class HitReader {
                 int strip   = bankDGTZ.getShort("component", i);
                 double ADCtoEdep = bankDGTZ.getInt("ADC", i);
                 double time = bankDGTZ.getFloat("time", i);
-                int order   = bankDGTZ.trueOrder(i);
+                int order   = bankDGTZ.getByte("order", i);;
+                if(Constants.getInstance().timeCuts
+                        && !Constants.getInstance().QCDDATSample) {
+                    order = bankDGTZ.trueOrder(i);
+                } 
                 //if (order == 1) {
                 //    continue;
                 //}
@@ -133,11 +137,13 @@ public class HitReader {
                 // create the strip object for the BMT
                 Strip BmtStrip = new Strip(strip, ADCtoEdep, time);
                 BmtStrip.setStatus(status.getIntValue("status", sector, layer, strip));
-                if(Constants.getInstance().timeCuts) {
+                if(Constants.getInstance().timeCuts
+                        && !Constants.getInstance().QCDDATSample) {
                     if(time!=0 && (time<tmin || time>tmax))
                         BmtStrip.setStatus(2);// calculate the strip parameters for the BMT hit
                 }
-                if(Constants.getInstance().bmtHVCuts) {
+                if(Constants.getInstance().bmtHVCuts 
+                        && !Constants.getInstance().QCDDATSample) {
                     if(bmtStripVoltage!=null && bmtStripVoltage.hasEntry(sector,layer,0) && 
                             bmtStripVoltageThresh!=null && bmtStripVoltageThresh.hasEntry(sector,layer,0)) {
                         double hv  = bmtStripVoltage.getDoubleValue("HV", sector,layer,0); 
@@ -299,7 +305,8 @@ public class HitReader {
                 if(tdcs.containsKey(key)) {
                     time = tdcs.get(key);
                     //time tag
-                    if(Constants.getInstance().useSVTTimingCuts) {
+                    if(Constants.getInstance().useSVTTimingCuts && 
+                            !Constants.getInstance().QCDDATSample) {
                         if(this.passTimingCuts(ADC, time)==false) 
                             continue;
                         }
