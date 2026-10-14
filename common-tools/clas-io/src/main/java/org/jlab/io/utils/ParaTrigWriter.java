@@ -25,6 +25,7 @@ public class ParaTrigWriter extends HipoWriterSorted {
         super();
         this.mask = mask;
         this.prescale = prescale;
+        setCompressionType(2);
         getSchemaFactory().copy(schema);
     }
     
