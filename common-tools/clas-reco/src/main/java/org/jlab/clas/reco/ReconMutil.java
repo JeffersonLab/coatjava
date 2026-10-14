@@ -409,6 +409,7 @@ final class ReconMutil {
         SchemaFactory s = ReconUtil.getSchemaFactory(parser.getOption("-S"), yaml);
         schemaBankList = ReconUtil.getBankList(s, yaml);
         paraWriter = new ParaTrigWriter((long)1<<39,0);
+        paraWriter.open("tb"+filename);
         return ReconUtil.open(filename, s);
     }
 

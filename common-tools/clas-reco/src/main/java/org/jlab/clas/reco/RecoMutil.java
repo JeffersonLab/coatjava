@@ -152,7 +152,9 @@ public class RecoMutil extends Porch {
             else
                 writer.addEvent(event.reduceEvent(schemaBankList), event.getEventTag());
         }
-        if (paraWriter != null) paraWriter.addEvent(event);
+        if (paraWriter != null) {
+            paraWriter.addEvent(event);
+        }
         occupancer.process(event);
         if (benchmark != null) benchmark.pause("write");
     }
@@ -199,6 +201,7 @@ public class RecoMutil extends Porch {
         schemaBankList = ReconUtil.getBankList(s, yaml);
         writer.open(filename);
         paraWriter = new ParaTrigWriter((long)1<<39,0);
+        paraWriter.open("tb"+filename);
         return writer;
     }
 
