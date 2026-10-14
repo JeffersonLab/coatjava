@@ -17,16 +17,17 @@ import org.jlab.detector.serial.SerialHoncho;
 import org.jlab.io.evio.EvioDataEvent;
 import org.jlab.io.evio.EvioSource;
 import org.jlab.io.hipo.HipoDataEvent;
+import org.jlab.io.utils.ParaTrigWriter;
 import org.jlab.jnp.hipo4.data.Bank;
 import org.jlab.jnp.hipo4.data.Event;
 import org.jlab.jnp.hipo4.data.SchemaFactory;
 import org.jlab.jnp.hipo4.io.HipoReader;
 import org.jlab.jnp.hipo4.io.HipoWriterSorted;
+import org.jlab.utils.CLASResources;
 import org.jlab.utils.ClaraYaml;
 import org.jlab.utils.benchmark.Benchmark;
 import org.jlab.utils.options.OptionParser;
 import org.jlab.utils.options.OptionValue;
-import org.jlab.utils.system.ClasUtilsFile;
 import org.json.JSONObject;
 
 public class RecoMutil extends Porch {
@@ -37,9 +38,9 @@ public class RecoMutil extends Porch {
 
     // I/O
     HipoWriterSorted writer;
+    ParaTrigWriter paraWriter;
     List<Bank> schemaBankList;
-    static final SchemaFactory fullSchema = new SchemaFactory();
-    static { fullSchema.initFromDirectory(ClasUtilsFile.getResourceDir("CLAS12DIR","etc/bankdefs/hipo4")); }
+    static final SchemaFactory fullSchema = CLASResources.getFullSchema();
     
     // Processors:
     SerialHoncho serial;
@@ -150,6 +151,7 @@ public class RecoMutil extends Porch {
             else
                 writer.addEvent(event.reduceEvent(schemaBankList), event.getEventTag());
         }
+        if (paraWriter != null) paraWriter.addEvent(event);
         occupancer.process(event);
         if (benchmark != null) benchmark.pause("write");
     }
@@ -159,6 +161,9 @@ public class RecoMutil extends Porch {
         if (writer != null) {
             serial.closure(writer);
             writer.close();
+        }
+        if (paraWriter != null) {
+            paraWriter.close();
         }
     }
 
@@ -185,7 +190,6 @@ public class RecoMutil extends Porch {
         }
     }
     
-
     HipoWriterSorted openWriter(OptionValue schema, String filename) {
         writer = new HipoWriterSorted();
         writer.setCompressionType(2);
@@ -193,6 +197,7 @@ public class RecoMutil extends Porch {
         writer.getSchemaFactory().copy(s);
         schemaBankList = ReconUtil.getBankList(s, yaml);
         writer.open(filename);
+        paraWriter = new ParaTrigWriter((long)1<<39,0);
         return writer;
     }
 

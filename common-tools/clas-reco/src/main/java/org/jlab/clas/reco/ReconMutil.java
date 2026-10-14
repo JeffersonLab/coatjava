@@ -21,17 +21,18 @@ import org.jlab.detector.serial.SerialHoncho;
 import org.jlab.io.evio.EvioDataEvent;
 import org.jlab.io.evio.EvioSource;
 import org.jlab.io.hipo.HipoDataEvent;
+import org.jlab.io.utils.ParaTrigWriter;
 import org.jlab.jnp.hipo4.data.Bank;
 import org.jlab.jnp.hipo4.data.Event;
 import org.jlab.jnp.hipo4.data.SchemaFactory;
 import org.jlab.jnp.hipo4.io.HipoReader;
 import org.jlab.jnp.hipo4.io.HipoWriterSorted;
+import org.jlab.utils.CLASResources;
 import org.jlab.utils.ClaraYaml;
 import org.jlab.utils.benchmark.Benchmark;
 import org.jlab.utils.benchmark.BenchmarkTimer;
 import org.jlab.utils.benchmark.ProgressPrintout;
 import org.jlab.utils.options.OptionParser;
-import org.jlab.utils.system.ClasUtilsFile;
 import org.json.JSONObject;
 
 /**
@@ -61,7 +62,7 @@ final class ReconMutil {
     HipoWriterSorted writer;
     HipoWriterSorted paraWriter;
     List<Bank> schemaBankList = new ArrayList<>();
-    SchemaFactory fullSchema;
+    SchemaFactory fullSchema = CLASResources.getFullSchema();
     
     // Processors:
     SerialHoncho serial;
@@ -313,6 +314,7 @@ final class ReconMutil {
                             writer.addEvent(e.get(i), e.get(i).getEventTag());
                         else
                             writer.addEvent(e.get(i).reduceEvent(schemaBankList), e.get(i).getEventTag());
+                        if (paraWriter != null) paraWriter.addEvent(e.get(i));
                         occupancer.process(e.get(i));
                         if (benchmark != null) benchmark.pause("write");
                     }
@@ -407,6 +409,7 @@ final class ReconMutil {
     HipoWriterSorted open(String filename, ClaraYaml yaml) {
         SchemaFactory s = ReconUtil.getSchemaFactory(parser.getOption("-S"), yaml);
         schemaBankList = ReconUtil.getBankList(s, yaml);
+        paraWriter = new ParaTrigWriter((long)1<<39,0);
         return ReconUtil.open(filename, s);
     }
 
@@ -446,8 +449,13 @@ final class ReconMutil {
      * Close the output file.
      */
     void close() {
-        serial.closure(writer);
-        writer.close();
+        if (writer != null) {
+            serial.closure(writer);
+            writer.close();
+        }
+        if (paraWriter != null) {
+            paraWriter.close();
+        }
         if (parser.getOption("-t").stringValue().split(",").length == 1)
             if (benchmark != null) System.out.println(benchmark);
         System.out.println(String.format("recon-mutil :: read/write/tagged/diff = %d/%d/%d/%d",
@@ -536,8 +544,6 @@ final class ReconMutil {
 
         taskset(parser.getOption("-t").stringValue());
 
-        fullSchema = new SchemaFactory();
-        fullSchema.initFromDirectory(ClasUtilsFile.getResourceDir("CLAS12DIR","etc/bankdefs/hipo4"));
         this.parser = parser;
         parser.syncLogLevel(Logger.getLogger(ReconMutil.class.getPackage().getName()));
         maxEvents = parser.getOption("-n").intValue();
