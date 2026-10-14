@@ -32,6 +32,7 @@ public class ParaTrigWriter extends HipoWriterSorted {
     @Override
     public void addEvent(Event e) {
         Bank b = new Bank(runConfig,1);
+        e.read(b);
         if (b.getRows() > 0) {
             if (mask > 0 && 0 != (b.getLong(RUN_config.trigger,0) & mask)) {
                 if (prescale<=0 || (++count % prescale) == 0) {
