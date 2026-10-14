@@ -37,6 +37,7 @@ public class RecoMutil extends Porch {
     // Static parameters:
     ClaraYaml yaml;
     double[] fields = null;
+    long paraTriggerMask;
 
     // I/O
     HipoWriterSorted writer;
@@ -200,8 +201,10 @@ public class RecoMutil extends Porch {
         writer.getSchemaFactory().copy(s);
         schemaBankList = ReconUtil.getBankList(s, yaml);
         writer.open(filename);
-        paraWriter = new ParaTrigWriter((long)1<<39,0);
-        paraWriter.open("tb"+filename);
+        if (paraTriggerMask > 0) {
+            paraWriter = new ParaTrigWriter(paraTriggerMask,0);
+            paraWriter.open("tb"+filename);
+        }
         return writer;
     }
 
@@ -263,51 +266,53 @@ public class RecoMutil extends Porch {
     
     /**
      * Initialize ReconMutil.
-     * @param parser 
+     * @param opt 
      */
-    final void init(OptionParser parser) {
+    final void init(OptionParser opt) {
 
-        taskset(parser.getOption("-t").stringValue());
+        taskset(opt.getOption("-t").stringValue());
 
-        parser.syncLogLevel(Logger.getLogger(ReconMutil.class.getPackage().getName()));
+        opt.syncLogLevel(Logger.getLogger(ReconMutil.class.getPackage().getName()));
         
-        maxEvents = parser.getOption("-n").intValue();
-        skipEvents = parser.getOption("-s").intValue();
+        maxEvents = opt.getOption("-n").intValue();
+        skipEvents = opt.getOption("-s").intValue();
         serial = new SerialHoncho();
         engines = new LinkedHashMap<>();
        
-        if (!parser.getOption("-y").isDefault()) {
-            yaml = new ClaraYaml(parser.getOption("-y").stringValue());
+        if (!opt.getOption("-y").isDefault()) {
+            yaml = new ClaraYaml(opt.getOption("-y").stringValue());
             for (JSONObject service : yaml.services()) {
                 JSONObject cfg = yaml.filter(service.getString("name"));
                 if (cfg.length() > 0) ReconUtil.addEngine(engines, service.getString("name"), service.getString("class"), cfg);
                 else ReconUtil.addEngine(engines, service.getString("name"), service.getString("class"), null);
             }
         }
-        else if (!parser.getOption("-c").isDefault()) {
-            for (String clazz : parser.getOption("-c").stringValue().split(","))
+        else if (!opt.getOption("-c").isDefault()) {
+            for (String clazz : opt.getOption("-c").stringValue().split(","))
                 ReconUtil.addEngine(engines, null, clazz, null);
         }
         else {
             for (String line : ReconUtil.readResourceLines("org/jlab/clas/reco/services.txt"))
                 ReconUtil.addEngine(engines, line.split(" ")[0], line.split(" ")[1], null);
         }
-        if (!parser.getOption("-B").isDefault()) {
+        if (!opt.getOption("-B").isDefault()) {
             ReconstructionEngine bg = ReconUtil.addEngine(engines, "BG", "org.jlab.service.bg.BackgroundEngine", null);
-            bg.engineConfigMap.put("filename",parser.getOption("-B").stringValue());
+            bg.engineConfigMap.put("filename",opt.getOption("-B").stringValue());
         }
-        if (!parser.getOption("-f").isDefault()) {
+        if (!opt.getOption("-f").isDefault()) {
             try {
-                fields = Arrays.stream(parser.getOption("-f").stringValue()
+                fields = Arrays.stream(opt.getOption("-f").stringValue()
                 .split(",")).mapToDouble(s -> Double.parseDouble(s)).toArray();
             }
             catch (Exception e) {
-                Logger.getLogger(ReconMutil.class.getName()).log(Level.SEVERE, () -> "invalid field option:  -f "+parser.getOption("-f").stringValue());
+                Logger.getLogger(ReconMutil.class.getName()).log(Level.SEVERE, () -> "invalid field option:  -f "+opt.getOption("-f").stringValue());
                 System.exit(22);
             }
         }
-        if (!parser.getOption("-b").isDefault())
+        if (!opt.getOption("-b").isDefault())
             benchmark = new Benchmark("ReconMutil",BENCHMARK_NAMES);
+        if (!opt.getOption("-x").isDefault())
+            paraTriggerMask = opt.getOption("-x").longValue();
     }
 
     /**
@@ -333,6 +338,7 @@ public class RecoMutil extends Porch {
         opt.addOption("-c",null,"comma-separated engine list");
         opt.addOption("-f",null,"field scales for torus and solenoid, comma-separated (T,S)");
         opt.addOption("-b","false","enable benchmarking");
+        opt.addOption("-x",null,"trigger-bit output mask (enables additional output file)");
         opt.setRequiresInputList(true);
         opt.parse(args);
 
