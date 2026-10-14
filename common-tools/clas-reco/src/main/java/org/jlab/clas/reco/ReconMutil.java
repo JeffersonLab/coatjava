@@ -411,7 +411,7 @@ final class ReconMutil {
         schemaBankList = ReconUtil.getBankList(s, yaml);
         paraWriter = new ParaTrigWriter((long)1<<39,0);
         String pfilename = filename.contains("./")
-                ? filename.substring(0,filename.lastIndexOf("/")+1) + filename.substring(filename.lastIndexOf("/")+1)
+                ? filename.substring(0,filename.lastIndexOf("/")+1) + "tb_" + filename.substring(filename.lastIndexOf("/")+1)
                 : filename;
         paraWriter.open(pfilename);
         return ReconUtil.open(filename, s);
