@@ -31,6 +31,8 @@ import org.jlab.utils.options.OptionValue;
 import org.json.JSONObject;
 
 public class RecoMutil extends Porch {
+    
+    static final SchemaFactory FULL_SCHEMA = CLASResources.getFullSchema();
 
     // Static parameters:
     ClaraYaml yaml;
@@ -40,7 +42,6 @@ public class RecoMutil extends Porch {
     HipoWriterSorted writer;
     ParaTrigWriter paraWriter;
     List<Bank> schemaBankList;
-    static final SchemaFactory fullSchema = CLASResources.getFullSchema();
     
     // Processors:
     SerialHoncho serial;
@@ -103,7 +104,7 @@ public class RecoMutil extends Porch {
     HipoDataEvent[] decode(int thread, Object input) {
         HipoDataEvent event = input instanceof ByteBuffer
                 ? decode(thread, (ByteBuffer)input)
-                : new HipoDataEvent(((Event)input), fullSchema);
+                : new HipoDataEvent(((Event)input), FULL_SCHEMA);
         if (benchmark != null) benchmark.resume(thread, "serial");
         Event tag;
         synchronized (serialLock) {
@@ -116,7 +117,7 @@ public class RecoMutil extends Porch {
         if (benchmark != null) benchmark.pause(thread, "serial");
         return tag.isEmpty() ?
                 new HipoDataEvent[]{event} :
-                new HipoDataEvent[]{event, new HipoDataEvent(tag, fullSchema)};
+                new HipoDataEvent[]{event, new HipoDataEvent(tag, FULL_SCHEMA)};
     }
 
     @Override

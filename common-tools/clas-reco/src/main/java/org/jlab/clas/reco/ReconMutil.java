@@ -42,8 +42,8 @@ import org.json.JSONObject;
 final class ReconMutil {
 
     static final boolean COLLECT_GARBAGE = false;
-
     static final String[] BENCHMARK_NAMES = new String[]{"evio","deco","serial","post","write"};
+    static final SchemaFactory FULL_SCHEMA = CLASResources.getFullSchema();
     
     // Performance parameters:
     final int BENCH_SECONDS = 30;
@@ -62,7 +62,6 @@ final class ReconMutil {
     HipoWriterSorted writer;
     HipoWriterSorted paraWriter;
     List<Bank> schemaBankList = new ArrayList<>();
-    SchemaFactory fullSchema = CLASResources.getFullSchema();
     
     // Processors:
     SerialHoncho serial;
@@ -207,7 +206,7 @@ final class ReconMutil {
                 for (int i=0; i<input.size(); i++) {
                     HipoDataEvent event = input.get(i) instanceof ByteBuffer
                             ? decode(thread, (ByteBuffer)input.get(i))
-                            : new HipoDataEvent(((Event)input.get(i)), fullSchema);
+                            : new HipoDataEvent(((Event)input.get(i)), FULL_SCHEMA);
                     output.add(event);
                     if (benchmark != null) benchmark.resume(thread, "serial");
                     Event tag;
@@ -216,7 +215,7 @@ final class ReconMutil {
                     }
                     if (!tag.isEmpty()) {
                         if (serial.containsSerial(tag)) serialTrigger.incrementAndGet();
-                        output.add(new HipoDataEvent(tag, fullSchema));
+                        output.add(new HipoDataEvent(tag, FULL_SCHEMA));
                         taggedEvents.incrementAndGet();
                     }
                     if (benchmark != null) benchmark.pause(thread, "serial");
