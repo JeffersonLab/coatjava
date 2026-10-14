@@ -1,10 +1,16 @@
-io-services:
-  reader:
-    class: org.jlab.io.clara.Clas12Reader
-    name: Clas12Reader
-  writer:
-    class: org.jlab.io.clara.Clas12Writer
-    name: Clas12Writer
+configuration:
+  services:
+    MAGFIELDS:
+      magfieldSolenoidMap: Symm_solenoid_r601_phi1_z1201_13June2018.dat
+      magfieldTorusMap: Symm_torus_r2501_phi16_z251_24Apr2018.dat
+    DCCR:
+      dcT2DFunc: "Exponential"
+      rawBankGroup: "NODENOISE"
+    DCHB:
+      dcT2DFunc: "Exponential"
+    DCTB:
+      dcT2DFunc: "Exponential"
+
 services:
   - class: org.jlab.clas.reco.DecoderEngine
     name: DECO
@@ -23,15 +29,9 @@ services:
 # DC clustering: nominal algoritm, filled the cluster bank for ai and conventional tracking
   - class: org.jlab.service.dc.DCHBClustering
     name: DCCR
-# This is where the AI plugin would go.  THe AI code reads the HB clusters.  
-  - class: org.jlab.service.mltn.MLTDEngine
-    name: MLTD
 # DC using clustering: regular HB tracking
   - class: org.jlab.service.dc.DCHBPostClusterConv
     name: DCHB
-# DC using clustering on AI hits: NN assisted HB tracking
-  - class: org.jlab.service.dc.DCHBPostClusterAI
-    name: DCHAI
   - class: org.jlab.service.ftof.FTOFHBEngine
     name: FTOFHB
   - class: org.jlab.service.ec.ECEngine
@@ -50,14 +50,9 @@ services:
     name: LTCC
   - class: org.jlab.service.eb.EBHBEngine
     name: EBHB
-  - class: org.jlab.service.eb.EBHBAIEngine
-    name: EBHAI
-# DC regular TB tracking    
+# DC regular TB tracking
   - class: org.jlab.service.dc.DCTBEngine
     name: DCTB
-# DC AI assisted TB tracking    
-  - class: org.jlab.service.dc.DCTBEngineAI
-    name: DCTAI  
   - class: org.jlab.service.fmt.FMTEngine
     name: FMT
   - class: org.jlab.rec.cvt.services.CVTSecondPassEngine
@@ -66,42 +61,22 @@ services:
     name: FTOFTB
   - class: org.jlab.service.eb.EBTBEngine
     name: EBTB
-  - class: org.jlab.service.eb.EBTBAIEngine
-    name: EBTAI
   - class: org.jlab.rec.rich.RICHEBEngine
     name: RICH
   - class: org.jlab.service.rtpc.RTPCEngine
     name: RTPC
+  - class: org.jlab.rec.service.vtx.VTXEngine
+    name: VTX
   - class: org.jlab.calibration.service.CalibBanksEngine
-    name: CALIB
-configuration:
-  services:
-    MAGFIELDS:
-      magfieldSolenoidMap: Symm_solenoid_r601_phi1_z1201_13June2018.dat
-      magfieldTorusMap: Symm_torus_r2501_phi16_z251_24Apr2018.dat
-# examples of yaml settings for magfields 
-#      magfieldSolenoidShift: "0.0"
-#      magfieldTorusXShift: "0.0"
-#      magfieldTorusYShift: "0.0"
-#      magfieldTorusZShift: "0.0"
-# examples of yaml settings for DC services 
-#    DCRC:
-#      dcGeometryVariation: rga_spring2018
-#      dcT2DFunc: "Polynomial"
-#      dcWireDistortion: "true"
-# example of how to set variation and timestamp for a service, uncomment to use
-#    EBTB:
-#      variation: default
-#      timestamp: 08/22/2018
-    DCCR:
-      dcT2DFunc: "Exponential"  
-    DCHB:
-      dcT2DFunc: "Exponential"  
-    DCHAI:
-      dcT2DFunc: "Exponential"  
-    DCTB:
-      dcT2DFunc: "Exponential"  
-    DCTAI:
-      dcT2DFunc: "Exponential"  
+    name: CALIB 
+
+io-services:
+  reader:
+    class: org.jlab.io.clara.Clas12Reader
+    name: Clas12Reader
+  writer:
+    class: org.jlab.io.clara.Clas12Writer
+    name: Clas12Writer
+
 mime-types:
   - binary/data-hipo
