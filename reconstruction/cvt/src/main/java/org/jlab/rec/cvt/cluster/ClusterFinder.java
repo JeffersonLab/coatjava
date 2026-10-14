@@ -3,7 +3,7 @@ package org.jlab.rec.cvt.cluster;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import org.jlab.detector.base.DetectorType;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import org.jlab.rec.cvt.hit.Hit;
 
 /**
@@ -13,22 +13,36 @@ import org.jlab.rec.cvt.hit.Hit;
  */
 public class ClusterFinder {
 
-    public ClusterFinder() {
+    static final int NSTRIP = 1200; // max number of strips
+    static final int NLAYR = 6;
+    static final int NSEC = 18;
 
+    static class HitMapPool extends ConcurrentLinkedQueue<Hit[][][]> {
+        public HitMapPool() {
+            super();
+            for (int i=0; i<64; i++)
+                add(new Hit[NSTRIP][NLAYR][NSEC]);
+        }
+        @Override
+        public Hit[][][] poll() {
+            Hit[][][] x = super.poll();
+            for (int i=0; i<NSTRIP; i++) {
+                for (int j=0; j<NLAYR; j++) {
+                    for (int k=0; k<NSEC; k++) {
+                        x[i][j][k] = null;
+                    }
+                }
+            }
+            return x;
+        }
     }
-    
-    // cluster finding algorithm
-    // the loop is done over sectors 
-    Hit[][][] HitArray;
-    int nstrip = 1200; // max number of strips
-    int nlayr = 6;
-    int nsec = 18;
-    public ArrayList<Cluster> findClusters(List<Hit> hits2) // the number of strips depends on the layer 
-    {
-        ArrayList<Cluster> clusters = new ArrayList<>();
 
+    static HitMapPool pool = new HitMapPool();
+    
+    public static ArrayList<Cluster> findClusters(List<Hit> hits2) // the number of strips depends on the layer 
+    {
         // a Hit Array is used to identify clusters		
-        HitArray = new Hit[nstrip][nlayr][nsec];
+        Hit[][][] HitArray = pool.poll();
 
         // initializing non-zero Hit Array entries
         // with valid hits
@@ -46,30 +60,31 @@ public class ClusterFinder {
             int l = hit.getLayer();
             int s = hit.getSector();
             
-            if (w > 0 && w < nstrip) {
+            if (w > 0 && w < NSTRIP) {
                 HitArray[w - 1][l - 1][s - 1] = hit; 
             }
-
         }
+
         int cid = 1;  // cluster id, will increment with each new good cluster
+        ArrayList<Cluster> clusters = new ArrayList<>();
 
         // for each layer and sector, a loop over the strips
         // is done to define clusters in that module's layer
         // clusters are delimited by strips with no hits 
-        for (int s = 0; s < nsec; s++) {
-            for (int l = 0; l < nlayr; l++) {
+        for (int s = 0; s < NSEC; s++) {
+            for (int l = 0; l < NLAYR; l++) {
                 int si = 0;  // strip index in the loop
 
                 // looping over all strips
-                while (si < nstrip) {
+                while (si < NSTRIP) {
                     // if there's a hit, it's a cluster candidate
-                    if (HitArray[si][l][s] != null || (si < nstrip - 1 && HitArray[si + 1][l][s] != null)) { 
+                    if (HitArray[si][l][s] != null || (si < NSTRIP - 1 && HitArray[si + 1][l][s] != null)) { 
                         // vector of hits in the cluster candidate
                         ArrayList<Hit> hits = new ArrayList<>();
 
                         // adding all hits in this and all the subsequent
                         // strip until there's a strip with no hit
-                        while ((si < nstrip - 1 && HitArray[si + 1][l][s] != null) || (HitArray[si][l][s] != null && si < nstrip)) {
+                        while ((si < NSTRIP - 1 && HitArray[si + 1][l][s] != null) || (HitArray[si][l][s] != null && si < NSTRIP)) {
                             if (HitArray[si][l][s] != null) { // continue clustering skipping over bad hit
                                 hits.add(HitArray[si][l][s]);
                             }
@@ -111,6 +126,7 @@ public class ClusterFinder {
                 }
             }
         }
+        pool.offer(HitArray);
         return clusters;
 
     }
