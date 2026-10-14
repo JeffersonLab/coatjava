@@ -264,7 +264,7 @@ public class RecoMutil extends Porch {
         
         maxEvents = parser.getOption("-n").intValue();
         skipEvents = parser.getOption("-s").intValue();
-        serial = new SerialHoncho(fullSchema);
+        serial = new SerialHoncho();
         engines = new LinkedHashMap<>();
        
         if (!parser.getOption("-y").isDefault()) {

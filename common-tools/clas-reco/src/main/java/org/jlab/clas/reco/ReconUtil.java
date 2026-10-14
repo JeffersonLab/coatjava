@@ -23,6 +23,7 @@ import org.jlab.clara.engine.EngineData;
 import org.jlab.clara.engine.EngineDataType;
 import org.jlab.jnp.hipo4.data.Bank;
 import org.jlab.jnp.hipo4.data.SchemaFactory;
+import org.jlab.jnp.hipo4.io.HipoWriterSorted;
 import org.jlab.utils.ClaraYaml;
 import org.jlab.utils.benchmark.Benchmark;
 import org.jlab.utils.benchmark.ProgressPrintout;
@@ -327,4 +328,12 @@ public class ReconUtil {
         return cpus != null ? taskset(cpus) : 42;
     }
 
+    static HipoWriterSorted open(String filename, SchemaFactory schema) {
+        HipoWriterSorted writer = new HipoWriterSorted();
+        writer.setCompressionType(2);
+        writer.getSchemaFactory().copy(schema);
+        writer.open(filename);
+        return writer;
+    }
+ 
 }

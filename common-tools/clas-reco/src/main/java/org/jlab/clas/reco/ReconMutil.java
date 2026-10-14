@@ -59,6 +59,7 @@ final class ReconMutil {
     // File I/O:
     Object reader;
     HipoWriterSorted writer;
+    HipoWriterSorted paraWriter;
     List<Bank> schemaBankList = new ArrayList<>();
     SchemaFactory fullSchema;
     
@@ -404,15 +405,11 @@ final class ReconMutil {
      * @param yaml the configuration
      */
     HipoWriterSorted open(String filename, ClaraYaml yaml) {
-        HipoWriterSorted writer = new HipoWriterSorted();
-        writer.setCompressionType(2);
         SchemaFactory s = ReconUtil.getSchemaFactory(parser.getOption("-S"), yaml);
-        writer.getSchemaFactory().copy(s);
         schemaBankList = ReconUtil.getBankList(s, yaml);
-        writer.open(filename);
-        return writer;
+        return ReconUtil.open(filename, s);
     }
- 
+
     /**
      * Read the next event into the chunk, and, if it's full, queue the chunk
      * and make a new one.
@@ -545,7 +542,7 @@ final class ReconMutil {
         parser.syncLogLevel(Logger.getLogger(ReconMutil.class.getPackage().getName()));
         maxEvents = parser.getOption("-n").intValue();
         skipEvents = parser.getOption("-s").intValue();
-        serial = new SerialHoncho(fullSchema);
+        serial = new SerialHoncho();
         engines = new LinkedHashMap<>();
         if (!parser.getOption("-y").isDefault()) {
             yaml = new ClaraYaml(parser.getOption("-y").stringValue());

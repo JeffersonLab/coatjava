@@ -19,6 +19,7 @@ import org.jlab.jnp.hipo4.data.Event;
 import org.jlab.jnp.hipo4.data.Schema;
 import org.jlab.jnp.hipo4.data.SchemaFactory;
 import org.jlab.jnp.hipo4.io.HipoWriterSorted;
+import org.jlab.utils.CLASResources;
 
 /**
  *
@@ -43,8 +44,8 @@ public class SerialHoncho {
     volatile DaqScalersSequence scalers;
     int run = 0;
 
-    public SerialHoncho(SchemaFactory schema) {
-        this.schema = schema;
+    public SerialHoncho() {
+        schema = CLASResources.getFullSchema();
         conman = new ConstantsManager();
         conman.init("/runcontrol/hwp","/runcontrol/helicity");
         runConfig = schema.getSchema("RUN::config");
