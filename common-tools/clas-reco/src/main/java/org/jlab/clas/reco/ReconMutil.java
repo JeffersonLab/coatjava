@@ -2,6 +2,7 @@ package org.jlab.clas.reco;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
@@ -409,8 +410,8 @@ final class ReconMutil {
         SchemaFactory s = ReconUtil.getSchemaFactory(parser.getOption("-S"), yaml);
         schemaBankList = ReconUtil.getBankList(s, yaml);
         paraWriter = new ParaTrigWriter((long)1<<39,0);
-        String pfilename = filename.startsWith("./")
-                ? filename.substring(filename.lastIndexOf("/")+1)
+        String pfilename = filename.contains("./")
+                ? filename.substring(0,filename.lastIndexOf("/")+1) + filename.substring(filename.lastIndexOf("/")+1)
                 : filename;
         paraWriter.open(pfilename);
         return ReconUtil.open(filename, s);
