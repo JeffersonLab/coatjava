@@ -37,7 +37,7 @@ public class RecoMutil extends Porch {
     // Static parameters:
     ClaraYaml yaml;
     double[] fields = null;
-    long paraTriggerMask;
+    long paraTriggerMask = 0;
 
     // I/O
     HipoWriterSorted writer;
