@@ -203,7 +203,10 @@ public class RecoMutil extends Porch {
         writer.open(filename);
         if (paraTriggerMask > 0) {
             paraWriter = new ParaTrigWriter(paraTriggerMask,0);
-            paraWriter.open("tb"+filename);
+            String pfilename = filename.contains("/")
+                    ? filename.substring(0,filename.lastIndexOf("/")+1) + "tb_" + filename.substring(filename.lastIndexOf("/")+1)
+                    : "tb_"+filename;
+            paraWriter.open(pfilename);
         }
         return writer;
     }
