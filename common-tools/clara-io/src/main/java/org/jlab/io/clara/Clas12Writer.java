@@ -8,7 +8,6 @@ import org.jlab.detector.serial.Occupancer;
 import org.jlab.jnp.hipo4.data.Bank;
 import org.jlab.jnp.hipo4.data.Event;
 import org.jlab.jnp.hipo4.data.SchemaFactory;
-import org.jlab.jnp.hipo4.io.HipoReader;
 import org.jlab.jnp.hipo4.io.HipoWriterSorted;
 import org.jlab.jnp.utils.file.FileUtils;
 import org.json.JSONObject;
@@ -98,21 +97,4 @@ public class Clas12Writer extends HipoToHipoWriter {
         if (paraTriggerMask > 0) paraWriter.close();
     }
  
-    /**
-     * Get the first valid run number from a RUN::config bank.
-     * @return run
-     */
-    private int getRunNumber() {
-        Event e = new Event();
-        HipoReader r = new HipoReader();
-        r.open(filename);
-        while (r.hasNext()) {
-            r.nextEvent(e);
-            e.read(runConfig);
-            if (runConfig.getRows()>0 && runConfig.getInt("run",0)>0)
-                return runConfig.getInt("run",0);
-        }
-        return 0;
-    }
-
 }
