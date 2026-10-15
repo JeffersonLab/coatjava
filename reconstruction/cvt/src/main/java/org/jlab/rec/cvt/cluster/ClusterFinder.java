@@ -81,31 +81,32 @@ public class ClusterFinder {
                             si++;
                         }
 
-                        if (this_cluster == null) continue;
+                        if (this_cluster != null) {
                     
-                        if (this_cluster.size() > 2) {
-                            for(int hi = 1; hi<this_cluster.size()-1; hi++) { //interpolate between neighboring strips
-                                if(this_cluster.get(hi).getStrip().getEdep()<this_cluster.get(hi-1).getStrip().getEdep()
-                                        && this_cluster.get(hi).getStrip().getEdep()<this_cluster.get(hi+1).getStrip().getEdep()) {
-                                    this_cluster.get(hi).getStrip().setEdep(0.5*(this_cluster.get(hi-1).getStrip().getEdep()+this_cluster.get(hi+1).getStrip().getEdep()));
+                            if (this_cluster.size() > 2) {
+                                for(int hi = 1; hi<this_cluster.size()-1; hi++) { //interpolate between neighboring strips
+                                    if(this_cluster.get(hi).getStrip().getEdep()<this_cluster.get(hi-1).getStrip().getEdep()
+                                            && this_cluster.get(hi).getStrip().getEdep()<this_cluster.get(hi+1).getStrip().getEdep()) {
+                                        this_cluster.get(hi).getStrip().setEdep(0.5*(this_cluster.get(hi-1).getStrip().getEdep()+this_cluster.get(hi+1).getStrip().getEdep()));
+                                    }
                                 }
                             }
+                            for (Hit h : this_cluster) {
+                                h.setAssociatedClusterID(this_cluster.getId());
+                                //h.newClustering = true; //RDV fix me!
+                            }
+                            
+                            this_cluster.calc_CentroidParams();
+                            //if(this_cluster.getDetector()==DetectorType.BST) {
+                            //    for (Hit h : this_cluster) {
+                            //        h.newClustering = false;
+                            //    }
+                            //}
+                            Collections.sort(this_cluster);
+                            
+                            //make list of clusters
+                            clusters.add(this_cluster);
                         }
-                        for (Hit h : this_cluster) {
-                            h.setAssociatedClusterID(this_cluster.getId());
-                            //h.newClustering = true; //RDV fix me!
-                        }
-                        
-                        this_cluster.calc_CentroidParams();
-                        //if(this_cluster.getDetector()==DetectorType.BST) {
-                        //    for (Hit h : this_cluster) {
-                        //        h.newClustering = false;
-                        //    }
-                        //}
-                        Collections.sort(this_cluster);
-                       
-                        //make list of clusters
-                        clusters.add(this_cluster);
                     }
                     
                     // if no hits, check for next wire coordinate
