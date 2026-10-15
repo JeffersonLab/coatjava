@@ -718,8 +718,6 @@ public class KFitter extends AKFitter {
         }
     }
     
-    // Since no vertex inforamtion, the starting point for path length is the final point at the last layer.
-    // After vertex information is obtained, transition for the starting point from the final point to vertex will be taken.
     private boolean filter(int k, boolean forward) {
         StateVec sVec = sv.transported(forward).get(k);
         org.jlab.clas.tracking.kalmanfilter.AMeasVecs.MeasVec mVec = mv.measurements.get(k);
@@ -895,7 +893,7 @@ public class KFitter extends AKFitter {
             sv.transport(sector, k, 0, sVec, mv, this.getSwimmer(), forward);
 
             StateVec svc = sv.transported(forward).get(0);
-            path += (forward ? 1 : -1) * svc.deltaPath;
+            path += svc.deltaPath;
             svc.setPathLength(path);
             
             double V0 = mv.measurements.get(0).surface.unc[0];
@@ -941,7 +939,7 @@ public class KFitter extends AKFitter {
 
                 double h = mv.hDoca(line, mv.measurements.get(k1 + 1).surface.wireLine[0]);
                 svc = sv.transported(forward).get(k1 + 1);
-                path += (forward ? 1 : -1) * svc.deltaPath;
+                path += svc.deltaPath;
                 svc.setPathLength(path);
                 svc.setProjector(mv.measurements.get(k1 + 1).surface.wireLine[0].origin().x());
                 svc.setProjectorDoca(h);
@@ -994,7 +992,7 @@ public class KFitter extends AKFitter {
             sv.transport(sector, k, 0, sVec, mv, this.getSwimmer(), forward);
 
             StateVec svc = sv.transported(forward).get(0);
-            path += (forward ? 1 : -1) * svc.deltaPath;
+            path += svc.deltaPath;
             svc.setPathLength(path);
             
             Point3D point = new Point3D(svc.x, svc.y, mv.measurements.get(0).surface.measPoint.z());
@@ -1068,7 +1066,7 @@ public class KFitter extends AKFitter {
                 }
                 
                 svc = sv.transported(forward).get(k1 + 1);
-                path += (forward ? 1 : -1) * svc.deltaPath;
+                path += svc.deltaPath;
                 svc.setPathLength(path);
                 
                 point = new Point3D(sv.transported(forward).get(k1 + 1).x, sv.transported(forward).get(k1 + 1).y, mv.measurements.get(k1 + 1).surface.measPoint.z());
@@ -1140,10 +1138,6 @@ public class KFitter extends AKFitter {
         return sv.transport(sector, finalStateVec.k, Zf, finalStateVec, mv, this.getSwimmer());
     }
     
-    public double getDeltaPathToVtx(int sector, double Zf) {
-        return sv.getDeltaPath(sector, finalStateVec.k, Zf, finalStateVec, mv, this.getSwimmer());
-    }
-
     //Todo: apply the common funciton to replace current function above
     @Override
     public void runFitter(AStateVecs sv, AMeasVecs mv) {
