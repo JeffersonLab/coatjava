@@ -628,6 +628,7 @@ final class ReconMutil {
         o.addOption("-c","2","comma-separated engine list");
         o.addOption("-f",null,"field scales for torus and solenoid, comma-separated (T,S)");
         o.addOption("-b","false","enable benchmarking");
+        o.addOption("-x",null,"trigger-bit output mask (enables additional output file)");
         o.setRequiresInputList(true);
         o.parse(args);
         ReconMutil r = new ReconMutil(o);
