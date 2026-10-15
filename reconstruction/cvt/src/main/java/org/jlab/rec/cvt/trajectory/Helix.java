@@ -273,15 +273,13 @@ public class Helix {
         }
 
 
-        double par = 1. - ((r * r - d0 * d0) * omega * omega) / (2. * (1. + d0 * Math.abs(omega)));
+        double par = (2. * (1. - d0 * omega) - (r * r - d0 * d0) * omega * omega) / (2. * Math.abs(1. - d0 * omega));
         double newPathLength = Math.abs(Math.acos(par) / omega);
 
         double alpha = -newPathLength * omega;
 
-        double x = d0 * charge * Math.sin(phi0) + (charge / Math.abs(omega)) 
-                * (Math.sin(phi0) - Math.cos(alpha) * Math.sin(phi0) - Math.sin(alpha) * Math.cos(phi0))+xb;
-        double y = -d0 * charge * Math.cos(phi0) - (charge / Math.abs(omega)) 
-                * (Math.cos(phi0) + Math.sin(alpha) * Math.sin(phi0) - Math.cos(alpha) * Math.cos(phi0))+yb;
+        double x = xb - d0 * Math.sin(phi0) + 1./omega * (Math.sin(phi0) - Math.sin(phi0 + alpha));
+        double y = yb + d0 * Math.cos(phi0) - 1./omega * (Math.cos(phi0) - Math.cos(phi0 + alpha));
         double z = z0 + newPathLength * tandip;
 
         return new Point3D(x, y, z);
@@ -301,7 +299,7 @@ public class Helix {
             return new Vector3D(ux, uy, uz);
         }
 
-        double par = 1. - ((r * r - d0 * d0) * omega * omega) / (2. * (1. + d0 * Math.abs(omega)));
+        double par = (2. * (1. - d0 * omega) - (r * r - d0 * d0) * omega * omega) / (2. * Math.abs(1. - d0 * omega));
         double newPathLength = Math.abs(Math.acos(par) / omega);
 
         double alpha = newPathLength * omega;

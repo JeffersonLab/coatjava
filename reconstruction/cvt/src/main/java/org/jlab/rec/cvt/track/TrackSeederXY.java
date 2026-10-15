@@ -237,15 +237,13 @@ public class TrackSeederXY {
     }
     private double calcResi(double rho, double d0, double phi0, double xc, double yc) {
         double r = Math.sqrt(xc*xc+yc*yc);
-        double par = 1. - ((r * r - d0 * d0) * rho * rho) / (2. * (1. + d0 * Math.abs(rho)));
+        double par = (2. * (1. + d0 * rho) - (r * r - d0 * d0) * rho * rho) / (2. * Math.abs(1. + d0 * rho));
         double newPathLength = Math.abs(Math.acos(par) / rho);
         int charge = (int) Math.signum(rho);
         double alpha = -newPathLength * rho;
 
-        double x = d0 * charge * Math.sin(phi0) + (charge / Math.abs(rho)) 
-                * (Math.sin(phi0) - Math.cos(alpha) * Math.sin(phi0) - Math.sin(alpha) * Math.cos(phi0));
-        double y = -d0 * charge * Math.cos(phi0) - (charge / Math.abs(rho)) 
-                * (Math.cos(phi0) + Math.sin(alpha) * Math.sin(phi0) - Math.cos(alpha) * Math.cos(phi0));
+        double x = d0 * Math.sin(phi0) + 1./rho * (Math.sin(phi0) - Math.sin(phi0 + alpha));
+        double y = -d0 * Math.cos(phi0) - 1./rho * (Math.cos(phi0) - Math.cos(phi0 + alpha));
        
         double res2 = ((x-xc)*(x-xc)+(y-yc)*(y-yc));
         return Math.sqrt(res2);
