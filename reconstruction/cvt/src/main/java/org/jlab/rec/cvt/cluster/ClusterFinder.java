@@ -65,47 +65,47 @@ public class ClusterFinder {
                     // if there's a hit, it's a cluster candidate
                     if (HitArray[si][l][s] != null || (si < nstrip - 1 && HitArray[si + 1][l][s] != null)) { 
                         
-                        Cluster clust = null;
+                        Cluster this_cluster = null;
                         
                         // adding all hits in this and all the subsequent
                         // strip until there's a strip with no hit
                         while ((si < nstrip - 1 && HitArray[si + 1][l][s] != null) || (HitArray[si][l][s] != null && si < nstrip)) {
                             if (HitArray[si][l][s] != null) { // continue clustering skipping over bad hit
-                                if (clust == null) {
+                                if (this_cluster == null) {
                                     Hit seed = HitArray[si][l][s];
-                                    clust = new Cluster(seed.getDetector(), seed.getType(), seed.getSector(), l + 1, cid++);
-                                    clust.setId(clusters.size() + 1);
+                                    this_cluster = new Cluster(seed.getDetector(), seed.getType(), seed.getSector(), l + 1, cid++);
+                                    this_cluster.setId(clusters.size() + 1);
                                 }
-                                clust.add(HitArray[si][l][s]);
+                                this_cluster.add(HitArray[si][l][s]);
                             }
                             si++;
                         }
 
-                        if (clust == null) break;
+                        if (this_cluster == null) break;
                     
-                        if (clust.size() > 2) {
-                            for(int hi = 1; hi<clust.size()-1; hi++) { //interpolate between neighboring strips
-                                if(clust.get(hi).getStrip().getEdep()<clust.get(hi-1).getStrip().getEdep()
-                                        && clust.get(hi).getStrip().getEdep()<clust.get(hi+1).getStrip().getEdep()) {
-                                    clust.get(hi).getStrip().setEdep(0.5*(clust.get(hi-1).getStrip().getEdep()+clust.get(hi+1).getStrip().getEdep()));
+                        if (this_cluster.size() > 2) {
+                            for(int hi = 1; hi<this_cluster.size()-1; hi++) { //interpolate between neighboring strips
+                                if(this_cluster.get(hi).getStrip().getEdep()<this_cluster.get(hi-1).getStrip().getEdep()
+                                        && this_cluster.get(hi).getStrip().getEdep()<this_cluster.get(hi+1).getStrip().getEdep()) {
+                                    this_cluster.get(hi).getStrip().setEdep(0.5*(this_cluster.get(hi-1).getStrip().getEdep()+this_cluster.get(hi+1).getStrip().getEdep()));
                                 }
                             }
                         }
-                        for (Hit h : clust) {
-                            h.setAssociatedClusterID(clust.getId());
+                        for (Hit h : this_cluster) {
+                            h.setAssociatedClusterID(this_cluster.getId());
                             //h.newClustering = true; //RDV fix me!
                         }
                         
-                        clust.calc_CentroidParams();
+                        this_cluster.calc_CentroidParams();
                         //if(this_cluster.getDetector()==DetectorType.BST) {
                         //    for (Hit h : this_cluster) {
                         //        h.newClustering = false;
                         //    }
                         //}
-                        Collections.sort(clust);
+                        Collections.sort(this_cluster);
                        
                         //make list of clusters
-                        clusters.add(clust);
+                        clusters.add(this_cluster);
                     }
                     
                     // if no hits, check for next wire coordinate
