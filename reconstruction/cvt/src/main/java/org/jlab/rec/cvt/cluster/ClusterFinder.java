@@ -81,7 +81,7 @@ public class ClusterFinder {
                             si++;
                         }
 
-                        if (this_cluster == null) break;
+                        if (this_cluster == null) continue;
                     
                         if (this_cluster.size() > 2) {
                             for(int hi = 1; hi<this_cluster.size()-1; hi++) { //interpolate between neighboring strips
