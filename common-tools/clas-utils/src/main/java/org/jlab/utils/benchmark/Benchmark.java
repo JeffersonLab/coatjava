@@ -28,7 +28,7 @@ public class Benchmark implements Comparator<String> {
         this.name = name;
     }
 
-    public Benchmark(String name, String[] specials) {
+    public Benchmark(String name, String... specials) {
         this.name = name;
         this.specials.addAll(Arrays.asList(specials));
     }

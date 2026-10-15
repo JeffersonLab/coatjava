@@ -1,6 +1,5 @@
 package org.jlab.utils.benchmark;
 
-import java.util.ArrayList;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -11,7 +10,7 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public class BenchmarkTimer {
 
-    private static final int WARMUP_CALLS = 100;
+    public static int WARMUP_CALLS = 100;
     
     public static class BenchmarkMultiTimer extends BenchmarkTimer {
         ConcurrentHashMap<Integer,Long> timeAtResume = new ConcurrentHashMap<>();
