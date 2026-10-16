@@ -2,6 +2,7 @@ package cnuphys.rk4;
 
 import java.util.ArrayDeque;
 import java.util.List;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * Static methods for Runge-Kutta 4 integration, including a constant stepsize
@@ -1062,6 +1063,41 @@ public class RungeKutta {
 	// A uniform step size advancer
 	class UniformAdvance implements IAdvance {
 
+        static class State {
+			double k2[];
+			double k3[];
+			double k4[];
+			double ytemp[];
+            State(int dim) {
+                k2 = new double[dim];
+                k3 = new double[dim];
+                k4 = new double[dim];
+                ytemp = new double[dim];
+            }
+            State reset() {
+                for (int i=0; i<k2.length; i++) {
+                    k2[i] = 0;
+                    k3[i] = 0;
+                    k4[i] = 0;
+                    ytemp[i] = 0;
+                }
+                return this;
+            }
+        }
+
+        static class StatePool extends ConcurrentLinkedQueue<State> {
+            StatePool(int size, int dim) {
+                for (int i=0; i<size; i++) add(new State(dim));
+            }
+            @Override
+            public State poll() { return super.poll().reset(); }
+        }
+
+        static StatePool[] statePool = new StatePool[]{
+            new StatePool(1000,3),new StatePool(1000,4),
+            new StatePool(1000,5),new StatePool(1000,6)
+        };
+
 		@Override
 		public void advance(double t,
 				double[] y,
@@ -1076,11 +1112,8 @@ public class RungeKutta {
 			double k1[] = dydt; // the current dreivatives
 			// we need some arrays from the pool
 
-			double k2[] = new double[nDim];
-			double k3[] = new double[nDim];
-			double k4[] = new double[nDim];
-			double ytemp[] = new double[nDim];
-
+            State s = statePool[nDim].poll();
+            
 			double hh = h * 0.5; // half step
 			double h6 = h / 6.0;
 
@@ -1090,27 +1123,28 @@ public class RungeKutta {
 			// first step: initial derivs to midpoint
 			// after this,
 			for (int i = 0; i < nDim; i++) {
-				ytemp[i] = y[i] + hh * k1[i];
+				s.ytemp[i] = y[i] + hh * k1[i];
 			}
-			deriv.derivative(tmid, ytemp, k2);
+			deriv.derivative(tmid, s.ytemp, s.k2);
 
 			// second step (like 1st, but use midpoint just computed derivatives
 			// dyt)
 			for (int i = 0; i < nDim; i++) {
-				ytemp[i] = y[i] + hh * k2[i];
+				s.ytemp[i] = y[i] + hh * s.k2[i];
 			}
-			deriv.derivative(tmid, ytemp, k3);
+			deriv.derivative(tmid, s.ytemp, s.k3);
 
 			// third (full) step
 			for (int i = 0; i < nDim; i++) {
-				ytemp[i] = y[i] + h * k3[i];
+				s.ytemp[i] = y[i] + h * s.k3[i];
 			}
-			deriv.derivative(t + h, ytemp, k4);
+			deriv.derivative(t + h, s.ytemp, s.k4);
 
 			for (int i = 0; i < nDim; i++) {
-				yout[i] = y[i] + h6 * (k1[i] + +2.0 * k2[i] + 2 * k3[i] + k4[i]);
+				yout[i] = y[i] + h6 * (k1[i] + +2.0 * s.k2[i] + 2 * s.k3[i] + s.k4[i]);
 			}
 
+            statePool[nDim].offer(s);
 		}
 
 		@Override
