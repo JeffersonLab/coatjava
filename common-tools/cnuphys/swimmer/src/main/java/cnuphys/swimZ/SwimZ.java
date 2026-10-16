@@ -76,9 +76,6 @@ public class SwimZ {
 	/**
 	 * SwimZ constructor. Here we create a Swimmer that will use the given
 	 * magnetic field.
-	 * 
-	 * @param field
-	 *            interface into a magnetic field
 	 */
 	public SwimZ() {
 		_probe = FieldProbe.factory();
@@ -165,10 +162,6 @@ public class SwimZ {
 	 *            the final z value (cm)
 	 * @param stepSize
 	 *            the initial step size
-	 * @param relTolerance
-	 *            the absolute tolerances on each state variable [x, y, tx, ty]
-	 *            (q = const). So it is an array with four entries, like [1.0e-4
-	 *            cm, 1.0e-4 cm, 1.0e-5, 1.0e05]
 	 * @param hdata
 	 *            An array with three elements. Upon return it will have the
 	 *            min, average, and max step size (in that order).
@@ -243,10 +236,6 @@ public class SwimZ {
 	 *            the final z value (cm)
 	 * @param stepSize
 	 *            the initial step size
-	 * @param relTolerance
-	 *            the absolute tolerances on each state variable [x, y, tx, ty]
-	 *            (q = const). So it is an array with four entries, like [1.0e-4
-	 *            cm, 1.0e-4 cm, 1.0e-5, 1.0e05]
 	 * @param hdata
 	 *            An array with three elements. Upon return it will have the
 	 *            min, average, and max step size (in that order).
@@ -402,7 +391,6 @@ public class SwimZ {
 	 * @param stop at end, holds final state vector
 	 * @param zf
 	 *            the final z value (cm)
-	 * @return the swim result
 	 * @throws SwimZException
 	 */
 

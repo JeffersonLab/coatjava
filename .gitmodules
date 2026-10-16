@@ -7,3 +7,6 @@
 [submodule "etc/nnet"]
 	path = etc/data/nnet
 	url = https://code.jlab.org/hallb/clas12/coatjava/networks.git
+[submodule "etc/data/sqlite"]
+	path = etc/data/sqlite
+	url = https://code.jlab.org/hallb/clas12/ccdbrcdb-sqlite

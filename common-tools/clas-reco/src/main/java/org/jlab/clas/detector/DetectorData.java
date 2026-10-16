@@ -5,7 +5,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.jlab.clas.physics.Particle;
 import org.jlab.detector.base.DetectorType;
 import org.jlab.geom.prim.Vector3D;
 import org.jlab.io.base.DataBank;
@@ -88,80 +87,6 @@ public class DetectorData {
             }
         }
         return particles;
-    }
-
-    /**
-     * reads Detector Event, detector particles and detector responses and then
-     * adds all associated responses to each particle.
-     *
-     * @param event
-     * @return
-     */
-    public static DetectorEvent readDetectorEvent(DataEvent event) {
-        return DetectorData.readDetectorEvent(event, "REC::Particle", "REC::Detector");
-    }
-
-    public static DetectorEvent readDetectorEvent(DataEvent event, String particle_bank, String response_bank) {
-
-        List<DetectorParticle> particles = DetectorData.readDetectorParticles(event, particle_bank);
-        DetectorEvent detectorEvent = new DetectorEvent();
-        for (DetectorParticle p : particles) {
-            detectorEvent.addParticle(p);
-        }
-
-        List<DetectorResponse> responses = DetectorData.readDetectorResponses(event, response_bank);
-        for (DetectorResponse r : responses) {
-            int association = r.getAssociation();
-            if (association >= 0 && association < detectorEvent.getParticles().size()) {
-                detectorEvent.getParticles().get(association).addResponse(r);
-            }
-        }
-
-        detectorEvent.getPhysicsEvent().clear();
-
-        for (DetectorParticle p : particles) {
-            if (p.getPid() == 0) {
-                Particle part = Particle.createWithMassCharge(
-                        p.getMass(), p.getCharge(),
-                        p.vector().x(), p.vector().y(), p.vector().z(),
-                        p.vertex().x(), p.vertex().y(), p.vertex().z()
-                );
-                detectorEvent.getPhysicsEvent().addParticle(part);
-            } else {
-                Particle part = Particle.createWithPid(p.getPid(),
-                        p.vector().x(), p.vector().y(), p.vector().z(),
-                        p.vertex().x(), p.vertex().y(), p.vertex().z()
-                );
-                detectorEvent.getPhysicsEvent().addParticle(part);
-            }
-        }
-
-        if (event.hasBank("MC::Particle") == true) {
-            DataBank bank = event.getBank("MC::Particle");
-            detectorEvent.getGeneratedEvent().clear();
-            int nrows = bank.rows();
-            for (int row = 0; row < nrows; row++) {
-                detectorEvent.getGeneratedEvent().addGeneratedParticle(
-                        bank.getInt("pid", row),
-                        bank.getFloat("px", row),
-                        bank.getFloat("py", row),
-                        bank.getFloat("pz", row),
-                        bank.getFloat("vx", row),
-                        bank.getFloat("vy", row),
-                        bank.getFloat("vz", row)
-                );
-                detectorEvent.getPhysicsEvent().addGeneratedParticle(
-                        bank.getInt("pid", row),
-                        bank.getFloat("px", row),
-                        bank.getFloat("py", row),
-                        bank.getFloat("pz", row),
-                        bank.getFloat("vx", row),
-                        bank.getFloat("vy", row),
-                        bank.getFloat("vz", row)
-                );
-            }
-        }
-        return detectorEvent;
     }
 
     /**

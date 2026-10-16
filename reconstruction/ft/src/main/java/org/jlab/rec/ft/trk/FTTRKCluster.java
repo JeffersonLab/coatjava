@@ -73,7 +73,7 @@ import org.jlab.rec.ft.FTConstants;
 	
 	/**
 	 * 
-	 * @param set the layer of the cluster (1...4)
+	 * @param _Layer the layer of the cluster (1...4)
 	 */
 	public void set_Layer(int _Layer) {
 		this._Layer = _Layer;
@@ -302,16 +302,6 @@ import org.jlab.rec.ft.FTConstants;
         public void set_StripSegment(Line3D _StripSegment) {
             this._StripSegment = _StripSegment;
         }
-
-
-
-        /**
-         * 
-         * @param Z  z-coordinate of a point in the local coordinate system of a module
-         * @return the average resolution for a group of strips in a cluster
-         * 
-         */
-
 
         private int _AssociatedCrossID;
         private int _AssociatedTrackID;

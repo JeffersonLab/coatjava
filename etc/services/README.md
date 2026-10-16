@@ -2,7 +2,6 @@
 * Real Data
   * Warning, these must be set appropriately for the data in question:
     * the CCDB variation
-    * the run number for MLTD/MLTAI network
   * [`data-ai.yaml`](data-ai.yaml)
     * AI track finding
   * [`data-cv.yaml`](data-cv.yaml)

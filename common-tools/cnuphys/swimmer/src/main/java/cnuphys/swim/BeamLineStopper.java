@@ -55,7 +55,6 @@ public class BeamLineStopper implements IStopper {
 
 	/**
 	 * 
-	 * @param charge
 	 * @param charge           the charge: -1 for electron, 1 for proton, etc
 	 * @param xo               the x vertex position in meters
 	 * @param yo               the y vertex position in meters

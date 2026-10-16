@@ -127,8 +127,8 @@ docs:
     - tar -xzf coatjava.tar.gz
     - python3 -m venv venv
     - source venv/bin/activate
-    - python3 -m pip install -r docs/mkdocs/requirements.txt
-    - ./docs/mkdocs/generate.sh pages
+    - python3 -m pip install -r docs/zensical/requirements.txt
+    - ./docs/zensical/generate.sh pages
     - libexec/build-javadocs.sh
     - ls -l && ls -l pages && ls -l publish
     - mv target/reports/apidocs pages/javadoc

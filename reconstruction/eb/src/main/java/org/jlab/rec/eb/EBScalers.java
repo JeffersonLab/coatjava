@@ -23,6 +23,7 @@ import org.jlab.io.base.DataEvent;
  *
  * @author baltzell
  */
+@Deprecated
 public class EBScalers {
 
     private RawReading firstRawReading=null;

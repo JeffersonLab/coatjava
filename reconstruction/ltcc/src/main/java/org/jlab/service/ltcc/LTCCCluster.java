@@ -7,7 +7,6 @@ package org.jlab.service.ltcc;
 
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
-//import org.jMath.Vector.threeVec;
 import java.util.List;
 import java.util.ArrayList;
 import org.jlab.geom.prim.Vector3D;

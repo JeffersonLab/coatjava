@@ -1,5 +1,3 @@
-# https://help.github.com/actions/language-and-framework-guides/building-and-testing-java-with-maven
-
 name: Coatjava-CI
 
 on:
@@ -7,10 +5,6 @@ on:
   push:
     branches: [ development ]
     tags: [ '*' ]
-  schedule:
-    # NOTE: From what I read, the email notification for cron can only go
-    #       to the last committer of this file!!!!!
-    - cron: '0 22 * * *'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
@@ -24,9 +18,9 @@ env:
   JAVA_VERSION: 21 # must be consistent with POM; see also dependabot config for any version limits
   JAVA_VERSION_LATEST: 25 # the latest `JAVA_VERSION` that we test with CI
   java_distribution: zulu
-  javadoc_version: 25 # newer than `JAVA_VERSION` for better javadoc
   groovy_version: 4.x
-  CCDB_CONNECTION: 'sqlite:////cvmfs/oasis.opensciencegrid.org/jlab/hallb/clas12/sw/noarch/data/ccdb/ccdb_latest.sqlite'
+  CCDB_CONNECTION: 'sqlite:///${{ github.workspace }}/coatjava/etc/data/sqlite/ccdb.sqlite'
+  RCDB_CONNECTION: 'sqlite:///${{ github.workspace }}/coatjava/etc/data/sqlite/rcdb.sqlite'
   nthreads: 1
 
 jobs:
@@ -37,7 +31,7 @@ jobs:
   download_test_data:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/cache@v5
+      - uses: actions/cache@v6
         id: cache
         with:
           key: raw_test_data # fixed key will always hit; clear cache to trigger cache miss
@@ -66,25 +60,19 @@ jobs:
       fail-fast: true
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-java@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6.0.1
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.java_distribution }}
           cache: maven
-      - name: setup cvmfs
-        uses: cvmfs-contrib/github-action-cvmfs@v5
-        with:
-          cvmfs_repositories: 'oasis.opensciencegrid.org'
-      - name: cvmfs
-        run: ls /cvmfs/oasis.opensciencegrid.org/jlab/hallb/clas12/sw/noarch/data/ccdb/ccdb_latest.sqlite
       - name: bump version to tag if tag trigger
         if: ${{ github.ref_type == 'tag' }}
         run: libexec/version-bump.sh ${{ github.ref_name }}
       - name: build
         run: |
           ./build-coatjava.sh --lfs --no-progress -T${{ env.nthreads }}
-          ./bin/install-clara -b -c ./coatjava ./clara
+          ./bin/install-clara -c ./coatjava ./clara
       - name: tar # tarball to preserve permissions
         run: |
           tar czvf coatjava.tar.gz coatjava
@@ -102,25 +90,19 @@ jobs:
       fail-fast: true
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-java@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6.0.1
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.java_distribution }}
           cache: maven
-      - name: setup cvmfs
-        uses: cvmfs-contrib/github-action-cvmfs@v5
-        with:
-          cvmfs_repositories: 'oasis.opensciencegrid.org'
-      - name: cvmfs
-        run: ls /cvmfs/oasis.opensciencegrid.org/jlab/hallb/clas12/sw/noarch/data/ccdb/ccdb_latest.sqlite
       - name: bump version to tag if tag trigger
         if: ${{ github.ref_type == 'tag' }}
         run: libexec/version-bump.sh ${{ github.ref_name }}
       - name: build
         run: |
           ./build-coatjava.sh --lfs --no-progress -T${{ env.nthreads }}
-          ./bin/install-clara -b -c ./coatjava ./clara
+          ./bin/install-clara -c ./coatjava ./clara
       - name: tar # tarball to preserve permissions
         run: |
           tar czvf coatjava.tar.gz coatjava
@@ -132,6 +114,26 @@ jobs:
           path: |
               coatjava.tar.gz
               clara.tar.gz
+
+  dependency_info:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Set up JDK
+        uses: actions/setup-java@v6.0.1
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: ${{ env.java_distribution }}
+          # NOTE: do not use `cache: maven` here, so stale `_remote.repositories` data aren't read
+      - name: build
+        run: |
+          ./build-coatjava.sh --no-aux --no-progress --quiet -T${{ env.nthreads }}
+      - name: collect info
+        run: libexec/dependency-info.rb
+      - name: print dependency trees
+        run: cat target/info/trees.txt
+      - name: print dependency repository sources
+        run: cat target/info/repos.yaml
 
   # tests
   #############################################################################
@@ -154,15 +156,12 @@ jobs:
         JAVA_VERSION: ${{ fromJson(needs.java_matrix.outputs.versions) }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-java@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6.0.1
         with:
           java-version: ${{ matrix.JAVA_VERSION }}
           distribution: ${{ env.java_distribution }}
           cache: maven
-      - uses: cvmfs-contrib/github-action-cvmfs@v5
-        with:
-          cvmfs_repositories: 'oasis.opensciencegrid.org'
       - name: unit tests
         run: ./build-coatjava.sh --lfs --unittests --no-progress -T${{ env.nthreads }}
       - name: collect jacoco report
@@ -180,48 +179,42 @@ jobs:
     needs: [ build ]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Set up JDK
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v6.0.1
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.java_distribution }}
           cache: maven
-      - uses: cvmfs-contrib/github-action-cvmfs@v5
-        with:
-          cvmfs_repositories: 'oasis.opensciencegrid.org'
       - uses: actions/download-artifact@v8
         with:
           name: build_ubuntu-latest
       - name: untar build
-        run: tar xzvf coatjava.tar.gz
+        run: tar xzf coatjava.tar.gz
       - name: spotbugs
-        run: ./build-coatjava.sh --spotbugs --nomaps --no-progress
+        run: ./build-coatjava.sh --spotbugs --no-maps --no-progress
 
   test_decoder:
     needs: [ build, download_test_data ]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Set up JDK
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v6.0.1
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.java_distribution }}
           cache: maven
-      - uses: cvmfs-contrib/github-action-cvmfs@v5
-        with:
-          cvmfs_repositories: 'oasis.opensciencegrid.org'
       - uses: actions/download-artifact@v8
         with:
           name: build_ubuntu-latest
-      - uses: actions/cache/restore@v5
+      - uses: actions/cache/restore@v6
         with:
           key: raw_test_data
           path: |
             clas_018779.evio.00001
       - name: untar build
-        run: tar xzvf coatjava.tar.gz
+        run: tar xzf coatjava.tar.gz
       - name: run test
         run: |
           ls -lhtr
@@ -234,33 +227,37 @@ jobs:
       fail-fast: true
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Set up JDK
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v6.0.1
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.java_distribution }}
           cache: maven
-      - name: setup cvmfs
-        uses: cvmfs-contrib/github-action-cvmfs@v5
-        with:
-          cvmfs_repositories: 'oasis.opensciencegrid.org'
       - uses: actions/download-artifact@v8
         with:
           name: build_ubuntu-latest
-      - uses: actions/cache/restore@v5
+      - uses: actions/cache/restore@v6
         with:
           key: raw_test_data
           path: |
             clas_018779.evio.00001
       - name: untar build
         run: |
-          tar xzvf clara.tar.gz
+          tar xzf clara.tar.gz
+          tar xzf coatjava.tar.gz
+      - run: ls
       - name: run test
-        run: |
-          ls -lhtr
-          ./bin/run-clara -y ./etc/services/rgd-clarode.yml -t 4 -n 500 -c ./clara -o ./tmp ./clas_018779.evio.00001 
-          ls -lhtr
+        run: ./bin/run-clara -y ./etc/services/rgd-clarode.yml -t 4 -n 500 -c ./clara -o ./tmp ./clas_018779.evio.00001
+      - name: ls tmp
+        run: ls -lhtr tmp
+      - name: rename
+        run: mv -v tmp/rec_clas_018779.evio.00001.hipo rec.hipo
+      - uses: actions/upload-artifact@v7
+        with:
+          name: test_clara_result
+          retention-days: 1
+          path: rec.hipo
 
   test_coatjava:
     needs: [ build ]
@@ -288,9 +285,9 @@ jobs:
           - { id: eb-eftpi, cmd: ./run-eb-tests.sh -100 electronFTpion   }
     runs-on: ${{ matrix.runner }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Set up JDK
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v6.0.1
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.java_distribution }}
@@ -298,13 +295,10 @@ jobs:
       - uses: actions/download-artifact@v8
         with:
           name: build_${{ matrix.runner }}
-      - uses: cvmfs-contrib/github-action-cvmfs@v5
-        with:
-          cvmfs_repositories: 'oasis.opensciencegrid.org'
       - name: untar build
         run: |
-          tar xzvf coatjava.tar.gz
-          tar xzvf clara.tar.gz
+          tar xzf coatjava.tar.gz
+          tar xzf clara.tar.gz
       - name: run test
         run: |
           git lfs install
@@ -319,9 +313,9 @@ jobs:
       fail-fast: true
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Set up JDK
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v6.0.1
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.java_distribution }}
@@ -329,13 +323,10 @@ jobs:
       - uses: actions/download-artifact@v8
         with:
           name: build_macos
-      - uses: cvmfs-contrib/github-action-cvmfs@v5
-        with:
-          cvmfs_repositories: 'oasis.opensciencegrid.org'
       - name: untar build
         run: |
-          tar xzvf coatjava.tar.gz
-          tar xzvf clara.tar.gz
+          tar xzf coatjava.tar.gz
+          tar xzf clara.tar.gz
       - name: run test
         run: |
           git lfs install
@@ -347,9 +338,9 @@ jobs:
     needs: [ build ]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Set up JDK
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v6.0.1
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.java_distribution }}
@@ -362,9 +353,33 @@ jobs:
         with:
           name: build_ubuntu-latest
       - name: untar build
-        run: tar xzvf coatjava.tar.gz
+        run: tar xzf coatjava.tar.gz
       - name: test run-groovy
         run: coatjava/bin/run-groovy validation/advanced-tests/test-run-groovy.groovy
+
+  test_qcddat:
+    needs: test_clara
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Set up JDK
+        uses: actions/setup-java@v6.0.1
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: ${{ env.java_distribution }}
+          cache: maven
+      - uses: actions/download-artifact@v8
+        with:
+          name: test_clara_result
+      - uses: actions/download-artifact@v8
+        with:
+          name: build_ubuntu-latest
+      - name: untar build
+        run: tar xzf coatjava.tar.gz
+      - name: hipo2npz
+        run: ./coatjava/bin/hipo2npz rec.hipo rec.npz
+      - name: hipo2npz-dump
+        run: ./coatjava/bin/hipo2npz-dump rec.npz 1
 
   # documentation
   #############################################################################
@@ -373,12 +388,14 @@ jobs:
     runs-on: ubuntu-latest
     needs: [ unit_tests ]
     steps:
-      ### mkdocs
-      - uses: actions/checkout@v6
-      - name: install mkdocs dependencies
-        run: python -m pip install -r docs/mkdocs/requirements.txt
-      - name: generate mkdocs
-        run: docs/mkdocs/generate.sh pages
+      ### zensical
+      - uses: actions/checkout@v7
+      - name: install zensical dependencies
+        run: python -m pip install -r docs/zensical/requirements.txt
+      - name: generate zensical
+        run: |
+          docs/zensical/generate.sh zensical_out
+          mv zensical_out/site pages
       ### jacoco
       - name: download jacoco report artifact
         uses: actions/download-artifact@v8
@@ -387,9 +404,9 @@ jobs:
           path: pages/jacoco
       ### javadoc
       - name: set up JDK
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v6.0.1
         with:
-          java-version: ${{ env.javadoc_version }}
+          java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.java_distribution }}
           cache: maven
       - name: build coatjava javadocs # javadoc:aggregate output dir cannot be controlled, so assume the latest "standard" path and `mv` it
@@ -433,7 +450,7 @@ jobs:
       RUN_ID: ${{ github.run_id }}
       TAG_NAME: ${{ github.ref_name }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: actions/download-artifact@v8
         with:
           name: build_ubuntu-latest
@@ -443,7 +460,7 @@ jobs:
           mv coatjava{,-${{ env.TAG_NAME }}}
           tar czf coatjava-${{ env.TAG_NAME }}{.tar.gz,}
       - name: release
-        uses: softprops/action-gh-release@v3
+        uses: softprops/action-gh-release@v3.0.3
         with:
           files: coatjava-${{ env.TAG_NAME }}.tar.gz
       - name: open issue if failed
@@ -457,6 +474,11 @@ jobs:
       - test_coatjava
       - test_run-groovy
       - generate_documentation
+      - spotbugs
+      - test_decoder
+      - test_clara
+      - test_coatjava_macos
+      - unit_tests
     runs-on: ubuntu-latest
     steps:
       - name: pass

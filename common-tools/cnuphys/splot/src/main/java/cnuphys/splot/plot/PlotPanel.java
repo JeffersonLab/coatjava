@@ -49,8 +49,7 @@ public class PlotPanel extends JPanel implements PropertyChangeListener {
 	/**
 	 * Create a plot panel for a single xy dataset and a toolbar
 	 * 
-	 * @param dataSet   the data set
-	 * @param plotTitle the title of the plot
+	 * @param canvas
 	 */
 	public PlotPanel(PlotCanvas canvas) {
 		this(canvas, STANDARD);
@@ -59,8 +58,7 @@ public class PlotPanel extends JPanel implements PropertyChangeListener {
 	/**
 	 * Create a plot panel for a single xy dataset
 	 * 
-	 * @param dataSet     the data set
-	 * @param plotTitle   the title of the plot
+	 * @param canvas
 	 * @param decorations (stripped down panel?)
 	 */
 	public PlotPanel(PlotCanvas canvas, int decorations) {

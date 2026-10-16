@@ -35,8 +35,7 @@ public class SectorDerivative implements IDerivative {
 	 *            -1 for electron, +1 for proton, etc.
 	 * @param momentum
 	 *            the magnitude of the momentum.
-	 * @param field
-	 *            the magnetic field
+	 * @param rcProbe
 	 */
 	public SectorDerivative(int sector, int charge, double momentum, RotatedCompositeProbe rcProbe) {
 		_sector = sector;
@@ -63,9 +62,7 @@ public class SectorDerivative implements IDerivative {
 	 * @param Q
 	 *            the values of the state vector ([x,y,z, px/p, py/p, pz/p]) at
 	 *            s (input).
-	 * @param dydt
-	 *            will be filled with the values of the derivatives at t
-	 *            (output).
+	 * @param dQds (output).
 	 */
 	@Override
 	public void derivative(double s, double[] Q, double[] dQds) {

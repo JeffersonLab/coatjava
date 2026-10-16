@@ -1,7 +1,7 @@
 package org.jlab.rec.cvt.fit;
 
 import org.jlab.rec.cvt.trajectory.Ray;
-import trackfitter.fitter.utilities.ProbChi2perNDF;
+import org.jlab.clas.tracking.utilities.ProbChi2perNDF;
 
 /**
  * The fit parameters of a line fit returned by LineFitter

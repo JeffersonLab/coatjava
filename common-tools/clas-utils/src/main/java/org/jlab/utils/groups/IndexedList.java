@@ -146,7 +146,6 @@ public class IndexedList<T> {
      * @return the item with the hash, null if not found
      */
     public T getItemByHash(long hash){
-        if (!this.collection.containsKey(hash)) return null;
         return this.collection.get(hash);
     }
 
@@ -335,6 +334,19 @@ public class IndexedList<T> {
         public int[] getIndices(long hashcode, int... indices) {
             int[] ret = new int[indices.length];
             for (int i=0; i<ret.length; i++)
+                ret[i] = getIndex(hashcode, indices[i]);
+            return ret;
+        }
+
+        /**
+         * Retrieves an array of the indices.
+         * @param hashcode
+         * @param nindices
+         * @return 
+         */
+        public int[] getIndices(long hashcode, int nindices) {
+            int[] ret = new int[nindices];
+            for (int i=0; i<nindices; i++)
                 ret[i] = getIndex(hashcode, i);
             return ret;
         }

@@ -181,9 +181,9 @@ public class RotatedCompositeProbe extends CompositeProbe {
 	 * expressed in Cartesian coordinates. The field is returned as a Cartesian
 	 * vector in kiloGauss/cm.
 	 *
-	 * @param x      the x coordinate in cm
-	 * @param y      the y coordinate in cm
-	 * @param z      the z coordinate in cm
+	 * @param xs      the x coordinate in cm
+	 * @param ys      the y coordinate in cm
+	 * @param zs      the z coordinate in cm
 	 * @param result a float array holding the retrieved field in kiloGauss. The 0,1
 	 *               and 2 indices correspond to x, y, and z components.
 	 */

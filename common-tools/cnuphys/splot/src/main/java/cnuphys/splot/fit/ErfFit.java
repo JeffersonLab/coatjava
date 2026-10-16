@@ -20,7 +20,6 @@ public class ErfFit extends Fitmrq implements IValueGetter {
 	 * Create a Error function Fit and perform the fit
 	 * 
 	 * @param fit       the fit data
-	 * @param tolerance the tolerance
 	 */
 	public ErfFit(Fit fit) throws IllegalArgumentException {
 		super(fit.getX(), fit.getY(), fit.getSigmaY(), initialGuess(fit), _funcs, fit.getTolerance());

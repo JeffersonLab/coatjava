@@ -44,9 +44,12 @@ public class Histo2DData {
 	 * @param name    the name
 	 * @param xname   the x variable name
 	 * @param yname   the y variable name
-	 * @param valMin  the data min
-	 * @param valMax  the data max
-	 * @param numBins the number of bins
+	 * @param valMinX
+	 * @param valMaxX
+         * @param numBinsX
+	 * @param valMinY
+	 * @param valMaxY
+         * @param numBinsY
 	 */
 	public Histo2DData(String name, String xname, String yname, double valMinX, double valMaxX, int numBinsX,
 			double valMinY, double valMaxY, int numBinsY) {
@@ -61,7 +64,9 @@ public class Histo2DData {
 	 * @param name  the curve name of the histogram
 	 * @param xname the x variable name
 	 * @param yname the y variable name
-	 * @param grid  the binning grid. It must be in ascending order but is otherwise
+	 * @param gridX  the binning grid. It must be in ascending order but is otherwise
+	 *              arbitrary.
+	 * @param gridY  the binning grid. It must be in ascending order but is otherwise
 	 *              arbitrary.
 	 */
 	public Histo2DData(String name, String xname, String yname, double[] gridX, double[] gridY) {
@@ -235,7 +240,8 @@ public class Histo2DData {
 	/**
 	 * Add a value to the histogram
 	 * 
-	 * @param value the value to ad
+	 * @param valueX the value to add
+	 * @param valueY the value to add
 	 */
 	public void add(double valueX, double valueY) {
 

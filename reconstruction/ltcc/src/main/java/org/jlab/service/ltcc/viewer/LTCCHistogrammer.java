@@ -9,7 +9,7 @@ import java.util.LinkedHashMap;
 import java.util.function.Function;
 import java.util.List;
 import java.util.stream.Collectors;
-import javafx.util.Pair;
+import java.util.AbstractMap.SimpleImmutableEntry;
 import org.jlab.groot.data.H1F;
 import org.jlab.groot.data.H2F;
 
@@ -38,7 +38,7 @@ public class LTCCHistogrammer<DataType> {
     }
     
     private final Map<String, SmartHisto<H1F, Double>> histos1D;
-    private final Map<String, SmartHisto<H2F, Pair<Double, Double>>> histos2D;
+    private final Map<String, SmartHisto<H2F, SimpleImmutableEntry<Double, Double>>> histos2D;
     
     LTCCHistogrammer() {
         histos1D = new LinkedHashMap();
@@ -48,7 +48,7 @@ public class LTCCHistogrammer<DataType> {
     public void add(H1F histo, Function<DataType, Double> getter) {
         histos1D.put(histo.getName(), new SmartHisto(histo, getter));
     }
-    public void add(H2F histo, Function<DataType, Pair<Double, Double>> getter) {
+    public void add(H2F histo, Function<DataType, SimpleImmutableEntry<Double, Double>> getter) {
         histos2D.put(histo.getName(), new SmartHisto(histo, getter));
     }
     
@@ -58,7 +58,7 @@ public class LTCCHistogrammer<DataType> {
     public void fill(DataType data, double weight) {      
         histos1D.forEach((k, v) -> v.getHisto().fill(v.getData(data), weight));
         histos2D.forEach((k, v) -> {
-            Pair<Double, Double> args = v.getData(data);
+            SimpleImmutableEntry<Double, Double> args = v.getData(data);
             v.getHisto().fill(args.getKey(), args.getValue(), weight);
         });
     }

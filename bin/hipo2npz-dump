@@ -1,0 +1,166 @@
+#!/usr/bin/env python3
+"""
+Show values for a few events from all banks in an NPZ produced by hipo2npz.
+
+Usage:
+    python hipo2npz-dump file.npz
+    python hipo2npz-dump file.npz 3
+"""
+
+from __future__ import annotations
+
+import ast
+import struct
+import sys
+from collections import defaultdict
+from pathlib import Path
+from zipfile import ZipFile
+
+
+def read_npy_from_bytes(blob: bytes):
+    if len(blob) < 10 or blob[:6] != b"\x93NUMPY":
+        raise ValueError("Not a valid .npy payload")
+
+    major = blob[6]
+    minor = blob[7]
+
+    if major == 1:
+        header_len = struct.unpack("<H", blob[8:10])[0]
+        header_start = 10
+    elif major in (2, 3):
+        header_len = struct.unpack("<I", blob[8:12])[0]
+        header_start = 12
+    else:
+        raise ValueError(f"Unsupported .npy version: {major}.{minor}")
+
+    header_end = header_start + header_len
+    header_text = blob[header_start:header_end].decode("latin1").strip()
+    header = ast.literal_eval(header_text)
+
+    descr = header["descr"]
+    shape = header["shape"]
+    fortran_order = header["fortran_order"]
+
+    if fortran_order:
+        raise ValueError("Fortran-order arrays are not supported")
+
+    if len(shape) != 1:
+        raise ValueError(f"Only 1D arrays are supported, got shape={shape}")
+
+    count = shape[0]
+    data = blob[header_end:]
+
+    fmt_map = {
+        "|i1": "b",
+        "<i1": "b",
+        "|u1": "B",
+        "<u1": "B",
+        "<i2": "h",
+        "<u2": "H",
+        "<i4": "i",
+        "<u4": "I",
+        "<i8": "q",
+        "<u8": "Q",
+        "<f4": "f",
+        "<f8": "d",
+    }
+
+    if descr not in fmt_map:
+        raise ValueError(f"Unsupported dtype descriptor: {descr}")
+
+    fmt = fmt_map[descr]
+    itemsize = struct.calcsize("<" + fmt)
+    expected = count * itemsize
+    if len(data) != expected:
+        raise ValueError(
+            f"Data length mismatch for {descr}: expected {expected}, got {len(data)}"
+        )
+
+    values = struct.unpack("<" + str(count) + fmt, data)
+    return values
+
+
+def load_npz(npz_path: Path):
+    arrays = {}
+    with ZipFile(npz_path, "r") as zf:
+        for name in zf.namelist():
+            if not name.endswith(".npy"):
+                continue
+            key = name[:-4]
+            arrays[key] = read_npy_from_bytes(zf.read(name))
+    return arrays
+
+
+def collect_banks(keys):
+    banks = set()
+    for key in keys:
+        if key.endswith("__rows_per_event") or key.endswith("__offsets"):
+            banks.add(key.rsplit("__", 1)[0])
+            continue
+
+        parts = key.split("__")
+        if len(parts) < 2:
+            continue
+        banks.add("__".join(parts[:-1]))
+    return sorted(banks)
+
+
+def main():
+    if len(sys.argv) < 2 or len(sys.argv) > 3:
+        print("Usage: python3 show_all_npz_events_no_numpy.py <file.npz> [N_EVENTS]")
+        sys.exit(2)
+
+    npz_path = Path(sys.argv[1])
+    n_events = int(sys.argv[2]) if len(sys.argv) == 3 else 3
+
+    if not npz_path.exists():
+        print(f"File not found: {npz_path}")
+        sys.exit(1)
+
+    arrays = load_npz(npz_path)
+    banks = collect_banks(arrays.keys())
+
+    for bank in banks:
+        rows_key = f"{bank}__rows_per_event"
+        offsets_key = f"{bank}__offsets"
+
+        if rows_key not in arrays or offsets_key not in arrays:
+            continue
+
+        rows_per_event = arrays[rows_key]
+        offsets = arrays[offsets_key]
+
+        column_keys = sorted(
+            k for k in arrays.keys()
+            if k.startswith(bank + "__") and k not in (rows_key, offsets_key)
+        )
+
+        print("=" * 80)
+        print(f"BANK: {bank}")
+        print("COLUMNS:")
+        for key in column_keys:
+            print(f"  {key[len(bank) + 2:]}")
+        print()
+
+        nevt = min(n_events, len(rows_per_event))
+
+        for evt in range(nevt):
+            start = int(offsets[evt])
+            stop = int(offsets[evt + 1])
+            nrows = int(rows_per_event[evt])
+
+            print(f"Event {evt}: rows={nrows} slice=[{start}:{stop}]")
+            if nrows == 0:
+                print("  <no rows>")
+                print()
+                continue
+
+            for key in column_keys:
+                col = key[len(bank) + 2:]
+                values = arrays[key][start:stop]
+                print(f"  {col}: {list(values)}")
+            print()
+
+
+if __name__ == "__main__":
+    main()

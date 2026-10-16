@@ -43,7 +43,6 @@ public class NewPlaneStopper implements IStopper {
 	 * @param sMax            maximal path length in meters
 	 * @param targetPlane     target Plane
 	 * @param accuracy        the accuracy in meters
-	 * @param normalDirection <code></code> if going smaller to larger rho
 	 */
 	public NewPlaneStopper(double[] u0, double s0, double sMax, Plane targetPlane, double accuracy) {
 

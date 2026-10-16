@@ -170,8 +170,6 @@ public class FTTRKEngine extends ReconstructionEngine {
             ArrayList<FTTRKCluster> clusters = trk.processDataEventAndGetClusters(event);
             int nStripsInClusters = 0;
 
-            DetectorEvent detectorEvent = DetectorData.readDetectorEvent(event);
-            PhysicsEvent            gen = detectorEvent.getGeneratedEvent();
             double maxcomp1=-100, maxcomp2=-100, maxcomp3=-100, maxcomp4=-100;
             int imax1 = -1, imax2 = -1, imax3 = -1, imax4 = -1;
             if(event.hasBank("FTTRK::hits")) {

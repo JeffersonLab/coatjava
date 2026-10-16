@@ -143,9 +143,11 @@ public class ClaraYaml {
 
     /**
      * Emulate the way CLARA parses the full YAML and presents it in EngineData.
-     * The "global" and "service" subsections in the "configuration" section get
-     * squashed into one namespace, and service-specific keys override any
-     * globals of the same name.
+     *
+     * The YAML's "global" and "services" configuration sections get squashed
+     * into one namespace, with service-specific parameters overriding globals
+     * of the same name.  Also, for the special services named "reader" and
+     * "writer", the "io-services" section is searched instead of "services".
      *
      * @param claraJson the full CLARA YAML contents
      * @param serviceName the name of the service in CLARA YAML (not class name)
@@ -161,9 +163,10 @@ public class ClaraYaml {
                     ret.accumulate(key, globals.getString(key));
                 }
             }
-            if (config.has("services")) {
-                if (config.getJSONObject("services").has(serviceName)) {
-                    JSONObject service = config.getJSONObject("services").getJSONObject(serviceName);
+	    String section = serviceName.equals("reader") || serviceName.equals("writer") ? "io-services" : "services";
+            if (config.has(section)) {
+                if (config.getJSONObject(section).has(serviceName)) {
+                    JSONObject service = config.getJSONObject(section).getJSONObject(serviceName);
                     for (String key : service.keySet()) {
                         ret.put(key, service.getString(key));
                     }

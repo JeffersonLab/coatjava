@@ -1,24 +1,38 @@
 package org.jlab.utils.benchmark;
 
 import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
+import org.jlab.utils.benchmark.BenchmarkTimer.BenchmarkMultiTimer;
 
 /**
  *
  * @author gavalian
  */
-public class Benchmark {
-    
-    private static final Benchmark benchmarkInstance = new Benchmark();
-    private final Map<String,BenchmarkTimer> timerStore = new LinkedHashMap<>();
+public class Benchmark implements Comparator<String> {
+   
+    String name;
+    private static final Benchmark benchmarkInstance = new Benchmark("");
+    private Map<String,BenchmarkMultiTimer> timerStore = new LinkedHashMap<>();
     private Timer updateTimer = null;
+    private final ArrayList<String> specials = new ArrayList<>();
     
-    private Benchmark() {}
-    
+    public Benchmark(String name) {
+        this.name = name;
+    }
+
+    public Benchmark(String name, String[] specials) {
+        this.name = name;
+        this.specials.addAll(Arrays.asList(specials));
+    }
+
     public static Benchmark getInstance(){
         return benchmarkInstance;
     }
@@ -37,75 +51,94 @@ public class Benchmark {
             bt.reset(); 
     }
     
-    public void addTimer(String name){
+    public synchronized void addTimer(String name){
         if (!timerStore.containsKey(name))
-            timerStore.put(name, new BenchmarkTimer(name));
-        else
-            System.err.println("[Benchmark] -----> error. timer with name ("+ name + ") already exists");
+            timerStore.put(name, new BenchmarkMultiTimer(name));
     }
     
     public void pause(String name){
         if (!timerStore.containsKey(name))
-            timerStore.put(name, new BenchmarkTimer(name));
+            addTimer(name);
         else
             timerStore.get(name).pause();
     }
     
     public void resume(String name){
         if (!timerStore.containsKey(name))
-            timerStore.put(name, new BenchmarkTimer(name));
+            addTimer(name);
         timerStore.get(name).resume();
+    }
+    
+    public void pause(int thread, String name){
+        if (!timerStore.containsKey(name))
+            addTimer(name);
+        else
+            timerStore.get(name).pause(thread);
+    }
+    
+    public void resume(int thread, String name){
+        if (!timerStore.containsKey(name))
+            addTimer(name);
+        timerStore.get(name).resume(thread);
     }
     
     public BenchmarkTimer getTimer(String name){
         return timerStore.getOrDefault(name, null);
     }
 
-    public BenchmarkTimer getTotal(String name) {
-        BenchmarkTimerTotal total = new BenchmarkTimerTotal(name);
-        for (BenchmarkTimer b : timerStore.values())
-            total.add(b);
-        return total;
-    }
-
     @Override
     public String toString(){
         StringBuilder s = new StringBuilder();
-        Collection<BenchmarkTimer> timers = timerStore.values();
+        Collection<BenchmarkMultiTimer> timers = timerStore.values();
         if (!timers.isEmpty()) {
             int len = timers.iterator().next().toString().length();
             char[] asterix = new char[len+8];
             Arrays.fill(asterix,'*');
-            String margins = new String(asterix);
+            String margins = new String(asterix) + "\n";
             s.append(margins);
-            s.append("\n");
-            s.append("*     BENCHMARK  RESULTS \n");
+            s.append("*     ");
+            s.append(name);
+            s.append(" Benchmarks\n");
             s.append(margins);
-            s.append("\n");
             for (BenchmarkTimer b : timers) {
                 s.append("*   ");
                 s.append(b);
                 s.append("   *\n");
             }
-            s.append("*   ");
-            s.append(getTotal(""));
-            s.append("   *\n");
+            s.append(String.format("*   %-15s : #Calls %12.2f, Total = %12.2f sec, Unit = %12.3f msec   *\n",
+                 "TOTAL",
+                 ((float)timers.stream().mapToInt(x -> x.numberOfCalls.get()).sum())/timers.size(),
+                 timers.stream().mapToDouble(x -> x.getSeconds()).sum(),
+                 timers.stream().mapToDouble(x -> x.getMillisecondsPerCall()).sum()));
             s.append(margins);
-            s.append("\n");
         }
         return s.toString();
     }
 
-    public static void main(String[] args){
-        Benchmark b = getInstance();
-        b.printTimer(10);
-        int loop = 0;
-        while(true){
-            b.resume("COUNT");
-            loop++;
-            b.pause("COUNT");
-            try { Thread.sleep(2000); }
-            catch (InterruptedException ex) {}
+    public String[] toCSV() {
+        return new String[]{
+            String.join(",",timerStore.keySet()) + ",TOTAL",
+            String.join(",",timerStore.values().stream().map(x -> String.format("%.2f",x.getMillisecondsPerCall())).toList())
+                + "," + String.format("%.2f",timerStore.values().stream().mapToDouble(x -> x.getMillisecondsPerCall()).sum())
+        };
+    }
+
+    public void sortByName() {
+        List<String> keys = new ArrayList<>(timerStore.keySet());
+        Collections.sort(keys, this);
+        Map<String,BenchmarkMultiTimer> timers = new LinkedHashMap<>();
+        for (String s : keys)
+            timers.put(s, timerStore.get(s));
+        timerStore = timers;
+    }
+
+    @Override
+    public int compare(String s1, String s2) {
+        if (specials.contains(s1)) {
+            return specials.contains(s2) ? s1.compareTo(s2) : -1;
+        } else {
+            return specials.contains(s2) ? 1 : s1.compareTo(s2);
         }
     }
+    
 }

@@ -14,7 +14,8 @@ public class RecoBankWriter {
 
     /**
      * 
-     * @param hitlist the list of  hits that are of the type Hit.
+     * @param event
+     * @param params
      * @return hits bank
      *
      */

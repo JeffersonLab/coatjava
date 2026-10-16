@@ -237,7 +237,7 @@ public class FitEditorPanel extends JPanel {
 	/**
 	 * FitEditorPanel Set the choices
 	 * 
-	 * @param fit the new choices
+	 * @param curve the new choices
 	 */
 	public void setFit(DataColumn curve) {
 

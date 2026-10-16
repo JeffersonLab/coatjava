@@ -106,14 +106,12 @@ public class FTHODOEngine extends ReconstructionEngine {
             DataEvent event = (DataEvent) reader.getNextEvent();
             cal.processDataEventUser(event);
 
-            DetectorEvent detectorEvent = DetectorData.readDetectorEvent(event);
-            PhysicsEvent            gen = detectorEvent.getGeneratedEvent();
             if(event.hasBank("FTHODO::clusters")) {
                 DataBank bank = event.getBank("FTHODO::clusters");
                 int nrows = bank.rows();
                 for(int i=0; i<nrows;i++) {
                     h1.fill(bank.getFloat("energy",i));
-                    h2.fill(bank.getFloat("energy",i)-gen.getParticle("[11]").vector().p());
+            //        h2.fill(bank.getFloat("energy",i)-gen.getParticle("[11]").vector().p());
 //                    h3.fill(bank.getFloat("clusterTheta",i)-gen.getParticle("[11]").theta()*180/Math.PI);
 //                    h4.fill(bank.getFloat("clusterPhi",i)-gen.getParticle("[11]").phi()*180/Math.PI);
                     h5.fill(bank.getFloat("time",i));

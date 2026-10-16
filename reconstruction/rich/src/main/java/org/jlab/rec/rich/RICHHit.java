@@ -367,6 +367,8 @@ public class RICHHit implements Comparable<RICHHit>{
 
     
     // ----------------
+    @Override
+    // ----------------
     public int compareTo(RICHHit ohit) {
     // ----------------
         if(ohit.get_duration()==this.get_duration()) return 0;

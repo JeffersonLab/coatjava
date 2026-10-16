@@ -9,9 +9,9 @@ public interface IAdaptiveStopper {
 	 * precise, because the check may not happen on every step, but it should be
 	 * close.
 	 * 
-	 * @param sNew the new value of the independent variable (typically pathlength)
-	 * @param uNew the new state vector (typically [x, y, z, vx, vy, vz])
-	 * @return <code>true</code> if we should stop now.
+	 * @param snew the new value of the independent variable (typically pathlength)
+	 * @param unew the new state vector (typically [x, y, z, vx, vy, vz])
+	 * @return {@code true} if we should stop now.
 	 */
 	public boolean stopIntegration(double snew, double unew[]);
 

@@ -427,7 +427,7 @@ public class Helix {
      * pathlength = integral of d(l) from l(rMin) to l(rMax) pathlength =
      * sqrt(R^2omega^2+tanL^2)*(l(rMax)-l(rMin))
      *
-     * @author pilleux
+     * Written by pilleux
      *
      */
     public double getPathLength(double rMin, double rMax) {

@@ -2,7 +2,6 @@ package org.jlab.rec.dc.trajectory;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Logger;
 import org.jlab.clas.swimtools.Swim;
 import org.jlab.detector.base.DetectorType;
 import org.jlab.geom.prim.Point3D;
@@ -23,8 +22,6 @@ public class Trajectory extends ArrayList<Cross> {
     public Trajectory() {
     }
 
-    private static final Logger LOGGER = Logger.getLogger(Trajectory.class.getName());
-    
     private int id;
     private int sector;
     private double integratedBdL;

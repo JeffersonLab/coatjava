@@ -47,7 +47,7 @@ public class TrackProjector {
     /**
      * Gets the list of track projections.
      *
-     * @return a {@link List} of {@link TrackProjection} objects representing
+     * @return a {@code List} of {@link TrackProjection} objects representing
      * the projections.
      */
     public ArrayList<TrackProjection> getProjections() {
@@ -66,7 +66,7 @@ public class TrackProjector {
     /**
      * Sets the list of track projections.
      *
-     * @param Projections a {@link List} of {@link TrackProjection}.
+     * @param Projections a {@code List} of {@link TrackProjection}.
      */
     public void setProjections(ArrayList<TrackProjection> Projections) {
         this.projections = Projections;

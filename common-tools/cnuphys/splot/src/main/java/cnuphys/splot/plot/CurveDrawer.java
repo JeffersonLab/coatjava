@@ -73,7 +73,7 @@ public class CurveDrawer {
 	 * Draw a 1D histogram
 	 * 
 	 * @param g           the graphics context
-	 * @param plotCanvas  the plot canvas
+	 * @param canvas      the plot canvas
 	 * @param histoColumn the column (should contain a HistData object)
 	 */
 	public static void drawHisto1D(Graphics g, PlotCanvas canvas, DataColumn histoColumn) {

@@ -317,9 +317,9 @@ public class SwimTrajectory2D {
 	 *                   containing p0-p1. It may or may not actually be between p0
 	 *                   and p1, as specified by the value of t.
 	 * @return the perpendicular distance to the line. If t is between 0 and 1 the
-	 *         intersection is on the line. If t < 0 the intersection is on the
-	 *         "infinite line" but not on p0->p1, it is on the p0 side; this returns
-	 *         the distance to p0. If t > 1 the intersection is on the p1 side; this
+	 *         intersection is on the line. If {@code t < 0} the intersection is on the
+	 *         "infinite line" but not on {@code p0->p1}, it is on the p0 side; this returns
+	 *         the distance to p0. If {@code t > 1} the intersection is on the p1 side; this
 	 *         returns the distance to p1.
 	 */
 	public static double perpendicularDistance(Point.Double p0, Point.Double p1, Point.Double wp,

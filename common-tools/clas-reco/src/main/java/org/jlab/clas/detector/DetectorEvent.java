@@ -3,11 +3,7 @@ package org.jlab.clas.detector;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import org.jlab.clas.physics.Particle;
-import org.jlab.clas.physics.PhysicsEvent;
 import org.jlab.detector.base.DetectorType;
-import org.jlab.io.base.DataEvent;
-
 
 /**
  *
@@ -16,54 +12,17 @@ import org.jlab.io.base.DataEvent;
 public class DetectorEvent {
     
     private final List<DetectorParticle>  particleList = new ArrayList<>();
-    private final PhysicsEvent          generatedEvent = new PhysicsEvent();
-    private final PhysicsEvent      reconstructedEvent = new PhysicsEvent();
     private DetectorHeader                 eventHeader = new DetectorHeader();
     
-    public DetectorEvent(){
-        
-    }
+    public DetectorEvent(){}
    
     public void sort() {
         Collections.sort(particleList);
         setAssociation();
     }
 
-    public static DetectorEvent readDetectorEvent(DataEvent event){
-        return DetectorData.readDetectorEvent(event);
-    }
-
     public DetectorHeader getEventHeader() {
         return eventHeader;
-    }
-    
-    public PhysicsEvent getGeneratedEvent(){
-        return this.generatedEvent;
-    }
-    
-    public PhysicsEvent getPhysicsEvent(){
-        return this.reconstructedEvent;
-    }
-        
-    public DetectorParticle matchedParticle(int pid, int skip){
-        Particle particle = generatedEvent.getParticleByPid(pid, skip);
-        if(particle.p()<0.0000001) return new DetectorParticle();
-        return matchedParticle(particle);
-    }
-    
-    public DetectorParticle matchedParticle(Particle p){
-        double compare = 100.0;
-        int index = -1;
-        for(int i = 0; i < particleList.size();i++){
-            if(p.charge()==particleList.get(i).getCharge()){
-                if(particleList.get(i).compare(p.vector().vect())<compare){
-                    compare = particleList.get(i).compare(p.vector().vect());
-                    index   = i; 
-                }
-            }
-        }
-        if(index<0&&compare>0.2) return new DetectorParticle();
-        return this.particleList.get(index);
     }
     
     public void clear(){
@@ -180,14 +139,6 @@ public class DetectorEvent {
         }
     }
 
-    public void addParticle(double px, double py, double pz,
-            double vx, double vy, double vz){
-        DetectorParticle particle = new DetectorParticle();
-        particle.vector().setXYZ(px, py, pz);
-        particle.vertex().setXYZ(vx, vy, vz);
-        this.addParticle(particle);
-    }
-    
     public DetectorParticle getTriggerParticle() {
         for (int ii=0; ii<particleList.size(); ii++) {
             if (particleList.get(ii).isTriggerParticle()) {

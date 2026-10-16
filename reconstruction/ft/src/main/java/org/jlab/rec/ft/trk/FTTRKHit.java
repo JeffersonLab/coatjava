@@ -121,8 +121,8 @@ public class FTTRKHit implements Comparable<FTTRKHit>{
 	}
 
 	/**
-	 * Sets the wire number
-	 * @param _Wire
+	 * Sets the strip number
+	 * @param _Strip
 	 */
 	public void set_Strip(int _Strip) {
 		this._Strip = _Strip;

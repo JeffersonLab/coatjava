@@ -4,8 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
+import org.jlab.rec.alert.AIPID.PIDResult;
+import org.jlab.rec.alert.AIPID.PrePIDResult;
 import org.jlab.rec.alert.projections.TrackProjection;
-//import org.jlab.rec.alert.AIpid.PIDResult;
 
 import ai.djl.util.Pair;
 
@@ -17,7 +18,7 @@ import ai.djl.util.Pair;
  * @author Whit Armstrong
  */
 public class RecoBankWriter {
-
+    
     /**
      * Writes the bank of track projections.
      *
@@ -54,12 +55,12 @@ public class RecoBankWriter {
         }
         return bank;
     }
-    
+
     /**
      * Appends the alert match banks to an event.
      *
      * @param event the {@link DataEvent} in which to append the banks
-     * @param projections the {@link ArrayList} of {@link TrackProjection} containing the 
+     * @param projections the {@link ArrayList} of {@link TrackProjection} containing the
      * track projections info to be added
      *
      * @return 0 if it worked, 1 if it failed
@@ -91,17 +92,16 @@ public class RecoBankWriter {
 
         return 0;
     }
-    
-    public int appendPrePIDBank(DataEvent event, ArrayList<org.jlab.rec.alert.AIPID.PrePIDResult> results) {
+
+    public int appendPrePIDBank(DataEvent event, ArrayList<PrePIDResult> results) {
 
         DataBank bank = event.createBank("ALERT::ai:prepid", results.size());
         if (bank == null) {
             System.err.println("COULD NOT CREATE A ALERT::ai:prepid BANK!!!!!!");
             return 1;
         }
-
         for (int i = 0; i < results.size(); i++) {
-            org.jlab.rec.alert.AIPID.PrePIDResult r = results.get(i);
+            PrePIDResult r = results.get(i);
             bank.setInt("trackid", i, r.trackid);
             bank.setInt("clusterid", i, r.clusterid);
             bank.setInt("prepid", i, r.prepid);
@@ -111,7 +111,27 @@ public class RecoBankWriter {
             bank.setFloat("p47", i, r.p47);
             bank.setFloat("p49", i, r.p49);
         }
+        event.appendBank(bank);
+        return 0;
+    }
 
+    public int appendPIDBank(DataEvent event, ArrayList<PIDResult> results) {
+        DataBank bank = event.createBank("ALERT::ai:pid", results.size());
+        if (bank == null) {
+            System.err.println("COULD NOT CREATE A ALERT::ai:pid BANK!!!!!!");
+            return 1;
+        }
+        for (int i = 0; i < results.size(); i++) {
+            PIDResult r = results.get(i);
+            bank.setInt("trackid", i, r.trackid);
+            bank.setInt("clusterid", i, r.clusterid);
+            bank.setInt("pid", i, r.pid);
+            bank.setFloat("prob_2212", i, r.p2212);
+            bank.setFloat("prob_45", i, r.p45);
+            bank.setFloat("prob_46", i, r.p46);
+            bank.setFloat("prob_47", i, r.p47);
+            bank.setFloat("prob_49", i, r.p49);
+        }
         event.appendBank(bank);
         return 0;
     }

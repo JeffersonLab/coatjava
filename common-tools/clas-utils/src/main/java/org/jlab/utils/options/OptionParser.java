@@ -70,7 +70,12 @@ public class OptionParser {
         option.setDescription(desc);
         requiredOptions.put(key, option);
     }
-    
+   
+    public void removeOption(String key) {
+        optionsDescriptors.remove(key);
+        requiredOptions.remove(key);
+    }
+
     public void addOption(String key, String defaultValue){
         check(key, optionsDescriptors.keySet());
         OptionValue option = new OptionValue(key,defaultValue);

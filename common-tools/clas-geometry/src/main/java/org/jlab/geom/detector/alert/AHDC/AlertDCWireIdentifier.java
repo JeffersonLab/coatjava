@@ -171,7 +171,7 @@ public class AlertDCWireIdentifier {
     /**
      * Convert layer number (from 0 to 7) to the superlayer-layer id (11,21,...,51)
      * 
-     * @param digit between 0 and 7
+     * @param num between 0 and 7
      * @return layer number between (11,21,...,51)
      */
     public static int number2layer(int num) {

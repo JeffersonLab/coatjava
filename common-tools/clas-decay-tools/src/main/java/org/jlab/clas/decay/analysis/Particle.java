@@ -571,7 +571,7 @@ public class Particle {
     }
 
     /**
-     * @param _recmass the _mass to set
+     * @param _mass the _mass to set
      */
     public void setRecMass(double _mass) {
         this._recmass = _mass;

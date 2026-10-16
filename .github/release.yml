@@ -22,5 +22,7 @@ changelog:
       labels: [ maven ]
     - title: 📦 Dependency Updates
       labels: [ dependencies ]
+    - title: ⚡ QCDDAT Updates
+      labels: [ qcddat ]
     - title: 🔘 Other Changes
       labels: [ '*' ]

@@ -79,7 +79,7 @@ public final class Rubberband {
 	/**
 	 * Create a Rubberband
 	 * 
-	 * @param container    the parent component being rubberbanded
+	 * @param canvas
 	 * @param rubberbanded who gets notified when we are done.
 	 * @param policy       the stretching shape policy.
 	 */

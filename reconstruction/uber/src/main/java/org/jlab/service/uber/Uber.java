@@ -29,7 +29,10 @@ import org.jlab.service.ltcc.LTCCEngine;
 import org.jlab.service.mltn.MLTDEngine;
 import org.jlab.service.rtpc.RTPCEngine;
 import org.jlab.calibration.service.CalibBanksEngine;
+import org.jlab.service.ai.DCClsComboEngine;
+import org.jlab.service.ai.DCDenoiseEngine;
 import org.jlab.service.dc.DCHBPostClusterConv;
+import org.jlab.service.dc.DCHBTrackingAI;
 import org.jlab.service.dc.DCTBEngineAI;
 import org.jlab.service.eb.EBHBAIEngine;
 import org.jlab.service.eb.EBTBAIEngine;
@@ -82,8 +85,8 @@ public class Uber {
         }
     }
 
-    public static class HitBasedAI extends UberEngine {
-        public HitBasedAI() {
+    public static class HitBasedAIClassic extends UberEngine {
+        public HitBasedAIClassic() {
             super("HB","uber","1.0");
             add(new DCHBClustering(),
                 new MLTDEngine(),
@@ -97,13 +100,47 @@ public class Uber {
         }
     }
 
-    public static class HitBasedAICV extends UberEngine {
-        public HitBasedAICV() {
+    public static class HitBasedAI extends UberEngine {
+        public HitBasedAI() {
+            super("HB","uber","1.0");
+            add(new DCDenoiseEngine(),
+                new DCHBClustering(),
+                new DCClsComboEngine(),
+                new DCHBTrackingAI("HB"),
+                new BANDEngine(),
+                new HTCCReconstructionService(),
+                new LTCCEngine(),
+                new FTOFHBEngine(),
+                new ECEngine(),
+                new EBHBEngine());
+        }
+    }
+
+    public static class HitBasedAIClassicCV extends UberEngine {
+        public HitBasedAIClassicCV() {
             super("HB","uber","1.0");
             add(new DCHBClustering(),
                 new MLTDEngine(),
                 new DCHBPostClusterConv(),
                 new DCHBPostClusterAI("AI"),
+                new BANDEngine(),
+                new HTCCReconstructionService(),
+                new LTCCEngine(),
+                new FTOFHBEngine(),
+                new ECEngine(),
+                new EBHBEngine(),
+                new EBHBAIEngine());
+        }
+    }
+
+    public static class HitBasedAICV extends UberEngine {
+        public HitBasedAICV() {
+            super("HB","uber","1.0");
+            add(new DCDenoiseEngine(),
+                new DCHBClustering(),
+                new DCClsComboEngine(),
+                new DCHBPostClusterConv(),
+                new DCHBTrackingAI("AI"),
                 new BANDEngine(),
                 new HTCCReconstructionService(),
                 new LTCCEngine(),

@@ -58,8 +58,6 @@ public class Track extends Trajectory implements Comparable<Track>{
     private double _totPathLen;
     private Point3D _trakOrig;
     private Vector3D _pOrig;
-    private Point3D _Vtx0_TiltedCS;
-    private Vector3D _pAtOrig_TiltedCS;
     private String _trking;
     private int _FitNDF;
     private double _NDFDAF;

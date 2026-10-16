@@ -31,6 +31,7 @@ import org.jlab.rec.dc.trajectory.Road;
  * @since 08.09.2018 updated by gurjyan
  @deprecated 
  */
+@Deprecated
 public class DCHBEngine extends DCEngine {
 
 

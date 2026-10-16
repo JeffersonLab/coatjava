@@ -1011,8 +1011,6 @@ public class LundSupport {
 	 * 
 	 * @param lundId    the id to set the style for.
 	 * @param lineColor the lineColor to use.
-	 * @param darker    if <code>true</code> make line color datker, else make it
-	 *                  lighter.
 	 */
 	public static void setStyle(int lundId, Color lineColor) {
 		LundSupport ls = LundSupport.getInstance();

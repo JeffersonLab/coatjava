@@ -40,12 +40,12 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.transform.Rotate;
 
 /**
- * Utility class that allows to visualize meshes created with null {@link MathUtil#evaluateFunction(
+ * Utility class that allows to visualize meshes created with null {@code MathUtil#evaluateFunction(
  *   eu.mihosoft.vrl.javaone2013.math.Function2D,
  *   int, int, float, float, float, double, double, double, double)
  * }.
  *
- * @author Michael Hoffer <info@michaelhoffer.de>
+ * written by Michael Hoffer (info@michaelhoffer.de)
  */
 public class VFX3DUtil {
 

@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.ArrayList;
 import org.jlab.detector.volume.Geant4Basic;
 import org.jlab.detector.units.SystemOfUnits.Length;
-import org.jlab.detector.volume.G4Pgon;
+import org.jlab.detector.volume.G4Pcone;
 import org.jlab.detector.volume.G4Trd;
 import org.jlab.detector.volume.G4World;
 import org.jlab.geom.base.ConstantProvider;
@@ -24,7 +24,7 @@ public final class MUCALGeant4Factory extends Geant4Factory {
         double[] mucal_iradius = {301.0*Length.mm, 72.8*Length.mm, 81.5*Length.mm, 98.7*Length.mm};
         double[] mucal_oradius = {301.1*Length.mm, 360.6*Length.mm, 401.0*Length.mm, 98.8*Length.mm};
         double[] mucal_zpos_root = {520.0*Length.mm, 625.0*Length.mm, 696.0*Length.mm, 836.0*Length.mm};
-        G4Pgon mucalVolume = new G4Pgon("mucalVolume", phiStart, phiTotal, nplanes, nplanes, mucal_zpos_root, mucal_iradius, mucal_oradius);
+        G4Pcone mucalVolume = new G4Pcone("mucalVolume", phiStart, phiTotal, nplanes, mucal_zpos_root, mucal_iradius, mucal_oradius);
         mucalVolume.setMother(motherVolume);
         for (int sector = 1; sector <= 2; sector++) {
             List<G4Trd> layerVolume = createPanel(provider, sector, 1);

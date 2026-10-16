@@ -27,9 +27,8 @@ public class Plane {
 	/**
 	 * Create a plane from a normal vector and a point on the plane
 	 * 
-	 * @param norm the normal vector
+	 * @param anorm the normal vector
 	 * @param p    a point in the plane
-	 * @return the plane that contains p and its normal is norm
 	 */
 	public Plane(Vector anorm, Point p) {
 		// lets make it a unit vector

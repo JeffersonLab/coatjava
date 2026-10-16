@@ -20,9 +20,10 @@ public class RICHBankBuilder extends CalibBankBuilder {
     }
     @Override
     public boolean isGoodEvent(DataEvent event) {
+	
+	DataBank part = event.getBank("REC::Particle");                
         
-        DataBank part = event.getBank("REC::Particle");                
-        if(part.rows()<1 ||
+         if(part.rows()<1 ||
            part.getInt("pid", 0)!=11 || 
            ((int) (Math.abs(part.getShort("status", 0))/1000))!=2)
                 return false;
@@ -37,7 +38,8 @@ public class RICHBankBuilder extends CalibBankBuilder {
         DataBank hits = event.getBank("RICH::Hit");
         DataBank clus = event.getBank("RICH::Cluster");
         DataBank phos = event.getBank("RICH::Photon");
-            
+
+
         List<Integer> goodPhotons = new ArrayList<>();
         for(int i=0; i<phos.rows(); i++) {
             int pid    = phos.getInt("hypo_pid", i);

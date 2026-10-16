@@ -193,7 +193,6 @@ public class HistoData {
 	/**
 	 * A string displaying some statistics
 	 * 
-	 * @param useRms if <code>true</code> use rms, else use sigma
 	 * @return a string with statistics info
 	 */
 	public String statStr() {

@@ -38,9 +38,9 @@ public class DefaultRhoStopper implements IStopper {
 	 * @param uo              starting state vector
 	 * @param s0              starting path length in meters
 	 * @param sMax            maximal path length in meters
+         * @param rho0
 	 * @param targetRho       stopping rho in meters
 	 * @param accuracy        the accuracy in meters
-	 * @param normalDirection <code></code> if going smaller to larger rho
 	 */
 	public DefaultRhoStopper(double[] uo, double s0, double sMax, double rho0, double targetRho, double accuracy) {
 		

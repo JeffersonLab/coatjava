@@ -636,8 +636,6 @@ public class LundTrackDialog extends JDialog {
 	 * Center a component.
 	 * 
 	 * @param component The Component to center.
-	 * @param dh        offset from horizontal center.
-	 * @param dv        offset from vertical center.
 	 */
 	public static void centerComponent(Component component) {
 

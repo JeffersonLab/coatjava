@@ -4,9 +4,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import javax.swing.JFrame;
-import org.jlab.clas.detector.DetectorData;
-import org.jlab.clas.detector.DetectorEvent;
-import org.jlab.clas.physics.PhysicsEvent;
 import org.jlab.clas.reco.ReconstructionEngine;
 import org.jlab.geom.prim.Vector3D;
 import org.jlab.groot.data.H1F;
@@ -124,8 +121,6 @@ public class FTCALEngine extends ReconstructionEngine {
             DataEvent event = (DataEvent) reader.getNextEvent();
             cal.processDataEvent(event);
 
-            DetectorEvent detectorEvent = DetectorData.readDetectorEvent(event);
-            PhysicsEvent            gen = detectorEvent.getGeneratedEvent();
             if(event.hasBank("FTCAL::clusters")) {
                 DataBank bank = event.getBank("FTCAL::clusters");
                 int nrows = bank.rows();
@@ -137,11 +132,11 @@ public class FTCALEngine extends ReconstructionEngine {
 ///                        h5.fill(bank.getFloat("time",i)-124.25);  // 124.25 offet for MC data
                     h5.fill(bank.getFloat("time", i));
                     h6.fill(cluster.x(), cluster.y());
-                    if(gen.countGenerated() != 0){
-                       h2.fill(bank.getFloat("energy",i)-gen.getGeneratedParticle(0).vector().p());
-                       h3.fill(Math.toDegrees(cluster.theta()-gen.getGeneratedParticle(0).theta()));
-                       h4.fill(Math.toDegrees(cluster.phi()-gen.getGeneratedParticle(0).phi()));
-}
+                    //if(gen.countGenerated() != 0){
+                    //   h2.fill(bank.getFloat("energy",i)-gen.getGeneratedParticle(0).vector().p());
+                    //   h3.fill(Math.toDegrees(cluster.theta()-gen.getGeneratedParticle(0).theta()));
+                    //   h4.fill(Math.toDegrees(cluster.phi()-gen.getGeneratedParticle(0).phi()));
+                    //}
                 }
             }
         }
@@ -153,12 +148,11 @@ public class FTCALEngine extends ReconstructionEngine {
         canvas.cd(1); canvas.draw(h2);
         canvas.cd(2); canvas.draw(h3);
         canvas.cd(3); canvas.draw(h4);
-	canvas.cd(4); canvas.draw(h6);
+        canvas.cd(4); canvas.draw(h6);
         canvas.cd(5); canvas.draw(h5);
         frame.add(canvas);
         frame.setLocationRelativeTo(null);
-        frame.setVisible(true);     
+        frame.setVisible(true);
+    }
 
-	}	
-	
 }

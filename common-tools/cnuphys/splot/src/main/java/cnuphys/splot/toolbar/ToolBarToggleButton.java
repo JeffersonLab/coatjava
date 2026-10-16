@@ -50,7 +50,6 @@ public class ToolBarToggleButton extends JToggleButton {
 	/**
 	 * Create a toolbar toggle button
 	 * 
-	 * @param container     the owner container.
 	 * @param imageFileName the name if the file holding the icon
 	 * @param toolTip       a string for a tool tip
 	 * @param actionCommand theaction command.
@@ -62,10 +61,12 @@ public class ToolBarToggleButton extends JToggleButton {
 	/**
 	 * Create a toolbar toggle button
 	 * 
-	 * @param container     the owner container.
 	 * @param imageFileName the name if the file holding the icon
 	 * @param toolTip       a string for a tool tip
 	 * @param actionCommand theaction command.
+         * @param xh
+         * @param yh
+         * @param cursorImageFile
 	 */
 	public ToolBarToggleButton(String imageFileName, String toolTip, String actionCommand, int xh, int yh,
 			String cursorImageFile) {
@@ -75,10 +76,14 @@ public class ToolBarToggleButton extends JToggleButton {
 	/**
 	 * Create a toolbar toggle button
 	 * 
-	 * @param container     the owner container.
 	 * @param imageFileName the name if the file holding the icon
 	 * @param toolTip       a string for a tool tip
 	 * @param actionCommand theaction command.
+         * @param xh
+         * @param yh
+         * @param cursorImageFile
+         * @param iw
+         * @param ih
 	 */
 	public ToolBarToggleButton(String imageFileName, String toolTip, String actionCommand, int xh, int yh,
 			String cursorImageFile, int iw, int ih) {

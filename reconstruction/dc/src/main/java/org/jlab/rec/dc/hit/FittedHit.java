@@ -1,7 +1,6 @@
 package org.jlab.rec.dc.hit;
 
 import eu.mihosoft.vrl.v3d.Vector3d;
-import org.jlab.clas.clas.math.FastMath;
 import org.jlab.clas.swimtools.Swimmer;
 import org.jlab.detector.geant4.v2.DCGeant4Factory;
 import org.jlab.geom.prim.Line3D;
@@ -1031,7 +1030,7 @@ public class FittedHit extends Hit implements Comparable<Hit> {
 
     /**
      * 
-     * @return a value <=1 resetting beta to 1 for overflows
+     * @return a value {@code <=1} resetting beta to 1 for overflows
      */
     public double get_Beta0to1() {
         double beta = this.get_Beta();

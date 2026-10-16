@@ -1279,7 +1279,7 @@ public class RungeKutta {
 	/**
 	 * Set the minimum step size
 	 * 
-	 * @param maxSS
+	 * @param minSS
 	 *            the minimum stepsize is whatever units you are using
 	 */
 	public void setMinStepSize(double minSS) {

@@ -15,7 +15,6 @@ public class ErfcFit extends Fitmrq implements IValueGetter {
 	 * Create a Error function Fit
 	 * 
 	 * @param fit       the fit data
-	 * @param tolerance the tolerance
 	 */
 	public ErfcFit(Fit fit) throws IllegalArgumentException {
 		super(fit.getX(), fit.getY(), fit.getSigmaY(), initialGuess(fit), _funcs, fit.getTolerance());

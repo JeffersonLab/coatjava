@@ -13,7 +13,6 @@ public class PolyAndGaussianFit extends Fitmrq implements IValueGetter {
 	/**
 	 * 
 	 * @param fit       the fit data
-	 * @param tolerance
 	 */
 	public PolyAndGaussianFit(Fit fit) {
 		super(fit.getX(), fit.getY(), fit.getSigmaY(), initialGuess(fit),

@@ -8,10 +8,7 @@ public class FitUtilities {
 	/**
 	 * A Straight line fit with errors in y
 	 * 
-	 * @param _x    the x data
-	 * @param _y    the y data
-	 * @param sigma the errors on the y data
-	 * @return the fit a + bx
+	 * @param fit
 	 */
 	public static void fitStraightLine(Fit fit) {
 		fixNullSig(fit);
@@ -329,9 +326,7 @@ public class FitUtilities {
 	 * repleaces all zero values with the mean value. At that point the fit should
 	 * be considered suspect.
 	 * 
-	 * @param sig the sigma array, which might be null
-	 * @param n   the length of the array, if it has to be created
-	 * @return a hopefully safe sigma array
+	 * @param fit
 	 */
 	protected static void fixNullSig(Fit fit) {
 

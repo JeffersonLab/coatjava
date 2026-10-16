@@ -15,6 +15,7 @@ import org.jlab.detector.pulse.ModeAHDC;
 
 import org.jlab.io.base.DataEvent;
 import org.jlab.io.evio.EvioDataEvent;
+import org.jlab.io.hipo.HipoDataEvent;
 
 import org.jlab.jnp.hipo4.data.Bank;
 import org.jlab.jnp.hipo4.data.Event;
@@ -795,4 +796,13 @@ public class CLASDecoder {
     public Event getDecodedEvent(EvioDataEvent rawEvent) {
         return getDecodedEvent(rawEvent, -1, -1, null, null);
     }
+
+    public HipoDataEvent getDecodedDataEvent(EvioDataEvent rawEvent) {
+        return new HipoDataEvent(getDecodedEvent(rawEvent, -1, -1, null, null), schemaFactory);
+    }
+
+    public HipoDataEvent getDecodedDataEvent(EvioDataEvent rawEvent, Double torus, Double solenoid) {
+        return new HipoDataEvent(getDecodedEvent(rawEvent, -1, -1, torus, solenoid), schemaFactory);
+    }
+
 }

@@ -80,8 +80,6 @@ public class SwimZStateVector {
 	 * 
 	 * @param sv
 	 *            the state vector to copy
-	 * @param v
-	 *            the array with, in order, x,y,tx,ty,q
 	 */
 	public SwimZStateVector(SwimZStateVector sv) {
 		this(sv.x, sv.y, sv.z, sv.tx, sv.ty);

@@ -669,7 +669,7 @@ public class Vector3d {
      * @param vector the vector to rotate
      * @param angle the angle of rotation
      *
-     * @author pdavies
+     * written by pdavies
      */
     public void rotate(Vector3d vector, double angle) {
         double m = vector.magnitude();
@@ -695,7 +695,7 @@ public class Vector3d {
      * @param point the other point
      * @return a point at the geometric mean of the two given points
      *
-     * @author pdavies
+     * written by pdavies
      */
     public Vector3d midpoint(Vector3d point) {
         return lerp(point, 0.5);
@@ -703,7 +703,7 @@ public class Vector3d {
 
     /**
      * @return theta elevation (angle between vector and z axis)
-     * @author pdavies
+     * written by pdavies
      */
     public double theta() {
         return (this.magnitude() < 2e-6) ? 1.0 : Math.acos(this.z / this.magnitude()); // special case at mag = 0
@@ -711,7 +711,7 @@ public class Vector3d {
 
     /**
      * @return phi azimuth (angle between projection onto xy plane and x axis)
-     * @author pdavies
+     * written by pdavies
      */
     public double phi() {
         return Math.atan2(this.y, this.x);

@@ -341,7 +341,6 @@ public class DetectorTest extends JPanel implements MouseListener, MouseMotionLi
 	}
 
 	/**
-	 * @param name     the name of the chamber.
 	 * @param boundary the rectangular boundary in world coordinates.
 	 */
 	public void addChamber(Rectangle2D.Double boundary) {

@@ -81,7 +81,7 @@ public enum FitType {
 	/**
 	 * Get an html string the describes the fit
 	 * 
-	 * @param object the fit object that will have to be cast appropriately
+	 * @param curveFit the fit object that will have to be cast appropriately
 	 * @return an html string the describes the fit
 	 */
 	public static String getFitString(Fit curveFit) {

@@ -36,8 +36,12 @@ public class StripChartPanel extends JPanel {
 	/**
 	 * Create a plot panel for a single xy dataset and a toolbar
 	 * 
-	 * @param dataSet   the data set
-	 * @param plotTitle the title of the plot
+	 * @param title
+	 * @param xLabel
+	 * @param yLabel
+	 * @param getter
+	 * @param capacity
+	 * @param interval
 	 */
 	public StripChartPanel(String title, String xLabel, String yLabel, IValueGetter getter, int capacity, long interval) {
 		
