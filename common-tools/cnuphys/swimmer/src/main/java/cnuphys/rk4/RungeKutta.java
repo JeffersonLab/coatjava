@@ -1094,6 +1094,7 @@ public class RungeKutta {
         }
 
         static StatePool[] statePool = new StatePool[]{
+            null, null, null, 
             new StatePool(1000,3),new StatePool(1000,4),
             new StatePool(1000,5),new StatePool(1000,6)
         };
