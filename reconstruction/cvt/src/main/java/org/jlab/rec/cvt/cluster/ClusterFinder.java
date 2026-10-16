@@ -78,7 +78,7 @@ public class ClusterFinder {
                 // looping over all strips
                 while (si < NSTRIP) {
                     // if there's a hit, it's a cluster candidate
-                    if (HitArray[si][l][s] != null || (si < nstrip - 1 && HitArray[si + 1][l][s] != null)) { 
+                    if (HitArray[si][l][s] != null || (si < NSTRIP - 1 && HitArray[si + 1][l][s] != null)) { 
                         
                         Cluster this_cluster = null;
                         
