@@ -1,4 +1,4 @@
-package org.jlab.io.utils;
+package org.jlab.clas.reco;
 
 import org.jlab.io.banks.RUN_config;
 import org.jlab.jnp.hipo4.data.Bank;
