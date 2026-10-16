@@ -6,7 +6,6 @@ import java.util.List;
 import javax.swing.JFrame;
 import org.jlab.clas.detector.DetectorData;
 import org.jlab.clas.detector.DetectorEvent;
-import org.jlab.clas.physics.GenericKinematicFitter;
 import org.jlab.clas.physics.PhysicsEvent;
 import org.jlab.clas.reco.ReconstructionEngine;
 import org.jlab.geom.prim.Vector3D;
@@ -19,60 +18,60 @@ import org.jlab.io.evio.EvioDataBank;
 import org.jlab.io.evio.EvioDataEvent;
 import org.jlab.io.hipo.HipoDataSource;
 
-
 public class FTCALEngine extends ReconstructionEngine {
 
-	public FTCALEngine() {
-		super("FTCAL", "devita", "3.0");
+    public FTCALEngine() {
+        super("FTCAL", "devita", "3.0");
+    }
+
+    FTCALReconstruction reco;
+    
+    @Override
+    public boolean init() {
+        reco = new FTCALReconstruction();
+        reco.debugMode=0;
+
+        String[]  tables = new String[]{ 
+            "/calibration/ft/ftcal/charge_to_energy",
+            "/calibration/ft/ftcal/time_offsets",
+            "/calibration/ft/ftcal/time_walk",
+            "/calibration/ft/ftcal/status",
+            "/calibration/ft/ftcal/thresholds",
+            "/calibration/ft/ftcal/cluster",
+            "/calibration/ft/ftcal/energycorr"
+        };
+        requireConstants(Arrays.asList(tables));
+        this.getConstantsManager().setVariation("default");
+        this.registerOutputBank("FTCAL::hits","FTCAL::clusters");       
+        return true;
 	}
 
-	FTCALReconstruction reco;
-	
-	@Override
-	public boolean init() {
-		reco = new FTCALReconstruction();
-		reco.debugMode=0;
-
-                String[]  tables = new String[]{ 
-                    "/calibration/ft/ftcal/charge_to_energy",
-                    "/calibration/ft/ftcal/time_offsets",
-                    "/calibration/ft/ftcal/time_walk",
-                    "/calibration/ft/ftcal/status",
-                    "/calibration/ft/ftcal/thresholds",
-                    "/calibration/ft/ftcal/cluster",
-                    "/calibration/ft/ftcal/energycorr"
-                };
-                requireConstants(Arrays.asList(tables));
-                this.getConstantsManager().setVariation("default");
-
-                this.registerOutputBank("FTCAL::hits","FTCAL::clusters");
-                
-                return true;
-	}
+    @Override
+    public void detectorChanged(int runNumber) {}
 
 	@Override
-	public boolean processDataEvent(DataEvent event) {
+	public boolean processDataEventUser(DataEvent event) {
             List<FTCALHit>     allHits           = new ArrayList();
             List<FTCALHit>     selectedHits      = new ArrayList();
             List<FTCALCluster> clusters          = new ArrayList();
             
-            // update calibration constants based on run number if changed
-            int run = setRunConditionsParameters(event);
+        // update calibration constants based on run number if changed
+        int run = setRunConditionsParameters(event);
 
-            if(run>=0) {
-                // get hits fron banks
-                allHits = reco.initFTCAL(event,this.getConstantsManager(), run);
-                // select good hits and order them by energy
-                selectedHits = reco.selectHits(allHits,this.getConstantsManager(), run);
-                // create clusters
-                clusters = reco.findClusters(selectedHits, this.getConstantsManager(), run);
-                // set cluster status
-                reco.selectClusters(clusters, this.getConstantsManager(), run);
-                // write output banks
-                reco.writeBanks(event, selectedHits, clusters, this.getConstantsManager(), run);
-            }
-            return true;
-	}
+        if(run>=0) {
+            // get hits fron banks
+            allHits = reco.initFTCAL(event,this.getConstantsManager(), run);
+            // select good hits and order them by energy
+            selectedHits = reco.selectHits(allHits,this.getConstantsManager(), run);
+            // create clusters
+            clusters = reco.findClusters(selectedHits, this.getConstantsManager(), run);
+            // set cluster status
+            reco.selectClusters(clusters, this.getConstantsManager(), run);
+            // write output banks
+            reco.writeBanks(event, selectedHits, clusters, this.getConstantsManager(), run);
+        }
+        return true;
+    }
 
     public int setRunConditionsParameters(DataEvent event) {
         int run = -1;
@@ -88,7 +87,7 @@ public class FTCALEngine extends ReconstructionEngine {
             DataBank bank = event.getBank("RUN::config");
             run = bank.getInt("run",0);
         }
-	
+    
         return run;
     }
 
@@ -125,43 +124,25 @@ public class FTCALEngine extends ReconstructionEngine {
             DataEvent event = (DataEvent) reader.getNextEvent();
             cal.processDataEvent(event);
 
-            if(event instanceof EvioDataEvent) {
-                GenericKinematicFitter      fitter = new GenericKinematicFitter(11);
-                PhysicsEvent                   gen = fitter.getGeneratedEvent((EvioDataEvent)event);
-                if(event.hasBank("FTCALRec::clusters")) {
-                    DataBank bank = event.getBank("FTCALRec::clusters");
-                    int nrows = bank.rows();
-                    for(int i=0; i<nrows;i++) {
-                        h1.fill(bank.getDouble("clusEnergy",i));
-                        h2.fill(bank.getDouble("clusEnergy",i)-gen.getParticle("[11]").vector().p());
-                        h3.fill(bank.getDouble("clusTheta",i)-gen.getParticle("[11]").theta()*180/Math.PI);
-                        h4.fill(bank.getDouble("clusPhi",i)-gen.getParticle("[11]").phi()*180/Math.PI);
-                        h5.fill(bank.getDouble("clusTime",i));
-                    }
-                }
-            }
-            else{
-                DetectorEvent detectorEvent = DetectorData.readDetectorEvent(event);
-                PhysicsEvent            gen = detectorEvent.getGeneratedEvent();
-                if(event.hasBank("FTCAL::clusters")) {
-                    DataBank bank = event.getBank("FTCAL::clusters");
-                    int nrows = bank.rows();
-                    for(int i=0; i<nrows;i++) {
-                        h1.fill(bank.getFloat("energy",i));
-                        Vector3D cluster = new Vector3D(bank.getFloat("x",i),bank.getFloat("y",i),bank.getFloat("z",i));  
+            DetectorEvent detectorEvent = DetectorData.readDetectorEvent(event);
+            PhysicsEvent            gen = detectorEvent.getGeneratedEvent();
+            if(event.hasBank("FTCAL::clusters")) {
+                DataBank bank = event.getBank("FTCAL::clusters");
+                int nrows = bank.rows();
+                for(int i=0; i<nrows;i++) {
+                    h1.fill(bank.getFloat("energy",i));
+                    Vector3D cluster = new Vector3D(bank.getFloat("x",i),bank.getFloat("y",i),bank.getFloat("z",i));  
 //                        System.out.println(cluster.theta() + " " + gen.getGeneratedParticle(0).theta());
 //                        System.out.println(cluster.x() + " " + cluster.y() + " " + cluster.z() + " ");
 ///                        h5.fill(bank.getFloat("time",i)-124.25);  // 124.25 offet for MC data
-                        h5.fill(bank.getFloat("time", i));
-			h6.fill(cluster.x(), cluster.y());
-                        if(gen.countGenerated() != 0){
-                           h2.fill(bank.getFloat("energy",i)-gen.getGeneratedParticle(0).vector().p());
-                           h3.fill(Math.toDegrees(cluster.theta()-gen.getGeneratedParticle(0).theta()));
-                           h4.fill(Math.toDegrees(cluster.phi()-gen.getGeneratedParticle(0).phi()));
-                        }
-                    }
+                    h5.fill(bank.getFloat("time", i));
+                    h6.fill(cluster.x(), cluster.y());
+                    if(gen.countGenerated() != 0){
+                       h2.fill(bank.getFloat("energy",i)-gen.getGeneratedParticle(0).vector().p());
+                       h3.fill(Math.toDegrees(cluster.theta()-gen.getGeneratedParticle(0).theta()));
+                       h4.fill(Math.toDegrees(cluster.phi()-gen.getGeneratedParticle(0).phi()));
+}
                 }
-
             }
         }
         JFrame frame = new JFrame("FT Reconstruction");

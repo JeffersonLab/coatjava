@@ -10,6 +10,9 @@ import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 import org.jlab.rec.dc.Constants;
 import org.jlab.rec.dc.banks.Banks;
+import org.jlab.clas.tracking.kalmanfilter.zReference.KFitter;
+import org.jlab.clas.tracking.kalmanfilter.zReference.DAFilter;
+import org.jlab.rec.ai.dcHBTrackState.HBTrackStateEstimator;
 
 public class DCEngine extends ReconstructionEngine {
 
@@ -18,6 +21,8 @@ public class DCEngine extends ReconstructionEngine {
     
     // options configured from yaml
     private int        selectedSector = 0;
+    private String     ministaggerStatus = null;
+    private String     feedthroughsStatus = null;
     private boolean    wireDistortion = false;
     private boolean    useStartTime   = true;
     private boolean    useBetaCut     = false;
@@ -31,9 +36,14 @@ public class DCEngine extends ReconstructionEngine {
     private String     inBankPrefix   = null;
     private String     outBankPrefix  = null;
     private double[][] shifts         = new double[Constants.NREG][6];
+    protected boolean  useDAF         = true;
+    private String   dafChi2Cut     = null;
+    private String   dafAnnealingFactorsTB = null;
+    
+    protected String hbTSEModelFileInbending = "transformer_32d_4h_3l_inbending.pt"; // AI model file for HB track state estimator for inbending runs  
+    protected String hbTSEModelFileOutbending = "transformer_32d_4h_3l_outbending.pt"; // AI model file for HB track state estimator for outbending runs  
     
     public static final Logger LOGGER = Logger.getLogger(ReconstructionEngine.class.getName());
-
 
     public DCEngine(String name) {
         super(name,"ziegler","5.0");
@@ -55,6 +65,14 @@ public class DCEngine extends ReconstructionEngine {
         if(this.getEngineConfigString("dcUseStartTime")!=null)
             useStartTime = Boolean.valueOf(this.getEngineConfigString("dcUseStartTime"));
       
+        // R3 ministagger
+        if(this.getEngineConfigString("dcMinistagger")!=null)       
+            ministaggerStatus = this.getEngineConfigString("dcMinistagger");
+        
+        // Wire feedthroughs
+        if(this.getEngineConfigString("dcFeedthroughs")!=null)       
+            feedthroughsStatus = this.getEngineConfigString("dcFeedthroughs");
+        
         // Wire distortions
         if(this.getEngineConfigString("dcWireDistortion")!=null)       
             wireDistortion = Boolean.parseBoolean(this.getEngineConfigString("dcWireDistortion"));
@@ -99,6 +117,28 @@ public class DCEngine extends ReconstructionEngine {
             outBankPrefix = this.getEngineConfigString("outputBankPrefix");
         }
         
+        //Set if use DAF
+        if(this.getEngineConfigString("useDAF")!=null) 
+            useDAF=Boolean.valueOf(this.getEngineConfigString("useDAF"));
+        
+        if(this.getEngineConfigString("dafChi2Cut")!=null) {
+            dafChi2Cut=this.getEngineConfigString("dafChi2Cut");
+            DAFilter.setDafChi2Cut(Double.valueOf(dafChi2Cut));
+        }
+        
+        if(this.getEngineConfigString("dafAnnealingFactorsTB")!=null){ 
+            dafAnnealingFactorsTB=this.getEngineConfigString("dafAnnealingFactorsTB");
+            KFitter.setDafAnnealingFactorsTB(dafAnnealingFactorsTB);
+        }
+                    
+        if (getEngineConfigString("hbTSEModelFileInbending") != null){
+            hbTSEModelFileInbending = getEngineConfigString("hbTSEModelFileInbending");
+        }
+        
+        if (getEngineConfigString("hbTSEModelFileOutbending") != null){
+            hbTSEModelFileOutbending = getEngineConfigString("hbTSEModelFileOutbending");
+        }
+               
         // Set geometry shifts for alignment code
         if(this.getEngineConfigString("alignmentShifts")!=null) {
             String[] alignmentShift = this.getEngineConfigString("alignmentShifts").split(",");
@@ -141,7 +181,7 @@ public class DCEngine extends ReconstructionEngine {
         
     
     @Override
-    public boolean processDataEvent(DataEvent event) {
+    public boolean processDataEventUser(DataEvent event) {
         return true;
     }
 
@@ -150,6 +190,8 @@ public class DCEngine extends ReconstructionEngine {
         this.setOptions();
         Constants.getInstance().initialize(this.getName(),
                                            geoVariation, 
+                                           ministaggerStatus, 
+                                           feedthroughsStatus,
                                            wireDistortion, 
                                            useStartTime, 
                                            useBetaCut, 
@@ -164,6 +206,11 @@ public class DCEngine extends ReconstructionEngine {
         this.initBanks();
         this.setDropBanks();
         return true;
+    }
+
+    @Override
+    public void detectorChanged(int runNumber) {
+        Constants.getInstance().LoadGeometry(runNumber, geoVariation, shifts);
     }
 
     private void initBanks() {
@@ -191,7 +238,7 @@ public class DCEngine extends ReconstructionEngine {
             return 0;
         }
         DataBank bank = event.getBank("RUN::config");
-        LOGGER.log(Level.FINE,"["+this.getName()+"] EVENT "+bank.getInt("event", 0));       
+        LOGGER.log(Level.FINEST,"["+this.getName()+"] EVENT "+bank.getInt("event", 0));       
         
         int run = bank.getInt("run", 0);
         return run;

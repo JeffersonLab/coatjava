@@ -6,9 +6,7 @@ import static org.junit.Assert.*;
 import org.jlab.io.base.DataEvent;
 
 import org.jlab.analysis.physics.TestEvent;
-import org.jlab.jnp.hipo4.data.SchemaFactory;
-import org.jlab.logging.DefaultLogger;
-import org.jlab.utils.system.ClasUtilsFile;
+import org.jlab.detector.base.DetectorType;
 
 /**
  *
@@ -18,15 +16,10 @@ public class ECReconstructionTest {
 	
   @Test
   public void testECReconstruction() {
-    DefaultLogger.debug();
 
     System.setProperty("CLAS12DIR", "../../");
 
-    String dir = ClasUtilsFile.getResourceDir("CLAS12DIR", "etc/bankdefs/hipo4");
-    SchemaFactory schemaFactory = new SchemaFactory();
-    schemaFactory.initFromDirectory(dir);
-    
-    DataEvent testEvent = TestEvent.getECSector1PhotonEvent(schemaFactory);
+    DataEvent testEvent = TestEvent.get(DetectorType.ECAL);
     
     ECEngine engineEC = new ECEngine();
     engineEC.init();

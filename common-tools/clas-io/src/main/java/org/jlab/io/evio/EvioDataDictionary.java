@@ -20,8 +20,8 @@ import org.jlab.utils.TablePrintout;
  */
 public class EvioDataDictionary implements DataDictionary {
 
-	Logger LOGGER = Logger.getLogger(EvioDataDictionary.class.getName());
-	private HashMap<String, EvioDataDescriptor> descriptors = new HashMap<String, EvioDataDescriptor>();
+	static final Logger LOGGER = Logger.getLogger(EvioDataDictionary.class.getName());
+	private HashMap<String, EvioDataDescriptor> descriptors = new HashMap<>();
 
 	public EvioDataDictionary() {
 
@@ -35,26 +35,28 @@ public class EvioDataDictionary implements DataDictionary {
 		this.initWithDir(directory);
 	}
 
+    @Override
 	public void init(String format) {
 
 	}
 
+    @Override
 	public String getXML() {
 		return "some xml";
 	}
 
+    @Override
 	public String[] getDescriptorList() {
 		String[] names = new String[descriptors.keySet().size()];
-		// ArrayList<String> array = new ArrayList();
 		int icounter = 0;
 		for (String key : descriptors.keySet()) {
 			names[icounter] = key;
 			icounter++;
 		}
 		return names;
-		// throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
 	}
 
+    @Override
 	public DataDescriptor getDescriptor(String desc_name) {
 		if (descriptors.containsKey(desc_name) == true) {
 			return descriptors.get(desc_name);
@@ -81,10 +83,10 @@ public class EvioDataDictionary implements DataDictionary {
 	}
 
 	public final void initWithDir(String dirname) {
-		ArrayList<String> ignorePrefixes = new ArrayList<String>();
+		ArrayList<String> ignorePrefixes = new ArrayList<>();
 		ignorePrefixes.add(".");
 		ignorePrefixes.add("_");
-		LOGGER.log(Level.INFO,"[EvioDataDictionary]---> loading bankdefs from directory : " + dirname);
+		LOGGER.log(Level.INFO, "[EvioDataDictionary]---> loading bankdefs from directory : {0}", dirname);
 		File dict_dir = new File(dirname);
 
 		if (dict_dir.exists() == false) {
@@ -93,33 +95,24 @@ public class EvioDataDictionary implements DataDictionary {
 		}
 
 		ArrayList<String> xmlFileList = FileUtils.filesInFolder(dict_dir, "xml", ignorePrefixes);
-		LOGGER.log(Level.INFO,"[EvioDataDictionary]------> number of XML files located  : " + xmlFileList.size());
+		LOGGER.log(Level.INFO, "[EvioDataDictionary]------> number of XML files located  : {0}", xmlFileList.size());
 		Integer counter = 0;
 		for (String file : xmlFileList) {
 			ArrayList<EvioDataDescriptor> descList = DictionaryLoader.getDescriptorsFromFile(file);
-			// ArrayList<String> descList = DictionaryLoader.descriptorParseXMLtoString(file);
 			for (EvioDataDescriptor desc : descList) {
 				descriptors.put(desc.getName(), desc);
-				// System.out.println(" rev = " + counter + " desc = " + desc.getName());
-				// ArrayList<EvioDataDescriptor> descList =
-				// EvioDataDescriptor desc = new EvioDataDescriptor();
-				// desc.init(format);
-				// descriptors.put(desc.getName(), desc);
 				counter++;
 			}
 		}
-		LOGGER.log(Level.INFO,"[EvioDataDictionary]--> total number of descriptors found  : " + counter.toString());
+		LOGGER.log(Level.INFO, "[EvioDataDictionary]--> total number of descriptors found  : {0}", counter.toString());
 	}
 
 	public void show() {
 		TablePrintout table = new TablePrintout("Bank:Columns:Tag:Number", "42:8:8:8");
 		for (Map.Entry<String, EvioDataDescriptor> entry : descriptors.entrySet()) {
-			// System.out.println(" step 1 ");
 			String name = entry.getKey();
 			String[] info = new String[4];
-			// System.out.println(" step 2 ");
 			info[0] = name;
-			// System.out.println(" step 3 ");
 			Integer nentries = descriptors.get(name).getEntryList().length;
 			info[1] = nentries.toString();
 			Integer tag = descriptors.get(name).getProperty("tag");
@@ -155,16 +148,17 @@ public class EvioDataDictionary implements DataDictionary {
 					}
 				}
 				if (desc.getValue().getProperty("tag", entryname) == tag && desc.getValue().getProperty("num", entryname) == num) {
-					return new String(desc.getKey() + "." + entryname);
+					return desc.getKey() + "." + entryname;
 				}
 			}
 		}
 		return name;
 	}
 
+    @Override
 	public DataBank createBank(String name, int rows) {
 		if (descriptors.containsKey(name) == false) {
-			LOGGER.log(Level.SEVERE,"[EvioDataDictionary]:: ERROR ---> no descriptor with name = " + name + " is found");
+			LOGGER.log(Level.SEVERE, "[EvioDataDictionary]:: ERROR ---> no descriptor with name = {0} is found", name);
 		}
 		EvioDataDescriptor desc = descriptors.get(name);
 		EvioDataBank bank = new EvioDataBank(desc);

@@ -1,9 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package org.jlab.io.utils;
 
 import java.io.IOException;
@@ -31,7 +25,6 @@ public class CompositeFormatReader {
     public static void main4(String[] args){
         EvioSource reader = new EvioSource();
         reader.open("/Users/gavalian/Work/DataSpace/LTCC/ltcc0test_000195.evio");
-        //while(reader.hasEvent()){
         for(int loop = 0; loop < 10; loop++){
             EvioDataEvent event = (EvioDataEvent) reader.getNextEvent();
             EvioNode      rawnode = event.getNodeFromTree(57601, 43, DataType.COMPOSITE);
@@ -55,7 +48,6 @@ public class CompositeFormatReader {
         }
     }
     
-    
     public static void main2(){
         
         try {
@@ -77,17 +69,16 @@ public class CompositeFormatReader {
             Logger.getLogger(CompositeFormatReader.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
+
     public static void main(String[] args){
         CompositeFormatReader.main4(args);
     }
+
     public static void main3(String[] args){
         try {
             EvioCompactReader reader = new EvioCompactReader("/Users/gavalian/Work/DataSpace/LTCC/ltcc0test_000195.evio");
             
             for(int loop = 0; loop < 10; loop++){
-                //EvioNode node = reader.getEvent(loop);                  
-                //List<EvioNode> nodes = reader.searchEvent(loop+1, 57601, 7);
-                //System.err.println("event " + loop + "  " + nodes.size());
                 ByteBuffer buffer = reader.getEventBuffer(loop+1);
                 System.err.println("event " + loop + "  " + buffer.limit() + "  " + buffer.order());
                 EvioCompactStructureHandler structure = new EvioCompactStructureHandler(buffer,DataType.BANK);
@@ -123,11 +114,6 @@ public class CompositeFormatReader {
                                                 );
                                         
                                         CompositeData cdata = new CompositeData(bdata,ByteOrder.LITTLE_ENDIAN);
-                                        List<DataType> itemTypes = cdata.getTypes();
-                                        //String format = cdata.
-                                        //for(DataType type : itemTypes){
-                                        //    System.err.println(" Data type = " + type);
-                                        //}
                                     }
                                 }
                             }
@@ -142,35 +128,4 @@ public class CompositeFormatReader {
             Logger.getLogger(CompositeFormatReader.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    /*
-    public static void main(String[] args) {
-        EvioSource reader = new EvioSource();
-        reader.open("/Users/gavalian/Work/DataSpace/LTCC/ltcc0test_000168.evio");
-        for(int loop = 0; loop < 10; loop++){
-            EvioDataEvent event = (EvioDataEvent) reader.getNextEvent();
-            System.err.println("Event " + loop + "  Has bank = " + event.hasBank(57601, 7));
-            EvioCompactStructureHandler structure = event.getStructureHandler();
-            try {
-                List<EvioNode> nodes = structure.getNodes();
-                /*
-                if(event.hasBank(57601, 7)==true){
-                
-                EvioNode node = event.getNodeFromTree(57601, 7, DataType.COMPOSITE);
-                
-                if(node!=null){
-                System.err.println("FOUND THE NODE");
-                //ByteBuffer  buffer = node.getStructureBuffer(false);
-                
-                try {
-                CompositeData cdata = new CompositeData(buffer.array(),ByteOrder.LITTLE_ENDIAN);
-                } catch (EvioException ex) {
-                Logger.getLogger(CompositeFormatReader.class.getName()).log(Level.SEVERE, null, ex);
-                }
-                }
-                }
-            } catch (EvioException ex) {
-                Logger.getLogger(CompositeFormatReader.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        }
-    }*/
 }

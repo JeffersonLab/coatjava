@@ -53,10 +53,9 @@ public class CalibrationConstantsLoader {
         public static int LASER_COMPONENT = 6;
         public static double[] LASER_CONV = {0,1,0};
 
-	public static synchronized void Load(int runno, String var, ConstantsManager manager) {
+	public static synchronized void Load(int runno, ConstantsManager manager) {
 
 		//System.out.println("*Loading calibration constants*");
-		manager.setVariation(var);
 
 		IndexedTable  lroffsets  = manager.getConstants(runno, "/calibration/band/lr_offsets");
 		IndexedTable  timewalkL	 = manager.getConstants(runno, "/calibration/band/time_walk_amp_left");

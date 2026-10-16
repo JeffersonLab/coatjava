@@ -11,20 +11,30 @@ public class ADCConvertor {
 
     }
 
-    /**
+    public static boolean isEventUnCorrupted(int adc, int adcstat) {
+        //The value adcStatus is 0 for runs where adc=-1 is permitted and 1 for runs where adc=-1 is NOT permitted
+        //
+        boolean pass = true;
+        if(adc==-1) {
+            if(adcstat==1) //1: event corrupted; 0 event is OK
+                pass=false;
+            if(adcstat==0) 
+                pass=true;
+        }
+        return pass;
+    }
+     /**
      *
      * @param adc ADC value Converts ADC values to DAQ units -- used for BST
      * test stand analysis
      * @return 
      */
     public static double SVTADCtoDAQ(int adc) {
-        if (adc == -5) {
-            return 1; // this is for running with Geantinos.  Geantinos have adc -5
-        }
+        
         if (adc < 0 || adc > 7) {
-            return 0;
+            return -1;
         }
-
+        
         int START[] = new int[8];
         int END[] = new int[8];
         for (int i = 0; i < 8; i++) {

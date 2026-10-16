@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.jlab.utils.groups;
 
 import java.awt.Color;
@@ -14,10 +9,11 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
+import java.util.stream.Collectors;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
+import org.jlab.utils.groups.IndexedList.IndexGenerator;
 
 /**
  *
@@ -25,49 +21,54 @@ import javax.swing.table.DefaultTableModel;
  */
 public class IndexedTable extends DefaultTableModel {
     
-    private String tableName        = "IndexedTable";
-    private String tableDescription = "Table of indexed values";
+    public static final IndexGenerator DEFAULT_GENERATOR = new IndexGenerator();
+        
+    protected Map<String,Integer>       entryMap   = new LinkedHashMap<>();
+    protected Map<String,String>        entryTypes = new LinkedHashMap<>();
+    
     private IndexedList<IndexedEntry> entries    = null;
-    private Map<String,Integer>       entryMap   = new LinkedHashMap<String,Integer>();
-    private Map<String,String>        entryTypes = new LinkedHashMap<String,String>();
-    private List<String>              entryNames = new ArrayList<String>();
-    private List<String>              indexNames = new ArrayList<String>();
+    private List<String>              entryNames = new ArrayList<>();
+    private List<String>              indexNames = new ArrayList<>();
     private String                    precisionFormat = "%.6f";
     
-    private Map<Integer,List<RowConstraint>>  constrains = new HashMap<Integer,List<RowConstraint>>(); 
+    private Map<Integer,List<RowConstraint>>  constrains = new HashMap<>(); 
     
     private int DEBUG_MODE = 0;
-    
+   
     public IndexedTable(int indexCount){
-        entries = new IndexedList<IndexedEntry>(indexCount);
+        entries = new IndexedList<>(indexCount);
         for(int i = 0; i < indexCount; i++){
-           //this.setIndexName(i, "A"+i);
             this.indexNames.add("A"+i);
         }
     }
     
     public IndexedTable(int indexCount,String format){
-        entries = new IndexedList<IndexedEntry>(indexCount);
+        entries = new IndexedList<>(indexCount);
         for(int i = 0; i < indexCount; i++){
-            //this.setIndexName(i, "A"+i);
             this.indexNames.add("A"+i);
         }
         this.parseFormat(format);
     }
     
     public IndexedTable(int indexCount,String[] format){
-        entries = new IndexedList<IndexedEntry>(indexCount);
+        entries = new IndexedList<>(indexCount);
         for(int i = 0; i < indexCount; i++){
            this.indexNames.add("A"+i);
         }
-        
         for(int i = 0; i < format.length; i++){
             String[] tokens = format[i].split("/");
             entryMap.put(tokens[0], i);
             entryTypes.put(tokens[0],tokens[1] );
             entryNames.add(tokens[0]);
         }
+    }
     
+    public void setByteShifts(int[] byteShifts){
+        this.entries.setIndexGenerator(new IndexGenerator(byteShifts));
+    }
+    
+    public int[] getByteShifts(){
+        return this.entries.getIndexGenerator().getByteShifts();
     }
     
     public void setPrecision(Integer precision){
@@ -77,9 +78,13 @@ public class IndexedTable extends DefaultTableModel {
         str.append("f");
         this.precisionFormat = str.toString();
     }
-    
+
     public boolean hasEntry(int... index){
         return this.entries.hasItem(index);
+    }
+    
+    public boolean hasEntryByHash(long hash){
+        return this.entries.hasItemByHash(hash);
     }
     
     public final void setIndexName(int index, String name){
@@ -87,25 +92,20 @@ public class IndexedTable extends DefaultTableModel {
     }
     
     public  void addEntry(int... index){
-        //System.out.println("adding entry with size = " + entryMap.size());
         this.entries.add(new IndexedEntry(entryMap.size()), index);       
     }
     
     public  void addConstraint(int column, double min, double max){
         if(constrains.containsKey(column)==false){
-            constrains.put(column, new ArrayList<RowConstraint>());
+            constrains.put(column, new ArrayList<>());
         }
-        
-        //constrains.put(column, new RowConstraint(column,min,max));
         constrains.get(column).add(new RowConstraint(column,min,max));
     }
     
      public  void addConstraint(int column, double min, double max, int condition, int condValue){
         if(constrains.containsKey(column)==false){
-            constrains.put(column, new ArrayList<RowConstraint>());
+            constrains.put(column, new ArrayList<>());
         }
-        
-        //constrains.put(column, new RowConstraint(column,min,max));
         constrains.get(column).add(new RowConstraint(column,min,max,condition,condValue));
     }
      
@@ -121,7 +121,7 @@ public class IndexedTable extends DefaultTableModel {
             }
         }
     }
-    
+
     public  void setDoubleValue(Double value, String item, int... index){
         if(this.entries.hasItem(index)==false){
             if(DEBUG_MODE>0) System.out.println( "[IndexedTable] ---> error.. entry does not exist");
@@ -162,11 +162,51 @@ public class IndexedTable extends DefaultTableModel {
         }
         return 0;
     }
+
+    public void setIntValueByHash(Integer value, int column, long hash) {
+        this.entries.getItemByHash(hash).setValue(column, value);
+    }
+
+    public int getIntValueByHash(int index, long hash) {
+        return entries.getItemByHash(hash).getValue(index).intValue();
+    }
     
+    public double getDoubleValueByHash(int index, long hash) {
+        return entries.getItemByHash(hash).getValue(index).doubleValue();
+    }
+
+    public int getIntValueByHash(String item, long hash) {
+        return entries.getItemByHash(hash).getValue(entryMap.get(item)).intValue();
+    }
+    
+    public double getDoubleValueByHash(String item, long hash) {
+        return entries.getItemByHash(hash).getValue(entryMap.get(item)).doubleValue();
+    }
+
+    public List<Number> getValuesByHash(long hash) {
+        return this.entries.getItemByHash(hash).entryValues;
+    }
+
+    public List<Integer> getIntegersByHash(long hash) {
+        return getValuesByHash(hash).stream().map(x -> x.intValue()).collect(Collectors.toList());
+    }
+
+    public List<Double> getDoublesByHash(long hash) {
+        return getValuesByHash(hash).stream().map(x -> x.doubleValue()).collect(Collectors.toList());
+    }
+
+    public NamedEntry getNamedEntry(int... index) {
+        return NamedEntry.create(entries.getItem(index), entryNames, index);
+    }
+
     public IndexedList getList(){
         return this.entries;
     }
-    
+
+    public Map<String,Integer> getEntryMap(){
+        return this.entryMap;
+    }
+
     private void parseFormat(String format){
         String[] tokens = format.split(":");
         entryMap.clear();
@@ -202,9 +242,9 @@ public class IndexedTable extends DefaultTableModel {
 
         for(int i = 0; i < this.entryNames.size(); i++){
             if(entryTypes.get(entryNames.get(i)).compareTo("D")==0){
-                entries.getItem(index).setValue(i, Double.parseDouble(values[i+indexNames.size()]));
+                entries.getItem(index).setValue(i, Double.valueOf(values[i+indexNames.size()]));
             } else {
-                entries.getItem(index).setValue(i, Integer.parseInt(values[i+indexNames.size()]));
+                entries.getItem(index).setValue(i, Integer.valueOf(values[i+indexNames.size()]));
             }
         }
     }
@@ -232,17 +272,15 @@ public class IndexedTable extends DefaultTableModel {
      */
     public boolean isValid(int row, int column){
         if(this.constrains.containsKey(column)==false) return true;
-        
         String value  = (String) this.getValueAt(row, column);
-        Double dvalue = Double.parseDouble(value);
+        Double dvalue = Double.valueOf(value);
         for(RowConstraint rc : constrains.get(column)){
             if(rc.conditionColumn()>=0){
                 String controlColumn = (String) this.getValueAt(row, rc.conditionColumn());
-                Integer intColumnValue = Integer.parseInt(controlColumn);
+                Integer intColumnValue = Integer.valueOf(controlColumn);
                 if(intColumnValue==rc.conditionColumnValue()){
                     return rc.isValid(dvalue)!=false;
                 } 
-                //return this.constrains.get(column).isValid(Double.parseDouble(value)) != false;
             } else {
                 return rc.isValid(dvalue)!=false;
             }
@@ -257,9 +295,8 @@ public class IndexedTable extends DefaultTableModel {
      */
     @Override
     public String getColumnName(int col) {
-        
-        if(col>2){
-            return this.entryNames.get(col-3);
+        if(col>this.indexNames.size()-1){
+            return this.entryNames.get(col-this.indexNames.size());
         }
         return this.indexNames.get(col);
     }
@@ -279,15 +316,11 @@ public class IndexedTable extends DefaultTableModel {
     
     @Override
     public boolean isCellEditable(int row, int column) {
-       //all cells false
        return false;
     }
     
     @Override
     public int getRowCount(){
-        //System.out.println("RAW COUNT is " + this.arrayEntries.size());
-        //return this.arrayEntries.size();
-        //return 2;
         int nrows = 0;
         try {
             nrows = entries.getMap().size();
@@ -307,24 +340,20 @@ public class IndexedTable extends DefaultTableModel {
         for(int i = 0; i < row; i++){
             value = (Long) iter.next();
         }
-        //System.out.println();
         if(column<entries.getIndexSize()){
-            Integer index = IndexedList.IndexGenerator.getIndex(value, column);
+            IndexedList indexList = new IndexedList(entries.getIndexSize());
+            Integer index = indexList.getIndexGenerator().getIndex(value, column);
             return index.toString();
         }
         
         IndexedEntry  trow = entries.getMap().get(value);
-        //System.out.println(" number of rows = " + trow.getSize() + "  " + (column-ic));
-        /*if((column-ic)>=trow.getSize()){
-            return "0";
-        }*/
         Number trowNum = trow.getValue(column-ic);
         if(trowNum instanceof Double){
             return String.format(this.precisionFormat, trowNum.doubleValue());
         }
         return trow.getValue(column-ic).toString();
     }
-    
+
     public class RowConstraint {
         
         public int   COLUMN = 0;
@@ -360,32 +389,28 @@ public class IndexedTable extends DefaultTableModel {
     public static class IndexedCellRenderer extends DefaultTableCellRenderer {
         @Override
         public Component getTableCellRendererComponent
-                (JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column)
-                {
-                    Component c = super.getTableCellRendererComponent
-                                          (table, value, isSelected, hasFocus, row, column);
-                     if(isSelected==true){
-                         c.setBackground(new Color(20,20,255));                
-                         return c;
-                     }
-                    if(row%2==0){
-                        c.setBackground(new Color(220,255,220));
-                    } else {
-                        c.setBackground(new Color(220,220,255));
-                    }
+                (JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column){
+            Component c = super.getTableCellRendererComponent
+                          (table, value, isSelected, hasFocus, row, column);
+            if(isSelected==true){
+                c.setBackground(new Color(20,20,255));                
+                return c;
+            }
+            if(row%2==0){
+                c.setBackground(new Color(220,255,220));
+            } else {
+                c.setBackground(new Color(220,220,255));
+            }
                     
-                    return c;
-                }
+            return c;
+        }
     }
     
     public static class IndexedEntry {
         
-        //private List<Number>  columnValues = ;
-        int  entrySize = 0;
-        List<Number>   entryValues = new ArrayList<Number>();
+        List<Number> entryValues = new ArrayList<>();
         
         public IndexedEntry(int size){
-            entrySize = size;
             for(int i = 0; i < size; i++){
                 entryValues.add(2.4);
             }
@@ -405,10 +430,33 @@ public class IndexedTable extends DefaultTableModel {
         
         public void setSize(int size){
             this.entryValues.clear();
-            this.entrySize = size;
             for(int i = 0; i < size; i++){
                 entryValues.add((Integer) 0);
             }
         }
     }
+
+    /**
+     * @param it table with which to compare
+     * @return whether the tables have conflicting indices 
+     */
+    public boolean conflicts(IndexedTable it) {
+        if (it.getList().getIndexSize() != this.getList().getIndexSize()) {
+            System.err.println("[CCDB-TT] Conflict:  Not even the same #inidices.");
+            return false;
+        }
+        List<Object> conflicts = new ArrayList<>();
+        for (Object key : it.getList().getMap().keySet()) {
+            if (entries.hasItemByHash((long)key)){
+                conflicts.add(key);
+                int[] index = new int[it.getList().getIndexSize()];
+                String s = "[CCDB-TT] Index Conflict:  ";
+                for (int i=0; i<index.length; i++)
+                    s += (i>0?"/":"")+IndexedTable.DEFAULT_GENERATOR.getIndex((long)key, i);
+                System.err.println(s);
+            }
+        }
+        return !conflicts.isEmpty();
+    }
+
 }

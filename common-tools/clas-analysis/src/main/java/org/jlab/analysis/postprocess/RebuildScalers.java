@@ -6,14 +6,13 @@ import java.util.Date;
 import java.util.List;
 import org.jlab.detector.calib.utils.ConstantsManager;
 import org.jlab.detector.calib.utils.RCDBConstants;
-import org.jlab.detector.helicity.HelicitySequence;
 import org.jlab.detector.scalers.DaqScalers;
 import org.jlab.detector.helicity.HelicitySequenceManager;
+import org.jlab.detector.scalers.DaqScalersSequence;
 import org.jlab.jnp.hipo4.data.Bank;
 import org.jlab.jnp.hipo4.data.Event;
 import org.jlab.jnp.hipo4.io.HipoReader;
 import org.jlab.jnp.hipo4.io.HipoWriterSorted;
-import org.jlab.logging.DefaultLogger;
 import org.jlab.utils.groups.IndexedTable;
 import org.jlab.utils.options.OptionParser;
 import org.jlab.utils.system.ClasUtilsFile;
@@ -32,10 +31,9 @@ public class RebuildScalers {
     
     public static void main(String[] args) {
 
-        DefaultLogger.debug();
-
         OptionParser parser = new OptionParser("rebuildscaler");
         parser.addRequired("-o","output.hipo");
+        parser.addOption("-c", "0", "Fix DSC/RUN::scaler clock rollover");
         parser.parse(args);
         List<String> inputList = parser.getInputList();
         if(inputList.isEmpty()==true){
@@ -47,7 +45,7 @@ public class RebuildScalers {
         HelicitySequenceManager helSeq = new HelicitySequenceManager(8,inputList);
         
         HipoWriterSorted writer = new HipoWriterSorted();
-        writer.getSchemaFactory().initFromDirectory(ClasUtilsFile.getResourceDir("COATJAVA", "etc/bankdefs/hipo4"));
+        writer.getSchemaFactory().initFromDirectory(ClasUtilsFile.getResourceDir("CLAS12DIR", "etc/bankdefs/hipo4"));
         writer.setCompressionType(2);
         writer.open(parser.getOption("-o").stringValue());
 			
@@ -60,6 +58,13 @@ public class RebuildScalers {
         ConstantsManager conman = new ConstantsManager();
         conman.init(Arrays.asList(new String[]{CCDB_FCUP_TABLE,CCDB_SLM_TABLE,CCDB_HEL_TABLE,CCDB_DSC_TABLE}));
         
+        DaqScalersSequence seq = null;
+        if (!parser.getOption("-c").stringValue().equals("0")) {
+            System.out.println("Correcting clock rollover!");
+            seq = DaqScalersSequence.rebuildSequence(1, conman, inputList);
+            seq.fixClockRollover();
+        }
+
         for (String filename : inputList) {
 
             HipoReader reader = new HipoReader();
@@ -100,6 +105,12 @@ public class RebuildScalers {
                     if (ccdb_dsc.getIntValue("frequency", 0,0,0) < 2e5) {
                         ds = DaqScalers.create(rawScalerBank, ccdb_fcup, ccdb_slm, ccdb_hel, ccdb_dsc);
                     }
+                    else if (seq != null) {
+                        // Use rollover-corrected clock if available and clock's freq > 200 kHz
+                        long ut = seq.get(event).dsc2.getClock();
+                        long gt = seq.get(event).dsc2.getGatedClock();
+                        ds = DaqScalers.create(rawScalerBank, ccdb_fcup, ccdb_slm, ccdb_hel, ccdb_dsc, ut, gt);
+                    }
                     else {
                         // Inputs for calculation run duration in seconds, since for
                         // some run periods the DSC2 clock rolls over during a run.
@@ -107,11 +118,11 @@ public class RebuildScalers {
                         Date uet = new Date(runConfigBank.getInt("unixtime",0)*1000L);
                         ds = DaqScalers.create(rawScalerBank, ccdb_fcup, ccdb_slm, ccdb_hel, rst, uet);
                     }
-
+                    
                     runScalerBank = ds.createRunBank(writer.getSchemaFactory());
                     helScalerBank = ds.createHelicityBank(writer.getSchemaFactory());
                    
-                    RebuildScalers.assignScalerHelicity(event, helScalerBank, helSeq);
+                    Util.assignScalerHelicity(event, helScalerBank, helSeq);
 
                     // put modified HEL/RUN::scaler back in the event:
                     event.write(runScalerBank);
@@ -125,65 +136,4 @@ public class RebuildScalers {
         writer.close();
     }
 
-    /**
-     * Assign the delay-corrected helicity to the HEL::scaler bank's rows
-     * @param event the event containing the scaler reading
-     * @param bank the HEL::scaler bank
-     * @param seq previously initialized helicity sequence
-     */
-    public static void assignScalerHelicity(Event event, Bank bank, HelicitySequenceManager seq) {
-
-        // Struck (helicity) scaler readout is always slightly after the helicity
-        // state change, i.e., as registered in the FADCs, so its true helicity
-        // is offset by one state from its event:
-        final int readoutStateOffset = -1;
-
-        // Rows in the HEL::scaler bank correspond to the most recent, consecutive,
-        // time-ordered, T-stable intervals.  The first row is the earliest in
-        // time, and the last row is the latest.  Here we loop over them:
-        for (int row=0; row<bank.getRows(); ++row) {
-
-            // This is the helicity state offset for this HEL::scaler row, where
-            // the last row has an offset of -1:
-            final int offset = bank.getRows() - row - 1 + readoutStateOffset;
-
-            // Assign delay-corrected helicity to this HEL::scaler row:
-            bank.putByte("helicity",row,seq.search(event,offset).value());
-            if (seq.getHalfWavePlate(event))
-                bank.putByte("helicityRaw",0,(byte)(-1*seq.search(event,offset).value()));
-            else
-                bank.putByte("helicityRaw",0,seq.search(event,offset).value());
-        }
-    }
-
-    /**
-     * Assign the delay-corrected helicity to the HEL::scaler bank's rows
-     * @param timestamp event TI timestamp, e.g., from RUN::config bank
-     * @param bank the HEL::scaler bank
-     * @param seq previously initialized helicity sequence
-     */
-    public static void assignScalerHelicity(Long timestamp, Bank bank, HelicitySequence seq) {
-
-        // Struck (helicity) scaler readout is always slightly after the helicity
-        // state change, i.e., as registered in the FADCs, so its true helicity
-        // is offset by one state from its event:
-        final int readoutStateOffset = -1;
-
-        // Rows in the HEL::scaler bank correspond to the most recent, consecutive,
-        // time-ordered, T-stable intervals.  The first row is the earliest in
-        // time, and the last row is the latest.  Here we loop over them:
-        for (int row=0; row<bank.getRows(); ++row) {
-
-            // This is the helicity state offset for this HEL::scaler row, where
-            // the last row has an offset of -1:
-            final int offset = bank.getRows() - row - 1 + readoutStateOffset;
-
-            // Assign delay-corrected helicity to this HEL::scaler row:
-            bank.putByte("helicity",row,seq.search(timestamp,offset).value());
-            if (seq.getHalfWavePlate())
-                bank.putByte("helicityRaw",0,(byte)(-1*seq.search(timestamp,offset).value()));
-            else
-                bank.putByte("helicityRaw",0,seq.search(timestamp,offset).value());
-        }
-    }
 }

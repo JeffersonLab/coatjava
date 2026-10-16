@@ -10,10 +10,12 @@ import org.jlab.geom.prim.Arc3D;
 import org.jlab.geom.prim.Line3D;
 import org.jlab.geom.prim.Point3D;
 import org.jlab.geom.prim.Transformation3D;
+import org.jlab.geom.prim.Vector3D;
 
 /**
  *
  * @author ziegler
+ * @author Tongtong Cao
  */
 
 public abstract class AMeasVecs {
@@ -22,7 +24,8 @@ public abstract class AMeasVecs {
 
     public void setMeasVecs(List<Surface> measSurfaces) {
         measurements = new ArrayList<>();
-        Collections.sort(measSurfaces);
+        if(measSurfaces.get(0).type != Type.LINEDOCA) // Measurements from DC has been sorted 
+        	Collections.sort(measSurfaces);
         for(int i = 0; i < measSurfaces.size(); i++) {
             MeasVec mvec = new MeasVec();
             mvec.k = i ;
@@ -33,9 +36,66 @@ public abstract class AMeasVecs {
             mvec.skip = mvec.surface.passive;
             mvec.hemisphere = measSurfaces.get(i).hemisphere;
             measurements.add(mvec);
+            if(measSurfaces.get(i).type == Type.LINEDOCA) { //Todo: assign a value to the Surface index and use that as the identifier
+            	mvec.region = measSurfaces.get(i).region;
+            	mvec.sector = measSurfaces.get(i).getSector();
+            	mvec.superlayer = measSurfaces.get(i).getSuperLayer();
+            	mvec.layer = measSurfaces.get(i).getLayer();
+            }
         }
     }
     
+    // For DC, there could be two hits at a measurement
+    public double[] dhDoca(int k, StateVec stateVec) {  
+    	double value[] = {Double.NaN, Double.NaN};
+    	
+    	Surface surf = this.measurements.get(stateVec.k).surface;
+    	Point3D point = new Point3D(stateVec.x, stateVec.y, stateVec.z);
+        Vector3D dir = new Vector3D(stateVec.tx, stateVec.ty, 1);
+        Line3D line = new Line3D(point, dir);
+    	double h = hDoca(line, surf.wireLine[0]);
+
+    	double signMeas = 1;
+    	double sign = 1;
+    	if(surf.doca[1]!=-99 || !(Math.abs(surf.doca[0])<0.5 && surf.doca[1]==-99 ) ) { //use LR only for double hits or large enough doca for one hit
+    		signMeas = Math.signum(surf.doca[0]);
+    		sign = Math.signum(h);
+    	} else {
+    		signMeas = Math.signum(h);
+    		sign = Math.signum(h);
+    	}
+
+    	value[0] = signMeas*Math.abs(surf.doca[0]) - sign*Math.abs(h);
+    	
+        //USE THE DOUBLE HIT
+        if(surf.doca[1]!=-99) { 
+            h = hDoca(line, surf.wireLine[1]);
+
+            signMeas = Math.signum(surf.doca[1]);
+            sign = Math.signum(h);
+            
+            value[1]= signMeas*Math.abs(surf.doca[1]) - sign*Math.abs(h);
+        } 
+    	
+    	return value;
+    }
+    
+    // Return a signed doca for DC
+    // Suppose that trajectory is line at the given layer, which is defined by the state vector with point(x, y, z) and dir(tx, ty, 1)
+    public double hDoca(Line3D trajLine, Line3D wireLine) {              
+        
+        // Define sign of calculated doca to be consistent with LR definition of measured doca
+        Line3D WL = new Line3D();
+        WL.copy(wireLine);
+        WL.copy(WL.distance(trajLine.origin()));
+        
+        // Get a line, which is commonly perpendicular to trajectory line and wire line
+        Line3D cpLine = new Line3D();
+        cpLine.copy(trajLine);
+        cpLine.copy(cpLine.distance(wireLine));
+        
+        return cpLine.length()*Math.signum(WL.direction().x());
+    }
     
     public double dh(int k, StateVec stateVec) {
         
@@ -53,7 +113,7 @@ public abstract class AMeasVecs {
         }
         if( this.measurements.get(stateVec.k).surface.type == Type.PLANEWITHPOINT || 
                 this.measurements.get(stateVec.k).surface.type == Type.CYLINDERWITHPOINT) {
-            Point3D p = new Point3D(this.measurements.get(stateVec.k).surface.refPoint);
+            Point3D p = new Point3D(this.measurements.get(stateVec.k).surface.measPoint);
             value = p.distance(stateVec.x, stateVec.y, stateVec.z);
         }
         if( this.measurements.get(stateVec.k).surface.type == Type.CYLINDERWITHARC) {
@@ -133,7 +193,7 @@ public abstract class AMeasVecs {
         }
         if( this.measurements.get(stateVec.k).surface.type == Type.PLANEWITHPOINT || 
                 this.measurements.get(stateVec.k).surface.type == Type.CYLINDERWITHPOINT) {
-            Point3D p = new Point3D(this.measurements.get(stateVec.k).surface.refPoint);
+            Point3D p = new Point3D(this.measurements.get(stateVec.k).surface.measPoint);
             p.setZ(0);
             value = p.distance(stateVec.x, stateVec.y, 0);
         }
@@ -209,6 +269,10 @@ public abstract class AMeasVecs {
         public boolean skip  = false;
         public double hemisphere = 1;
 
+        //For DC
+        public int region = -1;
+        public int sector = -1;
+        public int superlayer = -1;
 
         @Override
         public int compareTo(MeasVec arg) {

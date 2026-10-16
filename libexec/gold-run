@@ -1,0 +1,27 @@
+#!/bin/bash
+
+exe='decoder4u -n 10000'
+csv=gold.csv
+cache=pin-gold.txt
+
+if ! [ -f $csv ] || ! [ -f $cache ]
+then
+    echo "ERROR:  This requires the gold text files from the 'raw-data' repository"
+    echo "to be in your current working directory.  The easiest way to get them:"
+    echo "GIT_LFS_SKIP_SMUDGE=1 git clone https://code.jlab.org/hallb/clas12/raw-data.git"
+    exit 1
+fi
+
+IFS=$'\n'
+
+for x in $(tail -n +2 $csv)
+do
+    x=${x//[[:space:]]/}
+    run=${x##*,}
+    period=${x%%,*}
+    stub=${period}_${run}
+    data=$(grep ${run} $cache | grep 1$)
+    $exe -o $stub.hipo $data >& $stub.log &
+done
+
+wait

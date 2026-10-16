@@ -182,13 +182,13 @@ public class TrackSeederRZ {
         boolean value = false;
         double sl = (c1.getPoint().z() - c2.getPoint().z())/(c1.getPoint().toVector3D().rho() - c2.getPoint().toVector3D().rho());
         double in = -sl*c1.getPoint().toVector3D().rho()+c1.getPoint().z();
-        double targetCen = Geometry.getInstance().getZoffset();
-        double targetLen = Geometry.getInstance().getZlength();
+        double targetCen = Geometry.getInstance().getTargetZOffset();
+        double targetLen = Geometry.getInstance().getTargetHalfLength();
         
         if(Math.abs(targetCen-in)<targetLen+Constants.getInstance().getZRANGE())
            value = true;
         if(Constants.getInstance().seedingDebugMode) 
-            System.out.println("Passing: "+ value);
+            System.out.println("Passing : "+in+" is "+ value+" for target at center z = "+targetCen+" and target length "+targetLen);
         return value;
     }
 

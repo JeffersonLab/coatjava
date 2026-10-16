@@ -15,3 +15,5 @@
 
 // try to import a local package
 import org.jlab.clas.physics.*
+
+System.out.println "TEST PASSED"

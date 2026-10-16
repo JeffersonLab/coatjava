@@ -1,0 +1,28 @@
+name: orca
+
+on:
+  pull_request:
+  push:
+    branches: [ development ]
+    tags: [ '*' ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  orca:
+    # do not run on forks or dependabot PRs
+    if: |
+      github.event_name == 'push' ||
+      (github.event_name == 'pull_request' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.actor != 'dependabot[bot]')
+    uses: JeffersonLab/acro/.github/workflows/orca.yml@main
+    with:
+      ref_var: REF_COATJAVA # controls which git ref variable gets set to the triggering ref
+      pipeline_timeout: 3600 # maximum time to allow the pipeline to run (seconds)
+    secrets:
+      orca_project_id: ${{ secrets.ORCA_PROJECT_ID }}
+      orca_project_token: ${{ secrets.ORCA_PROJECT_TOKEN }}
+      orca_trigger_token: ${{ secrets.ORCA_TRIGGER_TOKEN }}

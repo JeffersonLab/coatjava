@@ -28,7 +28,6 @@ import org.jlab.utils.groups.IndexedTable;
  */
 public class CVTEngine extends ReconstructionEngine {
 
-
     /**
      * @param docacutsum the docacutsum to set
      */
@@ -67,11 +66,11 @@ public class CVTEngine extends ReconstructionEngine {
     private int     removeRegion        = 0;
     private int     beamSpotConstraint  = 2;
     private double  beamSpotRadius      = 0.3;
-    private String  targetMaterial      = "LH2";
+    private String  targetMaterial      = "";
     private boolean elossPrecorrection  = true;
     private boolean svtSeeding          = true;
     private boolean timeCuts            = true;
-    private boolean hvCuts              = true;
+    private boolean hvCuts              = false;
     public boolean useSVTTimingCuts     =  false;
     public boolean removeOverlappingSeeds = true;
     public boolean flagSeeds = true;
@@ -134,7 +133,14 @@ public class CVTEngine extends ReconstructionEngine {
         this.initConstantsTables();
         this.registerBanks();
         this.printConfiguration();
-        return true;    
+        return true;
+    }
+
+    @Override
+    public void detectorChanged(int runNumber) {
+        IndexedTable svtLorentz = this.getConstantsManager().getConstants(runNumber, "/calibration/svt/lorentz_angle");
+        IndexedTable bmtVoltage = this.getConstantsManager().getConstants(runNumber, "/calibration/mvt/bmt_voltage");
+        Geometry.initialize(this.getConstantsManager().getVariation(), runNumber, svtLorentz, bmtVoltage);
     }
     
     public final void setOutputBankPrefix(String prefix) {
@@ -275,27 +281,25 @@ public class CVTEngine extends ReconstructionEngine {
     }
     
     @Override
-    public boolean processDataEvent(DataEvent event) {
+    public boolean processDataEventUser(DataEvent event) {
         
         Swim swimmer = new Swim();
         
         int run = this.getRun(event); 
         
         IndexedTable svtStatus          = this.getConstantsManager().getConstants(run, "/calibration/svt/status");
-        IndexedTable svtLorentz         = this.getConstantsManager().getConstants(run, "/calibration/svt/lorentz_angle");
         IndexedTable bmtStatus          = this.getConstantsManager().getConstants(run, "/calibration/mvt/bmt_status");
         IndexedTable bmtTime            = this.getConstantsManager().getConstants(run, "/calibration/mvt/bmt_time");
-        IndexedTable bmtVoltage         = this.getConstantsManager().getConstants(run, "/calibration/mvt/bmt_voltage");
         IndexedTable bmtStripVoltage    = this.getConstantsManager().getConstants(run, "/calibration/mvt/bmt_strip_voltage");
         IndexedTable bmtStripThreshold  = this.getConstantsManager().getConstants(run, "/calibration/mvt/bmt_strip_voltage_thresholds");
         IndexedTable beamPos            = this.getConstantsManager().getConstants(run, "/geometry/beam/position");
-        
-        Geometry.initialize(this.getConstantsManager().getVariation(), 11, svtLorentz, bmtVoltage);
+        IndexedTable adcStatus            = this.getConstantsManager().getConstants(run, "/calibration/svt/adcstatus");
         
         CVTReconstruction reco = new CVTReconstruction(swimmer);
         
         List<ArrayList<Hit>>         hits = reco.readHits(event, svtStatus, bmtStatus, bmtTime, 
-                                                            bmtStripVoltage, bmtStripThreshold);
+                                                            bmtStripVoltage, bmtStripThreshold,
+                                                            adcStatus);
         List<ArrayList<Cluster>> clusters = reco.findClusters();
         List<ArrayList<Cross>>    crosses = reco.findCrosses();
         
@@ -466,7 +470,8 @@ public class CVTEngine extends ReconstructionEngine {
             "/calibration/mvt/bmt_voltage",
             "/calibration/mvt/bmt_strip_voltage",
             "/calibration/mvt/bmt_strip_voltage_thresholds",
-            "/geometry/beam/position"
+            "/geometry/beam/position",
+            "/calibration/svt/adcstatus"
         };
         requireConstants(Arrays.asList(tables));
         this.getConstantsManager().setVariation("default");
@@ -575,7 +580,6 @@ public class CVTEngine extends ReconstructionEngine {
         return cvtCovMatBank;
     }
     
-    
     public void printConfiguration() {            
         
         System.out.println("["+this.getName()+"] run with cosmics setting set to "+Constants.getInstance().isCosmics);        
@@ -588,7 +592,7 @@ public class CVTEngine extends ReconstructionEngine {
             System.out.println("["+this.getName()+"] run with region "+this.getEngineConfigString("removeRegion")+" removed");
         System.out.println("["+this.getName()+"] run with beamSpotConst set to "+Constants.getInstance().beamSpotConstraint+ " (0=no-constraint, 1=seed only, 2=seed and KF)");        
         System.out.println("["+this.getName()+"] run with beam spot size set to "+Constants.getInstance().getBeamRadius());                
-        System.out.println("["+this.getName()+"] Target material set to "+ Constants.getInstance().getTargetMaterial().getName());
+        System.out.println("["+this.getName()+"] Target material set to "+ Constants.getInstance().getTargetType());
         System.out.println("["+this.getName()+"] Pre-Eloss correction set to " + Constants.getInstance().preElossCorrection);
         System.out.println("["+this.getName()+"] run SVT-based seeding set to "+ Constants.getInstance().svtSeeding);
         System.out.println("["+this.getName()+"] run BMT timing cuts set to "+ Constants.getInstance().timeCuts);
@@ -608,7 +612,4 @@ public class CVTEngine extends ReconstructionEngine {
         
         
     }
-
-    
-
 }

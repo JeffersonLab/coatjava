@@ -25,6 +25,18 @@ public class SequenceUtil {
     static boolean INVERT_BITS_CHECK = false;
 
     /**
+     * Just convert bits to string, fixed-width, left-buffered with zeroes,
+     * since that doesn't seem to be included in the standard Java library.
+     * @param bits
+     * @return 
+     */
+    public static String toString(int bits) {
+        StringBuilder s = new StringBuilder();
+        for (int i=SEQUENCE_LENGTH-1; i>=0; --i) s.append((bits>>i)&1);
+        return s.toString();
+    }
+
+    /**
      * Pattern delay correction, as specified by JLab's injector group.
      * @param helicities the first helicity of the previous SEQUENCE_LENGTH patterns 
      * @param patternDelay number of patterns
@@ -33,8 +45,9 @@ public class SequenceUtil {
     public static byte getPatternHelicity(int helicities, byte patternDelay) {
         int bit = 0;
         int register = 0;
-        for (int i=RNG_REGISTER_SIZE-1; i>=0; --i)
+        for (int i=RNG_REGISTER_SIZE-1; i>=0; --i) {
             register = ( ((helicities>>i)&1) | (register<<1) ) & 0x3FFFFFFF;
+        }
         for (int i=0; i<patternDelay; ++i) {
             int bit7  = (register>>6)  & 1;
             int bit28 = (register>>27) & 1;
@@ -70,7 +83,7 @@ public class SequenceUtil {
                     if ( ((helicities>>(i-j))&1) != 
                             SequenceUtil.getWindowHelicity((byte)((helicities>>i)&1),(byte)j) ) {
                         Logger.getLogger(SequenceUtil.class.getName()).log(Level.WARNING,
-                            "Bad pattern/helicity: {0}/{1}", new Object[]{patterns, helicities});
+                            "Bad pattern / helicity: {0} / {1}", new Object[]{toString(patterns), toString(helicities)});
                         return false;
                     }
                 }
@@ -87,7 +100,7 @@ public class SequenceUtil {
         for (int i=0; i<SEQUENCE_LENGTH-1; ++i) {
             if ( Integer.bitCount((pairs>>i) & 0x3) != 1) {
                 Logger.getLogger(SequenceUtil.class.getName()).log(Level.WARNING,
-                    "Bad pairs: {0}", pairs);
+                    "Bad pairs: {0}", toString(pairs));
                 return false;
             }
         }
@@ -104,7 +117,7 @@ public class SequenceUtil {
         for (int i=0; i<(SEQUENCE_LENGTH-patternLength+1); ++i) {
             if (Integer.bitCount((patterns>>i) & mask) != (INVERT_BITS_CHECK?patternLength-1:1)) {
                 Logger.getLogger(SequenceUtil.class.getName()).log(Level.WARNING,
-                    "Bad patterns: {0}", patterns);
+                    "Bad patterns: {0}", toString(patterns));
                 return false;
             }
         }

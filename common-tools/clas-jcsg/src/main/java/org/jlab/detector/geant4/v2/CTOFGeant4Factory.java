@@ -26,12 +26,12 @@ public final class CTOFGeant4Factory extends Geant4Factory {
     private final int npaddles = 48;
     private final String ctofdbpath = "/geometry/ctof/ctof/";
     private final String caddbpath  = "/geometry/ctof/cad/";
-    private final String tgdbpath   = "/geometry/target/";
+    private final String tgdbpath   = "/geometry/shifts/solenoid/";
     private double globalOffset = 0;
     
     public CTOFGeant4Factory(ConstantProvider cp) {
         
-        this.globalOffset = cp.getDouble(tgdbpath+"position", 0);
+        this.globalOffset = cp.getDouble(tgdbpath+"z", 0);
         double cadRadius  = cp.getDouble(caddbpath+"radius", 0); 
         double cadThick   = cp.getDouble(caddbpath+"thickness", 0); 
         double cadAngle   = cp.getDouble(caddbpath+"angle", 0);

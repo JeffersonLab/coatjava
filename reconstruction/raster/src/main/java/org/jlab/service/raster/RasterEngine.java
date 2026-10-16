@@ -22,10 +22,12 @@ import org.jlab.utils.groups.IndexedTable;
 
 public class RasterEngine extends ReconstructionEngine {
 
+    private volatile int nErrors = 0;
+
     private final double udfPos = -999;
     private final int    xComponent = 1;
     private final int    yComponent = 2;
-    
+
     public static final Logger LOGGER = Logger.getLogger(RasterEngine.class.getName());
 
     public RasterEngine() {
@@ -47,9 +49,11 @@ public class RasterEngine extends ReconstructionEngine {
         return true;
     }
 
+    @Override
+    public void detectorChanged(int runNumber) {}
     
     @Override
-    public boolean processDataEvent(DataEvent event) {
+    public boolean processDataEventUser(DataEvent event) {
                
         // Read run number from RUN::config bank
         int run=-1;
@@ -68,7 +72,8 @@ public class RasterEngine extends ReconstructionEngine {
         // check if input bank has two rows, otherwise give warning
         DataBank adcBank = event.getBank("RASTER::adc");
         if(adcBank.rows()!=2) {
-            LOGGER.log(Level.WARNING,"RasterEngine:  RASTER::adc bank has incorrect number of rows, skipping event.");
+            if (10 > ++nErrors)
+                LOGGER.log(Level.WARNING,"RasterEngine:  RASTER::adc bank has incorrect number of rows, skipping event.");
             return false;
         }
         
@@ -129,7 +134,7 @@ public class RasterEngine extends ReconstructionEngine {
             System.out.print("MC position read : " + MC_Part.getFloat("vx",0) +"\n");
             
             // run the raster engine
-            engine.processDataEvent(event);
+            engine.processDataEventUser(event);
             
             // read the output bank and fill the histograms
             if(event.hasBank("RASTER::position")) {

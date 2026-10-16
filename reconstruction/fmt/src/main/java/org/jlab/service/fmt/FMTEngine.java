@@ -26,6 +26,7 @@ import org.jlab.rec.fmt.track.fit.StateVecs.StateVec;
  */
 public class FMTEngine extends ReconstructionEngine {
 
+    String variation = null;
     boolean debug = false;
 
     public FMTEngine() {
@@ -36,7 +37,7 @@ public class FMTEngine extends ReconstructionEngine {
     public boolean init() {
         
         // Get the constants for the correct variation
-        String variation = this.getEngineConfigString("variation");
+        variation = this.getEngineConfigString("variation");
         if (variation!=null) {
             System.out.println("["+this.getName()+"] " +
                     "run with FMT geometry variation based on yaml = " + variation);
@@ -45,7 +46,6 @@ public class FMTEngine extends ReconstructionEngine {
             variation = "default";
             System.out.println("["+this.getName()+"] run with FMT default geometry");
         }
-        
 
         String[] tables = new String[]{
             "/geometry/beam/position",
@@ -54,10 +54,6 @@ public class FMTEngine extends ReconstructionEngine {
         };
         requireConstants(Arrays.asList(tables));
         this.getConstantsManager().setVariation(variation);
-
-        // Load the geometry
-        int run = 10;
-        Constants.setDetector(GeometryFactory.getDetector(DetectorType.FMT,run, variation));
 
         // Register output banks
         super.registerOutputBank("FMT::Hits");
@@ -70,7 +66,13 @@ public class FMTEngine extends ReconstructionEngine {
     }
 
     @Override
-    public boolean processDataEvent(DataEvent event) {
+    public void detectorChanged(int runNumber) {
+        Constants.setDetector(GeometryFactory.getDetector(DetectorType.FMT,runNumber,
+            getConstantsManager().getVariation()));
+    }
+
+    @Override
+    public boolean processDataEventUser(DataEvent event) {
         // Initial setup.
         if(debug) System.out.println("\nNew event");
         
@@ -232,5 +234,4 @@ public class FMTEngine extends ReconstructionEngine {
 
         return true;
    }
-
 }

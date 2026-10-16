@@ -311,8 +311,8 @@ public class TrackSeederXY {
         List<Cross> seedcrsrm = new ArrayList<>();
         List<Cross> seedcrs = seed.getCrosses();
         for (Cross c : seedcrs) {
-            double xi = c.getPoint().x();
-            double yi = c.getPoint().y();
+            double xi = c.getPoint().x()-xbeam;
+            double yi = c.getPoint().y()-ybeam;
             double res = this.calcResi(r, d, f, xi, yi);
             if(res>worseResi) {
                worseResi = res;
@@ -335,8 +335,8 @@ public class TrackSeederXY {
         double ave_resi =0;
         int[] L = new int[6];
         for (Cross c : seedcrs) {
-            double xi = c.getPoint().x();
-            double yi = c.getPoint().y();
+            double xi = c.getPoint().x()-xbeam;
+            double yi = c.getPoint().y()-ybeam;
             double res = this.calcResi(r, d, f, xi, yi); 
             ave_resi+=res;
             int rg = c.getRegion();
@@ -355,8 +355,8 @@ public class TrackSeederXY {
             
             if(L[rg-1] ==0) { //missing layer --> search for cross
                 
-                double xi = c.getPoint().x();
-                double yi = c.getPoint().y();
+                double xi = c.getPoint().x()-xbeam;
+                double yi = c.getPoint().y()-ybeam;
                 double res = this.calcResi(r, d, f, xi, yi); 
                 if(res<Rs[rg-1] && (res<Constants.RESICUT || res<ave_resi) ){
                     Rs[rg-1] = res;

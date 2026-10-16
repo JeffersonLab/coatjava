@@ -1,6 +1,8 @@
 package org.jlab.clas.reco;
 
 import java.io.File;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.file.Files;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -15,10 +17,14 @@ import org.jlab.utils.options.OptionParser;
 import org.jlab.clara.engine.EngineData;
 import org.jlab.clara.engine.EngineDataType;
 import java.util.Arrays;
+import org.jlab.coda.jevio.EvioException;
+import org.jlab.detector.decode.CLASDecoder4;
+import org.jlab.io.evio.EvioDataEvent;
+import org.jlab.io.evio.EvioSource;
+import org.jlab.io.hipo.HipoDataEvent;
+import org.jlab.jnp.hipo4.data.Event;
 import org.jlab.jnp.hipo4.data.SchemaFactory;
-import org.jlab.utils.JsonUtils;
 import org.json.JSONObject;
-import org.jlab.logging.DefaultLogger;
 import org.jlab.utils.ClaraYaml;
 
 /**
@@ -27,13 +33,47 @@ import org.jlab.utils.ClaraYaml;
  */
 public class EngineProcessor {
 
+    public static final String ENGINE_CLASS_BG = "org.jlab.service.bg.BackgroundEngine";
+    public static final String ENGINE_CLASS_PP = "org.jlab.service.postproc.PostprocEngine";
+    
     private final Map<String,ReconstructionEngine>  processorEngines = new LinkedHashMap<>();
     private static final Logger LOGGER = Logger.getLogger(EngineProcessor.class.getPackage().getName());
     private boolean updateDictionary = true;
     private SchemaFactory banksToKeep = null;
     private final List<String> schemaExempt = Arrays.asList("RUN::config","DC::tdc");
 
+    private CLASDecoder4 decoder = new CLASDecoder4();
+
     public EngineProcessor(){}
+
+    private ReconstructionEngine findEngine(String clazz) {
+        for (String k : processorEngines.keySet()) {
+            if (processorEngines.get(k).getClass().getName().equals(clazz)) {
+                return processorEngines.get(k);
+            }
+        }
+        return null;
+    }
+
+    private void setBackgroundFiles(String filenames) {
+        if (findEngine(ENGINE_CLASS_BG) == null) {
+            LOGGER.info("Adding BackgroundEngine for -B option.");
+            addEngine("BG",ENGINE_CLASS_BG);
+        }
+        findEngine(ENGINE_CLASS_BG).engineConfigMap.put("filename", filenames);
+        findEngine(ENGINE_CLASS_BG).init();
+    }
+
+    private void setPreloadFiles(String filenames, boolean restream, boolean rebuild) {
+        if (findEngine(ENGINE_CLASS_PP) == null) {
+            LOGGER.info("Adding PostprocEngine for -P option.");
+            addEngine("BG",ENGINE_CLASS_PP);
+        }
+        findEngine(ENGINE_CLASS_PP).engineConfigMap.put("preloadFile", filenames);
+        findEngine(ENGINE_CLASS_PP).engineConfigMap.put("restream", String.valueOf(restream));
+        findEngine(ENGINE_CLASS_PP).engineConfigMap.put("rebuild", String.valueOf(rebuild));
+        findEngine(ENGINE_CLASS_PP).init();
+    }
 
     private void updateDictionary(HipoDataSource source, HipoDataSync sync){
         SchemaFactory fsync = sync.getWriter().getSchemaFactory();
@@ -75,7 +115,7 @@ public class EngineProcessor {
         String[] names = new String[]{
             "MAGFIELDS",
             "DCCR","DCHB","FTOFHB","EC","HTCC","EBHB",
-            "DCTB","FTOFTB","EBTB"
+            "DCTB","FTOFTB","EBTB","VTX"
         };
 
         String[] services = new String[]{
@@ -88,7 +128,8 @@ public class EngineProcessor {
             "org.jlab.service.eb.EBHBEngine",
             "org.jlab.service.dc.DCTBEngine",
             "org.jlab.service.ftof.FTOFTBEngine",
-            "org.jlab.service.eb.EBTBEngine"
+            "org.jlab.service.eb.EBTBEngine",
+            "org.jlab.rec.service.vtx.VTXEngine"
         };
 
         for(int i = 0; i < names.length; i++){
@@ -100,11 +141,11 @@ public class EngineProcessor {
         String[] names = new String[]{
             "MAGFIELDS",
             "FTCAL", "FTHODO", "FTTRK", "FTEB",
-            "URWELL", "DCCR", "DCHB","FTOFHB","EC","RASTER",
+            "URWT", "DCCR", "DCHB","FTOFHB","EC","RASTER",
             "CVTFP","CTOF","CND","BAND",
             "HTCC","LTCC","EBHB",
             "DCTB","FMT","FTOFTB","CVT","EBTB",
-            "RICHEB","RTPC","MC"
+            "RICHEB","RTPC","AHDC","ATOF","ALERT", "MC","VTX"
         };
 
         String[] services = new String[]{
@@ -113,7 +154,7 @@ public class EngineProcessor {
             "org.jlab.rec.ft.hodo.FTHODOEngine",
             "org.jlab.rec.ft.trk.FTTRKEngine",
             "org.jlab.rec.ft.FTEBEngine",
-            "org.jlab.service.urwell.URWellEngine",
+            "org.jlab.service.urwt.URWTEngine",
             "org.jlab.service.dc.DCHBClustering",
             "org.jlab.service.dc.DCHBPostClusterConv",
             "org.jlab.service.ftof.FTOFHBEngine",
@@ -121,7 +162,6 @@ public class EngineProcessor {
             "org.jlab.service.raster.RasterEngine",
             "org.jlab.rec.cvt.services.CVTEngine",
             "org.jlab.service.ctof.CTOFEngine",
-            //"org.jlab.service.cnd.CNDEngine",
             "org.jlab.service.cnd.CNDCalibrationEngine",
             "org.jlab.service.band.BANDEngine",
             "org.jlab.service.htcc.HTCCReconstructionService",
@@ -134,9 +174,14 @@ public class EngineProcessor {
             "org.jlab.service.eb.EBTBEngine",
             "org.jlab.rec.rich.RICHEBEngine",
             "org.jlab.service.rtpc.RTPCEngine",
-            "org.jlab.service.mc.TruthMatch"
+            "org.jlab.service.ahdc.AHDCEngine",
+            "org.jlab.service.atof.ATOFEngine",
+            "org.jlab.service.alert.ALERTEngine",
+            "org.jlab.service.mc.TruthMatch",
+            "org.jlab.rec.service.vtx.VTXEngine"
         };
-
+        if(names.length!=services.length)
+            LOGGER.log(Level.SEVERE, "initAll : the list of services does not match the list of service names...  ");
         for(int i = 0; i < names.length; i++){
             this.addEngine(names[i], services[i]);
         }
@@ -237,7 +282,7 @@ public class EngineProcessor {
     public void processEvent(DataEvent event){
         for(Map.Entry<String,ReconstructionEngine> engine : this.processorEngines.entrySet()){
             try {
-                engine.getValue().filterEvent(event);
+                engine.getValue().processDataEvent(event);
             } catch (Exception e){
                 LOGGER.log(Level.SEVERE, "[Exception] >>>>> engine : {0}\n\n", engine.getKey());
                 e.printStackTrace();
@@ -249,57 +294,71 @@ public class EngineProcessor {
         this.processFile(file, output, -1, -1);
     }
 
-    /**
+    public void processEvent(DataEvent event, HipoDataSync writer) {
+        processEvent(event);
+        removeBanks(event);
+        writer.writeEvent(event);
+    }
+
+    public void processFile(HipoDataSource reader, HipoDataSync writer, int skipEvents, int maxEvents) {
+        if (updateDictionary==true) updateDictionary(reader, writer);
+        ProgressPrintout progress = new ProgressPrintout();
+        int eventsRead = 0;
+        while (reader.hasEvent()) {
+            DataEvent event = reader.getNextEvent();
+            eventsRead++;
+            if (skipEvents <= 0 || eventsRead > skipEvents) processEvent(event, writer);
+            if (maxEvents > 0 && eventsRead > maxEvents+skipEvents) break;
+            progress.updateStatus();
+        }
+        progress.showStatus();
+    }
+
+    public void processFile(EvioSource reader, HipoDataSync writer, int skipEvents, int maxEvents) {
+        ProgressPrintout progress = new ProgressPrintout();
+        int eventsRead = 0;
+        while (reader.hasEvent()) {
+            eventsRead++;
+            try {
+                ByteBuffer bb = reader.getEventBuffer(eventsRead, true);
+                if (skipEvents <= 0 || eventsRead > skipEvents) {
+                    EvioDataEvent evio = new EvioDataEvent(bb.array(), ByteOrder.LITTLE_ENDIAN);
+                    Event hipo = decoder.getDecodedEvent(evio, -1, eventsRead, null, null);
+                    HipoDataEvent hipo2 = new HipoDataEvent(hipo, decoder.getSchemaFactory());
+                    processEvent(hipo2, writer);
+                }
+                if (maxEvents > 0 && eventsRead > maxEvents+skipEvents) break;
+            } catch (EvioException ex) {
+                System.getLogger(EngineProcessor.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
+            }
+            progress.updateStatus();
+        }
+        progress.showStatus();
+    }
+
+    /**}
      * process entire file through engine chain.
-     * @param file input file name to process
+     * @param input input file name to process
      * @param output output filename
      * @param nskip number of events to skip
      * @param nevents number of events to process
      */
-    public void processFile(String file, String output, int nskip, int nevents){
-        if(file.endsWith(".hipo")==true||file.endsWith(".h5")==true
-                ||file.endsWith(".h4")==true){
+    public void processFile(String input, String output, int nskip, int nevents) {
+        HipoDataSync writer = new HipoDataSync();
+        writer.setCompressionType(2);
+        if (input.endsWith(".hipo")  ||  input.endsWith(".h5") || input.endsWith(".h4")) {
             HipoDataSource reader = new HipoDataSource();
-            reader.open(file);
-            
-            int eventCounter = 0;
-            HipoDataSync   writer = new HipoDataSync();
-            writer.setCompressionType(2);
-
-            // this doesn't work (before or after "open"):
-            //if (this.banksToKeep != null)
-            //    writer.getWriter().getSchemaFactory().reduce(banksToKeep.getSchemaKeys());
-
+            reader.open(input);
             writer.open(output);
-
-            if(updateDictionary==true)
-                updateDictionary(reader, writer);
-           
-            if(nskip>0 && nevents>0) nevents += nskip;
-            
-            ProgressPrintout  progress = new ProgressPrintout();
-            while(reader.hasEvent()==true){
-                DataEvent event = reader.getNextEvent();
-                if(nskip<=0 || eventCounter>nskip) {
-                    processEvent(event);
-
-                    // this works:
-                    removeBanks(event);
-
-                    writer.writeEvent(event);
-                }
-                eventCounter++;
-                if(nevents>0){
-                    if(eventCounter>nevents) break;
-                }
-                progress.updateStatus();
-            }
-            progress.showStatus();
-            writer.close();
+            processFile(reader, writer, nskip, nevents);
         } else {
-            LOGGER.info("\n\n>>>> error in file extension (use .hipo,.h4 or .h5)\n>>>> how is this not simple ?\n");
+            LOGGER.info(() -> "No HIPO file extension found, assuming this is an EVIO file:  "+input);
+            EvioSource reader = new EvioSource();
+            reader.open(input);
+            writer.open(output);
+            processFile(reader, writer, nskip, nevents);
         }
-        
+        writer.close();
     }
 
     /**
@@ -315,21 +374,21 @@ public class EngineProcessor {
     public static void main(String[] args){
         OptionParser parser = new OptionParser("recon-util");
         parser.addRequired("-o","output.hipo");
-        parser.addRequired("-i","input.hipo");
+        parser.addRequired("-i","input.evio/hipo");
         parser.setRequiresInputList(false);
         parser.addOption("-c","0","use default configuration [0 - no, 1 - yes/default, 2 - all services] ");
         parser.addOption("-s","-1","number of events to skip");
         parser.addOption("-n","-1","number of events to process");
         parser.addOption("-y","0","yaml file");
         parser.addOption("-u","true","update dictionary from writer ? ");
-        parser.addOption("-d","1","Debug level [0 - OFF, 1 - ON/default]");
         parser.addOption("-S",null,"schema directory");
-        parser.setDescription("previously known as notsouseful-util");
+        parser.addOption("-B",null,"background file");
+        parser.addOption("-P",null,"preload file for post-processing");
+        parser.addOption("-R","0","rebuild scalers");
+        parser.addOption("-H","0","restream helicity");
 
         parser.parse(args);
-
-        if(parser.getOption("-d").intValue() == 0) DefaultLogger.initialize();
-        else DefaultLogger.debug();
+        parser.syncLogLevel(LOGGER);
 
         List<String> services = parser.getInputList();
 
@@ -380,6 +439,18 @@ public class EngineProcessor {
         if (parser.getOption("-S").stringValue() != null)
             proc.setBanksToKeep(parser.getOption("-S").stringValue());
 
+        // command-line filename for background merging overrides YAML:
+        if (parser.getOption("-B").stringValue() != null)
+            proc.setBackgroundFiles(parser.getOption("-B").stringValue());
+        
+        // command-line filename for post-processing overrides YAML:
+        if (parser.getOption("-P").stringValue() != null) {
+            proc.setPreloadFiles(parser.getOption("-P").stringValue(),
+                parser.getOption("-H").intValue()!=0,
+                parser.getOption("-R").intValue()!=0);
+        }
+
         proc.processFile(inputFile,outputFile,nskip,nevents);
     }
+
 }

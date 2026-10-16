@@ -44,74 +44,64 @@ public class FTTRKEngine extends ReconstructionEngine {
             };
             requireConstants(Arrays.asList(tables));
             this.getConstantsManager().setVariation("default");
-            
-            // use 11 provisionally as run number to download the basic FTTK geometry constants
-            FTTRKConstantsLoader.Load(11, this.getConstantsManager().getVariation());
+
             reco = new FTTRKReconstruction();
-	    reco.debugMode=0;
+	        reco.debugMode=0;
             
             if(this.getEngineConfigString("fall18TT")!=null) {
                 FTTRKConstantsLoader.ADJUSTTT = Boolean.parseBoolean(this.getEngineConfigString("fall18TT"));
             }
-/*
-            String[]  tables = new String[]{ 
-                "/calibration/ft/fthodo/charge_to_energy",
-                "/calibration/ft/fthodo/time_offsets",
-                "/calibration/ft/fthodo/status",
-                "/geometry/ft/fthodo",
-                "/geometry/ft/fttrk"
-            };
-            requireConstants(Arrays.asList(tables));
-            this.getConstantsManager().setVariation("default");
-*/            
-            
 
             return true;
 	}
 
+    @Override
+    public void detectorChanged(int runNumber) {
+        FTTRKConstantsLoader.Load(runNumber, this.getConstantsManager().getVariation());
+    }
+
 	@Override
-	public boolean processDataEvent(DataEvent event) {
-            // update calibration constants based on run number if changed
-            int run = setRunConditionsParameters(event);
+	public boolean processDataEventUser(DataEvent event) {
+        // update calibration constants based on run number if changed
+        int run = setRunConditionsParameters(event);
+        if(run>=0) {
+            // get hits fron banks
+            List<FTTRKHit> allHits = reco.initFTTRK(event,this.getConstantsManager(), run); 
+            // create clusters
+            List<FTTRKCluster> clusters = reco.findClusters(allHits);
+            // create crosses
+            List<FTTRKCross> crosses = reco.findCrosses(clusters);
+            // update hit banks with associated clusters/crosses information
+            reco.updateAllHitsWithAssociatedIDs(allHits, clusters);
+            // write output banks
+            reco.writeBanks(event, allHits, clusters, crosses);
+        }
+        return true;
+	}
+        
+    public ArrayList<FTTRKCluster> processDataEventAndGetClusters(DataEvent event) {
+        List<FTTRKHit> allHits      = new ArrayList();
+        ArrayList<FTTRKCluster> clusters = new ArrayList();   // era ArrayList
+        ArrayList<FTTRKCross>   crosses  = new ArrayList();
             
-            if(run>=0) {
-                // get hits fron banks
-                List<FTTRKHit> allHits = reco.initFTTRK(event,this.getConstantsManager(), run); 
+        // update calibration constants based on run number if changed
+        int run = setRunConditionsParameters(event);
+            
+        if(run>=0) {
+            // get hits from banks
+            allHits = reco.initFTTRK(event,this.getConstantsManager(), run);
+            if(allHits.size()>0){
                 // create clusters
-                List<FTTRKCluster> clusters = reco.findClusters(allHits);
+                clusters = reco.findClusters(allHits);
                 // create crosses
-                List<FTTRKCross> crosses = reco.findCrosses(clusters);
+                crosses = reco.findCrosses(clusters);
                 // update hit banks with associated clusters/crosses information
                 reco.updateAllHitsWithAssociatedIDs(allHits, clusters);
                 // write output banks
                 reco.writeBanks(event, allHits, clusters, crosses);
             }
-            return true;
-	}
-        
-        public ArrayList<FTTRKCluster> processDataEventAndGetClusters(DataEvent event) {
-            List<FTTRKHit> allHits      = new ArrayList();
-            ArrayList<FTTRKCluster> clusters = new ArrayList();   // era ArrayList
-            ArrayList<FTTRKCross>   crosses  = new ArrayList();
-            
-            // update calibration constants based on run number if changed
-            int run = setRunConditionsParameters(event);
-            
-            if(run>=0) {
-                // get hits from banks
-                allHits = reco.initFTTRK(event,this.getConstantsManager(), run);
-                if(allHits.size()>0){
-                    // create clusters
-                    clusters = reco.findClusters(allHits);
-                    // create crosses
-                    crosses = reco.findCrosses(clusters);
-                    // update hit banks with associated clusters/crosses information
-                    reco.updateAllHitsWithAssociatedIDs(allHits, clusters);
-                    // write output banks
-                    reco.writeBanks(event, allHits, clusters, crosses);
-                }
-            }
-            return clusters;
+        }
+        return clusters;
 	}      
 
     public int setRunConditionsParameters(DataEvent event) {
@@ -119,25 +109,22 @@ public class FTTRKEngine extends ReconstructionEngine {
         if(event.hasBank("RUN::config")==false) {
                 System.out.println("RUN CONDITIONS NOT READ!");
         }       
-    
         DataBank bank = event.getBank("RUN::config");
-            run = bank.getInt("run")[0];
-        
-	return run;	
+        run = bank.getInt("run")[0];
+	    return run;	
     }
-
     
     public static void main (String arg[]) {
         int debug = FTTRKReconstruction.debugMode;
-	FTTRKEngine trk = new FTTRKEngine();
-	trk.init();
+	    FTTRKEngine trk = new FTTRKEngine();
+	    trk.init();
         // insert input filename here
         String input = "/home/filippi/clas12/fttrkDev/clas12-offline-software-6.5.13-fttrkDev/filter_005418_newbanks.hipo";
         System.out.println("input file " + input);
-	HipoDataSource  reader = new HipoDataSource();
-	reader.open(input);
+	    HipoDataSource  reader = new HipoDataSource();
+	    reader.open(input);
 		
-	// initialize histos
+	    // initialize histos
         H2F h1 = new H2F("h1", "Layer vs. Component", 768, 0., 769., 4, 0.5, 4.5);
         h1.setTitleX("Component");
         h1.setTitleY("Layer");
@@ -177,7 +164,6 @@ public class FTTRKEngine extends ReconstructionEngine {
         int nc1 = 0, nc2 = 0, ncmatch = 0;
         int nev=0;
         while(reader.hasEvent()){
-//        int nev1 = 0; int nev2 = 20000; for(nev=nev1; nev<nev2; nev++){   // debug only a set of events (uncomment while loop in case)
             DataEvent event = (DataEvent) reader.getNextEvent();
             if(debug>=1) System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~ processing event ~~~~~~~~~~~ " + nev); 
                         

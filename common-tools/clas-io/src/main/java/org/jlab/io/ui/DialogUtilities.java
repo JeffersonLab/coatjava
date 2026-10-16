@@ -118,9 +118,9 @@ public class DialogUtilities {
 		int newgap;
 
 		if (inp == null) {
-			str = new String("");
+			str = "";
 		} else {
-			str = new String(inp);
+			str = inp;
 		}
 
 		FontMetrics fm = c.getFontMetrics(c.getFont());

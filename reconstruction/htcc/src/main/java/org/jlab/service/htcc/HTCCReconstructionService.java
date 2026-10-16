@@ -20,7 +20,7 @@ public class HTCCReconstructionService extends ReconstructionEngine{
     }
     
     @Override
-    public boolean processDataEvent(DataEvent event) {
+    public boolean processDataEventUser(DataEvent event) {
         int runNo = 10;
 
         if(event.hasBank("RUN::config")==true){
@@ -48,9 +48,7 @@ public class HTCCReconstructionService extends ReconstructionEngine{
 
     @Override
     public boolean init() {
-        
-
-            String[]  htccTables = new String[]{
+        String[]  htccTables = new String[]{
             "/calibration/htcc/gain", 
             "/calibration/htcc/time", 
             "/calibration/htcc/ring_time", 
@@ -59,13 +57,12 @@ public class HTCCReconstructionService extends ReconstructionEngine{
             "/geometry/htcc/htcc", 
     
         };
-            
         this.registerOutputBank("HTCC::rec");
-        
         requireConstants(Arrays.asList(htccTables));
         return true;
     }
 
-   
+    @Override
+    public void detectorChanged(int runNumber) {}
     
 }

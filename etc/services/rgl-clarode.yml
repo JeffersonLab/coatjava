@@ -1,0 +1,66 @@
+io-services:
+  reader:
+    class: org.jlab.io.clara.Clas12Reader
+    name: Clas12Reader
+  writer:
+    class: org.jlab.io.clara.Clas12Writer
+    name: Clas12Writer
+services:
+  - class: org.jlab.clas.reco.DecoderEngine
+    name: DECO
+  - class: org.jlab.clas.swimtools.MagFieldsEngine
+    name: MAGFIELDS
+  - class: org.jlab.rec.ft.cal.FTCALEngine
+    name: FTCAL
+  - class: org.jlab.rec.ft.hodo.FTHODOEngine
+    name: FTHODO
+  - class: org.jlab.rec.ft.FTEBEngine
+    name: FTEB
+  - class: org.jlab.service.ai.DCDenoiseEngine
+    name: DCDN
+  - class: org.jlab.service.dc.DCHBClustering
+    name: DCCR
+  - class: org.jlab.service.dc.DCHBPostClusterConv
+    name: DCHB
+  - class: org.jlab.service.ftof.FTOFHBEngine
+    name: FTOFHB
+  - class: org.jlab.service.ec.ECEngine
+    name: EC
+  - class: org.jlab.service.ctof.CTOFEngine
+    name: CTOF
+  - class: org.jlab.service.cnd.CNDCalibrationEngine
+    name: CND
+  - class: org.jlab.service.band.BANDEngine
+    name: BAND
+  - class: org.jlab.service.htcc.HTCCReconstructionService
+    name: HTCC
+  - class: org.jlab.service.ltcc.LTCCEngine
+    name: LTCC
+  - class: org.jlab.service.eb.EBHBEngine
+    name: EBHB
+  - class: org.jlab.service.dc.DCTBEngine
+    name: DCTB
+  - class: org.jlab.service.ftof.FTOFTBEngine
+    name: FTOFTB
+  - class: org.jlab.service.eb.EBTBEngine
+    name: EBTB
+  - class: org.jlab.rec.rich.RICHEBEngine
+    name: RICH
+  - class: org.jlab.service.atof.ATOFEngine
+    name: ATOF
+  - class: org.jlab.service.ahdc.AHDCEngine
+    name: AHDC
+configuration:
+  global:
+    variation: rgl_spring2025
+  io-services:
+    writer:
+      schema_dir: dst
+  services:
+    MAGFIELDS:
+      magfieldSolenoidMap: Symm_solenoid_r601_phi1_z1201_13June2018.dat
+      magfieldTorusMap: Full_torus_r251_phi181_z251_25Jan2021.dat
+    AHDC:
+      Mode: "AI_Track_Finding"
+mime-types:
+  - binary/data-hipo

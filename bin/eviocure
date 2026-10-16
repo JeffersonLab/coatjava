@@ -1,9 +1,9 @@
 #!/bin/bash
 
-. `dirname $0`/env.sh 
+. `dirname $0`/../libexec/env.sh
 
 export MALLOC_ARENA_MAX=1
 
-java -Xmx1536m -Xms1024m \
-    -cp "$CLAS12DIR/lib/clas/*:$CLAS12DIR/lib/plugins/*" \
+java ${JAVA_OPTS-} -Xmx1536m -Xms1024m \
+    -cp ${COATJAVA_CLASSPATH:-''} \
     org.jlab.io.utils.EvioCure $*

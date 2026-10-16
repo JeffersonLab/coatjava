@@ -1,5 +1,6 @@
 package org.jlab.analysis.postprocess;
 
+import java.util.TreeMap;
 import java.util.logging.Logger;
 import org.jlab.clas.reco.ReconstructionEngine;
 import org.jlab.detector.calib.utils.ConstantsManager;
@@ -13,7 +14,6 @@ import org.jlab.detector.scalers.DaqScalersSequence;
 import org.jlab.detector.helicity.HelicityBit;
 import org.jlab.detector.helicity.HelicitySequenceDelayed;
 import org.jlab.jnp.hipo4.data.SchemaFactory;
-import org.jlab.logging.DefaultLogger;
 import org.jlab.utils.groups.IndexedTable;
 import org.jlab.utils.options.OptionParser;
 
@@ -35,15 +35,13 @@ public class Tag1ToEvent {
 
     public static void main(String[] args) {
 
-        DefaultLogger.debug();
-
-        // Parse command-line options:
         OptionParser parser = new OptionParser("postprocess");
         parser.addOption("-q","0","do beam charge and livetime (0/1=false/true)");
         parser.addOption("-d","0","do delayed helicity (0/1=false/true)");
         parser.addOption("-f","0","rebuild the HEL::flip banks (0/1=false/true)");
         parser.addRequired("-o","output.hipo");
         parser.parse(args);
+        parser.syncLogLevel(LOGGER);
         if (parser.getInputList().isEmpty()) {
             parser.printUsage();
             LOGGER.severe("No input file(s) specified.");
@@ -83,7 +81,7 @@ public class Tag1ToEvent {
             LOGGER.info("\n>>> Initializing helicity configuration from CCDB ...\n");
             ConstantsManager conman = new ConstantsManager();
             conman.init("/runcontrol/hwp","/runcontrol/helicity");
-            final int run = getRunNumber(parser.getInputList().get(0));
+            final int run = Util.getRunNumber(parser.getInputList().get(0));
             IndexedTable helTable = conman.getConstants(run, "/runcontrol/helicity");
  
             // Initialize the scaler sequence from tag-1 events:
@@ -103,6 +101,9 @@ public class Tag1ToEvent {
                 helSeq.initialize(parser.getInputList());
             }
 
+            // Initialize the unix-event map:
+            TreeMap<Integer,Integer> eventUnix = Processor.getEventUnixMap(schema, parser.getInputList());
+            
             // Loop over the input HIPO files:
             LOGGER.info("\n>>> Starting post-processing ...\n");
             for (String filename : parser.getInputList()) {
@@ -137,7 +138,7 @@ public class Tag1ToEvent {
                     if (doHelicityDelay) {
                         recEventBank.putByte("helicity",0,hb.value());
                         recEventBank.putByte("helicityRaw",0,hbraw.value());
-                        RebuildScalers.assignScalerHelicity(runConfigBank.getLong("timestamp",0), helScalerBank, helSeq);
+                        Util.assignScalerHelicity(runConfigBank.getLong("timestamp",0), helScalerBank, helSeq);
                     }
 
                     // Write beam charge to REC::Event:
@@ -150,11 +151,25 @@ public class Tag1ToEvent {
                     event.write(recEventBank);
                     event.write(helScalerBank);
 
+                    // Update RUN::config.unixtime:
+                    if (runConfigBank.getRows() > 0) {
+                        int evno = runConfigBank.getInt("event", 0);
+                        Integer key = eventUnix.floorKey(evno);
+                        if (key != null) {
+                            Integer unix = eventUnix.get(key);
+                            if (unix != null) {
+                                event.remove(runConfigBank.getSchema());
+                                runConfigBank.putInt("unixtime", 0, unix);
+                                event.write(runConfigBank);
+                            }
+                        }
+                    }
+
                     // Write out the original event: 
                     writer.addEvent(event, event.getEventTag());
 
                     // Copy config banks to new, tag-1 events:
-                    createTag1Events(writer, event, configEvent, configBanks);
+                    Util.createTag1Events(writer, event, configEvent, configBanks);
                 }
 
                 reader.close();
@@ -169,33 +184,6 @@ public class Tag1ToEvent {
 
         LOGGER.info(String.format("Tag1ToEvent:  Good Helicity Fraction: %.2f%%",100*(float)goodHelicity/(goodHelicity+badHelicity)));
         LOGGER.info(String.format("Tag1ToEvent:  Good Charge   Fraction: %.2f%%",100*(float)goodCharge/(goodCharge+badCharge)));
-    }
-
-    private static void createTag1Events(HipoWriterSorted writer, Event source, Event destination, Bank... banks) {
-        destination.reset();
-        for (Bank bank : banks) {
-            source.read(bank);
-            if (bank.getRows()>0)
-                destination.write(bank);
-        }
-        if (!destination.isEmpty())
-            writer.addEvent(destination,1);
-    }
-
-    private static int getRunNumber(String... filenames) {
-        Event event = new Event();
-        for (String filename : filenames) {
-            HipoReader reader = new HipoReader();
-            reader.open(filename);
-            Bank bank = new Bank(reader.getSchemaFactory().getSchema("RUN::config"));
-            while (reader.hasNext()) {
-                reader.nextEvent(event);
-                event.read(bank);
-                if (bank.getRows()>0 && bank.getInt("run",0)>0)
-                    return bank.getInt("run",0);
-            }
-        }
-        return -1;
     }
 
 }

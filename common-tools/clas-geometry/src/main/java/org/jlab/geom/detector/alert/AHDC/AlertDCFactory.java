@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.jlab.geom.detector.alert.AHDC;
 
 import org.jlab.geom.base.ConstantProvider;
@@ -59,8 +54,7 @@ public class AlertDCFactory implements Factory<AlertDCDetector, AlertDCSector, A
 
 	@Override
 	public AlertDCSector createSector(ConstantProvider cp, int sectorId) {
-		if (!(0 <= sectorId && sectorId < nsectors)) throw new IllegalArgumentException("Error: invalid sector=" + sectorId);
-		AlertDCSector sector = new AlertDCSector(sectorId);
+		AlertDCSector sector = new AlertDCSector(sectorId+1);
 		for (int superlayerId = 0; superlayerId < nsuperl; superlayerId++)
 		     sector.addSuperlayer(createSuperlayer(cp, sectorId, superlayerId));
 		return sector;
@@ -69,9 +63,7 @@ public class AlertDCFactory implements Factory<AlertDCDetector, AlertDCSector, A
 
 	@Override
 	public AlertDCSuperlayer createSuperlayer(ConstantProvider cp, int sectorId, int superlayerId) {
-		if (!(0 <= sectorId && sectorId < nsectors)) throw new IllegalArgumentException("Error: invalid sector=" + sectorId);
-		if (!(0 <= superlayerId && superlayerId < nsuperl)) throw new IllegalArgumentException("Error: invalid superlayer=" + superlayerId);
-		AlertDCSuperlayer superlayer = new AlertDCSuperlayer(sectorId, superlayerId);
+		AlertDCSuperlayer superlayer = new AlertDCSuperlayer(sectorId+1, superlayerId+1);
 
 		for (int layerId = 0; layerId < nlayers; layerId++)
 		     superlayer.addLayer(createLayer(cp, sectorId, superlayerId, layerId));
@@ -85,7 +77,7 @@ public class AlertDCFactory implements Factory<AlertDCDetector, AlertDCSector, A
 		if (!(0 <= superlayerId && superlayerId < nsuperl)) throw new IllegalArgumentException("Error: invalid superlayer=" + superlayerId);
 		if (!(0 <= layerId && layerId < nlayers)) throw new IllegalArgumentException("Error: invalid layer=" + layerId);
 
-		AlertDCLayer layer = new AlertDCLayer(sectorId, superlayerId, layerId);
+		AlertDCLayer layer = new AlertDCLayer(sectorId+1, superlayerId+1, layerId+1);
 
 		// Load constants AHDC
 		// Length in Z mm!
@@ -93,15 +85,16 @@ public class AlertDCFactory implements Factory<AlertDCDetector, AlertDCSector, A
 		double numWires;
 		double R_layer  = 32.0d;
 		double DR_layer = 4.0d;
+		double thster; // stereo angle in deg, will be convert to radian later
 
-		double   zoff1 = 0.0d;
-		double   zoff2 = 300.0d;
-		Point3D  p1    = new Point3D(R_layer, 0, zoff1);
+		double z_origin = -188.0d;
+		double z_end = +162.5d; 
+		Point3D  p1    = new Point3D(R_layer, 0, z_origin);
 		Vector3D n1    = new Vector3D(0, 0, 1);
 
 		Plane3D lPlane = new Plane3D(p1, n1);
 
-		Point3D  p2     = new Point3D(R_layer, 0, zoff2);
+		Point3D  p2     = new Point3D(R_layer, 0, z_end);
 		Vector3D n2     = new Vector3D(0, 0, 1);
 		Plane3D  rPlane = new Plane3D(p2, n2);
 
@@ -113,18 +106,23 @@ public class AlertDCFactory implements Factory<AlertDCDetector, AlertDCSector, A
 		if (superlayerId == 0) {
 			numWires = 47.0d; //47
 			R_layer  = 32.0d;
+			thster = -19.1489d;
 		} else if (superlayerId == 1) {
 			numWires = 56.0d; //56
 			R_layer  = 38.0d;
+			thster = -19.2857d;
 		} else if (superlayerId == 2) {
 			numWires = 72.0d; //72
 			R_layer  = 48.0d;
+			thster = -20.0d;
 		} else if (superlayerId == 3) {
 			numWires = 87.0d;
 			R_layer  = 58.0d;
+			thster = -20.6897d;
 		} else {
 			numWires = 99.0d;
 			R_layer  = 68.0d;
+			thster = -20.0d;
 		}
 
 		// Calculate the radius for the layers of sense wires
@@ -132,22 +130,28 @@ public class AlertDCFactory implements Factory<AlertDCDetector, AlertDCSector, A
 
 		double alphaW_layer = Math.toRadians(round / (numWires));
 
-		// shift the wire end point +-20deg in XY plan
-		double thster = Math.toRadians(20.0d);
-		double zl     = 300.0d;
+		// shift the wire end point by almost +-20deg in XY plan
+		// convert stereo angle from degrees to radians
+		thster = Math.toRadians(thster);
+		
 
 		// Create AHDC sense wires
 		for (int wireId = 0; wireId < numWires; wireId++) {
 
-			// The point given by (wx, wy, wz) is the midpoint of the current wire.
-			double wx = -R_layer * Math.sin(alphaW_layer * wireId);
-			double wy = -R_layer * Math.cos(alphaW_layer * wireId);
+			// start at phi=0
+			// in each layer the first wire is the first at phi>=0, i.e.
+			// 0.5 0 0.5 0 0.5 0.5 0 0.5 for layer 1 to 8
+			double wirePhiIndex = wireId + 0.5*(numWires%2) + 0.5*layerId*(1-2*(numWires%2)); 
+
+			// The point given by (wx, wy, wz) is the origin of the current wire.
+			double wx = R_layer * Math.cos(alphaW_layer * wirePhiIndex);
+			double wy = R_layer * Math.sin(alphaW_layer * wirePhiIndex);
 
 			// Find the interesection of the current wire with the end-plate
 			// planes by construciting a long line that passes through the midpoint
-			double wx_end = -R_layer * Math.sin(alphaW_layer * wireId + thster * (Math.pow(-1, superlayerId)));
-			double wy_end = -R_layer * Math.cos(alphaW_layer * wireId + thster * (Math.pow(-1, superlayerId)));
-			Line3D line   = new Line3D(wx, wy, 0, wx_end, wy_end, zl);
+			double wx_end = R_layer * Math.cos(alphaW_layer * wirePhiIndex + thster * (Math.pow(-1, superlayerId)));
+			double wy_end = R_layer * Math.sin(alphaW_layer * wirePhiIndex + thster * (Math.pow(-1, superlayerId)));
+			Line3D line   = new Line3D(wx, wy, z_origin, wx_end, wy_end, z_end);
 
 			Point3D lPoint = new Point3D();
 			Point3D rPoint = new Point3D();
@@ -158,70 +162,99 @@ public class AlertDCFactory implements Factory<AlertDCDetector, AlertDCSector, A
 			// Do not change the code above. It is for signal wires positioning
 
 			// Construct the cell around the signal wires created above top
-			double px_0 = -(R_layer + 2) * Math.sin(alphaW_layer * wireId);
-			double py_0 = -(R_layer + 2) * Math.cos(alphaW_layer * wireId);
-			double px_1 = -(R_layer + 2) * Math.sin(alphaW_layer * wireId + alphaW_layer / 2);
-			double py_1 = -(R_layer + 2) * Math.cos(alphaW_layer * wireId + alphaW_layer / 2);
-			double px_2 = -(R_layer - 2) * Math.sin(alphaW_layer * wireId + alphaW_layer / 2);
-			double py_2 = -(R_layer - 2) * Math.cos(alphaW_layer * wireId + alphaW_layer / 2);
-			double px_3 = -(R_layer - 2) * Math.sin(alphaW_layer * wireId);
-			double py_3 = -(R_layer - 2) * Math.cos(alphaW_layer * wireId);
-			double px_4 = -(R_layer - 2) * Math.sin(alphaW_layer * wireId - alphaW_layer / 2);
-			double py_4 = -(R_layer - 2) * Math.cos(alphaW_layer * wireId - alphaW_layer / 2);
-			double px_5 = -(R_layer + 2) * Math.sin(alphaW_layer * wireId - alphaW_layer / 2);
-			double py_5 = -(R_layer + 2) * Math.cos(alphaW_layer * wireId - alphaW_layer / 2);
+			double px_0 = (R_layer + 2) * Math.cos(alphaW_layer * wirePhiIndex);
+			double py_0 = (R_layer + 2) * Math.sin(alphaW_layer * wirePhiIndex);
+			double px_1 = (R_layer + 2) * Math.cos(alphaW_layer * wirePhiIndex + alphaW_layer / 2);
+			double py_1 = (R_layer + 2) * Math.sin(alphaW_layer * wirePhiIndex + alphaW_layer / 2);
+			double px_2 = (R_layer - 2) * Math.cos(alphaW_layer * wirePhiIndex + alphaW_layer / 2);
+			double py_2 = (R_layer - 2) * Math.sin(alphaW_layer * wirePhiIndex + alphaW_layer / 2);
+			double px_3 = (R_layer - 2) * Math.cos(alphaW_layer * wirePhiIndex);
+			double py_3 = (R_layer - 2) * Math.sin(alphaW_layer * wirePhiIndex);
+			double px_4 = (R_layer - 2) * Math.cos(alphaW_layer * wirePhiIndex - alphaW_layer / 2);
+			double py_4 = (R_layer - 2) * Math.sin(alphaW_layer * wirePhiIndex - alphaW_layer / 2);
+			double px_5 = (R_layer + 2) * Math.cos(alphaW_layer * wirePhiIndex - alphaW_layer / 2);
+			double py_5 = (R_layer + 2) * Math.sin(alphaW_layer * wirePhiIndex - alphaW_layer / 2);
 			// bottom (do not forget to add the +20 deg. twist respect to the "straight" version)
-			double px_6  = -(R_layer + 2) * Math.sin(alphaW_layer * wireId + thster * (Math.pow(-1, superlayerId)));
-			double py_6  = -(R_layer + 2) * Math.cos(alphaW_layer * wireId + thster * (Math.pow(-1, superlayerId)));
-			double px_7  = -(R_layer + 2) * Math.sin(alphaW_layer * wireId + alphaW_layer / 2 + thster * (Math.pow(-1, superlayerId)));
-			double py_7  = -(R_layer + 2) * Math.cos(alphaW_layer * wireId + alphaW_layer / 2 + thster * (Math.pow(-1, superlayerId)));
-			double px_8  = -(R_layer - 2) * Math.sin(alphaW_layer * wireId + alphaW_layer / 2 + thster * (Math.pow(-1, superlayerId)));
-			double py_8  = -(R_layer - 2) * Math.cos(alphaW_layer * wireId + alphaW_layer / 2 + thster * (Math.pow(-1, superlayerId)));
-			double px_9  = -(R_layer - 2) * Math.sin(alphaW_layer * wireId + thster * (Math.pow(-1, superlayerId)));
-			double py_9  = -(R_layer - 2) * Math.cos(alphaW_layer * wireId + thster * (Math.pow(-1, superlayerId)));
-			double px_10 = -(R_layer - 2) * Math.sin(alphaW_layer * wireId - alphaW_layer / 2 + thster * (Math.pow(-1, superlayerId)));
-			double py_10 = -(R_layer - 2) * Math.cos(alphaW_layer * wireId - alphaW_layer / 2 + thster * (Math.pow(-1, superlayerId)));
-			double px_11 = -(R_layer + 2) * Math.sin(alphaW_layer * wireId - alphaW_layer / 2 + thster * (Math.pow(-1, superlayerId)));
-			double py_11 = -(R_layer + 2) * Math.cos(alphaW_layer * wireId - alphaW_layer / 2 + thster * (Math.pow(-1, superlayerId)));
+			double px_6  = (R_layer + 2) * Math.cos(alphaW_layer * wirePhiIndex + thster * (Math.pow(-1, superlayerId)));
+			double py_6  = (R_layer + 2) * Math.sin(alphaW_layer * wirePhiIndex + thster * (Math.pow(-1, superlayerId)));
+			double px_7  = (R_layer + 2) * Math.cos(alphaW_layer * wirePhiIndex + alphaW_layer / 2 + thster * (Math.pow(-1, superlayerId)));
+			double py_7  = (R_layer + 2) * Math.sin(alphaW_layer * wirePhiIndex + alphaW_layer / 2 + thster * (Math.pow(-1, superlayerId)));
+			double px_8  = (R_layer - 2) * Math.cos(alphaW_layer * wirePhiIndex + alphaW_layer / 2 + thster * (Math.pow(-1, superlayerId)));
+			double py_8  = (R_layer - 2) * Math.sin(alphaW_layer * wirePhiIndex + alphaW_layer / 2 + thster * (Math.pow(-1, superlayerId)));
+			double px_9  = (R_layer - 2) * Math.cos(alphaW_layer * wirePhiIndex + thster * (Math.pow(-1, superlayerId)));
+			double py_9  = (R_layer - 2) * Math.sin(alphaW_layer * wirePhiIndex + thster * (Math.pow(-1, superlayerId)));
+			double px_10 = (R_layer - 2) * Math.cos(alphaW_layer * wirePhiIndex - alphaW_layer / 2 + thster * (Math.pow(-1, superlayerId)));
+			double py_10 = (R_layer - 2) * Math.sin(alphaW_layer * wirePhiIndex - alphaW_layer / 2 + thster * (Math.pow(-1, superlayerId)));
+			double px_11 = (R_layer + 2) * Math.cos(alphaW_layer * wirePhiIndex - alphaW_layer / 2 + thster * (Math.pow(-1, superlayerId)));
+			double py_11 = (R_layer + 2) * Math.sin(alphaW_layer * wirePhiIndex - alphaW_layer / 2 + thster * (Math.pow(-1, superlayerId)));
 
 			// Group into points with (x,y,z) coordinates
 			List<Point3D> firstF  = new ArrayList<>();
 			List<Point3D> secondF = new ArrayList<>();
 			// first Face
-			Point3D p_0 = new Point3D(px_0, py_0, 0.0d);
-			Point3D p_1 = new Point3D(px_1, py_1, 0.0d);
-			Point3D p_2 = new Point3D(px_2, py_2, 0.0d);
-			Point3D p_3 = new Point3D(px_3, py_3, 0.0d);
-			Point3D p_4 = new Point3D(px_4, py_4, 0.0d);
-			Point3D p_5 = new Point3D(px_5, py_5, 0.0d);
+			Point3D p_0 = new Point3D(px_0, py_0, z_origin);
+			Point3D p_1 = new Point3D(px_1, py_1, z_origin);
+			Point3D p_2 = new Point3D(px_2, py_2, z_origin);
+			Point3D p_3 = new Point3D(px_3, py_3, z_origin);
+			Point3D p_4 = new Point3D(px_4, py_4, z_origin);
+			Point3D p_5 = new Point3D(px_5, py_5, z_origin);
 			// second Face
-			Point3D p_6  = new Point3D(px_6, py_6, zl);
-			Point3D p_7  = new Point3D(px_7, py_7, zl);
-			Point3D p_8  = new Point3D(px_8, py_8, zl);
-			Point3D p_9  = new Point3D(px_9, py_9, zl);
-			Point3D p_10 = new Point3D(px_10, py_10, zl);
-			Point3D p_11 = new Point3D(px_11, py_11, zl);
+			Point3D p_6  = new Point3D(px_6, py_6, z_end);
+			Point3D p_7  = new Point3D(px_7, py_7, z_end);
+			Point3D p_8  = new Point3D(px_8, py_8, z_end);
+			Point3D p_9  = new Point3D(px_9, py_9, z_end);
+			Point3D p_10 = new Point3D(px_10, py_10, z_end);
+			Point3D p_11 = new Point3D(px_11, py_11, z_end);
+
+			// !!! 	Alignment correction
+			int layer_row = AlertDCWireIdentifier.layer2number((superlayerId+1)*10 + (layerId+1));
+			double upstream_rotZ = Math.toRadians(cp.getDouble("/geometry/alert/ahdc/layer_alignment/upstream_rotZ", layer_row));
+			double downstream_rotZ = Math.toRadians(cp.getDouble("/geometry/alert/ahdc/layer_alignment/downstream_rotZ", layer_row));
+			int wire_row = AlertDCWireIdentifier.slc2wire(sectorId+1, (superlayerId+1)*10 + (layerId+1), wireId+1);
+			double wire_rotZ = Math.toRadians(cp.getDouble("/geometry/alert/ahdc/wire_alignment/rotZ", wire_row));
+
+			//System.out.printf("%d %d %d, %f , %f, %f\n",sectorId+1, (superlayerId+1)*10 + (layerId+1), wireId+1, Math.toDegrees(upstream_rotZ), Math.toDegrees(downstream_rotZ), Math.toDegrees(wire_rotZ));
+
+			p_0.rotateZ(wire_rotZ + upstream_rotZ);
+			p_1.rotateZ(wire_rotZ + upstream_rotZ);
+			p_2.rotateZ(wire_rotZ + upstream_rotZ);
+			p_3.rotateZ(wire_rotZ + upstream_rotZ);
+			p_4.rotateZ(wire_rotZ + upstream_rotZ);
+			p_5.rotateZ(wire_rotZ + upstream_rotZ);
+
+			p_6.rotateZ(wire_rotZ + downstream_rotZ);
+			p_7.rotateZ(wire_rotZ + downstream_rotZ);
+			p_8.rotateZ(wire_rotZ + downstream_rotZ);
+			p_9.rotateZ(wire_rotZ + downstream_rotZ);
+			p_10.rotateZ(wire_rotZ + downstream_rotZ);
+			p_11.rotateZ(wire_rotZ + downstream_rotZ);
+
+			lPoint.rotateZ(wire_rotZ + upstream_rotZ);
+			rPoint.rotateZ(wire_rotZ + downstream_rotZ);
+			wireLine = new Line3D(lPoint, rPoint);
+
+
 			// defining a cell around a wireLine, must be counter-clockwise!
 			firstF.add(p_0);
-			firstF.add(p_1);
-			firstF.add(p_2);
-			firstF.add(p_3);
-			firstF.add(p_4);
 			firstF.add(p_5);
+			firstF.add(p_4);
+			firstF.add(p_3);
+			firstF.add(p_2);
+			firstF.add(p_1);
 
 			secondF.add(p_6);
-			secondF.add(p_7);
-			secondF.add(p_8);
-			secondF.add(p_9);
-			secondF.add(p_10);
 			secondF.add(p_11);
+			secondF.add(p_10);
+			secondF.add(p_9);
+			secondF.add(p_8);
+			secondF.add(p_7);
 
 			// Create the cell and signal wire inside
 			// PrismaticComponent(int componentId, List<Point3D> firstFace, List<Point3D> secondFace)
 			// not possible to add directly PrismaticComponent class because it is an ABSTRACT
 			// a new class should be created: public class NewClassWire extends PrismaticComponent {...}
 			// 5 top points & 5 bottom points with convexe shape. Concave shape is not supported.
-			AlertDCWire wire = new AlertDCWire(wireId, wireLine, firstF, secondF);
+			AlertDCWire wire = new AlertDCWire(wireId+1, wireLine, firstF, secondF);
 			// Add wire object to the list
 			layer.addComponent(wire);
 		}

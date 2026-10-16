@@ -18,6 +18,8 @@ public class DetectorHeader {
     private float    livetime = -1;
     private short eventCategory = 0;
     private short eventCategoryFT = 0;
+    private float      torus = 0.0f;
+    private float   solenoid = 0.0f;
 
     public DetectorHeader() {
     }
@@ -113,4 +115,10 @@ public class DetectorHeader {
     public void setEventCategory(short evcat) {
         this.eventCategory = evcat;
     }
+    
+    public void setTorus(float t) { torus = t; }
+    public void setSolenoid(float s) {solenoid = s; }
+    public float getTorus() { return torus; }
+    public float getSolenoid() { return solenoid; }
+
 }

@@ -1,0 +1,13 @@
+---
+name: HipoFrameReader
+engine: org.jlab.io.clara.HipoFrameReader
+type: java
+
+author: Gagik Gavalian
+email: gavalian@jlab.org
+
+version: 0.5
+description:
+  Reads HIPO events from a file.
+
+  Returns a new event on each request or an error if there was some problem.

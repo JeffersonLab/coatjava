@@ -1,0 +1,11 @@
+---
+name: Clas12Writer
+engine: org.jlab.io.clara.Clas12Writer
+type: java
+
+author: Nathan Baltzell
+email: baltzell@jlab.org
+
+version: 0.1
+description:
+  Writes HIPO events to a file, duplicating special banks into new tag-1 events.

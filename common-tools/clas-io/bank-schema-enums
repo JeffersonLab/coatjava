@@ -1,0 +1,18 @@
+#!/usr/bin/env python3
+import os,glob,json
+top = os.path.normpath(os.path.dirname(os.path.abspath(__file__))+'/../..')
+idir = 'etc/bankdefs/hipo4'
+odir = 'common-tools/clas-io/src/main/java/org/jlab/io/banks'
+print(f'INFO:  Creating schema enums at {odir}')
+os.makedirs(f'{top}/{odir}', exist_ok=True)
+for x in glob.glob(f'{top}/{idir}/*.json'):
+    for bank in json.load(open(x,'r')):
+        class_name = bank['name'].replace('::','_').replace(':','_')
+        with open(f'{top}/{odir}/{class_name}.java','w') as f:
+            f.write('package org.jlab.io.banks;\n')
+            f.write(f'public class {class_name} {{\n')
+            for i,entry in enumerate(bank['entries']):
+                var_name = entry['name']
+                f.write(f'    public static final short {var_name} = {i};\n')
+            f.write('}\n')
+            f.close()

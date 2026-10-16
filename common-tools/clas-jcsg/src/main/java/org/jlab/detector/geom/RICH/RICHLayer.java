@@ -42,6 +42,7 @@ public class RICHLayer extends ArrayList<RICHComponent> {
     private ArrayList<Integer> compo_list          = new ArrayList<Integer>();
     
     private RICHFrame local_frame = new RICHFrame();
+    private RICHPixel pmtpixels   = null;
 
 
     // ----------------
@@ -99,6 +100,14 @@ public class RICHLayer extends ArrayList<RICHComponent> {
     public int get_size() { return this.size(); }
     // ----------------
 
+    // ----------------
+    public void set_PMTPixels(RICHPixel pmtpixels){ this.pmtpixels = pmtpixels;}
+    // ----------------
+  
+    // ----------------
+    public RICHPixel get_PMTPixels(){ return this.pmtpixels;}
+    // ----------------
+  
     // ----------------
     public Shape3D get_TrackingSurf() { 
     // ----------------

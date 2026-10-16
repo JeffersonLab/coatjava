@@ -616,33 +616,38 @@ public class Cross extends ArrayList<Cluster> implements Comparable<Cross> {
     @Override
     public int compareTo(Cross arg) {
 
-        int return_val = 0;
-        if(Constants.getInstance().isCosmics) {
+        int return_val;
+        if (Constants.getInstance().isCosmics) {
             int RegComp = this.getSVTCosmicsRegion() < arg.getSVTCosmicsRegion() ? -1 : this.getSVTCosmicsRegion() == arg.getSVTCosmicsRegion() ? 0 : 1;
             int IDComp = this.getId() < arg.getId() ? -1 : this.getId() == arg.getId() ? 0 : 1;
-
             return_val = ((RegComp == 0) ? IDComp : RegComp);
-        } else {
-            
-            //int thisreg = (this.getDetector().equalsIgnoreCase("BMT")) ? 3 + bgeom.getLayer( this.getRegion(), this.getDetectorType()) : this.getRegion();
-            //int argreg  = (arg.getDetector().equalsIgnoreCase("BMT"))  ? 3 + bgeom.getLayer( arg.getRegion(), arg.getDetectorType()) : arg.getRegion();
+        }
+        else {
+           
             int thisreg = this.getOrderedRegion();
             int argreg  = arg.getOrderedRegion();
             int RegComp = thisreg < argreg ? -1 : thisreg == argreg ? 0 : 1;
-//            int RegComp = this.getRegion() < arg.getRegion() ? -1 : this.getRegion() == arg.getRegion() ? 0 : 1;
             
             // check that is not BMTC for phi comparison
             if( Double.isNaN(arg.getPoint().x())==false &&  Double.isNaN(this.getPoint().x())==false ) {
-            	int PhiComp = this.getPoint0().toVector3D().phi() < arg.getPoint0().toVector3D().phi() ? -1 : this.getPoint0().toVector3D().phi() == arg.getPoint0().toVector3D().phi() ? 0 : 1;
-            
-            	return_val = ((RegComp == 0) ? PhiComp : RegComp);
+                if (RegComp == 0) {
+                    double phi0 = this.getPoint0().toVector3D().phi();
+                    double phi1 = arg.getPoint0().toVector3D().phi();
+                    return_val = phi0 < phi1 ? -1 : phi0 == phi1 ? 0 : 1;
+                }
+                else {
+                    return_val = RegComp;
+                }
             }
             else {
-            	int ZComp = this.getPoint0().z() < arg.getPoint0().z() ? -1 : this.getPoint0().z() == arg.getPoint0().z() ? 0 : 1;
-            	return_val = ((RegComp == 0) ? ZComp : RegComp);
+                if (RegComp == 0) {
+                    return_val = this.getPoint0().z() < arg.getPoint0().z() ? -1 : this.getPoint0().z() == arg.getPoint0().z() ? 0 : 1;
+                }
+                else {
+                    return_val = RegComp;
+                }
             }
         }
-
         return return_val;
     }
 

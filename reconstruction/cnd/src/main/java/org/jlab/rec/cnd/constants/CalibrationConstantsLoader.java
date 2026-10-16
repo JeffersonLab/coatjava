@@ -26,8 +26,9 @@ public class CalibrationConstantsLoader {
                 "/calibration/cnd/Energy",
                 "/calibration/cnd/time_jitter",
 		"/geometry/cnd/cndgeom",
-		"/geometry/target", "/calibration/cnd/cluster",
-        "/calibration/cnd/double_hits"
+		"/geometry/shifts/solenoid", 
+                "/calibration/cnd/cluster",
+                "/calibration/cnd/double_hits"
             };
 
         public CalibrationConstantsLoader(int run, ConstantsManager ccdb) {
@@ -129,7 +130,7 @@ public class CalibrationConstantsLoader {
             INNERRADIUS[0] = 10.*tabJs.get(10).getDoubleValue("InnerRadius", 1, 1, 1);            
             THICKNESS[0] = 10.*tabJs.get(10).getDoubleValue("Thickness", 1, 1, 1);  // not right structure for common tools
 	    
-	    ZTARGET[0] = tabJs.get(11).getDoubleValue("position", 0, 0, 0);  // not right structure for common tools
+	    ZTARGET[0] = tabJs.get(11).getDoubleValue("z", 0, 0, 0);  // not right structure for common tools
             //INNERRADIUS[0] = 290.0;            
             //THICKNESS[0] = 30.0;  
 

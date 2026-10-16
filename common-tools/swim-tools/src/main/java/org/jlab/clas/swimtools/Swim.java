@@ -22,6 +22,9 @@ import cnuphys.adaptiveSwim.geometry.Cylinder;
 import cnuphys.adaptiveSwim.geometry.Line;
 import cnuphys.adaptiveSwim.geometry.Point;
 import cnuphys.adaptiveSwim.geometry.Vector;
+import java.util.ArrayList;
+import java.util.List;
+import org.jlab.geom.prim.Line3D;
 /**
  *
  * @author ziegler
@@ -44,8 +47,9 @@ public class Swim {
     final double SWIMZMINMOM = 0.75; // GeV/c
     final double MINTRKMOM = 0.05; // GeV/c
     double accuracy = 20e-6; // 20 microns
-    double stepSize = 5.00 * 1.e-4; // 500 microns
-
+    public double stepSize = 5.00 * 1.e-4; // 500 microns
+    public double distanceBetweenSaves= 100*stepSize;
+    
     private ProbeCollection PC;
     
     /**
@@ -57,6 +61,15 @@ public class Swim {
             PC = new ProbeCollection();
             Swimmer.put(Thread.currentThread(), PC);
         }
+    }
+
+    /**
+     * Set max swimming path length
+     *
+     * @param maxPathLength
+     */
+    public void setMaxPathLength(double _maxPathLength) {
+        this._maxPathLength = _maxPathLength;
     }
 
     /**
@@ -279,6 +292,88 @@ public class Swim {
         return value;
 
     }
+    
+        public double[] SwimToPlaneTiltSecSysBdlXZPlane(int sector, double z_cm) {
+        double z = z_cm / 100; // the magfield method uses meters
+        double[] value = new double[8];
+
+        if (_pTot < MINTRKMOM || this.SwimUnPhys==true) // fiducial cut
+        {
+            return null;
+        }
+
+        // use a SwimZResult instead of a trajectory (dph)
+        SwimZResult szr = null;
+
+        SwimTrajectory traj = null;
+        double hdata[] = new double[3];
+
+        try {
+
+            if (_pTot > SWIMZMINMOM) {
+
+                // use the new z swimmer (dph)
+                // NOTE THE DISTANCE, UNITS FOR swimZ are cm, NOT m like the old
+                // swimmer (dph)
+
+                double stepSizeCM = stepSize * 100; // convert to cm
+
+                // create the starting SwimZ state vector
+                SwimZStateVector start = new SwimZStateVector(_x0 * 100, _y0 * 100, _z0 * 100, _pTot, _theta, _phi);
+
+                try {
+                        szr = PC.RCF_z.sectorAdaptiveRK(sector, _charge, _pTot, start, z_cm, stepSizeCM, hdata);
+                } catch (SwimZException e) {
+                        szr = null;
+                        //System.err.println("[WARNING] Tilted SwimZ Failed for p = " + _pTot);
+                }
+            }
+
+            if (szr != null) {
+                double bdl = szr.sectorGetBDLXZPlane(sector, PC.RCF_z.getProbe());
+                double pathLength = szr.getPathLength(); // already in cm
+
+                SwimZStateVector last = szr.last();
+                double p3[] = szr.getThreeMomentum(last);
+
+                value[0] = last.x; // xf in cm
+                value[1] = last.y; // yz in cm
+                value[2] = last.z; // zf in cm
+                value[3] = p3[0];
+                value[4] = p3[1];
+                value[5] = p3[2];
+                value[6] = pathLength;
+                value[7] = bdl / 10; // convert from kg*cm to T*cm
+            } else { // use old swimmer. Either low momentum or SwimZ failed.
+                                // (dph)
+
+                traj = PC.RCF.sectorSwim(sector, _charge, _x0, _y0, _z0, _pTot, _theta, _phi, z, accuracy, _rMax,
+                                _maxPathLength, stepSize, cnuphys.swim.Swimmer.CLAS_Tolerance, hdata);
+
+                // traj.computeBDL(sector, rprob);
+                if(traj==null)
+                    return null;
+                
+                traj.sectorComputeBDL(sector, PC.RCP);
+                // traj.computeBDL(rcompositeField);
+
+                double lastY[] = traj.lastElement();
+                value[0] = lastY[0] * 100; // convert back to cm
+                value[1] = lastY[1] * 100; // convert back to cm
+                value[2] = lastY[2] * 100; // convert back to cm
+                value[3] = lastY[3] * _pTot;
+                value[4] = lastY[4] * _pTot;
+                value[5] = lastY[5] * _pTot;
+                value[6] = lastY[6] * 100;
+                value[7] = lastY[7] * 10;
+            } // use old swimmer
+        } catch (Exception e) {
+                e.printStackTrace();
+        }
+        return value;
+
+    }
+        
     /**
      * 
      * @param z_cm
@@ -899,6 +994,86 @@ public class Swim {
 
     }
 
+    //
+    
+    private class LineSwimStopper implements IStopper {
+
+        private double _finalPathLength = Double.NaN;
+
+        private Line3D _l;
+        private Point3D _p;
+        double min = 999;
+        private LineSwimStopper(Line3D l) {
+                // DC reconstruction units are cm. Swim units are m. Hence scale by
+                // 100
+                _l =l;
+                _p = new Point3D();
+        }
+
+        @Override
+        public boolean stopIntegration(double t, double[] y) {
+            _p.set(y[0]* 100.0, y[1]* 100.0, y[2]* 100.0);
+            double doca = _l.distance(_p).length();
+            if(doca<min) {
+                min = doca;
+            }
+            return (doca > min );
+            
+        }
+
+        /**
+         * Get the final path length in meters
+         *
+         * @return the final path length in meters
+         */
+        @Override
+        public double getFinalT() {
+                return _finalPathLength;
+        }
+
+        /**
+         * Set the final path length in meters
+         *
+         * @param finalPathLength
+         *            the final path length in meters
+         */
+        @Override
+        public void setFinalT(double finalPathLength) {
+                _finalPathLength = finalPathLength;
+        }
+    }
+    
+    public double[] SwimToLine(Line3D l) {
+
+        double[] value = new double[8];
+        
+        if(this.SwimUnPhys==true)
+            return null;
+        LineSwimStopper stopper = new LineSwimStopper(l);
+
+        SwimTrajectory st = PC.CF.swim(_charge, _x0, _y0, _z0, _pTot, _theta, _phi, stopper, _maxPathLength, stepSize,
+                        0.0005);
+        if(st==null)
+            return null;
+        st.computeBDL(PC.CP);
+        // st.computeBDL(compositeField);
+
+        double[] lastY = st.lastElement();
+
+        value[0] = lastY[0] * 100; // convert back to cm
+        value[1] = lastY[1] * 100; // convert back to cm
+        value[2] = lastY[2] * 100; // convert back to cm
+        value[3] = lastY[3] * _pTot; // normalized values
+        value[4] = lastY[4] * _pTot;
+        value[5] = lastY[5] * _pTot;
+        value[6] = lastY[6] * 100;
+        value[7] = lastY[7] * 10; // Conversion from kG.m to T.cm
+
+        return value;
+
+    }
+
+    //
     
     
     private void printV(String pfx, double v[]) {
@@ -1071,4 +1246,185 @@ public class Swim {
 
     }
 
+/**
+     * 
+     * @param Z
+     * @return state  x,y,z,px,py,pz, pathlength, iBdl at the surface 
+     */
+    public double[] SwimToZ(double Z, int dir) {
+        
+        double[] value = new double[8];
+        //if(this.SwimUnPhys)
+        //    return null;
+        
+        ZSwimStopper stopper = new ZSwimStopper(Z, dir);
+        
+        SwimTrajectory st = PC.CF.swim(_charge, _x0, _y0, _z0, _pTot, _theta, _phi, stopper, _maxPathLength, stepSize,
+                        distanceBetweenSaves);
+        if(st==null)
+                return null;
+        st.computeBDL(PC.CP);
+        // st.computeBDL(compositeField);
+        this.setSwimTraj(st);
+        double[] lastY = st.lastElement();
+
+        value[0] = lastY[0] * 100; // convert back to cm
+        value[1] = lastY[1] * 100; // convert back to cm
+        value[2] = lastY[2] * 100; // convert back to cm
+        value[3] = lastY[3] * _pTot; // normalized values
+        value[4] = lastY[4] * _pTot;
+        value[5] = lastY[5] * _pTot;
+        value[6] = lastY[6] * 100;
+        value[7] = lastY[7] * 10; // Conversion from kG.m to T.cm
+
+        return value;
+
+    }
+
+    private SwimTrajectory swimTraj; 
+    
+    private class ZSwimStopper implements IStopper {
+
+        private double _finalPathLength = Double.NaN;
+
+        private double _Z;
+        private int _dir;
+        
+        private ZSwimStopper(double Z, int dir) {
+            // The reconstruction units are cm. Swim units are m. Hence scale by
+            // 100
+            _Z = Z;
+           _dir = dir;
+        }
+
+        @Override
+        public boolean stopIntegration(double t, double[] y) {
+            
+            double z = y[2] * 100.;
+            if(_dir>0) {
+                return (z > _Z);
+            } else {
+                return (z<_Z);
+            }
+        }
+
+        /**
+         * Get the final path length in meters
+         *
+         * @return the final path length in meters
+         */
+        @Override
+        public double getFinalT() {
+                return _finalPathLength;
+        }
+
+        /**
+         * Set the final path length in meters
+         *
+         * @param finalPathLength
+         *            the final path length in meters
+         */
+        @Override
+        public void setFinalT(double finalPathLength) {
+                _finalPathLength = finalPathLength;
+        }
+    }
+    /**
+     * @return the swimTraj
+     */
+    public SwimTrajectory getSwimTraj() {
+        return swimTraj;
+    }
+
+    /**
+     * @param swimTraj the swimTraj to set
+     */
+    public void setSwimTraj(SwimTrajectory swimTraj) {
+        this.swimTraj = swimTraj;
+    }
+    
+    private  class DCASwimStopper implements IStopper {
+
+        public DCASwimStopper(SwimTrajectory swimTraj) { 
+            _swimTraj = swimTraj;
+            for(int i = 0; i < _swimTraj.size()-1; i++) { 
+                polylines.add(new Line3D(_swimTraj.get(i)[0],_swimTraj.get(i)[1],_swimTraj.get(i)[2],
+                        _swimTraj.get(i+1)[0],_swimTraj.get(i+1)[1],_swimTraj.get(i+1)[2]));
+                
+            }
+        }
+
+        private List<Line3D> polylines = new ArrayList<>();
+        private SwimTrajectory _swimTraj;
+        private double _finalPathLength = Double.NaN;
+        private double _doca = Double.POSITIVE_INFINITY;
+        
+        @Override
+        public boolean stopIntegration(double t, double[] y) {
+            Point3D dcaCand = new Point3D(y[0],y[1],y[2]); 
+            double maxDoca = Double.POSITIVE_INFINITY;
+            int nlines = polylines.size();
+            for(int i=0; i<nlines; i++) {
+                double doca = polylines.get(i).distance(dcaCand).length();
+                if (doca < maxDoca) {
+                    maxDoca = doca;
+                } 
+            }
+            if (maxDoca < _doca) {
+                _doca = maxDoca; 
+                return false;
+            }
+            return true;
+        }
+
+        /**
+         * Get the final path length in meters
+         *
+         * @return the final path length in meters
+         */
+        @Override
+        public double getFinalT() {
+                return _finalPathLength;
+        }
+
+        /**
+         * Set the final path length in meters
+         *
+         * @param finalPathLength
+         *            the final path length in meters
+         */
+        @Override
+        public void setFinalT(double finalPathLength) {
+                _finalPathLength = finalPathLength;
+        }
+    
+    }
+    public double[] SwimToDCA(SwimTrajectory trk2) { //use for both traj to get doca for each track
+        
+         double[] value = new double[6];
+        //if(this.SwimUnPhys)
+        //    return null;
+        
+        DCASwimStopper stopper = new DCASwimStopper(trk2);
+        
+        SwimTrajectory st = PC.CF.swim(_charge, _x0, _y0, _z0, _pTot, _theta, _phi, stopper, _maxPathLength, stepSize,
+                        0.0005);
+        if(st==null)
+                return null;
+       
+        double[] lastY = st.lastElement();
+
+        value[0] = lastY[0] * 100; // convert back to cm
+        value[1] = lastY[1] * 100; // convert back to cm
+        value[2] = lastY[2] * 100; // convert back to cm
+        value[3] = lastY[3] * _pTot; // normalized values
+        value[4] = lastY[4] * _pTot;
+        value[5] = lastY[5] * _pTot;
+        
+
+        return value;
+        
+        
+        
+    }
 }

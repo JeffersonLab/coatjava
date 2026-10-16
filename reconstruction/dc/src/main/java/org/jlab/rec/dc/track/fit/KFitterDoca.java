@@ -117,7 +117,7 @@ public class KFitterDoca {
                         sv.trackCov.get(svzLength- 1)); */
                 for (int k = svzLength - 1; k >0; k--) {
                     //if(i==2 && this.totNumIter==30)
-                    //LOGGER.log(Level.FINE, "sector " +sector+"stateVec "+sv.trackTraj.get(k).printInfo());
+                    //LOGGER.log(Level.FINEST, "sector " +sector+"stateVec "+sv.trackTraj.get(k).printInfo());
                     if(k>=2) {
                         sv.transport(sector, k, k - 2,
                             sv.trackTraj.get(k),
@@ -137,7 +137,7 @@ public class KFitterDoca {
             }
             for (int k = 0; k < svzLength - 1; k++) {
                 //if(i==2 && this.totNumIter==30)
-                //LOGGER.log(Level.FINE, "stateVec "+sv.trackTraj.get(k).printInfo());
+                //LOGGER.log(Level.FINEST, "stateVec "+sv.trackTraj.get(k).printInfo());
                 sv.transport(sector, k, k + 1,
                         sv.trackTraj.get(k),
                         sv.trackCov.get(k));
@@ -208,18 +208,18 @@ public class KFitterDoca {
                     0, 0, 0, 0, 0,
                     0, 0, 0, 0, 0,
                     0, 0, 0, 0, 0);
-        //LOGGER.log(Level.FINE, "Ci ");
+        //LOGGER.log(Level.FINEST, "Ci ");
         //Matrix5x5.show(Ci);
-        //LOGGER.log(Level.FINE, "Cinv ");
+        //LOGGER.log(Level.FINEST, "Cinv ");
         //Matrix5x5.show(first_inverse);
-        //LOGGER.log(Level.FINE, "addition ");
+        //LOGGER.log(Level.FINEST, "addition ");
         //Matrix5x5.show(addition);
         
         Matrix5x5.add(first_inverse, addition, result);
         double det2 = Matrix5x5.inverse(result, result_inv, adj);
-        //LOGGER.log(Level.FINE, "addition result");
+        //LOGGER.log(Level.FINEST, "addition result");
         //Matrix5x5.show(result);
-        //LOGGER.log(Level.FINE, "inv result");
+        //LOGGER.log(Level.FINEST, "inv result");
         //Matrix5x5.show(result_inv);
         if(Math.abs(det2)<1.e-30)
             return null;
@@ -276,7 +276,7 @@ public class KFitterDoca {
             //    signMeas = Math.signum(h);
             double c2 = ((signMeas*Math.abs(mv.measurements.get(k).doca[0]) - sign*Math.abs(h)) 
                     * (signMeas*Math.abs(mv.measurements.get(k).doca[0]) - sign*Math.abs(h)) / V);
-            //if(signMeas!=Math.signum(h) && this.interNum>1) LOGGER.log(Level.FINE, sv.trackTraj.get(k).printInfo()+" h "+(float)h);
+            //if(signMeas!=Math.signum(h) && this.interNum>1) LOGGER.log(Level.FINEST, sv.trackTraj.get(k).printInfo()+" h "+(float)h);
             double x_filt = sv.trackTraj.get(k).x + K[0] * (signMeas*Math.abs(mv.measurements.get(k).doca[0]) - sign*Math.abs(h));
             double y_filt = sv.trackTraj.get(k).y + K[1] * (signMeas*Math.abs(mv.measurements.get(k).doca[0]) - sign*Math.abs(h));
             double tx_filt = sv.trackTraj.get(k).tx + K[2] * (signMeas*Math.abs(mv.measurements.get(k).doca[0]) - sign*Math.abs(h));

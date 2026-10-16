@@ -1,9 +1,13 @@
 package org.jlab.analysis.physics;
 
+import org.jlab.detector.base.DetectorType;
 import org.jlab.io.hipo.HipoDataEvent;
 import org.jlab.jnp.hipo4.data.Bank;
 import org.jlab.jnp.hipo4.data.Event;
 import org.jlab.jnp.hipo4.data.SchemaFactory;
+import org.jlab.jnp.hipo4.io.HipoReader;
+import org.jlab.jnp.hipo4.io.HipoWriterSorted;
+import org.jlab.utils.CLASResources;
 
 /**
  *
@@ -11,11 +15,61 @@ import org.jlab.jnp.hipo4.data.SchemaFactory;
  */
 public class TestEvent {
 
+    public static void main(String args[]) {
+        write();
+        //getDCSector1ElectronEvent(0).show();
+    }
 
-	public static HipoDataEvent getDCSector1ElectronEvent(SchemaFactory schemaFactory) {
-                Event testEvent = new Event();
-		
-		
+    public static HipoDataEvent get(DetectorType t) {
+        SchemaFactory sf = new SchemaFactory();
+        sf.initFromDirectory(CLASResources.getResourcePath("etc/bankdefs/hipo4"));
+
+        HipoReader reader = new HipoReader();
+        String dir = CLASResources.getResourcePath("etc/data/test");
+        String stub = t.getName().toLowerCase();
+        reader.open(String.format("%s/%s.hipo",dir,stub));
+
+        Event e = new Event();
+        reader.getEvent(e, 0);
+        if(t==DetectorType.DC)
+            return getDCSector1ElectronEvent(e);
+        else 
+            return new HipoDataEvent(e,sf);
+    }
+
+    private static void write() {
+        SchemaFactory sf = new SchemaFactory();
+        sf.initFromDirectory(CLASResources.getResourcePath("etc/bankdefs/hipo4"));
+        write( "dc.hipo",getDCSector1ElectronEvent(sf).getHipoEvent());
+        write( "cvt.hipo",getCVTTestEvent(sf).getHipoEvent());
+        write( "ecal.hipo",getECSector1PhotonEvent(sf).getHipoEvent());
+    }
+
+    private static void write(String path, Event e) {
+        try (HipoWriterSorted writer = new HipoWriterSorted()) {
+            writer.setCompressionType(2);
+            writer.getSchemaFactory().initFromDirectory(CLASResources.getResourcePath("etc/bankdefs/hipo4"));
+            writer.open(path);
+            writer.addEvent(e);
+        }
+    } 
+
+    public static HipoDataEvent getDCSector1ElectronEvent(Event e) {
+        SchemaFactory sf = new SchemaFactory();
+        sf.initFromDirectory(CLASResources.getResourcePath("etc/bankdefs/hipo4"));
+        
+        Bank mcPart = new Bank(sf.getSchema("MC::Particle"));
+        e.read(mcPart);
+        Bank recEvent = new Bank(sf.getSchema("RECHB::Event"), 1);
+        recEvent.putFloat("startTime", 0, mcPart.getByte("vt", 0));
+        e.write(recEvent);
+        
+        return new HipoDataEvent(e,sf);
+    }
+    
+    @Deprecated
+    public static HipoDataEvent getDCSector1ElectronEvent(SchemaFactory schemaFactory) {
+        Event testEvent = new Event();
 
 		// this event is based on a gemc event with
  		// one generated electron with p=2.5, th=25, ph=0
@@ -275,7 +329,6 @@ public class TestEvent {
                 HipoDataEvent hipoEvent = new HipoDataEvent(testEvent,schemaFactory);
 		return hipoEvent;
 	}
-
 
 	public static HipoDataEvent getECSector1PhotonEvent(SchemaFactory schemaFactory) {
 		Event testEvent = new Event();

@@ -1,9 +1,6 @@
 package org.jlab.service.rtpc;
 
 import java.io.File;
-
-
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -26,15 +23,11 @@ import org.jlab.rec.rtpc.hit.TrackDisentangler;
 import org.jlab.rec.rtpc.hit.TrackFinder;
 import org.jlab.rec.rtpc.hit.TrackHitReco;
 import org.jlab.rec.rtpc.hit.HelixFitTest;
-import org.jlab.detector.calib.utils.ConstantsManager;
 import org.jlab.utils.groups.IndexedTable;
 
 import org.jlab.clas.tracking.kalmanfilter.Material;
 
-
-
 public class RTPCEngine extends ReconstructionEngine{
-
 
     public RTPCEngine() {
         super("RTPC","davidp","3.0");
@@ -54,8 +47,7 @@ public class RTPCEngine extends ReconstructionEngine{
         String cosm = this.getEngineConfigString("rtpcCosmic");
         String beamfit = this.getEngineConfigString("rtpcBeamlineFit");
         String disentangler = this.getEngineConfigString("rtpcDisentangler");
-	String chi2cull = this.getEngineConfigString("rtpcChi2Cull");
-        //System.out.println(sim + " " + cosm + " " + beamfit);
+	    String chi2cull = this.getEngineConfigString("rtpcChi2Cull");
         String kfstatus = this.getEngineConfigString("rtpcKF");
 
         if(sim != null){
@@ -98,11 +90,12 @@ public class RTPCEngine extends ReconstructionEngine{
 
         return true;
     }
-
-
+    
+    @Override
+    public void detectorChanged(int runNumber) {}
 
     @Override
-    public boolean processDataEvent(DataEvent event) {
+    public boolean processDataEventUser(DataEvent event) {
 
         HitParameters params = new HitParameters();
 
@@ -230,7 +223,7 @@ public class RTPCEngine extends ReconstructionEngine{
         while(reader.hasEvent()){
             DataEvent event = reader.getNextEvent();
             //if(eventcount == eventselect){
-            en.processDataEvent(event);
+            en.processDataEventUser(event);
             writer.writeEvent(event);
             //}else if(eventcount > eventselect) break;
             eventcount ++;

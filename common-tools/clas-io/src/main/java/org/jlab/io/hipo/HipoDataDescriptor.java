@@ -1,15 +1,7 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.jlab.io.hipo;
 
-import java.util.List;
 import org.jlab.io.base.DataDescriptor;
-import org.jlab.jnp.hipo.data.HipoNodeType;
 import org.jlab.jnp.hipo4.data.Schema;
-
 
 /**
  *
@@ -20,18 +12,16 @@ public class HipoDataDescriptor implements DataDescriptor {
     private  Schema hipoSchema = null;
     
     public HipoDataDescriptor(){
-
     }
      
     public HipoDataDescriptor(Schema schema){
-        //this.init(schema);
         hipoSchema = schema;
     }
     
     public final void init(Schema schema){
-       // hipoSchema.copy(schema);
     }
     
+    @Override
     public void init(String s) {
         hipoSchema = Schema.fromJsonString(s);
     }
@@ -40,7 +30,6 @@ public class HipoDataDescriptor implements DataDescriptor {
     public String[] getEntryList() {
         int elements = hipoSchema.getElements();
         String[] entries = new String[elements];
-        int counter = 0;
         for(int i = 0; i < elements; i++){
             entries[i] = hipoSchema.getElementName(i);
         }
@@ -55,7 +44,6 @@ public class HipoDataDescriptor implements DataDescriptor {
     @Override
     public boolean hasEntry(String entry) {
         return hipoSchema.hasEntry(entry);
-        //return (this.hipoSchema.getEntry(entry)!=null);
     }
 
     @Override

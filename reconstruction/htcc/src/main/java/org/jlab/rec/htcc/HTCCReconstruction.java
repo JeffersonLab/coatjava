@@ -61,9 +61,9 @@ public class HTCCReconstruction {
 
         // Place all of the hits into clusters
         List<HTCCCluster> clusters = new ArrayList();
-        HTCCCluster cluster;
-        while (!remainingHits.isEmpty() && (cluster = findCluster(remainingHits)) != null) {
-            clusters.add(cluster);
+        while (!remainingHits.isEmpty()) {
+            HTCCCluster cluster =  findCluster(remainingHits);
+            if(cluster!=null) clusters.add(cluster);
         }
 
         // Push all of the clusters into the bank and print the results

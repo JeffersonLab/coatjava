@@ -1,17 +1,19 @@
 io-services:
   reader:
-    class: org.jlab.io.clara.HipoToHipoReader
-    name: HipoToHipoReader
+    class: org.jlab.io.clara.Clas12Reader
+    name: Clas12Reader
   writer:
-    class: org.jlab.io.clara.HipoToHipoWriter
-    name: HipoToHipoWriter
+    class: org.jlab.io.clara.Clas12Writer
+    name: Clas12Writer
 services:
+  - class: org.jlab.clas.reco.DecoderEngine
+    name: DECO
   - class: org.jlab.service.eb.EBTBEngine
     name: EBTB
 configuration:
-#  io-services:
-#    writer:
-#      schema_dir: "absolute-path-to-schema-folder"
+  io-services:
+    writer:
+      schema_dir: dst
   services:
     EBTB:
       dropBanks: 'true'

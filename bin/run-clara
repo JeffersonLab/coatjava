@@ -1,0 +1,192 @@
+#!/bin/bash -f
+
+ulimit -u 49152 >& /dev/null
+set -e
+
+usage="Usage:  run-clara -y YAML [-h] [-m] [-t #] [-n #] [-o DIR] [-p PREFIX] [-c CLARA_HOME] FILE..."
+info='\nRequired Arguments:\n
+\tFILE... (input data files)\n
+\t-y   YAML file\n
+Options:\n
+\t-o   output directory (default=.)\n
+\t-p   output prefix (default=rec_)\n
+\t-c   CLARA installation (default=$CLARA_HOME)\n
+\t-t   number of threads (default=2)\n
+\t-n   number of events (default=-1)\n
+\t-m   merge output files (see dependencies below)\n
+\t-l   larger JVM memory requests\n
+\t-L   set Java log level (e.g., info, fine, etc.)\n
+\t-q   quiet output (overrides -L)\n
+\t-v   verbose output (xtrace)\n
+\t-h   print this help and exit\n\n
+Merging outputs (-m) requires hipo-utils and yq (https://github.com/mikefarah/yq).'
+
+function error() {
+    echo -e "\n$usage\n\nERROR:  $@." >&2 && exit 1
+}
+
+# Interpret command line:
+threads=2
+prefix=rec_
+java_quiet=false
+java_log_level=info
+CLARA_USER_DATA=.
+while getopts y:o:p:c:t:n:lL:qmvh opt
+do
+    case $opt in
+        y) yaml=$OPTARG ;;
+        o) CLARA_USER_DATA=$OPTARG ;;
+        p) prefix=$OPTARG ;;
+        c) CLARA_HOME=$OPTARG ;;
+        t) threads=$OPTARG && echo $threads | grep -q -E '^[0-9]+$' || error "-t must be an integer, threads" ;;
+        n) nevents="-e $OPTARG" && echo "$nevents" | grep -q -E '^-e [0-9]+$' || error "-n must be an integer, events" ;;
+        l) large=1 ;;
+        L) java_log_level=$OPTARG ;;
+        m) merge=1 ;;
+        q) java_quiet=true ;;
+        v) set -o xtrace ;;
+        h) echo -e "\n$usage" && echo -e $info && exit 0 ;;
+    esac
+done
+shift $((OPTIND-1))
+inputs=$@
+
+# Configure JVM memory settings (overridedable via $JAVA_OPTS):
+gb_init=$((threads))
+gb_max=$((threads+2))
+[ $threads -gt 1 ] && ! [ -z ${large+x} ] && gb_max=$((threads*2))
+java_opts="-Xms${gb_init}g -Xmx${gb_max}g"
+
+# Check configuration:
+[ $# -lt 1 ] && error "Input data files are required"
+[ -z ${yaml+x} ] && error "-y YAML is required"
+[ -f $yaml ] && [ -r $yaml ] || error "YAML file does not exist:  $yaml"
+[ -z ${CLARA_HOME+x} ] && error "-c must be specified or \$CLARA_HOME set"
+[ -d $CLARA_HOME ] || error "Invalid CLARA_HOME:  $CLARA_HOME"
+[ $threads -eq 0 ] && threads=`grep -c ^processor /proc/cpuinfo`
+! [ -z ${merge+x} ] && ! command -v hipo-utils >& /dev/null && error "Merging requested, but hipo-utils is not in \$PATH"
+yaml=$(cd $(dirname $yaml) && pwd)/$(basename $yaml)
+
+# Create the environment variables and directories required by CLARA:
+[ -e $CLARA_USER_DATA ] && echo "WARNING:  Using existing directory:  $CLARA_USER_DATA" >&2
+mkdir -p $CLARA_USER_DATA || error "Cannot create -o output directory: $CLARA_USER_DATA"
+mkdir -p $CLARA_USER_DATA/log $CLARA_USER_DATA/config $CLARA_USER_DATA/data/output
+export CLARA_USER_DATA=$(cd $CLARA_USER_DATA && pwd)
+export CLARA_HOME=$(cd $CLARA_HOME && pwd)
+export CLAS12DIR=$CLARA_HOME/plugins/clas12
+unset CLARA_MONITOR_FE
+
+# Generate the file for CLARA containing a list of file basenames:
+rm -f $CLARA_USER_DATA/filelist.txt && touch $CLARA_USER_DATA/filelist.txt
+for x in $inputs
+do
+    test -f $x && test -r $x || error "Invalid input file:  $x"
+    echo $(basename $x) >> $CLARA_USER_DATA/filelist.txt
+    test -f $CLARA_USER_DATA/$(basename $x) || ln -sf $(cd $(dirname $x) && pwd)/$(basename $x) $CLARA_USER_DATA
+done
+[ $(cat $CLARA_USER_DATA/filelist.txt | wc -l) -gt 0 ] || error "Found no input files"
+
+# Set some JVM options:
+JAVA_OPTS="$java_opts $JAVA_OPTS -XX:+IgnoreUnrecognizedVMOptions"
+JAVA_OPTS="$JAVA_OPTS -Djava.io.tmpdir=$CLARA_USER_DATA -Dorg.sqlite.tmpdir=$CLARA_USER_DATA"
+
+# Set logger and verbosity
+JAVA_OPTS="$JAVA_OPTS -Djava.util.logging.manager=org.jlab.logging.SplitLogManager"
+if $java_quiet; then
+  JAVA_OPTS="$JAVA_OPTS -Djava.util.logging.config.file=$CLAS12DIR/etc/logging/logging.properties"
+else
+  java_log_level_upcase=$(echo $java_log_level | tr '[:lower:]' '[:upper:]')
+  case ${java_log_level_upcase} in
+    SEVERE|WARNING|INFO|CONFIG|FINE|FINER|FINEST|ALL|OFF)
+      JAVA_OPTS="$JAVA_OPTS -D.level=${java_log_level_upcase}"
+      ;;
+    *)
+      error "unknown Java log level '$java_log_level'"
+      ;;
+  esac
+fi
+export JAVA_OPTS
+
+function get_host_ip() {
+    if command -v ip >/dev/null 2>&1
+    then
+        ip route get 1 | awk '{print $7; exit}' && return 0
+    elif command -v ifconfig >/dev/null 2>&1
+    then
+        while IFS=$': \t' read -r -a line
+        do
+            if [ -z "${line%inet}" ]
+            then
+                ip=${line[${#line[1]}>4?1:2]}
+                [ "${ip#127.0.0.1}" ]
+                echo $ip && return 0
+            fi
+        done< <(LANG=C ifconfig)
+    fi
+    return 1
+}
+function get_dpe_port() {
+    local ports
+    ports=$(seq 49152 20 65535)
+    command -v shuf >/dev/null 2>&1 && ports=$(echo "$ports" | shuf)
+    for port in $ports
+    do
+        local ctrl_port=$((port + 2))
+        if ! eval "exec 6<>/dev/tcp/127.0.0.1/$ctrl_port" 2> /dev/null
+        then
+            echo $port
+            return 0
+        fi
+    done
+    return 1
+}
+
+# Finally, run CLARA:
+if [ $(uname) == "Darwin" ]
+then
+    ip=$(get_host_ip) || error "Unknown IP address"
+    port=$(get_dpe_port) || error "Unknown DPE port"
+    set -v
+    $CLARA_HOME/bin/j_dpe \
+        --host $ip --port $port \
+        --session recon --max-cores $threads \
+        --max-sockets 5120 --report 5 \
+        2>&1 | tee $CLARA_USER_DATA/log/dpe.log &
+    set +v
+    sleep 1
+    unset JAVA_OPTS
+    set -v
+    $CLARA_HOME/bin/clara-orchestrator \
+        -F -f ${ip}%${port}_java -s recon \
+            -i $CLARA_USER_DATA -o $CLARA_USER_DATA -z $prefix \
+            -p $threads -t $threads $nevents \
+            $yaml $CLARA_USER_DATA/filelist.txt
+    set +v
+else
+    set -v
+    $CLARA_HOME/lib/clara/run-clara \
+    -i $CLARA_USER_DATA \
+    -o $CLARA_USER_DATA \
+    -z $prefix \
+    -x $CLARA_USER_DATA/log \
+    -t $threads \
+    $nevents \
+    -s recon \
+    $yaml $CLARA_USER_DATA/filelist.txt
+    set +v
+fi
+
+# Merge outputs:
+if ! [ -z ${merge+x} ]
+then
+    if grep -q org.jlab.jnp.grapes $yaml >& /dev/null
+    then
+        for id in $(yq .configuration.services.*.id $yaml | sort -n | uniq)
+        do
+            hipo-utils -merge -o $CLARA_USER_DATA/$prefix$id.hipo $CLARA_USER_DATA/$prefix*$id.hipo
+        done
+    else
+        outfiles=$(sed "s#^#$CLARA_USER_DATA/$prefix#" $CLARA_USER_DATA/filelist.txt)
+        hipo-utils -merge -o $CLARA_USER_DATA/$prefix.hipo $outfiles
+    fi
+fi

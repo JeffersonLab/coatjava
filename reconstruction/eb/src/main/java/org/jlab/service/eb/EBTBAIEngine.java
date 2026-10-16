@@ -17,9 +17,15 @@ public class EBTBAIEngine extends EBEngine {
         setUsePOCA(false);
     }
 
+    public EBTBAIEngine(String outputBankPrefix) {
+        super("EBTBAI");
+        setUsePOCA(false);
+        setOutputBankPrefix(outputBankPrefix);
+    }
+
     @Override
-    public boolean processDataEvent(DataEvent de) {
-        return super.processDataEvent(de,ebScalers);
+    public boolean processDataEventUser(DataEvent de) {
+        return super.processDataEventUser(de,ebScalers);
     }
 
     @Override

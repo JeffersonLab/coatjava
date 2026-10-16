@@ -1,8 +1,89 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <FindBugsFilter>
-	<!-- Include only serious bugs (rank 1 to 16) -->
-	<Match>
-		<!--<Rank value="17" />-->
-		<Rank value="3" />
-	</Match>
+
+  <!--
+    set max rank value, where the higher the rank, the less serious the
+    bug-prone behavior:
+      - 1-4    high priority
+      - 5-9    medium priority
+      - 10-14  low priority
+      - 15-20  informational
+    FIXME:
+    At rank 8, the number of bug detections skyrockets; many of them are suppressed
+    below, but there are still many more bug detections to either fix or suppress.
+    So for now, we set the max rank to 7.
+  -->
+  <Match>
+    <Rank value="7"/>
+  </Match>
+
+  <!--
+    the following are suppressions, where we tell spotbugs to ignore
+    certain problems; these are organized by rank
+  -->
+
+  <!-- RANK 4 SUPPRESSIONS -->
+  <Match> <!-- not ours -->
+    <Bug pattern="UR_UNINIT_READ"/>
+    <Class name="eu.mihosoft.vrl.v3d.ext.openjfx.shape3d.symbolic.SymbolicPolygonMesh"/>
+  </Match>
+
+  <!-- RANK 7 SUPPRESSIONS -->
+  <Match> <!-- seems that @Nullable is no longer enough to suppress -->
+    <Bug pattern="NP_NULL_PARAM_DEREF_NONVIRTUAL"/>
+    <Class name="org.jlab.service.ltcc.LTCCHit"/>
+  </Match>
+
+  <!-- RANK 8 SUPPRESSIONS -->
+  <!-- <Match> --> <!--  the pattern `while(phi > 360) phi -= 360.0;` -->
+  <!--   <Bug pattern="FL_FLOATS_AS_LOOP_COUNTERS"/> -->
+  <!-- </Match> -->
+  <!-- <Match> --> <!-- ignore this static method hiding -->
+  <!--   <Bug pattern="HSM_HIDING_METHOD"/> -->
+  <!--   <Class name="cnuphys.splot.plot.VerticalLabelUI"/> -->
+  <!--   <Method name="createUI"/> -->
+  <!-- </Match> -->
+  <!-- <Match> --> <!-- not quite a singleton pattern -->
+  <!--   <Bug pattern="SING_SINGLETON_HAS_NONPRIVATE_CONSTRUCTOR"/> -->
+  <!--   <Class name="cnuphys.splot.plot.VerticalLabelUI"/> -->
+  <!-- </Match> -->
+  <!-- <Match> --> <!-- singleton implements Serializable; should use enum singleton pattern -->
+  <!--   <Bug pattern="SING_SINGLETON_IMPLEMENTS_SERIALIZABLE"/> -->
+  <!--   <Class name="cnuphys.lund.LundTrackDialog"/> -->
+  <!-- </Match> -->
+  <!-- <Match> --> <!-- singleton implements Serializable; should use enum singleton pattern -->
+  <!--   <Bug pattern="SING_SINGLETON_IMPLEMENTS_SERIALIZABLE"/> -->
+  <!--   <Class name="cnuphys.swim.SwimMenu"/> -->
+  <!-- </Match> -->
+  <!-- <Match> --> <!-- static method hiding of base-class DetectorResponse.readHipoEvent -->
+  <!--   <Bug pattern="HSM_HIDING_METHOD"/> -->
+  <!--   <Class name="org.jlab.clas.detector.TaggerResponse"/> -->
+  <!--   <Method name="readHipoEvent" params="org.jlab.io.base.DataEvent,String,org.jlab.detector.base.DetectorType"\> -->
+  <!-- </Match> -->
+  <!-- <Match> --> <!-- static method hiding of base-class DetectorResponse.readHipoEvent -->
+  <!--   <Bug pattern="HSM_HIDING_METHOD"/> -->
+  <!--   <Class name="org.jlab.clas.detector.ScintillatorResponse"/> -->
+  <!--   <Method name="readHipoEvent" params="org.jlab.io.base.DataEvent,String,org.jlab.detector.base.DetectorType"\> -->
+  <!-- </Match> -->
+  <!-- <Match> --> <!-- static method hiding of base-class DetectorResponse.readHipoEvent -->
+  <!--   <Bug pattern="HSM_HIDING_METHOD"/> -->
+  <!--   <Class name="org.jlab.clas.detector.CherenkovResponse"/> -->
+  <!--   <Method name="readHipoEvent" params="org.jlab.io.base.DataEvent,String,org.jlab.detector.base.DetectorType"\> -->
+  <!-- </Match> -->
+  <!-- <Match> --> <!-- static method hiding of base-class DetectorResponse.readHipoEvent -->
+  <!--   <Bug pattern="HSM_HIDING_METHOD"/> -->
+  <!--   <Class name="org.jlab.clas.detector.CalorimeterResponse"/> -->
+  <!--   <Method name="readHipoEvent" params="org.jlab.io.base.DataEvent,String,org.jlab.detector.base.DetectorType"\> -->
+  <!-- </Match> -->
+  <!-- <Match> --> <!-- since DefaultLogger may be deprecated soon; FIXME: this filter doesn't seem to work -->
+  <!--   <Class name="org.jlab.logging.DefaultLogger"/> -->
+  <!-- </Match> -->
+
+  <!-- HIGHER RANK SUPPRESSIONS -->
+  <!-- <Match> --> <!-- not worth fixing -->
+  <!--   <Class name="cnuphys.snr.ExtendedWord"/> -->
+  <!--   <Bug pattern="EQ_SELF_USE_OBJECT"/> -->
+  <!--   <Method name="equals" params="cnuphys.snr.ExtendedWord"/> -->
+  <!-- </Match> -->
+
 </FindBugsFilter>

@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.jlab.utils.system;
 
 import java.util.ArrayList;
@@ -15,10 +10,9 @@ import java.util.Map;
  * @author gavalian
  */
 public class CommandLineParser {
-       private  Map<String,CommandLineOption>  parserCommands = 
-            new LinkedHashMap<String,CommandLineOption>();
-    private  List<CommandLineOption>  currentCommand = new 
-            ArrayList<CommandLineOption>();
+
+    private  Map<String,CommandLineOption>  parserCommands = new LinkedHashMap<>();
+    private  List<CommandLineOption>  currentCommand = new ArrayList<>();
     
     public CommandLineParser(){}
     
@@ -40,8 +34,6 @@ public class CommandLineParser {
     public void parse(String[] args){
         
         if(args.length<1) return;
-        
-        
         
         if(this.parserCommands.size()==1){
             this.currentCommand.get(0).parse(args, 0);
@@ -71,22 +63,20 @@ public class CommandLineParser {
     public static class CommandLineOption {
         
         private Map<String,CommandLineItem> requiredParameters =
-                new LinkedHashMap<String,CommandLineItem>();
+                new LinkedHashMap<>();
         
         private Map<String,CommandLineItem> optionalParameters =
-                new LinkedHashMap<String,CommandLineItem>();
+                new LinkedHashMap<>();
         
         private Map<String,CommandLineItem> flagParameters = 
-                new  LinkedHashMap<String,CommandLineItem>();
+                new  LinkedHashMap<>();
         
         private Map<String,CommandLineItem> parsedParameters =
-                new LinkedHashMap<String,CommandLineItem>();
+                new LinkedHashMap<>();
         
-        private List<String>  commandInputs = new ArrayList<String>();
+        private List<String>  commandInputs = new ArrayList<>();
         
-        private Map<String,String>  commandDefinitions = new LinkedHashMap<String,String>();
-        
-        private String       listDeliminator = ":";
+        private Map<String,String>  commandDefinitions = new LinkedHashMap<>();
         
         private String command = "-run";
         
@@ -110,11 +100,9 @@ public class CommandLineParser {
         public void printCommands(){
             System.out.println();
             System.out.println(" Commands : ");
-            //for(Map.Entry<String,String> entry : );
         }
         
         public void setListDeliminator(String delim){
-            this.listDeliminator = delim;
         }
         
         public void addRequiredParameter(String par, String description){
@@ -322,7 +310,6 @@ public class CommandLineParser {
         public void   setDescription(String desc){ description = desc;}
         public boolean isRequired(){ return this.isRequired;}
         
-        
         public String  getDescriptionString(int legth, boolean isFlag){
             StringBuilder str = new StringBuilder();
             str.append("\t");
@@ -332,7 +319,6 @@ public class CommandLineParser {
             }
             return str.toString();
         }
-        
         
         public String  getItemString(int legth, boolean isFlag){
             StringBuilder str = new StringBuilder();

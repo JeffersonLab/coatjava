@@ -62,6 +62,9 @@ public class FittedHit extends Hit implements Comparable<Hit> {
     private double _tProp;
     private double _tStart;   // The event start time
     private double _Time;     //Time = TDC - tFlight - tProp - T0 - TStart
+    
+    private double _DAFWeight = -999; // Weight by DAF
+    
     /**
      * identifying outoftimehits;
      */
@@ -191,8 +194,7 @@ public class FittedHit extends Hit implements Comparable<Hit> {
             }
 
             double x = this.get_Doca() / this.get_CellSize();
-            if(event.hasBank("MC::Particle") ||
-                    event.getBank("RUN::config").getInt("run", 0) < 100 ) { // for MC use functional form put in simulation
+            if(event.hasBank("MC::Particle")) { // for MC use functional form put in simulation
                 
                 double p1 = constants0.getDoubleValue("parameter1", this.get_Sector(),this.get_Superlayer(),0);
                 double p2 = constants0.getDoubleValue("parameter2", this.get_Sector(),this.get_Superlayer(),0);
@@ -382,27 +384,28 @@ public class FittedHit extends Hit implements Comparable<Hit> {
             double deltatime_beta = 0;
             double deltadoca_beta = 0;
             
-            if(Constants.getInstance().useUSETIMETBETA()==true) {
-                deltatime_beta = calcDeltaTimeBetaTFCN(this.get_Time(), tab, beta);
-            } 
-            
-            if(event.hasBank("MC::Particle")==false) {
-                distance = tde.interpolateOnGrid(B, Math.toDegrees(ralpha), 
-                        this.getCorrectedTime(this.get_Time(), deltatime_beta), 
-                        secIdx, slIdx);
-            } else {
-                distance = tde.interpolateOnGrid(B, Math.toDegrees(ralpha), 
-                        this.getCorrectedTime(this.get_Time(), 0), 
-                        secIdx, slIdx) ;
-            }
-            //get deltadoca
-            if(Constants.getInstance().useUSETIMETBETA()==false) {
-                deltadoca_beta = calcDeltaDocaBeta(distance, tab, beta);
-            }
-            
-            distance -=deltadoca_beta;
-            this.set_DeltaTimeBeta(deltatime_beta);
-            this.set_DeltaDocaBeta(deltadoca_beta);
+//            if(Constants.getInstance().useUSETIMETBETA()==true) {
+//                deltatime_beta = calcDeltaTimeBetaTFCN(this.get_Time(), tab, beta);
+//            } 
+//            
+//            if(event.hasBank("MC::Particle")==false) {
+//                distance = tde.interpolateOnGrid(B, Math.toDegrees(ralpha), 
+//                        this.getCorrectedTime(this.get_Time(), deltatime_beta), 
+//                        secIdx, slIdx);
+//            } else {
+//                distance = tde.interpolateOnGrid(B, Math.toDegrees(ralpha), 
+//                        this.getCorrectedTime(this.get_Time(), 0), 
+//                        secIdx, slIdx) ;
+//            }
+//            //get deltadoca
+//            if(Constants.getInstance().useUSETIMETBETA()==false) {
+//                deltadoca_beta = calcDeltaDocaBeta(distance, tab, beta);
+//            }
+//            
+//            distance -=deltadoca_beta;
+            //this.set_DeltaTimeBeta(deltatime_beta);
+            //this.set_DeltaDocaBeta(deltadoca_beta);
+            distance = tde.interpolateOnGrid(B, Math.toDegrees(ralpha), beta, this.get_Time(), secIdx, slIdx);
             
         }
      
@@ -1037,13 +1040,30 @@ public class FittedHit extends Hit implements Comparable<Hit> {
         return beta;
     }
     
+    /**
+     * @return _DAFWeight
+     */
+    public double getDAFWeight() {
+        return _DAFWeight;
+    }
+
+    /**
+     * @param weight the _DAFWeight to set
+     */
+    public void setDAFWeight(double weight) {
+        this._DAFWeight = weight;
+    }     
+
     public void updateHitfromSV(StateVec st, DCGeant4Factory DcDetector) {
 //        this.set_Id(this.get_Id());
 //        this.set_TDC(this.get_TDC());
 //        this.set_AssociatedHBTrackID(trk.get_Id());
 //        this.set_AssociatedClusterID(this.get_AssociatedClusterID());
         this.setAssociatedStateVec(st);
-        this.set_TrkResid(this.get_Doca() * Math.signum(st.getProjectorDoca()) - st.getProjectorDoca());
+        this.set_TrkResid(this.get_Doca() * this.get_LeftRightAmb() - st.getProjectorDoca());
+        this.setDAFWeight(st.getDAFWeight());
+        //Set the first bit of TB hit status to indicate that a hit is belong to single or double
+        if(st.getIsDoubleHit() == 1) this.set_QualityFac(1);
         this.setB(st.getB());
         this.setSignalPropagTimeAlongWire(st.x(), st.y(), DcDetector);
         this.setSignalTimeOfFlight();
@@ -1092,6 +1112,7 @@ public class FittedHit extends Hit implements Comparable<Hit> {
             hitClone.set_CellSize(this.get_CellSize());
             hitClone.set_AssociatedClusterID(this.get_AssociatedClusterID());
             hitClone.set_AssociatedHBTrackID(this.get_AssociatedHBTrackID());
+            hitClone.set_IndexTDC(this.get_IndexTDC());
             hitClone.betaFlag = this.betaFlag;
             
         return hitClone;

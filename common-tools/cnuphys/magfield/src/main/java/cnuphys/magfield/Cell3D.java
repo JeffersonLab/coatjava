@@ -71,14 +71,9 @@ public class Cell3D {
 				for (int k = 0; k < 2; k++) {
 					int nn3 = _n3 + k;
 					int index = _probe.getCompositeIndex(nn1, nn2, nn3);
-					
-					if (index < 0) {
-						System.out.println();
-					}
 					c[i][j][k][0] = _probe.getB1(index);
 					c[i][j][k][1] = _probe.getB2(index);
 					c[i][j][k][2] = _probe.getB3(index);
-
 				}
 			}
 		}

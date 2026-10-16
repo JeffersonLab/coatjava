@@ -1,0 +1,108 @@
+##################################################################################
+# | Name                  | GitHub Handle    |
+# | ----                  | -------------    |
+# | Adam Hobart           | ajhobart         |
+# | Andrey Kim            | drewkenjo        |
+# | Christopher Dilks     | c-dilks          |
+# | Cole Smith            | forcar           |
+# | David Heddle          | heddle           |
+# | Eric Fuchey           | efuchey          |
+# | Felix Touchte Codjo   | ftouchte         |
+# | Florian Hauenstein    | hauenst          |
+# | Gagik Gavalian        | gavalian         |
+# | Marco Contalbrigo     | mcontalb         |
+# | Mathieu Ouillon       | mathieuouillon   |
+# | Michael Paolone       | mpaolone         |
+# | Mohammad Hattawy      | Hattawy          |
+# | Nathan Baltzell       | baltzell         |
+# | Noemie Pilleux        | N-Plx            |
+# | Pierre Chatagnon      | PChatagnon       |
+# | Rafayel Paremuzyan    | rafopar          |
+# | Raffaella De Vita     | raffaelladevita  |
+# | Silvia Niccolai       | silvianic        |
+# | Sylvester Joosten     | sly2j            |
+# | Tongtong Cao          | tongtongcao      |
+# | Veronique Ziegler     | zieglerv         |
+# | Whitney Armstrong     | whit2333         |
+##################################################################################
+
+# primary (default) maintainers
+* @baltzell @raffaelladevita @c-dilks
+
+# infrastructure
+.github/ @baltzell @raffaelladevita @c-dilks
+.gitlab-ci.yml @baltzell @raffaelladevita @c-dilks
+bin/ @baltzell @raffaelladevita @c-dilks
+docs/ @baltzell @raffaelladevita @c-dilks
+external-dependencies/ @baltzell @raffaelladevita @c-dilks
+libexec/ @baltzell @raffaelladevita @c-dilks
+
+# RG-L (ALERT)
+.gitlab-rgl.yml @whit2333
+.containers/ @whit2333
+
+# common-tools
+common-tools/clara-io/ @baltzell
+common-tools/clas-analysis/ @raffaelladevita @baltzell @zieglerv
+common-tools/clas-decay-tools/ @zieglerv
+common-tools/clas-detector/ @baltzell @raffaelladevita
+common-tools/clas-geometry/ @baltzell @raffaelladevita @zieglerv
+common-tools/clas-io/ @raffaelladevita @baltzell @gavalian @drewkenjo
+common-tools/clas-jcsg/ @drewkenjo @raffaelladevita @baltzell
+common-tools/clas-logging/ @baltzell
+common-tools/clas-math/ @zieglerv
+common-tools/clas-physics/ @raffaelladevita @baltzell @zieglerv @gavalian
+common-tools/clas-reco/ @raffaelladevita @baltzell
+common-tools/clas-tracking/ @zieglerv @raffaelladevita @tongtongcao
+common-tools/clas-utils/ @raffaelladevita @baltzell @zieglerv @gavalian
+common-tools/swim-tools/ @zieglerv @heddle @tongtongcao
+
+# coat-libs
+common-tools/coat-libs/ @raffaelladevita @baltzell @c-dilks
+
+# common-tools / cnuphys
+common-tools/cnuphys/ @heddle
+
+# reconstruction
+reconstruction/ai/ @baltzell @tongtongcao
+reconstruction/alert/ @baltzell @mathieuouillon @mpaolone @efuchey @whit2333 @ftouchte @N-Plx
+reconstruction/band/ @hauenst
+reconstruction/bg/ @baltzell @raffaelladevita
+reconstruction/calib/ @raffaelladevita
+reconstruction/cnd/ @PChatagnon @ajhobart @silvianic
+reconstruction/cvt/ @zieglerv @raffaelladevita
+reconstruction/dc/ @zieglerv @tongtongcao @hauenst
+reconstruction/eb/ @baltzell @raffaelladevita
+reconstruction/ec/ @forcar @gavalian
+reconstruction/fmt/ @zieglerv @raffaelladevita
+reconstruction/ft/ @raffaelladevita
+reconstruction/htcc/ @raffaelladevita @baltzell @zieglerv
+reconstruction/ltcc/ @raffaelladevita @baltzell @zieglerv @sly2j
+reconstruction/mc/ @baltzell @rafopar
+reconstruction/mltn/ @gavalian
+reconstruction/postproc/ @baltzell
+reconstruction/raster/ @raffaelladevita @N-Plx
+reconstruction/recoil/ @silvianic
+reconstruction/rich/ @drewkenjo @mcontalb
+reconstruction/rtpc/ @mathieuouillon @Hattawy
+reconstruction/swaps/ @baltzell @raffaelladevita
+reconstruction/tof/ @zieglerv @raffaelladevita
+reconstruction/uber/ @baltzell @raffaelladevita
+reconstruction/urwt/ @raffaelladevita @tongtongcao
+reconstruction/vtx/ @zieglerv
+
+# etc
+etc/bankdefs/ @baltzell @raffaelladevita @c-dilks
+etc/data/ @baltzell
+etc/data/nnet/ @baltzell @tongtongcao @c-dilks
+etc/ejml/ @raffaelladevita @gavalian
+etc/logging/ @baltzell
+etc/nnet/ @gavalian
+etc/services/ @baltzell @raffaelladevita @zieglerv
+
+# validation
+validation/ @baltzell @raffaelladevita @c-dilks
+
+# all POM files
+### NOTE: exceptions and specific files/overrides must be listed last
+**/pom.xml @baltzell @raffaelladevita @c-dilks

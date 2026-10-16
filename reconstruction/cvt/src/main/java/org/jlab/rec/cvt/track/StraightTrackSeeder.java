@@ -219,7 +219,8 @@ public class StraightTrackSeeder {
     
 
     List<Seed> BMTmatches = new ArrayList<>();
-    public List<Seed> findSeed(List<Cross> svt_crosses, List<Cross> bmt_crosses, boolean isSVTOnly) {
+    public List<Seed> findSeed(List<Cross> svt_crosses, List<Cross> bmt_crosses, boolean isSVTOnly, 
+            double xb, double yb) {
         BMTmatches.clear();
         seedScan.clear() ;
         List<Seed> seedlist = new ArrayList<>();
@@ -302,7 +303,7 @@ public class StraightTrackSeeder {
             List<Cross> seedcrs = mseed.getCrosses();
             Track cand = null;
             if(seedcrs.size()>=3)
-                cand = fitSeed(seedcrs, 5, false);
+                cand = fitSeed(seedcrs, 5, false, xb, yb);
             if (cand != null) {
                 Seed seed = new Seed();
                 seed.setCrosses(seedcrs);
@@ -319,7 +320,7 @@ public class StraightTrackSeeder {
                     for (Seed bseed : BMTmatches) {
                         Collections.sort(bseed.getCrosses());
                         //refit using the BMT
-                        Track bcand = fitSeed(bseed.getCrosses(), 5, false);
+                        Track bcand = fitSeed(bseed.getCrosses(), 5, false, xb, yb);
                         if (bcand != null) {
                             seed = new Seed();
                             seed.setCrosses(bseed.getCrosses());
@@ -373,7 +374,7 @@ public class StraightTrackSeeder {
     private final List<Cross> SVTCrosses = new ArrayList<>();
     
     public Track fitSeed(List<Cross> VTCrosses, int fitIter, 
-            boolean originConstraint) {
+            boolean originConstraint, double xb, double yb) {
         double chisqMax = Double.POSITIVE_INFINITY;
         
         Track cand = null;
@@ -476,7 +477,7 @@ public class StraightTrackSeeder {
             //if(shift==0)
 //            if(i==0) System.out.println();
 //            System.out.println(fitTrk.getChi2()[0] + " " + chisqMax + " " + Constants.CIRCLEFIT_MAXCHI2);
-            cand.update_Crosses(-1);
+            cand.update_Crosses(-1, xb, yb);
             if (fitTrk.getChi2()[0] < chisqMax) {
                 chisqMax = fitTrk.getChi2()[0];
 //                if(chisqMax<Constants.CIRCLEFIT_MAXCHI2)

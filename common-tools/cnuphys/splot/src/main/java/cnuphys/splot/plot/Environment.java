@@ -95,7 +95,7 @@ public final class Environment {
 	 * 
 	 * @return the singleton object.
 	 */
-	public static Environment getInstance() {
+	public static synchronized Environment getInstance() {
 		if (instance == null) {
 			instance = new Environment();
 		}

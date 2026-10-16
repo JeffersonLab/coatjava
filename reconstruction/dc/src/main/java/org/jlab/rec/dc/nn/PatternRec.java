@@ -9,10 +9,12 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.jlab.detector.geant4.v2.DCGeant4Factory;
+import org.jlab.rec.dc.Constants;
 import org.jlab.rec.dc.cluster.Cluster;
 import org.jlab.rec.dc.cluster.ClusterCleanerUtilities;
 import org.jlab.rec.dc.cluster.ClusterFinder;
 import org.jlab.rec.dc.cluster.ClusterFitter;
+import org.jlab.rec.dc.cluster.ClusterFitter.CoordSys;
 import org.jlab.rec.dc.cluster.FittedCluster;
 import org.jlab.rec.dc.cross.Cross;
 import org.jlab.rec.dc.cross.CrossList;
@@ -83,8 +85,10 @@ public class PatternRec {
                                     s.get_Region() == r.get(ri).get_Region() &&
                                     s.associatedCrossId == r.get(ri).associatedCrossId &&
                                     r.get(ri).associatedCrossId != -1) {
-                                if (s.get_Superlayer() % 2 == missingSL % 2)
+                                if (s.get_Superlayer() % 2 == missingSL % 2){
                                     Segs2Road.add(s);
+                                    break;
+                                }
                             }
                         }
                     }
@@ -110,7 +114,7 @@ public class PatternRec {
             if(entry.getValue().size()==3)
                 crossList.add(entry.getValue()); 
             for(Cross c : entry.getValue()) 
-                LOGGER.log(Level.FINE, "AI"+c.printInfo()+c.get_Segment1().printInfo()+c.get_Segment2().printInfo());
+                LOGGER.log(Level.FINEST, "AI"+c.printInfo()+c.get_Segment1().printInfo()+c.get_Segment2().printInfo());
         }
         return crossList;
     }
@@ -139,15 +143,28 @@ public class PatternRec {
         while(itr.hasNext()) {
             Map.Entry<Integer, ArrayList<Hit>> entry = itr.next(); 
              
-            if(entry.getValue().size()>=20) {// 4 layers per superlayer, 5 out of six superlayer tracking
-                // find clusters
-                 //fill array of hit
-                clf.fillHitArray(entry.getValue(), 0);        //find clumps of hits init
-                List<Cluster> clusters = clf.findClumps(entry.getValue(), ct);
+            if(entry.getValue().size()>=15) {// 3 or 4 layers per superlayer, 5 out of six superlayer tracking
+                // Construct clusters
+                Map<Integer, Cluster> clusterMap = new HashMap<>();
+                for(Hit hit : entry.getValue()){
+                    int index = hit.NNClusId;
+                    if(clusterMap.get(index)==null) { // if the list not yet created make it
+                        clusterMap.put(index, new Cluster(hit.get_Sector(), hit.get_Superlayer(), index)); 
+                        clusterMap.get(index).add(hit); // append hit
+                    } else {
+                        clusterMap.get(index).add(hit); // append hit
+                    }
+                }
+                List<Cluster> clusters = new ArrayList();
+                for(Cluster clus : clusterMap.values()){
+                    Collections.sort(clus);
+                    clusters.add(clus);
+                }
                 for (Cluster clus : clusters) {
                     FittedCluster fclus = new FittedCluster(clus);
                     clus.set_Id(clus.get(0).NNClusId);
-                    if (clus != null && clus.size() >= 4 ) { //4 layers per superlayer
+                    if (clus != null && ((!ct.isExceptionalCluster(clus) && clus.size() >= Constants.DC_MIN_NLAYERS) || 
+                    (ct.isExceptionalCluster(clus) && clus.size() >= Constants.DC_MIN_NLAYERS-1)) ) { // 3 or 4 layers per superlayer
                         fclus.set_Id(clus.get(0).NNClusId); 
                         // update the hits
                         for (FittedHit fhit : fclus) {
@@ -156,7 +173,7 @@ public class PatternRec {
                             fhit.updateHitPosition(DcDetector); 
                         }
                 
-                        cf.SetFitArray(fclus, "TSC"); 
+                        cf.SetFitArray(fclus, CoordSys.TSC); 
                         cf.Fit(fclus, true); 
                         cf.SetResidualDerivedParams(fclus, false, false, DcDetector); //calcTimeResidual=false, resetLRAmbig=false, local= false
 
@@ -167,7 +184,7 @@ public class PatternRec {
                             fhit.set_AssociatedClusterID(fclus.get_Id());
                             fhit.set_AssociatedHBTrackID(entry.getKey());
                         }
-                        cf.SetFitArray(fclus, "TSC");
+                        cf.SetFitArray(fclus, org.jlab.rec.dc.cluster.ClusterFitter.CoordSys.TSC);
                         cf.Fit(fclus, false);
                         cf.SetSegmentLineParameters(fclus.get(0).get_Z(), fclus);
                         

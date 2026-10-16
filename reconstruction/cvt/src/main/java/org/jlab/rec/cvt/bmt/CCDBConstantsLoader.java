@@ -224,13 +224,15 @@ public class CCDBConstantsLoader {
         gemcCenter.rotateY(Math.toRadians(gemcRot.y()));
         gemcCenter.rotateX(Math.toRadians(gemcRot.x()));
         gemcShift.translateXYZ(-gemcCenter.x(), -gemcCenter.y(), -gemcCenter.z());
+        BMTConstants.TOPOSITION = new Transformation3D();
+        BMTConstants.TOPOSITION.translateXYZ(xpos+gemcShift.x(), ypos+gemcShift.y(), zpos+gemcShift.z());
         for (int row = 0; row<NLAYERS*NSECTORS; row++) {
             int sector = dbprovider.getInteger("/geometry/cvt/mvt/alignment/sector", row);
             int layer  = dbprovider.getInteger("/geometry/cvt/mvt/alignment/layer", row);
             Point3D shift = new Point3D(dbprovider.getDouble("/geometry/cvt/mvt/alignment/deltaX", row),
                                         dbprovider.getDouble("/geometry/cvt/mvt/alignment/deltaY", row),
                                         dbprovider.getDouble("/geometry/cvt/mvt/alignment/deltaZ", row)); 
-            shift.translateXYZ(xpos+gemcShift.x(), ypos+gemcShift.y(), zpos+gemcShift.z());
+            BMTConstants.TOPOSITION.apply(shift);
             Vector3D rot = new Vector3D(dbprovider.getDouble("/geometry/cvt/mvt/alignment/rotX", row)+Math.toRadians(gemcRot.x()),
                                         dbprovider.getDouble("/geometry/cvt/mvt/alignment/rotY", row)+Math.toRadians(gemcRot.y()),
                                         dbprovider.getDouble("/geometry/cvt/mvt/alignment/rotZ", row)+Math.toRadians(gemcRot.z())); 

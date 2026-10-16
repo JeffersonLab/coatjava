@@ -111,7 +111,7 @@ if (isForwardTagger) {
         pgen2.setRange(
         3.0,  8.0,
         2.5,  4.5,
-      -10.0, 10.0);   
+      110.0, 130.0);   
     }
     else if (pid==-22 || pid==-211 || pid==-2212 || pid==-321) {
         // electron in FT

@@ -44,7 +44,6 @@ public class FTTRKConstantsLoader {
         public static synchronized void Load(int run, String var) {
 
             // get constants from database table
-            System.out.println(" LOADING CONSTANTS ");
 //	    if(CSTLOADED == true) return null;
             dbprovider = new DatabaseConstantProvider(run, var); // reset using the new variation
 				
@@ -70,7 +69,6 @@ public class FTTRKConstantsLoader {
             }
             
             CSTLOADED = true;
-            System.out.println("SUCCESFULLY LOADED FTTRK GEOMETRY CONSTANTS");
             
             SideHalfstrips =  (Nstrips -2*Longstrips)/4;      // 128
             InnerHole = (double)(SideHalfstrips)*Pitch;       // 7.168 cm, exceeds Beamhole by 0.125 cm - reference as minimum radius
@@ -156,7 +154,6 @@ public class FTTRKConstantsLoader {
                     stripsY[j+2][i][1] += tY2;
                 }
             }
-            System.out.println("*****    FTTRK constants loaded");
         }
   
         private static int getLocalRegionY(int strip){

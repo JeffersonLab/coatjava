@@ -1,12 +1,10 @@
 package eb;
 
 import java.io.File;
-import org.junit.Test;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.List;
 import java.util.ArrayList;
-import static org.junit.Assert.*;
 
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
@@ -15,14 +13,12 @@ import org.jlab.io.hipo.HipoDataSource;
 import org.jlab.detector.base.DetectorType;
 import org.jlab.clas.pdg.PDGDatabase;
 
-import org.jlab.analysis.math.ClasMath;
+import org.jlab.clas.detector.DetectorResponse;
 
 /**
  *
  * Analyze EB efficiencies based on Joseph's 2-particle test events.
  *
- * TODO:  Inherit process/checkResults to subclasses for FD/CD/FT
- * TODO:  Write a more general purpose test based on MC::Particle bank.
  * TODO:  Rewrite this from scratch.  Meanwhile, can't live without it.
  * 
  * @author baltzell
@@ -78,10 +74,29 @@ public class EBTwoTrackTest {
     Map <Integer,List<Integer>> recSciMap=new HashMap<Integer,List<Integer>>();
     Map <Integer,List<Integer>> recTrkMap=new HashMap<Integer,List<Integer>>();
 
-    @Test
-    public void main() {
+    static void assertEquals(boolean a, boolean b) {
+        if (a!=b) {
+            System.err.println("Assertion Failed!");
+            System.exit(3);
+        }
+    }
+    static void assertEquals(String msg, int a, int b) {
+        if (a!=b) {
+            System.err.println(msg);
+            System.exit(3);
+        }
+    }
+
+    public static void main(String[] args) {
+        EBTwoTrackTest t = new EBTwoTrackTest();
+        t.go();
+    }
+
+    public void go() {
+
         String fileName=System.getProperty("INPUTFILE");
         File file = new File(fileName);
+
         if (!file.exists() || file.isDirectory()) {
             System.err.println("Cannot find input file.");
             assertEquals(false, true);
@@ -155,9 +170,7 @@ public class EBTwoTrackTest {
             hadronPDG=45;
         }
         else if (ss.equals("electrongammaFT")) {
-            isForwardTagger=true;
-            ftPDG=22;
-            hadronPDG=11;
+            hadronPDG=22;
         }
         else udfFileType=true;
 
@@ -541,7 +554,7 @@ public class EBTwoTrackTest {
             if (pid==hadronPDG) {
                 final double px=recPartBank.getFloat("px",ii);
                 final double py=recPartBank.getFloat("py",ii);
-                final int sector = ClasMath.getSectorFromPhi(Math.atan2(py,px));
+                final int sector = DetectorResponse.getSector(Math.atan2(py,px));
                 nHadronsSector[sector-1]++;
                 if (sector==hadronSector || (pid==11 && sector==electronSector)) {
                     nFtFd++;
@@ -588,7 +601,7 @@ public class EBTwoTrackTest {
                 for (int ii=0; ii<ctrkBank.rows(); ii++) {
                     if (ctrkBank.getInt("q",ii)>0) {
                         final double phi0 = ctrkBank.getFloat("phi0",ii);
-                        final int sector = ClasMath.getSectorFromPhi(phi0);
+                        final int sector = DetectorResponse.getSector(phi0);
                         if (sector == hadronSector)
                             nPosTracks++;
                     }
@@ -632,7 +645,7 @@ public class EBTwoTrackTest {
                     px = recSciBank.getFloat("x",recSciMap.get(ii).get(0));
                     py = recSciBank.getFloat("y",recSciMap.get(ii).get(0));
                 }
-                final int sector = ClasMath.getSectorFromPhi(Math.atan2(py,px));
+                final int sector = DetectorResponse.getSector(Math.atan2(py,px));
 
                 if (pid==11 && sector==electronSector) {
                     if (!foundElectron) nElectronsSector[sector-1]++;

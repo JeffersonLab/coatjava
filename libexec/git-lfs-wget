@@ -1,0 +1,24 @@
+#!/bin/bash
+
+[ "$#" -ne 2 ] && echo 'Usage:  git-lfs-wget URI subpath' && exit 1
+
+subdir=$(echo $1 | awk -F/ '{print$NF}' | awk -F. '{print$1}')
+
+if [ -d $subdir ]
+then
+    if ! [ -e $subdir/.git ]
+    then
+        echo "ERROR:  $subdir already exists but is not a git repo."
+        exit 1
+    fi
+else
+    GIT_LFS_SKIP_SMUDGE=1 git clone $1
+    git lfs install --skip-smudge
+fi
+
+cd $subdir
+
+git config lfs.fetchinclude "$2"
+
+git lfs pull
+

@@ -19,7 +19,7 @@ import org.jlab.detector.volume.G4World;
  */
 public abstract class Geant4Factory {
 
-    protected G4World motherVolume = new G4World("fc");
+    protected G4World motherVolume = new G4World("root");
     protected final HashMap<String, String> properties = new HashMap<>();
 
     @Override

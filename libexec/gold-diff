@@ -1,0 +1,16 @@
+#!/bin/bash
+
+[ "$#" -ne 2 ] && echo 'Usage:  gold-diff dir1 dir2' && exit 1
+
+a=$1
+b=$2
+
+for x in $a/*.hipo
+do
+    y=$b/$(basename $x)
+    stub=$(basename $x)
+    stub=${stub%%.*}
+    hipo-diff -q 1 -s 0,1,2 -n 10000 $x $y >& $stub.log &
+done
+
+wait

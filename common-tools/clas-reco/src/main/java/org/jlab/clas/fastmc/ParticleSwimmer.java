@@ -1,11 +1,5 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.jlab.clas.fastmc;
 
-import cnuphys.magfield.CompositeField;
 import cnuphys.magfield.MagneticFieldInitializationException;
 import cnuphys.magfield.MagneticFields;
 import cnuphys.magfield.Solenoid;
@@ -15,7 +9,6 @@ import cnuphys.swim.DefaultListener;
 import cnuphys.swim.DefaultSwimStopper;
 import cnuphys.swim.SwimTrajectory;
 import cnuphys.swim.Swimmer;
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.logging.Level;
 import java.util.logging.Logger;

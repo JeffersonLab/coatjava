@@ -40,10 +40,11 @@ public class CVTReconstruction {
     
     public List<ArrayList<Hit>> readHits(DataEvent event, IndexedTable svtStatus, 
             IndexedTable bmtStatus, IndexedTable bmtTime, 
-            IndexedTable bmtStripVoltage, IndexedTable bmtStripVoltageThresh) {
+            IndexedTable bmtStripVoltage, IndexedTable bmtStripVoltageThresh,
+            IndexedTable adcStatus) {
         
         HitReader hitRead = new HitReader();
-        hitRead.fetch_SVTHits(event, -1, -1, svtStatus);
+        hitRead.fetch_SVTHits(event, -1, -1, svtStatus, adcStatus);
         if(Constants.getInstance().svtOnly==false)
           hitRead.fetch_BMTHits(event, swimmer, bmtStatus, bmtTime, 
                   bmtStripVoltage, bmtStripVoltageThresh);
@@ -138,10 +139,14 @@ public class CVTReconstruction {
         double[] xyBeam = new double[2];
         xyBeam[0] = beamPos.getDoubleValue("x_offset", 0, 0, 0)*10;
         xyBeam[1] = beamPos.getDoubleValue("y_offset", 0, 0, 0)*10;
+        if(Constants.getInstance().seedingDebugMode) 
+            System.out.println("BEAM SPOT INFO.  (xB, yB) = ("+xyBeam[0]+", "+xyBeam[1]+") mm");
         if(event.hasBank("RASTER::position")){
             DataBank raster_bank = event.getBank("RASTER::position");
             xyBeam[0] += raster_bank.getFloat("x", 0)*10;
             xyBeam[1] += raster_bank.getFloat("y", 0)*10;
+            if(Constants.getInstance().seedingDebugMode) 
+                System.out.println("BEAM SPOT W. RASTER  (xB, yB) = ("+xyBeam[0]+", "+xyBeam[1]+") mm");
         }
         return xyBeam;
     }

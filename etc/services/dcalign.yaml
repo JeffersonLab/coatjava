@@ -1,11 +1,13 @@
 io-services:
   reader:
-    class: org.jlab.io.clara.HipoToHipoReader
-    name: HipoToHipoReader
+    class: org.jlab.io.clara.Clas12Reader
+    name: Clas12Reader
   writer:
-    class: org.jlab.io.clara.HipoToHipoWriter
-    name: HipoToHipoWriter
+    class: org.jlab.io.clara.Clas12Writer
+    name: Clas12Writer
 services:
+  - class: org.jlab.clas.reco.DecoderEngine
+    name: DECO
   - class: org.jlab.clas.swimtools.MagFieldsEngine
     name: MAGFIELDS
   - class: org.jlab.rec.ft.cal.FTCALEngine
@@ -51,13 +53,15 @@ services:
     name: RICH
   - class: org.jlab.service.rtpc.RTPCEngine
     name: RTPC
+  - class: org.jlab.calibration.service.CalibBanksEngine
+    name: CALIB
 configuration:
   global:
     variation: rgb_spring2019
 #      timestamp: 12/31/2020-00:00:00
-#  io-services:
-#    writer:
-#      schema_dir: "absolute-path-to-distribution/etc/bankdefs/hipo4/singles/dcalign"
+  io-services:
+    writer:
+      schema_dir: dcalign
   services:
     MAGFIELDS:
       magfieldSolenoidMap: Symm_solenoid_r601_phi1_z1201_13June2018.dat

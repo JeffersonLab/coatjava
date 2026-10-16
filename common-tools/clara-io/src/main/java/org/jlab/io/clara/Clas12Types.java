@@ -4,6 +4,7 @@ import org.jlab.clara.base.error.ClaraException;
 import org.jlab.clara.engine.ClaraSerializer;
 import org.jlab.clara.engine.EngineDataType;
 import org.jlab.jnp.hipo4.data.Event;
+import org.jlab.jnp.hipo4.data.DataFrame;
 
 import java.nio.ByteBuffer;
 
@@ -29,9 +30,26 @@ public final class Clas12Types {
         }
     }
 
+    private static class FrameSerializer implements ClaraSerializer {
+
+        @Override
+        public ByteBuffer write(Object o) throws ClaraException {
+            DataFrame stream = (DataFrame) o;
+            return stream.getFrameBuffer();
+        }
+
+        @Override
+        public Object read(ByteBuffer bb) throws ClaraException {
+            return new DataFrame(bb);
+        }
+    }
+
     public static final EngineDataType EVIO =
             new EngineDataType("binary/data-evio", EngineDataType.BYTES.serializer());
 
     public static final EngineDataType HIPO =
             new EngineDataType("binary/data-hipo", new HipoSerializer());
+
+    public static final EngineDataType HIPOFRAME = 
+            new EngineDataType("binary/data-hipo-frame", new FrameSerializer());
 }
