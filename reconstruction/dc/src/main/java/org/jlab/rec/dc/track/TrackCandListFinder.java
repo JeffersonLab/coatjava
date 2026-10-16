@@ -290,15 +290,9 @@ public class TrackCandListFinder {
                         stateVec.getZ(),
                         DcDetector, dcSwim);
                 
-                if(cand.get_Vtx0() != null){
-                    Point3D VTCS = cand.get(cand.size()-1).getCoordsInTiltedSector(cand.get_Vtx0().x(), cand.get_Vtx0().y(), cand.get_Vtx0().z());
-                    finalSV.k = measSurfaces.size()-1;
-                    kFZRef.finalStateVec = finalSV;                    
-                    double deltaPathToVtx =  kFZRef.getDeltaPathToVtx(sector, VTCS.z());
-
-                    List<org.jlab.rec.dc.trajectory.StateVec> kfStateVecsAlongTrajectory = setKFStateVecsAlongTrajectory(kFZRef, deltaPathToVtx);
+                List<org.jlab.rec.dc.trajectory.StateVec> kfStateVecsAlongTrajectory = setKFStateVecsAlongTrajectory(kFZRef);
                     cand.setStateVecs(kfStateVecsAlongTrajectory);                                  
-                }
+
 
                 if (kFZRef.chi2 < Constants.MAXCHI2) cands.add(cand);                                              
             }
@@ -940,6 +934,8 @@ public class TrackCandListFinder {
                         continue;
                     }
 
+                    List<org.jlab.rec.dc.trajectory.StateVec> kfStateVecsAlongTrajectory = setKFStateVecsAlongTrajectory(kFZRef);
+
                     StateVec fn = new StateVec();
                     if (!kFZRef.setFitFailed && kFZRef.finalStateVec != null) {
                         fn.set(kFZRef.finalStateVec.x, kFZRef.finalStateVec.y, kFZRef.finalStateVec.tx, kFZRef.finalStateVec.ty);
@@ -958,14 +954,7 @@ public class TrackCandListFinder {
                             cand.set_FitConvergenceStatus(kFZRef.ConvStatus);
                             cand.set_Id(cands.size() + 1);
                             cand.set_CovMat(kFZRef.finalStateVec.CM);
-                            
-                            if (cand.get_Vtx0() != null) {
-                                Point3D VTCS = cand.get(cand.size()-1).getCoordsInTiltedSector(cand.get_Vtx0().x(), cand.get_Vtx0().y(), cand.get_Vtx0().z());
-                                double deltaPathToVtx =  kFZRef.getDeltaPathToVtx(cand.get(cand.size()-1).get_Sector(), VTCS.z());
-                            
-                                List<org.jlab.rec.dc.trajectory.StateVec> kfStateVecsAlongTrajectory = setKFStateVecsAlongTrajectory(kFZRef, deltaPathToVtx);
                                 cand.setStateVecs(kfStateVecsAlongTrajectory);
-                            }
 
                             // add candidate to list of tracks	
                             cands.add(cand);
@@ -1100,6 +1089,7 @@ public class TrackCandListFinder {
                         kFZRef.init(measSurfaces, initSV);						
 						
                         kFZRef.runFitter();
+                        List<org.jlab.rec.dc.trajectory.StateVec> kfStateVecsAlongTrajectory = setKFStateVecsAlongTrajectory(kFZRef);
                         
                         if (kFZRef.finalStateVec != null) {
                             if (kFZRef.chi2 < Constants.MAXCHI2) {
@@ -1120,6 +1110,7 @@ public class TrackCandListFinder {
                                 cand.set_FitConvergenceStatus(kFZRef.ConvStatus);
 
                                 cand.set_CovMat(kFZRef.finalStateVec.CM);                                 
+                                cand.setStateVecs(kfStateVecsAlongTrajectory);                                    							
                                 
                                 cand.setFinalStateVec(fitStateVec);
                                 cand.set_Id(cands.size() + 1);
@@ -1128,14 +1119,6 @@ public class TrackCandListFinder {
                                         fitStateVec.getZ(),
                                         DcDetector, dcSwim);
 
-                                if (cand.get_Vtx0() != null) {
-                                    Point3D VTCS = cand.get(cand.size()-1).getCoordsInTiltedSector(cand.get_Vtx0().x(), cand.get_Vtx0().y(), cand.get_Vtx0().z());
-                                    double deltaPathToVtx =  kFZRef.getDeltaPathToVtx(cand.get(cand.size()-1).get_Sector(), VTCS.z());
-                                
-                                    List<org.jlab.rec.dc.trajectory.StateVec> kfStateVecsAlongTrajectory = setKFStateVecsAlongTrajectory(kFZRef, deltaPathToVtx);
-                                    cand.setStateVecs(kfStateVecsAlongTrajectory);
-                                }
-                                
                                 // add candidate to list of tracks
                                 if (cand.fit_Successful = true) {
                                     cands.add(cand);                                    
@@ -1151,7 +1134,7 @@ public class TrackCandListFinder {
         return cands;
     }
     
-    public List<org.jlab.rec.dc.trajectory.StateVec> setKFStateVecsAlongTrajectory(KFitter kFZRef, double deltaPathToVtx) {
+    public List<org.jlab.rec.dc.trajectory.StateVec> setKFStateVecsAlongTrajectory(KFitter kFZRef) {
     	List<org.jlab.rec.dc.trajectory.StateVec> kfStateVecsAlongTrajectory = new ArrayList<>();
     	
     	for(int i = 0; i < kFZRef.kfStateVecsAlongTrajectory.size(); i++) {
@@ -1159,7 +1142,7 @@ public class TrackCandListFinder {
             org.jlab.rec.dc.trajectory.StateVec sv = new org.jlab.rec.dc.trajectory.StateVec(svc.x, svc.y, svc.tx, svc.ty);
             sv.setZ(svc.z);
             sv.setB(svc.B);
-            sv.setPathLength(svc.getPathLength() + deltaPathToVtx);  // Transition for the starting point from the final point at the last layer to vertex
+            sv.setPathLength(svc.getPathLength());  
             sv.setProjector(svc.getProjector());
             sv.setProjectorDoca(svc.getProjectorDoca());
             kfStateVecsAlongTrajectory.add(sv);
@@ -1168,7 +1151,7 @@ public class TrackCandListFinder {
     	return kfStateVecsAlongTrajectory;
     }
     
-        public List<org.jlab.rec.dc.trajectory.StateVec> setKFStateVecsAlongTrajectory(KFitterStraight kFZRef, double deltaPathToVtx) {
+        public List<org.jlab.rec.dc.trajectory.StateVec> setKFStateVecsAlongTrajectory(KFitterStraight kFZRef) {
     	List<org.jlab.rec.dc.trajectory.StateVec> kfStateVecsAlongTrajectory = new ArrayList<>();
     	
     	for(int i = 0; i < kFZRef.kfStateVecsAlongTrajectory.size(); i++) {
@@ -1176,7 +1159,7 @@ public class TrackCandListFinder {
             org.jlab.rec.dc.trajectory.StateVec sv = new org.jlab.rec.dc.trajectory.StateVec(svc.x, svc.y, svc.tx, svc.ty);
             sv.setZ(svc.z);
             sv.setB(svc.B);
-            sv.setPathLength(svc.getPathLength() + deltaPathToVtx); // Transition for the starting point from the final point at the last layer to vertex 
+            sv.setPathLength(svc.getPathLength());  
             sv.setProjector(svc.getProjector());
             sv.setProjectorDoca(svc.getProjectorDoca());
             kfStateVecsAlongTrajectory.add(sv);
