@@ -260,13 +260,6 @@ public class Seed implements Comparable<Seed>{
 
     public boolean fit(int fitIter, double xb, double yb, double bfield) {
         
-        List<Double> X = new ArrayList<>();
-        List<Double> Y = new ArrayList<>();
-        List<Double> Z = new ArrayList<>();
-        List<Double> Rho = new ArrayList<>();
-        List<Double> ErrZ = new ArrayList<>();
-        List<Double> ErrRho = new ArrayList<>();
-        List<Double> ErrRt = new ArrayList<>();
         List<Cross> BMTCrossesC = new ArrayList<>();
         List<Cross> BMTCrossesZ = new ArrayList<>();
         List<Cross> SVTCrosses = new ArrayList<>();
@@ -302,13 +295,14 @@ public class Seed implements Comparable<Seed>{
         if (bmtCSz >= 2) {
             useSVTdipAngEst = 0;
         }
-        ((ArrayList<Double>) X).ensureCapacity(svtSz + bmtZSz);
-        ((ArrayList<Double>) Y).ensureCapacity(svtSz + bmtZSz);
-        ((ArrayList<Double>) Z).ensureCapacity(svtSz * useSVTdipAngEst + bmtCSz);
-        ((ArrayList<Double>) Rho).ensureCapacity(svtSz * useSVTdipAngEst + bmtCSz);
-        ((ArrayList<Double>) ErrZ).ensureCapacity(svtSz * useSVTdipAngEst + bmtCSz);
-        ((ArrayList<Double>) ErrRho).ensureCapacity(svtSz * useSVTdipAngEst + bmtCSz); // Try: don't use svt in dipdangle fit determination
-        ((ArrayList<Double>) ErrRt).ensureCapacity(svtSz + bmtZSz);
+
+        List<Double> X = new ArrayList<>(svtSz + bmtZSz);
+        List<Double> Y = new ArrayList<>(svtSz + bmtZSz);
+        List<Double> Z = new ArrayList<>(svtSz * useSVTdipAngEst + bmtCSz);
+        List<Double> Rho = new ArrayList<>(svtSz * useSVTdipAngEst + bmtCSz);
+        List<Double> ErrZ = new ArrayList<>(svtSz * useSVTdipAngEst + bmtCSz);
+        List<Double> ErrRho = new ArrayList<>(svtSz * useSVTdipAngEst + bmtCSz);
+        List<Double> ErrRt = new ArrayList<>(svtSz + bmtZSz);
          
         HelicalTrackFitter fitTrk = new HelicalTrackFitter();
         for (int i = 0; i < fitIter; i++) {
