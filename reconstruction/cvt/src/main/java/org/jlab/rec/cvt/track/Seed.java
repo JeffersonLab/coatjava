@@ -266,10 +266,6 @@ public class Seed implements Comparable<Seed>{
         
         double chisqMax = Double.POSITIVE_INFINITY;
 
-        int svtSz = 0;
-        int bmtZSz = 0;
-        int bmtCSz = 0;
-        
         for (Cross c : this.getCrosses()) {
             // reset cross to clear previous track settings on direction and Point
             c.reset();
@@ -283,19 +279,12 @@ public class Seed implements Comparable<Seed>{
                 BMTCrossesZ.add(c);
             }
         }
-        svtSz = SVTCrosses.size();
-        if (BMTCrossesZ != null) {
-            bmtZSz = BMTCrossesZ.size();
-        }
-        if (BMTCrossesC != null) {
-            bmtCSz = BMTCrossesC.size();
-        }
 
-        int useSVTdipAngEst = 1;
-        if (bmtCSz >= 2) {
-            useSVTdipAngEst = 0;
-        }
-
+        int svtSz = SVTCrosses.size();
+        int bmtZSz = BMTCrossesZ.size();
+        int bmtCSz = BMTCrossesC.size();
+        int useSVTdipAngEst = bmtCSz >= 2 ? 0 : 1;
+        
         List<Double> X = new ArrayList<>(svtSz + bmtZSz);
         List<Double> Y = new ArrayList<>(svtSz + bmtZSz);
         List<Double> Z = new ArrayList<>(svtSz * useSVTdipAngEst + bmtCSz);
