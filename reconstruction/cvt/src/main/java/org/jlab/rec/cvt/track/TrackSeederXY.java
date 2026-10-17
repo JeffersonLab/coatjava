@@ -4,12 +4,14 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.jlab.geom.prim.Point3D;
 import org.jlab.detector.base.DetectorType;
 import org.jlab.rec.cvt.Constants;
 import org.jlab.rec.cvt.bmt.BMTType;
 import org.jlab.rec.cvt.cross.Cross;
 import org.jlab.rec.cvt.fit.CircleFitter;
 import org.jlab.rec.cvt.fit.CircleFitPars;
+import org.jlab.rec.cvt.trajectory.Helix;
 
 public class TrackSeederXY {
     
@@ -235,17 +237,18 @@ public class TrackSeederXY {
         
         return countsvt;
     }
+    
+    // A method to calculate residual for a cross relative to a circle from fit 
     private double calcResi(double rho, double d0, double phi0, double xc, double yc) {
-        double r = Math.sqrt(xc*xc+yc*yc);
-        double par = (2. * (1. + d0 * rho) - (r * r - d0 * d0) * rho * rho) / (2. * Math.abs(1. + d0 * rho));
-        double newPathLength = Math.abs(Math.acos(par) / rho);
-        int charge = (int) Math.signum(rho);
+        Helix helix = new Helix(-d0, phi0, rho, 0, 0, 0, 0); // d0 from circular fitting is opposite to d0 in Helix
+        
+        double r = Math.sqrt(xc*xc+yc*yc);        
+        double newPathLength = helix.getPathLengthAtRadius(r);
         double alpha = -newPathLength * rho;
-
-        double x = d0 * Math.sin(phi0) + 1./rho * (Math.sin(phi0) - Math.sin(phi0 + alpha));
-        double y = -d0 * Math.cos(phi0) - 1./rho * (Math.cos(phi0) - Math.cos(phi0 + alpha));
+        
+        double[] xy = helix.getXYAtRadius(alpha); 
        
-        double res2 = ((x-xc)*(x-xc)+(y-yc)*(y-yc));
+        double res2 = ((xy[0]-xc)*(xy[0]-xc)+(xy[1]-yc)*(xy[1]-yc));
         return Math.sqrt(res2);
     }
 
