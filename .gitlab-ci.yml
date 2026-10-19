@@ -179,9 +179,9 @@ profile:
   extends: .clon
   allow_failure: true
   script:
-    - ./clara/plugins/clas12/libexec/profile -e cpu   -o _clara -- run-clara -c ./clara -y ./etc/services/rgd-clarode.yml -o tmp1 -t 16 -l $EVIOFILE
-    - ./clara/plugins/clas12/libexec/profile -e alloc -o _clara -- run-clara -c ./clara -y ./etc/services/rgd-clarode.yml -o tmp2 -t 16 -l $EVIOFILE
-    - ./clara/plugins/clas12/libexec/profile -e lock  -o _clara -- run-clara -c ./clara -y ./etc/services/rgd-clarode.yml -o tmp3 -t 16 -l $EVIOFILE
+    - ./clara/plugins/clas12/libexec/profile -e cpu   -o _clara -- run-clara -c ./clara -y ./etc/services/data-ai.yml -o tmp1 -t 16 -l $EVIOFILE
+    - ./clara/plugins/clas12/libexec/profile -e alloc -o _clara -- run-clara -c ./clara -y ./etc/services/data-ai.yml -o tmp2 -t 16 -l $EVIOFILE
+    - ./clara/plugins/clas12/libexec/profile -e lock  -o _clara -- run-clara -c ./clara -y ./etc/services/data-ai.yml -o tmp3 -t 16 -l $EVIOFILE
   artifacts:
     when: always
     expire_in: 1 week
