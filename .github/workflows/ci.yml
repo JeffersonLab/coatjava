@@ -248,7 +248,7 @@ jobs:
           tar xzf coatjava.tar.gz
       - run: ls
       - name: run test
-        run: ./bin/run-clara -y ./etc/services/rgd-clarode.yml -t 4 -n 500 -c ./clara -o ./tmp ./clas_018779.evio.00001
+        run: ./bin/run-clara -y ./etc/services/data-ai.yml -t 4 -n 500 -c ./clara -o ./tmp ./clas_018779.evio.00001
       - name: ls tmp
         run: ls -lhtr tmp
       - name: rename
