@@ -1,20 +1,5 @@
 set terminal svg size 1000,700 enhanced font 'Verdana, 14'
 
-# parse command line arguments:
-# (usage:  scaling.gpl [-m] [datafile])
-datafile = 'scaling.txt'
-if (ARGC > 0) {
-    if (ARGV[1] eq "-m") {
-        recoMutil = 1
-        set datafile separator ","
-        if (ARGC > 1) {
-            datafile = ARGV[ARGC]
-        }
-    } else {
-        datafile = ARGV[ARGC]
-    }
-}
-
 set palette maxcolors 8
 set palette defined ( \
     0 '#A6CEE3',\
@@ -57,6 +42,19 @@ set style line 35 pt 6 lt 1 lc rgb '#FB9A99' # light red
 set style line 36 pt 6 lt 1 lc rgb '#E31A1C' # dark red
 set style line 37 pt 6 lt 1 lc rgb '#FDBF6F' # light orange
 set style line 38 pt 6 lt 1 lc rgb '#FF7F00' # dark orange
+
+# parse command line arguments:
+datafile = 'scaling-clara.txt'
+if (ARGC > 0) {
+    if (ARGV[1] eq "-u") {
+        uberMode = 1
+        if (ARGC > 1) {
+            datafile = ARGV[ARGC]
+        }
+    } else {
+        datafile = ARGV[ARGC]
+    }
+}
 
 set multiplot layout 2,2
 set datafile columnheaders
