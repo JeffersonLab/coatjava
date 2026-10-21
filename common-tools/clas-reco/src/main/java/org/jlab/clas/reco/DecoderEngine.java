@@ -82,9 +82,9 @@ public class DecoderEngine implements Engine {
             }
             HipoDataEvent hipo;
             try {
-                CLASDecoder d = pool.take();
+                CLASDecoder d = pool.poll();
                 hipo = new HipoDataEvent(d.getDecodedEvent(evio),schema);
-                pool.put(d);
+                pool.offer(d);
                 output.setData("binary/data-hipo", hipo.getHipoEvent());
             } catch (Exception e) {
                 String msg = String.format("Error processing input event%n%n%s", ClaraUtil.reportException(e));

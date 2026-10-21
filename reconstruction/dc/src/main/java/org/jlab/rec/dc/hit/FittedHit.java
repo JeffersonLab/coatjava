@@ -1,7 +1,6 @@
 package org.jlab.rec.dc.hit;
 
 import eu.mihosoft.vrl.v3d.Vector3d;
-import org.jlab.clas.clas.math.FastMath;
 import org.jlab.clas.swimtools.Swimmer;
 import org.jlab.detector.geant4.v2.DCGeant4Factory;
 import org.jlab.geom.prim.Line3D;

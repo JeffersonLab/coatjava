@@ -16,7 +16,6 @@ import org.jlab.geom.prim.Vector3D;
 import org.jlab.rec.dc.Constants;
 
 import java.io.PrintWriter;
-import java.util.logging.Logger;
 import org.jlab.geom.detector.ec.ECLayer;
 import org.jlab.geom.detector.ec.ECSuperlayer;
 import org.jlab.geom.detector.fmt.FMTLayer;
@@ -32,8 +31,6 @@ import org.jlab.geom.prim.Triangle3D;
  *
  */
 public class TrajectorySurfaces {
-
-    public static Logger LOGGER = Logger.getLogger(TrajectorySurfaces.class.getName());
 
     private List<ArrayList<Surface>> detectorPlanes = new ArrayList<>();
 
@@ -62,9 +59,8 @@ public class TrajectorySurfaces {
         Constants.getInstance().Z[11]= dcDetector.getWireMidpoint(0, 5, 0, 0).z;
         Constants.getInstance().Z[12]= dcDetector.getWireMidpoint(0, 5, 5, 0).z;
         //DcDetector.getWireMidpoint(this.get_Sector()-1, this.get_Superlayer()-1, this.get_Layer()-1, this.get_Wire()-1).z;
-        
-        double d = 0;
-        Vector3D n,P;
+        Vector3D n;
+
         for(int isector =0; isector<6; isector++) {
             
             int sector = isector+1;

@@ -4,13 +4,13 @@
 
   <groupId>org.jlab.clas12.detector</groupId>
   <artifactId>clas12detector-alert</artifactId>
-  <version>14.2.0-SNAPSHOT</version>
+  <version>14.2.2-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <parent>
     <groupId>org.jlab.clas12</groupId>
     <artifactId>reconstruction</artifactId>
-    <version>14.2.0-SNAPSHOT</version>
+    <version>14.2.2-SNAPSHOT</version>
   </parent>
 
   <dependencies>
@@ -23,61 +23,56 @@
       <artifactId>commons-math3</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.apache.commons</groupId>
-      <artifactId>commons-lang3</artifactId>
-      <scope>compile</scope>
-    </dependency>
-    <dependency>
       <groupId>org.jlab.clas</groupId>
       <artifactId>clas-reco</artifactId>
-      <version>14.2.0-SNAPSHOT</version>
+      <version>14.2.2-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>org.jlab.clas</groupId>
       <artifactId>clas-io</artifactId>
-      <version>14.2.0-SNAPSHOT</version>
+      <version>14.2.2-SNAPSHOT</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.jlab.clas</groupId>
       <artifactId>clas-analysis</artifactId>
-      <version>14.2.0-SNAPSHOT</version>
+      <version>14.2.2-SNAPSHOT</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.jlab.clas</groupId>
       <artifactId>clas-tracking</artifactId>
-      <version>14.2.0-SNAPSHOT</version>
+      <version>14.2.2-SNAPSHOT</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.jlab.clas</groupId>
       <artifactId>clas-geometry</artifactId>
-      <version>14.2.0-SNAPSHOT</version>
+      <version>14.2.2-SNAPSHOT</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.jlab.clas</groupId>
       <artifactId>clas-utils</artifactId>
-      <version>14.2.0-SNAPSHOT</version>
+      <version>14.2.2-SNAPSHOT</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.jlab.clas</groupId>
       <artifactId>clas-detector</artifactId>
-      <version>14.2.0-SNAPSHOT</version>
+      <version>14.2.2-SNAPSHOT</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.jlab.clas</groupId>
       <artifactId>clas-physics</artifactId>
-      <version>14.2.0-SNAPSHOT</version>
+      <version>14.2.2-SNAPSHOT</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.jlab.clas</groupId>
       <artifactId>swim-tools</artifactId>
-      <version>14.2.0-SNAPSHOT</version>
+      <version>14.2.2-SNAPSHOT</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
@@ -137,7 +132,7 @@
             </goals>
             <configuration>
               <outputDirectory>${project.build.directory}/lib/services</outputDirectory>
-              <includeGroupIds>ai.djl</includeGroupIds>
+              <includeGroupIds>ai.djl,com.google.code.gson</includeGroupIds>
             </configuration>
           </execution>
         </executions>

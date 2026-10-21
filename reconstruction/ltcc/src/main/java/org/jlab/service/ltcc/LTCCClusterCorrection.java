@@ -5,8 +5,6 @@
  */
 package org.jlab.service.ltcc;
 
-//import org.jMath.Vector.threeVec;
-
 import org.jlab.geom.prim.Vector3D;
 
 
@@ -27,13 +25,13 @@ public class LTCCClusterCorrection {
     /*
     * static member function calcPosition
         * arguments:
-            - threeVec clusterPos: estimated cluster position from the 
+            - Vector3D clusterPos: estimated cluster position from the 
                                    reconstruction
             - double p: track momentum
             - int charge: track charge
             - double torus: torus field setting
             - double solenoid: solenoid field setting
-        * returns (threeVec): a vector with a more accurate cluster position
+        * returns (Vector3D): a vector with a more accurate cluster position
     */
     public static Vector3D calcPosition(Vector3D clusterPos, double p, 
             int charge, double torus, double solenoid) {

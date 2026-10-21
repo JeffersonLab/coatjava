@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Logger;
 import org.jlab.detector.base.DetectorType;
 import org.jlab.detector.base.GeometryFactory;
 import org.jlab.geom.base.ConstantProvider;
@@ -23,8 +22,6 @@ public class TableLoader {
     public TableLoader() {
     }
     
-    public static final Logger LOGGER = Logger.getLogger(TableLoader.class.getName());
-
     private static boolean T2DLOADED = false;
     
     public static final int NBINST=2000;

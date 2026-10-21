@@ -228,11 +228,11 @@ public class DCHBPostClusterConv extends DCEngine {
 
         trkcands.addAll(mistrkcands);
 
-        LOGGER.log(Level.FINEST, "Found after 5STg "+mistrkcands.size()+" HB seeds ");
+        LOGGER.log(Level.FINEST, () -> "Found after 5STg "+mistrkcands.size()+" HB seeds ");
         for(int i = 0; i< trkcands.size(); i++) {
-            LOGGER.log(Level.FINEST, "cand "+i);
+            LOGGER.log(Level.FINEST, "cand {0}", i);
             for(Cross c : trkcands.get(i)) {
-                LOGGER.log(Level.FINEST, c.printInfo());
+                LOGGER.log(Level.FINEST, () -> c.printInfo());
             }
             LOGGER.log(Level.FINEST, "------------------------------------------------------------------ ");
         }

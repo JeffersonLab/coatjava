@@ -1,5 +1,6 @@
 package org.jlab.analysis.postprocess;
 
+import java.util.List;
 import java.util.TreeMap;
 import java.util.logging.Logger;
 import org.jlab.clas.reco.ReconstructionEngine;
@@ -13,6 +14,7 @@ import org.jlab.detector.scalers.DaqScalers;
 import org.jlab.detector.scalers.DaqScalersSequence;
 import org.jlab.detector.helicity.HelicityBit;
 import org.jlab.detector.helicity.HelicitySequenceDelayed;
+import org.jlab.detector.serial.SerialUtil;
 import org.jlab.jnp.hipo4.data.SchemaFactory;
 import org.jlab.utils.groups.IndexedTable;
 import org.jlab.utils.options.OptionParser;
@@ -32,6 +34,31 @@ import org.jlab.utils.options.OptionParser;
 public class Tag1ToEvent {
 
     static final Logger LOGGER = Logger.getLogger(Tag1ToEvent.class.getName());
+
+    /**
+     * Load the mapping from event number to unix time
+     * @param schema
+     * @param files
+     * @return map 
+     */
+    public static TreeMap<Integer,Integer> getEventUnixMap(SchemaFactory schema, List<String> files) {
+        TreeMap<Integer,Integer> m = new TreeMap<>();
+        Event e = new Event();
+        Bank b = schema.getBank("RUN::unix");//new Bank(schema.getSchema("RUN::unix"));
+        for (String f : files) {
+            HipoReader r = new HipoReader();
+            r.setTags(1);
+            r.open(f);
+            while (r.hasNext()) {
+                r.nextEvent(e);
+                e.read(b);
+                int size = b.getRows();
+                for (int i=0; i<size; i++) m.put(b.getInt("event",i), b.getInt("unixtime",i));
+            }
+            r.close();
+        }
+        return m;
+    }
 
     public static void main(String[] args) {
 
@@ -81,7 +108,7 @@ public class Tag1ToEvent {
             LOGGER.info("\n>>> Initializing helicity configuration from CCDB ...\n");
             ConstantsManager conman = new ConstantsManager();
             conman.init("/runcontrol/hwp","/runcontrol/helicity");
-            final int run = Util.getRunNumber(parser.getInputList().get(0));
+            final int run = SerialUtil.getRunNumber(parser.getInputList().get(0));
             IndexedTable helTable = conman.getConstants(run, "/runcontrol/helicity");
  
             // Initialize the scaler sequence from tag-1 events:
@@ -102,7 +129,7 @@ public class Tag1ToEvent {
             }
 
             // Initialize the unix-event map:
-            TreeMap<Integer,Integer> eventUnix = Processor.getEventUnixMap(schema, parser.getInputList());
+            TreeMap<Integer,Integer> eventUnix = getEventUnixMap(schema, parser.getInputList());
             
             // Loop over the input HIPO files:
             LOGGER.info("\n>>> Starting post-processing ...\n");
@@ -138,7 +165,7 @@ public class Tag1ToEvent {
                     if (doHelicityDelay) {
                         recEventBank.putByte("helicity",0,hb.value());
                         recEventBank.putByte("helicityRaw",0,hbraw.value());
-                        Util.assignScalerHelicity(runConfigBank.getLong("timestamp",0), helScalerBank, helSeq);
+                        SerialUtil.assignScalerHelicity(runConfigBank.getLong("timestamp",0), helScalerBank, helSeq);
                     }
 
                     // Write beam charge to REC::Event:
@@ -169,7 +196,7 @@ public class Tag1ToEvent {
                     writer.addEvent(event, event.getEventTag());
 
                     // Copy config banks to new, tag-1 events:
-                    Util.createTag1Events(writer, event, configEvent, configBanks);
+                    SerialUtil.createTag1Events(writer, event, configEvent, configBanks);
                 }
 
                 reader.close();

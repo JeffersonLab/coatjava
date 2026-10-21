@@ -269,7 +269,7 @@ public class Constants {
         return RCUT;
     }
     
-    public static void setRCUT(double r) {
+    private static void setRCUT(double r) {
         RCUT = r;
     }
 
@@ -281,7 +281,7 @@ public class Constants {
         return ZRANGE;
     }
     
-    public static void setZRANGE(double zr) {
+    private static void setZRANGE(double zr) {
         ZRANGE = zr;
     }
     

@@ -9,13 +9,13 @@ import java.util.List;
 public class OptionValue {
     
     private String optionString = "-h";
-    private String optionValue  = "";
+    private String optionValue = "";
     private String optionDescription = "";
-    private String optionDefault     = "0";
+    private String optionDefault = "0";
             
     public OptionValue() { }
-    public OptionValue(String opt) {  setOption(opt);}
-    public OptionValue(String opt,String value) {  setOption(opt); setValue(value);}
+    public OptionValue(String opt) { setOption(opt); }
+    public OptionValue(String opt,String value) { setOption(opt); setValue(value); setDefault(value); }
     
     public final OptionValue setOption(String opt){ this.optionString = opt; return this;}
     public final OptionValue setValue(String value){ this.optionValue = value; return this;}
@@ -27,11 +27,11 @@ public class OptionValue {
     public String  getDescription() { return this.optionDescription;}
     public String  getDefault() { return this.optionDefault;}
     
-    public int     intValue()     { return Integer.parseInt(this.optionValue);}
-    public long    longValue()    { return Long.parseLong(this.optionValue);}
+    public int     intValue()     { return Integer.decode(this.optionValue);}
+    public long    longValue()    { return Long.decode(this.optionValue);}
     public double  doubleValue()  { return Double.parseDouble(this.optionValue);}
     public String  stringValue()  { return this.optionValue;}
-    
+
     private int getOptionIndex(List<String> options){
         for(int i = 0; i < options.size(); i++){
             if(options.get(i).equals(optionString)==true)
