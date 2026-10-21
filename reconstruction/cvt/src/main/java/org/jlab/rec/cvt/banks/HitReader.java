@@ -146,13 +146,15 @@ public class HitReader {
                         double hv1 = bmtStripVoltageThresh.getDoubleValue("HV1", sector,layer,0); 
                         double hv2 = bmtStripVoltageThresh.getDoubleValue("HV2", sector,layer,0); 
                         double hv3 = bmtStripVoltageThresh.getDoubleValue("HV3", sector,layer,0); 
-                        
-                        if(hv<hv1) 
-                            BmtStrip.setStatus(4);
-                        if(hv>=hv1 && hv<hv2) 
-                            BmtStrip.setStatus(5);
-                        if(hv>=hv2 && hv<hv3) 
-                            BmtStrip.setStatus(6);
+
+                        int hvStatus = 0;
+                        if(hv<hv1)
+                            hvStatus = 4;
+                        if(hv>=hv1 && hv<hv2)
+                            hvStatus = 5;
+                        if(hv>=hv2 && hv<hv3)
+                            hvStatus = 6;
+                        BmtStrip.setStatus(mergeBmtStatus(BmtStrip.getStatus(), hvStatus));
                     }
                 }
                 BmtStrip.calcBMTStripParams(sector, layer, swim); // for Z detectors the Lorentz angle shifts the strip measurement; calc_Strip corrects for this effect
@@ -215,6 +217,21 @@ public class HitReader {
             
             this.setBMTHits(hits);
         }
+    }
+
+    /**
+     * Combine independently derived BMT status flags without allowing a later non-rejecting
+     * HV annotation (5 or 6) to resurrect a hit already rejected by channel status or timing
+     * (1 through 4). An HV rejection (4) likewise takes precedence over an earlier annotation.
+     */
+    static int mergeBmtStatus(int currentStatus, int hvStatus) {
+        if(currentStatus>0 && currentStatus<5)
+            return currentStatus;
+        if(hvStatus>0 && hvStatus<5)
+            return hvStatus;
+        if(currentStatus!=0)
+            return currentStatus;
+        return hvStatus;
     }
 
     /**
