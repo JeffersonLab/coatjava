@@ -13,6 +13,7 @@ import org.jlab.jnp.hipo4.data.Bank;
 import org.jlab.jnp.hipo4.data.Event;
 import org.jlab.jnp.hipo4.data.Schema;
 import org.jlab.jnp.hipo4.data.SchemaFactory;
+import org.jlab.utils.CLASResources;
 import org.jlab.utils.system.ClasUtilsFile;
 
 /**
@@ -23,8 +24,7 @@ import org.jlab.utils.system.ClasUtilsFile;
 public class Occupancer extends ArrayList<Occupancer.OccupanceTable> {
 
     static final String OCC_BANK_DIR = ClasUtilsFile.getResourceDir("CLAS12DIR","etc/bankdefs/hipo4/singles/occupancy");
-    static final SchemaFactory FULL_SCHEMA = new SchemaFactory();
-    static { FULL_SCHEMA.initFromDirectory(ClasUtilsFile.getResourceDir("CLAS12DIR","etc/bankdefs/hipo4")); }
+    static final SchemaFactory FULL_SCHEMA = CLASResources.getFullSchema();
 
     long triggerMask;
     int prescale;
