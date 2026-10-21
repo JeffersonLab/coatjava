@@ -27,11 +27,11 @@ public class OptionValue {
     public String  getDescription() { return this.optionDescription;}
     public String  getDefault() { return this.optionDefault;}
     
-    public int     intValue()     { return Integer.parseInt(this.optionValue);}
-    public long    longValue()    { return Long.parseLong(this.optionValue);}
+    public int     intValue()     { return Integer.decode(this.optionValue);}
+    public long    longValue()    { return Long.decode(this.optionValue);}
     public double  doubleValue()  { return Double.parseDouble(this.optionValue);}
     public String  stringValue()  { return this.optionValue;}
-    
+
     private int getOptionIndex(List<String> options){
         for(int i = 0; i < options.size(); i++){
             if(options.get(i).equals(optionString)==true)
