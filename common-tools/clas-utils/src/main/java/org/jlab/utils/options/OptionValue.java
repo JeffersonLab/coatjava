@@ -1,6 +1,5 @@
 package org.jlab.utils.options;
 
-import java.util.HexFormat;
 import java.util.List;
 
 /**
