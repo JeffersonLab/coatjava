@@ -1,5 +1,8 @@
 package org.jlab.rec.cvt.banks;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import org.jlab.analysis.physics.TestEvent;
@@ -14,6 +17,17 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
 public class RecoBankWriterTest {
+
+    private static Path repositoryRoot() {
+        Path root = Paths.get(System.getProperty("user.dir")).toAbsolutePath();
+        while (root != null && !Files.isDirectory(root.resolve("etc/bankdefs/hipo4"))) {
+            root = root.getParent();
+        }
+        if (root == null) {
+            throw new IllegalStateException("Cannot locate etc/bankdefs/hipo4 from the test directory");
+        }
+        return root;
+    }
 
     @Test
     public void seedCovarianceIsNotReportedAsFilteredFitCovariance() {
@@ -30,7 +44,18 @@ public class RecoBankWriterTest {
 
         assertFalse(track.isCovFromFilteredFit());
 
-        DataEvent event = TestEvent.get(DetectorType.CVT);
+        String originalClas12Dir = System.getProperty("CLAS12DIR");
+        DataEvent event;
+        try {
+            System.setProperty("CLAS12DIR", repositoryRoot().toString());
+            event = TestEvent.get(DetectorType.CVT);
+        } finally {
+            if (originalClas12Dir == null) {
+                System.clearProperty("CLAS12DIR");
+            } else {
+                System.setProperty("CLAS12DIR", originalClas12Dir);
+            }
+        }
         DataBank bank = RecoBankWriter.fillTrackBank(
                 event, Collections.singletonList(track), "CVTRec::Tracks");
 
