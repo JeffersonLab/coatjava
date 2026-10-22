@@ -78,8 +78,6 @@ public abstract class Porch {
 
         reset();
 
-        System.out.println(String.format("reco-mutil::  spawning 2*%d+2 threads",threads[0]));
-        
         // start a period status printout:
         ReconUtil.runPeriodic(10, statsShow);
         
