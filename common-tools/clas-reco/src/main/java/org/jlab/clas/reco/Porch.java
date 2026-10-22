@@ -78,7 +78,7 @@ public abstract class Porch {
 
         reset();
 
-        System.out.println(String.format("recon-mutil::  spawning 2*%d+2 threads",threads[0]));
+        System.out.println(String.format("reco-mutil::  spawning 2*%d+2 threads",threads[0]));
         
         // start a period status printout:
         ReconUtil.runPeriodic(10, statsShow);
@@ -222,11 +222,11 @@ public abstract class Porch {
      * @param threads thread counts to use
      */
     void rethreader(int... threads) {
-        System.out.println("recon-mutil::  ~~~~~~~~~ rethreading launched ~~~~~~~~~");
+        System.out.println("reco-mutil::  ~~~~~~~~~ rethreading launched ~~~~~~~~~");
         Map<Integer,Benchmark> benches = new LinkedHashMap<>();
         Map<Integer,ProgressPrintout> progs = new LinkedHashMap<>();
         while (!ReconUtil.isDone(decoThreads)) ReconUtil.sleep(100);
-        System.out.println("recon-mutil::  ~~~~~~~~~ rethreading primed ~~~~~~~~~");
+        System.out.println("reco-mutil::  ~~~~~~~~~ rethreading primed ~~~~~~~~~");
         for (int thread : threads) {
             if (taskset.equals("-")) ReconUtil.taskset(0, thread);
             BenchmarkTimer.WARMUP_CALLS = 10*thread+90;
@@ -238,7 +238,7 @@ public abstract class Porch {
             }
             while (!progress.warmedUp() && !procQueue.isEmpty()) ReconUtil.sleep(100);
             ReconUtil.sleep(BENCH_SECONDS *1000);
-            System.out.printf("\nrecon-mutil:: ~~~~~~~~~ rethreading timed %d ~~~~~~~~~\n%n",thread);
+            System.out.printf("\nreco-mutil:: ~~~~~~~~~ rethreading timed %d ~~~~~~~~~\n%n",thread);
             System.out.println(progress.getUpdateString());
             System.out.println(benchmark);
             benches.put(thread, benchmark);
