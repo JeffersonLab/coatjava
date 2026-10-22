@@ -319,7 +319,7 @@ public class RecoMutil extends Porch {
     }
 
     /**
-     * The command-line entry-point known as "recon-mutil".
+     * The command-line entry-point known as "reco-mutil".
      * @param args command-line arguments
      */
     public static void main(String[] args) {
