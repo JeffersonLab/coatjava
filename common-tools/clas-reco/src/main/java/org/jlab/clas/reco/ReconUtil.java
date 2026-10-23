@@ -1,10 +1,12 @@
 package org.jlab.clas.reco;
 
+import com.sun.management.OperatingSystemMXBean;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.lang.management.ManagementFactory;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -308,4 +310,7 @@ public class ReconUtil {
         return cpus != null ? taskset(cpus) : 42;
     }
 
+    static long getTotalMachineMemory() {
+        return ((OperatingSystemMXBean)ManagementFactory.getOperatingSystemMXBean()).getTotalMemorySize();
+    }
 }
