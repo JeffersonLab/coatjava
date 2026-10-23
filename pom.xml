@@ -44,6 +44,11 @@
       <id>code.jlab.org-ccdbrcdb-java</id>
       <url>https://code.jlab.org/api/v4/projects/245/packages/maven</url>
     </repository>
+    <!-- groot ::: https://code.jlab.org/hallb/clas12/groot -->
+    <repository>
+      <id>code.jlab.org-groot</id>
+      <url>https://code.jlab.org/api/v4/projects/388/packages/maven</url>
+    </repository>
     <!-- clasweb repositories -->
     <repository>
       <id>clasweb-clas12maven</id>
@@ -127,7 +132,7 @@
       <dependency>
         <groupId>org.jlab</groupId>
         <artifactId>groot</artifactId>
-        <version>4.0.5</version> <!-- WARNING: if changed, check the `net.objecthunter:exp4j` version; see `docs/dependency_conflicts.md` -->
+        <version>6.0.0</version> <!-- WARNING: if changed, check the `net.objecthunter:exp4j` version; see `docs/dependency_conflicts.md` -->
       </dependency>
 
       <dependency>
@@ -252,7 +257,7 @@
 
       <!--
         resolve convergence conflict of `net.objecthunter:exp4j` by choosing the latest used by
-        - `org.jlab:groot:5.0.0`                 uses version 0.4.8
+        - `org.jlab:groot:6.0.0`                 uses version 0.4.8
         - `org.jlab.jnp:jnp-hipo4:4.5`           uses version 0.4.8
         - `org.jlab.jnp:jnp-hipo:2.0-SNAPSHOT`   uses version 0.4.4
         - see `docs/dependency_conflicts.md` for more info
