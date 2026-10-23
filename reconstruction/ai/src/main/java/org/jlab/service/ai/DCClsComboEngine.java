@@ -32,11 +32,14 @@ import org.jlab.rec.ai.dcCluster.DCCluster;
 import org.jlab.rec.ai.dcCluster.DCClusterCombo;
 
 public class DCClsComboEngine extends ReconstructionEngine {
-    String inputBank = "HitBasedTrkg::Clusters";
+    
+    final static String INPUT_BANK_PREFIX = "inputBankPrefix";
+    String inputBank = "HitBasedTrkg::Clusters";    
+    
     String outputBank = "ai::tracks";
     
     final static String CONF_THREADS = "threads";
-    
+        
     final static String LIMIT_CLSCOMBOS_PERSECTOR = "limitClsCombosPerSector";
     int limitClsCombosPerSector = (int)1e5;
     
@@ -74,6 +77,11 @@ public class DCClsComboEngine extends ReconstructionEngine {
         System.setProperty("ai.djl.pytorch.num_interop_threads", "1");
         System.setProperty("ai.djl.pytorch.num_threads", "1");
         System.setProperty("ai.djl.pytorch.graph_optimizer", "false");
+        
+        if (getEngineConfigString(INPUT_BANK_PREFIX) != null){
+            String inputBankPrefix = getEngineConfigString(INPUT_BANK_PREFIX);        
+            if(inputBankPrefix.equals("DN")) inputBank = "HitBasedTrkg::DNClusters";
+        }
         
         int threads = Integer.parseInt(getEngineConfigString(CONF_THREADS,"64"));
         
