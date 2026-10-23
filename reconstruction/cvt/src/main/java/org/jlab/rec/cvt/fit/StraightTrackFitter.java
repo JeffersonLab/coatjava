@@ -79,7 +79,6 @@ public class StraightTrackFitter {
         double slope = _xyfit.getFit().slope();
         double intercept = _xyfit.getFit().intercept();
         Line3D line = new Line3D(new Point3D(X.get(0),slope*X.get(0)+intercept,0), new Point3D(X.get(1),slope*X.get(1)+intercept,0));
-        double fit_dca = 0;
         Point3D xydoca = line.distance(new Point3D(this.getXb(), this.getYb(),0)).origin();
         
         double fit_phi_at_dca = line.direction().phi();
@@ -89,12 +88,9 @@ public class StraightTrackFitter {
         }
         double x = xydoca.x();
         double y = xydoca.y();
-        fit_dca = Math.atan2(-x,y);
-        if(Math.cos(fit_phi_at_dca)>0.1) {
-            fit_dca = y/Math.cos(fit_phi_at_dca);
-        } else {
-            fit_dca = -x/Math.sin(fit_phi_at_dca);
-        }
+        double fit_dca = Math.cos(fit_phi_at_dca)>0.1 ?
+                         y/Math.cos(fit_phi_at_dca) :
+                        -x/Math.sin(fit_phi_at_dca);
         
         //Line fit
         _linefit = new LineFitter();

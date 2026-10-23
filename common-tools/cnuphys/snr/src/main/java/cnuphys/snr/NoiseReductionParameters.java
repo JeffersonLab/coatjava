@@ -733,6 +733,7 @@ public class NoiseReductionParameters {
      * @deprecated doesn't do anything, kept for backwards capability.
      * @param lookForTracks
      */
+    @Deprecated
     public static void setLookForTracks(boolean lookForTracks) {
     }
     

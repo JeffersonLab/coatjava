@@ -99,7 +99,6 @@ public class HelicalTrackFitter {
         P2.clear();
 
         int passed_fits = 0;
-        double averageChi2 = 0;
         double chi2 = 0;
 
         int index0 = 0;
@@ -131,6 +130,7 @@ public class HelicalTrackFitter {
         }
 
         double avechi2Max = 1.;
+        double averageChi2 = 0;
         if (passed_fits > 0) {
             averageChi2 = chi2 / passed_fits;
             if (averageChi2 > avechi2Max) {

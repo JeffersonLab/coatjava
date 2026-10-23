@@ -25,7 +25,7 @@ done
 shift $((OPTIND-1))
 executable=$1
 arguments=${@:2}
-logfile=asprof$stub.log
+logfile=asprof_$event$stub.log
 
 which asprof >& /dev/null
 [ "$?" -ne 0 ] && echo 'ERROR:  asprof is not in $PATH.' && echo -e $usage2 && exit 3
@@ -42,13 +42,17 @@ set -e
 $executable $arguments >> $logfile 2>&1 &
 set +e
 
+# figure out the process id to profile:
 pid_bash=$!
 echo info:  pid bash=$pid_bash, getting java ...
 sleep 1
 pid_java=$(pgrep -P $pid_bash)
-sleep 1
-# go 2 deep for run-clara:
-pid_java=$(pgrep -P $pid_java | head -n 1)
+if [[ "$executable" == *clara* ]]
+then
+    # go 2 deep for run-clara:
+    sleep 1
+    pid_java=$(pgrep -P $pid_java | head -n 1)
+fi
 echo info:  pid java=$pid_java
 tail -f $logfile &
 pid_tail=$!
