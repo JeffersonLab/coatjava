@@ -74,8 +74,9 @@ public class MeasVecs extends AMeasVecs {
             
             //SVplus.updateFromHelix();
             //SVminus.updateFromHelix();
-            sv.setStateVecPosAtMeasSite(SVplus,  mv, null);
-            sv.setStateVecPosAtMeasSite(SVminus, mv, null);
+            boolean plusOK = sv.setStateVecPosAtMeasSite(SVplus, mv, null);
+            boolean minusOK = sv.setStateVecPosAtMeasSite(SVminus, mv, null);
+            if (!plusOK || !minusOK) return null;
 //            sv.printlnStateVec(SVplus);
 //            sv.printlnStateVec(SVminus);
             Hval[i] = (this.h(stateVec.k, SVplus) - this.h(stateVec.k, SVminus)) / getDelta_d_a()[i] ;
