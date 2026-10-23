@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.jlab.clas.clas.math.FastMath;
 import org.jlab.clas.swimtools.Swim;
 import org.jlab.detector.geant4.v2.DCGeant4Factory;
 import org.jlab.geom.prim.Line3D;
@@ -24,8 +23,8 @@ import org.jlab.rec.dc.trajectory.StateVec;
 import org.jlab.rec.dc.trajectory.Trajectory;
 import org.jlab.rec.dc.trajectory.TrajectoryFinder;
 
-import trackfitter.fitter.LineFitPars;
-import trackfitter.fitter.LineFitter;
+import org.jlab.rec.dc.track.fit.basefit.LineFitter;
+import org.jlab.rec.dc.track.fit.basefit.LineFitPars;
 
 import org.jlab.clas.tracking.kalmanfilter.Surface;
 import org.jlab.clas.tracking.kalmanfilter.zReference.KFitter;
@@ -47,7 +46,7 @@ public class TrackCandListFinder {
 
     private static final Logger LOGGER = Logger.getLogger(TrackCandListFinder.class.getName());
 
-    long startTime, startTime2 = 0;
+    long startTime;
 
     /**
      * the tracking status = HitBased or TimeBased
@@ -95,47 +94,47 @@ public class TrackCandListFinder {
         return pass;
     }
 
-    private double getHitBasedFitChi2ToCrosses(int sector, double x1, double y1, double z1,
-            double x2, double y2, double z2, double x3,
-            double y3, double z3, double p, int q, double x,
-            double y, double z, double tanThX, double tanThY, Swim dcSwim) {
-        double pz = p / Math.sqrt(tanThX * tanThX + tanThY * tanThY + 1);
-
-        dcSwim.SetSwimParameters(x, y, z,
-                -pz * tanThX, -pz * tanThY, -pz,
-                -q);
-        double chi2 = 0; // assume err =1 on points 
-        double[] R = dcSwim.SwimToPlaneTiltSecSys(sector, z3);
-        if (R == null) {
-            return Double.POSITIVE_INFINITY;
-        }
-
-        //chi2 += (R[0] - x3) * (R[0] - x3) + (R[1] - y3) * (R[1] - y3);
-        chi2 += (Math.sqrt(R[0] * R[0] + R[1] * R[1]) - Math.sqrt(x3 * x3 + y3 * y3)) * (Math.sqrt(R[0] * R[0] + R[1] * R[1]) - Math.sqrt(x3 * x3 + y3 * y3));
-        dcSwim.SetSwimParameters(R[0], R[1], R[2],
-                R[3], R[4], R[5],
-                -q);
-        R = dcSwim.SwimToPlaneTiltSecSys(sector, z2);
-        if (R == null) {
-            return Double.POSITIVE_INFINITY;
-        }
-
-        dcSwim.SetSwimParameters(R[0], R[1], R[2],
-                R[3], R[4], R[5],
-                -q);
-        chi2 += (R[0] - x2) * (R[0] - x2) + (R[1] - y2) * (R[1] - y2);
-        dcSwim.SetSwimParameters(R[0], R[1], R[2],
-                R[3], R[4], R[5],
-                -q);
-        R = dcSwim.SwimToPlaneTiltSecSys(sector, z1);
-        if (R == null) {
-            return Double.POSITIVE_INFINITY;
-        }
-
-        chi2 += (R[0] - x1) * (R[0] - x1) + (R[1] - y1) * (R[1] - y1);
-
-        return chi2;
-    }
+    // private double getHitBasedFitChi2ToCrosses(int sector, double x1, double y1, double z1,
+    //         double x2, double y2, double z2, double x3,
+    //         double y3, double z3, double p, int q, double x,
+    //         double y, double z, double tanThX, double tanThY, Swim dcSwim) {
+    //     double pz = p / Math.sqrt(tanThX * tanThX + tanThY * tanThY + 1);
+    //
+    //     dcSwim.SetSwimParameters(x, y, z,
+    //             -pz * tanThX, -pz * tanThY, -pz,
+    //             -q);
+    //     double chi2 = 0; // assume err =1 on points 
+    //     double[] R = dcSwim.SwimToPlaneTiltSecSys(sector, z3);
+    //     if (R == null) {
+    //         return Double.POSITIVE_INFINITY;
+    //     }
+    //
+    //     //chi2 += (R[0] - x3) * (R[0] - x3) + (R[1] - y3) * (R[1] - y3);
+    //     chi2 += (Math.sqrt(R[0] * R[0] + R[1] * R[1]) - Math.sqrt(x3 * x3 + y3 * y3)) * (Math.sqrt(R[0] * R[0] + R[1] * R[1]) - Math.sqrt(x3 * x3 + y3 * y3));
+    //     dcSwim.SetSwimParameters(R[0], R[1], R[2],
+    //             R[3], R[4], R[5],
+    //             -q);
+    //     R = dcSwim.SwimToPlaneTiltSecSys(sector, z2);
+    //     if (R == null) {
+    //         return Double.POSITIVE_INFINITY;
+    //     }
+    //
+    //     dcSwim.SetSwimParameters(R[0], R[1], R[2],
+    //             R[3], R[4], R[5],
+    //             -q);
+    //     chi2 += (R[0] - x2) * (R[0] - x2) + (R[1] - y2) * (R[1] - y2);
+    //     dcSwim.SetSwimParameters(R[0], R[1], R[2],
+    //             R[3], R[4], R[5],
+    //             -q);
+    //     R = dcSwim.SwimToPlaneTiltSecSys(sector, z1);
+    //     if (R == null) {
+    //         return Double.POSITIVE_INFINITY;
+    //     }
+    //
+    //     chi2 += (R[0] - x1) * (R[0] - x1) + (R[1] - y1) * (R[1] - y1);
+    //
+    //     return chi2;
+    // }
 
     /*
     ** a: parameter a for fitting function f(x) = a*z^2 + b*z + c in xz plane
@@ -208,7 +207,7 @@ public class TrackCandListFinder {
     }
     
     public List<Track> getTrackCandsAI(CrossList crossList, DCGeant4Factory DcDetector, Swim dcSwim, HBTrackStateEstimator hbTSEstimator){
-        List<Track> cands = new ArrayList();
+        List<Track> cands = new ArrayList<>();
         
         for (List<Cross> aCrossList : crossList) {
             Track cand = new Track();
@@ -318,13 +317,11 @@ public class TrackCandListFinder {
      */
     public List<Track> getTrackCands(CrossList crossList, DCGeant4Factory DcDetector, double TORSCALE, Swim dcSwim,
             boolean donotapplyCuts) {
-        List<Track> cands = null;
         if (Math.abs(TORSCALE) < 0.001) {
-            cands = this.findStraightTracks(crossList, DcDetector, TORSCALE, dcSwim);
+            return this.findStraightTracks(crossList, DcDetector, TORSCALE, dcSwim);
         } else {
-            cands = this.findCurvedTracks(crossList, DcDetector, TORSCALE, dcSwim, donotapplyCuts);
+            return this.findCurvedTracks(crossList, DcDetector, TORSCALE, dcSwim, donotapplyCuts);
         }
-        return cands;
     }
 
     /**
@@ -374,13 +371,10 @@ public class TrackCandListFinder {
                 FitPars2 = linefit.getFit();
             }
 
-            double X0 = -99999;
-            double Y0 = -99999;
-
             if (FitPars1 != null && FitPars2 != null) {
 
-                X0 = FitPars1.intercept();
-                Y0 = FitPars2.intercept();
+                double X0 = FitPars1.intercept();
+                double Y0 = FitPars2.intercept();
                 Point3D trkR1X = new Point3D(FitPars1.slope() * x[0] + FitPars1.intercept(),
                         FitPars2.slope() * x[0] + FitPars2.intercept(), x[0]);
                 Point3D trkR3X = new Point3D(FitPars1.slope() * x[2] + FitPars1.intercept(),
@@ -408,30 +402,6 @@ public class TrackCandListFinder {
                 cand.setPathLength(trkR3X.distance(trkVtx));
             }
         }
-    }
-
-    /**
-     * @param x x coordinate in the lab frame
-     * @param y y coordinate in the lab frame
-     * @return the sector in the DC lab frame system corresponding to the (x,y)
-     * coordinates
-     */
-    private int getSector(double x, double y) {
-        double phi = Math.toDegrees(FastMath.atan2(y, x));
-        double ang = phi + 30;
-        while (ang < 0) {
-            ang += 360;
-        }
-        int sector = 1 + (int) (ang / 60.);
-
-        if (sector == 7) {
-            sector = 6;
-        }
-
-        if ((sector < 1) || (sector > 6)) {
-            System.err.println("Track sector not found....");
-        }
-        return sector;
     }
 
     /**
@@ -531,20 +501,6 @@ public class TrackCandListFinder {
 
         if (Vt == null) {
             return;
-        }
-
-        int LR = 0;
-        for (Cross crs : cand) {
-            Segment s1 = crs.get_Segment1();
-            Segment s2 = crs.get_Segment2();
-
-            for (FittedHit h : s1) {
-                LR += h._lr;
-            }
-            for (FittedHit h : s2) {
-                LR += h._lr;
-            }
-
         }
 
         double xOrFix = Vt[0];
@@ -796,24 +752,6 @@ public class TrackCandListFinder {
     }
     
     /**
-     * @param selectedTracks the list of selected tracks
-     * @param selectedTrk the selected track
-     * @return a boolean indicating if the track is in the list
-     */
-    private boolean ListContainsTrack(List<Track> selectedTracks, Track selectedTrk) {
-        boolean isInList = false;
-        for (Track trk : selectedTracks) {
-            if (trk == null) {
-                continue;
-            }
-            if (trk.get_Id() == selectedTrk.get_Id()) {
-                isInList = true;
-            }
-        }
-        return isInList;
-    }
-
-    /**
      * @param track the track
      * @param trkcands the list of candidates
      * @param list the list of selected tracks
@@ -923,37 +861,33 @@ public class TrackCandListFinder {
         }
     }
 
-    private double calcCurvSign(Track cand) {
-        double P0x = cand.get(0).get_Point().z();
-        double P1x = cand.get(1).get_Point().z();
-        double P2x = cand.get(2).get_Point().z();
-        double P0y = cand.get(0).get_Point().x();
-        double P1y = cand.get(1).get_Point().x();
-        double P2y = cand.get(2).get_Point().x();
-
-        if (Math.abs(P1x - P0x) < 1.0e-18 || Math.abs(P2x - P1x) < 1.0e-18) {
-            return 0.0;
-        }
-
-        // Find the intersection of the lines joining the innermost to middle and middle to outermost point
-        double ma = (P1y - P0y) / (P1x - P0x);
-        double mb = (P2y - P1y) / (P2x - P1x);
-
-        if (Math.abs(mb - ma) < 1.0e-18) {
-            return 0.0;
-        }
-
-        double xcen = 0.5 * (ma * mb * (P0y - P2y) + mb * (P0x + P1x) - ma * (P1x + P2x)) / (mb - ma);
-        double ycen = (-1. / mb) * (xcen - 0.5 * (P1x + P2x)) + 0.5 * (P1y + P2y);
-
-        return Math.signum(ycen);
-    }
+    // private double calcCurvSign(Track cand) {
+    //     double P0x = cand.get(0).get_Point().z();
+    //     double P1x = cand.get(1).get_Point().z();
+    //     double P2x = cand.get(2).get_Point().z();
+    //     double P0y = cand.get(0).get_Point().x();
+    //     double P1y = cand.get(1).get_Point().x();
+    //     double P2y = cand.get(2).get_Point().x();
+    //
+    //     if (Math.abs(P1x - P0x) < 1.0e-18 || Math.abs(P2x - P1x) < 1.0e-18) {
+    //         return 0.0;
+    //     }
+    //
+    //     // Find the intersection of the lines joining the innermost to middle and middle to outermost point
+    //     double ma = (P1y - P0y) / (P1x - P0x);
+    //     double mb = (P2y - P1y) / (P2x - P1x);
+    //
+    //     if (Math.abs(mb - ma) < 1.0e-18) {
+    //         return 0.0;
+    //     }
+    //
+    //     double xcen = 0.5 * (ma * mb * (P0y - P2y) + mb * (P0x + P1x) - ma * (P1x + P2x)) / (mb - ma);
+    //     double ycen = (-1. / mb) * (xcen - 0.5 * (P1x + P2x)) + 0.5 * (P1y + P2y);
+    //
+    //     return Math.signum(ycen);
+    // }
 
     private List<Track> findStraightTracks(CrossList crossList, DCGeant4Factory DcDetector, double TORSCALE, Swim dcSwim) {
-
-        if(LOGGER.getLevel()==Level.FINEST) {
-            startTime2 = System.currentTimeMillis();
-        }
 
         List<Track> cands = new ArrayList<>();
         if (crossList.isEmpty()) {
@@ -1046,11 +980,6 @@ public class TrackCandListFinder {
     private List<Track> findCurvedTracks(CrossList crossList, DCGeant4Factory DcDetector, double TORSCALE, Swim dcSwim,
             boolean donotapplyCuts) {
     	    	
-    	
-        if(LOGGER.getLevel()==Level.FINEST) {
-            startTime2 = System.currentTimeMillis();
-        }
-
         List<Track> cands = new ArrayList<>();
         if (crossList.isEmpty()) {
             return cands;

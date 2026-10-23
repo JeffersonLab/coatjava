@@ -304,13 +304,8 @@ public class StateVecsDoca {
 
         rk.SwimToZ(trkcand.get(0).get_Sector(), initSV, dcSwim, z0, bf);
 
-        if (initSV != null) {
+        this.trackTraj.put(0, initSV);
 
-            this.trackTraj.put(0, initSV);
-        } else {
-            kf.setFitFailed = true;
-            return;
-        }
         //LOGGER.log(Level.FINEST, (0)+"] init "+this.trackTraj.get(0).x+","+this.trackTraj.get(0).y+","+
         //		this.trackTraj.get(0).z+","+this.trackTraj.get(0).tx+","+this.trackTraj.get(0).ty+" "+1/this.trackTraj.get(0).Q);
         double err_sl1 = trkcand.get(0).get_Segment1().get_fittedCluster().get_clusterLineFitSlopeErr();

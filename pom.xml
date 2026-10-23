@@ -4,7 +4,7 @@
 
   <groupId>org.jlab.clas</groupId>
   <artifactId>coatjava</artifactId>
-  <version>14.2.1-SNAPSHOT</version>
+  <version>14.2.2-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <properties>
@@ -19,30 +19,35 @@
   </modules>
 
   <repositories>
-    <!-- code.jlab.org package registries -->
+    <!-- jnp-hipo4 ::: https://code.jlab.org/hallb/clas12/hipo-java -->
     <repository>
-      <!-- git repo:  https://code.jlab.org/hallb/clas12/hipo-java -->
-      <!-- artifacts: jnp-hipo4 -->
       <id>code.jlab.org-hipo-java</id>
       <url>https://code.jlab.org/api/v4/projects/919/packages/maven</url>
     </repository>
+    <!-- xmsg ::: https://code.jlab.org/hallb/clas12/coatjava/xmsg-java -->
     <repository>
-      <!-- git repo:  https://code.jlab.org/hallb/clas12/coatjava/xmsg-java -->
-      <!-- artifacts: xmsg -->
       <id>code.jlab.org-xmsg-java</id>
       <url>https://code.jlab.org/api/v4/projects/959/packages/maven</url>
     </repository>
+    <!-- jclara ::: https://code.jlab.org/hallb/clas12/coatjava/clara-java -->
     <repository>
-      <!-- git repo:  https://code.jlab.org/hallb/clas12/coatjava/clara-java -->
-      <!-- artifacts: jclara -->
       <id>code.jlab.org-clara-java</id>
       <url>https://code.jlab.org/api/v4/projects/243/packages/maven</url>
     </repository>
+    <!-- freehep-jminuit ::: https://code.jlab.org/hallb/clas12/jminuit-maven-mirror -->
     <repository>
-      <!-- git repo:  https://code.jlab.org/hallb/clas12/jminuit-maven-mirror -->
-      <!-- artifacts: freehep-jminuit -->
       <id>code.jlab.org-freehep-jminuit</id>
       <url>https://code.jlab.org/api/v4/projects/1079/packages/maven</url>
+    </repository>
+    <!-- ccdbrcdb ::: https://code.jlab.org/hallb/clas12/coatjava/ccdbrcdb-java -->
+    <repository>
+      <id>code.jlab.org-ccdbrcdb-java</id>
+      <url>https://code.jlab.org/api/v4/projects/245/packages/maven</url>
+    </repository>
+    <!-- groot ::: https://code.jlab.org/hallb/clas12/groot -->
+    <repository>
+      <id>code.jlab.org-groot</id>
+      <url>https://code.jlab.org/api/v4/projects/388/packages/maven</url>
     </repository>
     <!-- clasweb repositories -->
     <repository>
@@ -127,7 +132,7 @@
       <dependency>
         <groupId>org.jlab</groupId>
         <artifactId>groot</artifactId>
-        <version>4.0.5</version> <!-- WARNING: if changed, check the `net.objecthunter:exp4j` version; see `docs/dependency_conflicts.md` -->
+        <version>6.0.0</version> <!-- WARNING: if changed, check the `net.objecthunter:exp4j` version; see `docs/dependency_conflicts.md` -->
       </dependency>
 
       <dependency>
@@ -216,7 +221,18 @@
       <dependency>
         <groupId>org.jlab.ccdbrcdb</groupId>
         <artifactId>ccdbrcdb</artifactId>
-        <version>2.0</version>
+        <version>2.1</version>
+        <exclusions>
+          <exclusion>
+            <!--
+              protobuf is transitive via `mysql-connector-j` and is only needed for
+              the X DevAPI (MySQL X Protocol), unused here; it also conflicts with
+              the version used by `xmsg`, so we exclude it here
+            -->
+            <groupId>com.google.protobuf</groupId>
+            <artifactId>protobuf-java</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
 
       <dependency>
@@ -241,7 +257,7 @@
 
       <!--
         resolve convergence conflict of `net.objecthunter:exp4j` by choosing the latest used by
-        - `org.jlab:groot:5.0.0`                 uses version 0.4.8
+        - `org.jlab:groot:6.0.0`                 uses version 0.4.8
         - `org.jlab.jnp:jnp-hipo4:4.5`           uses version 0.4.8
         - `org.jlab.jnp:jnp-hipo:2.0-SNAPSHOT`   uses version 0.4.4
         - see `docs/dependency_conflicts.md` for more info
@@ -425,12 +441,7 @@
             </goals>
             <configuration>
               <rules>
-                <dependencyConvergence>
-                  <excludes>
-                    <!-- excluding conflicts that may be tricky to resolve -->
-                    <exclude>com.google.protobuf:protobuf-java</exclude> <!-- `org.jlab.ccdbrcdb:ccdbrcdb` use v3, but `org.jlab.coda.xmsg` uses v2 -->
-                  </excludes>
-                </dependencyConvergence>
+                <dependencyConvergence/>
               </rules>
             </configuration>
           </execution>
