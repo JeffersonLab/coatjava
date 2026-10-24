@@ -16,7 +16,7 @@
   <dependencies>
     <dependency>
       <groupId>org.jlab.jnp</groupId>
-      <artifactId>jnp-hipo</artifactId>
+      <artifactId>jnp-hipo4</artifactId>
     </dependency>
     <dependency>
       <groupId>cnuphys</groupId>
