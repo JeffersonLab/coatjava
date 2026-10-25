@@ -3,49 +3,34 @@ package org.jlab.io.clara;
 import java.nio.file.Path;
 import org.jlab.clara.std.services.EventWriterException;
 import org.jlab.detector.calib.utils.ConstantsManager;
-import org.jlab.detector.serial.SerialHoncho;
 import org.jlab.detector.serial.Occupancer;
-import org.jlab.jnp.hipo4.data.Bank;
+import org.jlab.clas.reco.ParaTrigWriter;
+import org.jlab.detector.serial.SerialHoncho;
 import org.jlab.jnp.hipo4.data.Event;
-import org.jlab.jnp.hipo4.data.SchemaFactory;
 import org.jlab.jnp.hipo4.io.HipoWriterSorted;
-import org.jlab.jnp.utils.file.FileUtils;
+import org.jlab.utils.CLASResources;
 import org.json.JSONObject;
 
 /**
- * 
- * 1. Copies certain banks on-the-fly to new tag-1 events
- * 2. Caches helicity states, scaler readouts, and unix time
- * 3. Writes HEL::flip, RUN/HEL::scaler, and RUN::unix to new tag-1 events
- * 4. Runs post-processing, writing tag-1 information to all events 
- * 5. Adds .hipo to the output filename, if necessary
- * 6. Outputs a parallel file of select trigger bits with a raw schema
+ *
  * @author baltzell
  */
 public class Clas12Writer extends HipoToHipoWriter {
 
     Occupancer occupancer;
     SerialHoncho serial;
-    Bank runConfig;
     ConstantsManager conman;
-    SchemaFactory fullSchema;
-    HipoWriterSorted paraWriter;
-    long paraCount;
+    ParaTrigWriter paraWriter;
     long paraTriggerMask;
     int paraTriggerPrescale;
 
     private void init(JSONObject opts) {
         occupancer = new Occupancer(opts.optLong("occTriggerMask",(long)1<<39),opts.optInt("occEvents",100));
-        fullSchema = new SchemaFactory();
-        fullSchema.initFromDirectory(FileUtils.getEnvironmentPath("CLAS12DIR","etc/bankdefs/hipo4"));
-        serial = new SerialHoncho(fullSchema);
-        runConfig = new Bank(fullSchema.getSchema("RUN::config"));
+        serial = new SerialHoncho(CLASResources.getFullSchema());
         conman = new ConstantsManager();
         conman.init("/runcontrol/hwp","/runcontrol/helicity");
         paraTriggerMask = opts.optLong("paraTriggerMask", 0);
         paraTriggerPrescale = opts.optInt("paraTriggerPrescale", 0);
-        if (opts.has("variation")) conman.setVariation(opts.getString("variation"));
-        if (opts.has("timestamp")) conman.setTimeStamp(opts.getString("timestamp"));
     }
 
     @Override
@@ -58,8 +43,7 @@ public class Clas12Writer extends HipoToHipoWriter {
             String basename = file.getFileName().toString();
             if (!basename.endsWith(".hipo")) basename += ".hipo";
             if (paraTriggerMask > 0) {
-                paraWriter = new HipoWriterSorted();
-                paraWriter.getSchemaFactory().copy(fullSchema);
+                paraWriter = new ParaTrigWriter(paraTriggerMask,paraTriggerPrescale);
                 paraWriter.open(dirname + "/tb" + basename.substring(basename.indexOf("_")));
             }
             w.open(dirname + "/" + basename);
@@ -75,17 +59,8 @@ public class Clas12Writer extends HipoToHipoWriter {
         if (!t.isEmpty()) writer.addEvent(t, 1);
         occupancer.process(((Event)event));
         super.writeEvent(event);
-        writeRaw((Event)event, t);
-    }
-
-    void writeRaw(Event physics, Event tagged) {
-        if (paraTriggerMask > 0) {
-            physics.read(runConfig);
-            if (runConfig.getRows()>0 && (runConfig.getLong("trigger",0) & paraTriggerMask) != 0)
-                if (paraTriggerPrescale<=0 || (++paraCount % paraTriggerPrescale) == 0)
-                    paraWriter.addEvent(physics);
-            if (!tagged.isEmpty()) paraWriter.addEvent(tagged, tagged.getEventTag());
-        }
+        paraWriter.addEvent((Event)event);
+        if (!t.isEmpty()) paraWriter.addEvent(t,1);
     }
 
     @Override
