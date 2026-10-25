@@ -317,8 +317,8 @@ public class EngineProcessor {
 
     public void processEvent(DataEvent event, HipoDataSync writer) {
         processEvent(event);
-        removeBanks(event);
         occupancer.process(((HipoDataEvent)event).getHipoEvent());
+        removeBanks(event);
         writer.writeEvent(event);
     }
 
