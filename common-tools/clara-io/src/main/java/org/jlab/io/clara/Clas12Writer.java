@@ -29,14 +29,13 @@ public class Clas12Writer extends HipoToHipoWriter {
     Bank runConfig;
     ConstantsManager conman;
     SchemaFactory fullSchema;
-
     HipoWriterSorted paraWriter;
     long paraCount;
     long paraTriggerMask;
     int paraTriggerPrescale;
 
     private void init(JSONObject opts) {
-        occupancer = new Occupancer((long)1<<39,100);
+        occupancer = new Occupancer(opts.optLong("occTriggerMask",(long)1<<39),opts.optInt("occEvents",100));
         fullSchema = new SchemaFactory();
         fullSchema.initFromDirectory(FileUtils.getEnvironmentPath("CLAS12DIR","etc/bankdefs/hipo4"));
         serial = new SerialHoncho(fullSchema);
