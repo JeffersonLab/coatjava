@@ -1,6 +1,7 @@
 package org.jlab.rec.cvt.banks;
 
 import java.util.List;
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -9,7 +10,7 @@ import org.jlab.detector.banks.RawBank.OrderType;
 import org.jlab.detector.base.DetectorType;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
-import org.jlab.io.hipo.HipoDataSync;
+import org.jlab.analysis.physics.TestEvent;
 import org.jlab.rec.cvt.bmt.BMTType;
 import org.jlab.rec.cvt.cluster.Cluster;
 import org.jlab.rec.cvt.hit.Hit;
@@ -21,15 +22,24 @@ public class BSTHitReaderTest {
     private static final int NOMINAL = OrderType.NOMINAL.getTypeId();
     private static final int BACKGROUND = OrderType.BGADDED_NOMINAL.getTypeId();
     private static final int REMOVED = OrderType.BGREMOVED.getTypeId();
-    private static HipoDataSync events;
+    private static String previousClas12Dir;
 
     @BeforeClass
     public static void initializeGeometry() {
-        assertNotNull("Source libexec/env.sh before running the test", System.getenv("CLAS12DIR"));
+        previousClas12Dir = System.getProperty("CLAS12DIR");
+        System.setProperty("CLAS12DIR", "../../");
         CVTEngine engine = new CVTEngine();
         assertTrue(engine.init());
         engine.detectorChanged(11);
-        events = new HipoDataSync();
+    }
+
+    @AfterClass
+    public static void restoreResourcePath() {
+        if (previousClas12Dir == null) {
+            System.clearProperty("CLAS12DIR");
+        } else {
+            System.setProperty("CLAS12DIR", previousClas12Dir);
+        }
     }
 
     @Test
@@ -57,7 +67,10 @@ public class BSTHitReaderTest {
     }
 
     private static void assertHitReferences(int[] orders, int[] adcs, int[] expectedRawRows) {
-        DataEvent event = events.createEvent();
+        // Reuse the repository's event/schema factory, retaining no fixture hits.
+        DataEvent event = TestEvent.get(DetectorType.CVT);
+        event.removeBanks(event.getBankList());
+        assertEquals(0, event.getBankList().length);
         DataBank raw = event.createBank("BST::adc", orders.length);
         IndexedTable status = new IndexedTable(3, "status/I");
         for (int row = 0; row < orders.length; row++) {
