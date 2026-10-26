@@ -289,7 +289,7 @@ public class HitReader {
                     continue; // ignore hits TDC hits with ADC==-1 
                 }
                 int order   = bankDGTZ.getByte(BST_adc.order, i);
-                int id      = i + 1;
+                int id      = bankDGTZ.trueIndex(i) + 1;
                 int sector  = bankDGTZ.getByte(BST_adc.sector, i);
                 int layer   = bankDGTZ.getByte(BST_adc.layer, i);
                 int strip   = bankDGTZ.getShort(BST_adc.component, i);
