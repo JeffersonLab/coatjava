@@ -158,6 +158,11 @@
         <artifactId>jevio</artifactId>
         <classifier>jar-with-dependencies</classifier>
         <version>6.2-SNAPSHOT</version>
+        <!--
+          exclude all of `jevio`'s dependencies, since we're consuming the uber jar and we don't want Maven to attempt to
+          pull these dependencies itself; these exclusions do not exclude these dependencies from the shaded JAR (`coat-libs`),
+          so they'll be available downstream and at runtime, since we shade this `jevio` uber jar
+        -->
         <exclusions>
           <exclusion>
             <groupId>net.jpountz.lz4</groupId>
@@ -165,7 +170,7 @@
           </exclusion>
           <exclusion>
             <groupId>com.aha.compression</groupId>
-            <artifactId> AHACompressionAPI </artifactId>
+            <artifactId>AHACompressionAPI </artifactId>
           </exclusion>
           <exclusion>
             <groupId>com.lmax</groupId>
