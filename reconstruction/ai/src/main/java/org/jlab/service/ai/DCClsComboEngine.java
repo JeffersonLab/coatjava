@@ -33,14 +33,14 @@ import org.jlab.rec.ai.dcCluster.DCClusterCombo;
 
 public class DCClsComboEngine extends ReconstructionEngine {
     
-    final static String INPUT_BANK_PREFIX = "inputBankPrefix";
+    final static String CONF_INPUT_BANK_PREFIX = "inputBankPrefix";
     String inputBank = "HitBasedTrkg::Clusters";    
     
     String outputBank = "ai::tracks";
     
     final static String CONF_THREADS = "threads";
         
-    final static String LIMIT_CLSCOMBOS_PERSECTOR = "limitClsCombosPerSector";
+    final static String CONF_LIMIT_CLSCOMBOS_PERSECTOR = "limitClsCombosPerSector";
     int limitClsCombosPerSector = (int)1e5;
     
     final static String CONF_MODEL_FILE_6CLS = "modelFile6Cls";
@@ -78,15 +78,15 @@ public class DCClsComboEngine extends ReconstructionEngine {
         System.setProperty("ai.djl.pytorch.num_threads", "1");
         System.setProperty("ai.djl.pytorch.graph_optimizer", "false");
         
-        if (getEngineConfigString(INPUT_BANK_PREFIX) != null){
-            String inputBankPrefix = getEngineConfigString(INPUT_BANK_PREFIX);        
+        if (getEngineConfigString(CONF_INPUT_BANK_PREFIX) != null){
+            String inputBankPrefix = getEngineConfigString(CONF_INPUT_BANK_PREFIX);        
             if(inputBankPrefix.equals("DN")) inputBank = "HitBasedTrkg::DNClusters";
         }
         
         int threads = Integer.parseInt(getEngineConfigString(CONF_THREADS,"64"));
         
-        if (getEngineConfigString(LIMIT_CLSCOMBOS_PERSECTOR) != null)
-            limitClsCombosPerSector = Integer.parseInt(getEngineConfigString(LIMIT_CLSCOMBOS_PERSECTOR));
+        if (getEngineConfigString(CONF_LIMIT_CLSCOMBOS_PERSECTOR) != null)
+            limitClsCombosPerSector = Integer.parseInt(getEngineConfigString(CONF_LIMIT_CLSCOMBOS_PERSECTOR));
         
         if (getEngineConfigString(CONF_THRESHOLD_6CLS) != null)
             threshold6Cls = Float.parseFloat(getEngineConfigString(CONF_THRESHOLD_6CLS));
