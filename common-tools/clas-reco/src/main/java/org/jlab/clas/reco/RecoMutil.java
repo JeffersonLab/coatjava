@@ -46,7 +46,7 @@ public class RecoMutil extends Porch {
     
     // Processors:
     SerialHoncho serial;
-    Occupancer occupancer = new Occupancer();
+    Occupancer occupancer = new Occupancer((long)1<<39,1000);
     CLASDecoderPool decoders = new CLASDecoderPool(64,"default",null);
     Map<String,ReconstructionEngine> engines = new LinkedHashMap<>();
 
