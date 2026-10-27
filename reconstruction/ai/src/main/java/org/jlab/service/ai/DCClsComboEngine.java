@@ -36,6 +36,7 @@ public class DCClsComboEngine extends ReconstructionEngine {
     final static String CONF_INPUT_BANK_PREFIX = "inputBankPrefix";
     String inputBank = "HitBasedTrkg::Clusters";    
     
+    final static String CONF_OUTPUT_BANK_PREFIX = "outputBankPrefix";
     String outputBank = "ai::tracks";
     
     final static String CONF_THREADS = "threads";
@@ -82,6 +83,11 @@ public class DCClsComboEngine extends ReconstructionEngine {
             String inputBankPrefix = getEngineConfigString(CONF_INPUT_BANK_PREFIX);        
             if(inputBankPrefix.equals("DN")) inputBank = "HitBasedTrkg::DNClusters";
         }
+        
+        if (getEngineConfigString(CONF_OUTPUT_BANK_PREFIX) != null){
+            String outBankPrefix = getEngineConfigString(CONF_OUTPUT_BANK_PREFIX);        
+            if(outBankPrefix.equals("aidn")) inputBank = "aidn::tracks";
+        }        
         
         int threads = Integer.parseInt(getEngineConfigString(CONF_THREADS,"64"));
         
