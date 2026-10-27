@@ -170,7 +170,7 @@
           </exclusion>
           <exclusion>
             <groupId>com.aha.compression</groupId>
-            <artifactId>AHACompressionAPI </artifactId>
+            <artifactId>AHACompressionAPI</artifactId>
           </exclusion>
           <exclusion>
             <groupId>com.lmax</groupId>
