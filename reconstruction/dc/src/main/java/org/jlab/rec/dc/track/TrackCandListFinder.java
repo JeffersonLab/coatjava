@@ -257,8 +257,7 @@ public class TrackCandListFinder {
                 initSV.Q = estSV[4];
                 
                 double absTorScale = Math.abs(Swimmer.getTorScale());
-                if(absTorScale != 1 && absTorScale != 0) 
-                    initSV.Q = estSV[4] / absTorScale; // Momentum magnitude is scaled by the scale factor of magnetic field
+                initSV.Q = absTorScale>0.001 ? estSV[4]/absTorScale : estSV[4]; // Momentum magnitude is scaled by the scale factor of magnetic field
                                  
                 RungeKuttaDoca rk = new RungeKuttaDoca();
                 rk.SwimToZ(sector, initSV, dcSwim, measSurfaces.get(0).wireLine[0].end().z(), new float[3]); 
