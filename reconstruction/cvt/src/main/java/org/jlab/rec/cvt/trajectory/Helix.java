@@ -255,61 +255,56 @@ public class Helix {
 
         return charge;
     }
+    
+    // a method to return path length at a fixed radius in xy plane
+    public double getPathLengthAtRadius(double r){
+        double par = (2. * (1. - _dca * _curvature) - (r * r - _dca * _dca) * _curvature * _curvature) / (2. * Math.abs(1. - _dca * _curvature));
+        return Math.abs(Math.acos(par) / _curvature);
+    } 
+    
+    // a method to return a point (as a vector) at a given radial position.
+    public double[] getXYAtRadius(double alpha){
+        double x = xb - _dca * Math.sin(_phi_at_dca) + 1./_curvature * (Math.sin(_phi_at_dca) - Math.sin(_phi_at_dca + alpha));
+        double y = yb + _dca * Math.cos(_phi_at_dca) - 1./_curvature * (Math.cos(_phi_at_dca) - Math.cos(_phi_at_dca + alpha));
+        return new double[]{x, y};
+    }     
 
+    // a method to return a point (as a vector) at a given radial position.	
     public Point3D getPointAtRadius(double r) {
-        // a method to return a point (as a vector) at a given radial position.	
-        double d0 = _dca;
-        double omega = _curvature;
-        double charge = this.getCharge();
-        double phi0 = _phi_at_dca;
-        double tandip = _tandip;
-        double z0 = _Z0;
-
         if (Math.abs(_curvature)<1E-5) { // R > 100 m, assume it's straight track
-            double x = -d0 * Math.sin(phi0) + r*Math.cos(phi0)+xb;
-            double y =  d0 * Math.cos(phi0) + r*Math.sin(phi0)+yb;
-            double z =  z0 + r*tandip;
+            double x = -_dca * Math.sin(_phi_at_dca) + r*Math.cos(_phi_at_dca)+xb;
+            double y =  _dca * Math.cos(_phi_at_dca) + r*Math.sin(_phi_at_dca)+yb;
+            double z =  _Z0 + r*_tandip;
             return new Point3D(x, y, z);
         }
 
+        double newPathLength = getPathLengthAtRadius(r);
 
-        double par = 1. - ((r * r - d0 * d0) * omega * omega) / (2. * (1. + d0 * Math.abs(omega)));
-        double newPathLength = Math.abs(Math.acos(par) / omega);
+        double alpha = -newPathLength * _curvature;
+        
+        double[] xy = getXYAtRadius(alpha);
+        double z = _Z0 + newPathLength * _tandip;
 
-        double alpha = -newPathLength * omega;
-
-        double x = d0 * charge * Math.sin(phi0) + (charge / Math.abs(omega)) 
-                * (Math.sin(phi0) - Math.cos(alpha) * Math.sin(phi0) - Math.sin(alpha) * Math.cos(phi0))+xb;
-        double y = -d0 * charge * Math.cos(phi0) - (charge / Math.abs(omega)) 
-                * (Math.cos(phi0) + Math.sin(alpha) * Math.sin(phi0) - Math.cos(alpha) * Math.cos(phi0))+yb;
-        double z = z0 + newPathLength * tandip;
-
-        return new Point3D(x, y, z);
+        return new Point3D(xy[0], xy[1], z);
     }
 
-    public Vector3D getTrackDirectionAtRadius(double r) {
-        // a method to return a point (as a vector) at a given radial position.
-        double d0 = _dca;
-        double omega = _curvature;
-        double phi0 = _phi_at_dca;
-        double tandip = _tandip;
-        
+    // a method to return a point (as a vector) at a given radial position. 
+    public Vector3D getTrackDirectionAtRadius(double r) {       
         if (Math.abs(_curvature) <1E-5) { // R > 100 m, assume it's straight track
-            double ux =  Math.cos(phi0);
-            double uy =  Math.sin(phi0);
-            double uz =  tandip;
-            return new Vector3D(ux, uy, uz);
+            double ux =  Math.cos(_phi_at_dca);
+            double uy =  Math.sin(_phi_at_dca);
+            double uz =  _tandip;
+            Vector3D trkDir = new Vector3D(ux, uy, uz);
+            return trkDir.asUnit();
         }
 
-        double par = 1. - ((r * r - d0 * d0) * omega * omega) / (2. * (1. + d0 * Math.abs(omega)));
-        double newPathLength = Math.abs(Math.acos(par) / omega);
-
-        double alpha = newPathLength * omega;
+        double newPathLength = getPathLengthAtRadius(r);
+        double alpha = -newPathLength * _curvature;
 
         double sintheta = Math.abs(sinTheta());
 
-        double ux = Math.cos(-alpha + phi0) * sintheta;
-        double uy = Math.sin(-alpha + phi0) * sintheta;
+        double ux = Math.cos(_phi_at_dca + alpha) * sintheta;
+        double uy = Math.sin(_phi_at_dca + alpha) * sintheta;
         double uz = cosTheta();
 
         Vector3D trkDir = new Vector3D(ux, uy, uz);

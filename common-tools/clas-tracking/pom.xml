@@ -19,10 +19,6 @@
       <artifactId>commons-math3</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.jlab.jnp</groupId>
-      <artifactId>jnp-hipo</artifactId>
-    </dependency>
-    <dependency>
       <groupId>org.ejml</groupId>
       <artifactId>ejml-simple</artifactId> <!-- WARNING: don't override the version number from the top-level dependencyManagement; see `docs/dependency_conflicts.md` -->
     </dependency>
@@ -49,6 +45,11 @@
     <dependency>
       <groupId>org.jlab.clas</groupId>
       <artifactId>clas-geometry</artifactId>
+      <version>14.2.2-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>org.jlab.clas</groupId>
+      <artifactId>clas-math</artifactId>
       <version>14.2.2-SNAPSHOT</version>
     </dependency>
   </dependencies>
