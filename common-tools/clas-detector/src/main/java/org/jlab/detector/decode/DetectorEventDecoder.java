@@ -217,19 +217,32 @@ public class DetectorEventDecoder {
         final int nadc = data.getADCSize();
         for (int i = 0; i < nadc; i++) {
             ADCData adc = data.getADCData(i);
-            if(adc.getPulseSize()>0){
+            if (adc.getPulseSize() > 0) {
                 try {
-                    extendedFitter.fit(nsa, nsb, tet, ped, adc.getPulseArray());
+                    ExtendedFADCFitter[] hits = extendedFitter.multiFit(nsa, nsb, tet, ped, adc.getPulseArray());
+                    // the first hit is treated conventionally:
+                    adc.setIntegral(hits[0].adc + hits[0].ped*(nsa+nsb));
+                    adc.setHeight((short) hits[0].pulsePeakValue);
+                    adc.setTimeWord(hits[0].t0);
+                    adc.setPedestal((short) hits[0].ped);
+                    adc.setADC(nsa, nsb);
+                    // and extra hits get a new object here:
+                    for (int j = 1; j < hits.length; j++) {
+                        ADCData a = new ADCData();
+                        a.setOrder(adc.getOrder());
+                        a.setIntegral(hits[j].adc + hits[j].ped*(nsa+nsb));
+                        a.setHeight((short) hits[j].pulsePeakValue);
+                        a.setTimeWord(hits[j].t0);
+                        a.setPedestal((short) hits[j].ped);
+                        a.setADC(nsa, nsb);
+                        data.addADC(a);
+                    }
                 } catch (Exception e) {
+                    e.printStackTrace();
                     System.err.println(">>>> error : fitting pulse "+dd.getCrate()+
                         " / "+dd.getSlot()+" / "+dd.getChannel());
                 }
-                adc.setIntegral(extendedFitter.adc + extendedFitter.ped*(nsa+nsb));
-                adc.setHeight((short) this.extendedFitter.pulsePeakValue);
-                adc.setTimeWord(this.extendedFitter.t0);
-                adc.setPedestal((short) this.extendedFitter.ped);
             }
-            data.getADCData(i).setADC(nsa, nsb);
         }
     }
 
