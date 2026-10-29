@@ -34,6 +34,11 @@
       <id>code.jlab.org-clara-java</id>
       <url>https://code.jlab.org/api/v4/projects/243/packages/maven</url>
     </repository>
+    <!-- jevio ::: https://code.jlab.org/hallb/evio -->
+    <repository>
+      <id>code.jlab.org-evio</id>
+      <url>https://code.jlab.org/api/v4/projects/1038/packages/maven</url>
+    </repository>
     <!-- freehep-jminuit ::: https://code.jlab.org/hallb/clas12/jminuit-maven-mirror -->
     <repository>
       <id>code.jlab.org-freehep-jminuit</id>
@@ -157,7 +162,7 @@
         <groupId>org.jlab.coda</groupId>
         <artifactId>jevio</artifactId>
         <classifier>jar-with-dependencies</classifier>
-        <version>6.2-SNAPSHOT</version>
+        <version>5.99.0</version>
         <!--
           exclude all of `jevio`'s dependencies, since we're consuming the uber jar and we don't want Maven to attempt to
           pull these dependencies itself; these exclusions do not exclude these dependencies from the shaded JAR (`coat-libs`),
