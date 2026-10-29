@@ -137,7 +137,7 @@
       <dependency>
         <groupId>org.jlab</groupId>
         <artifactId>groot</artifactId>
-        <version>6.0.0</version> <!-- WARNING: if changed, check the `net.objecthunter:exp4j` version; see `docs/dependency_conflicts.md` -->
+        <version>6.0.0</version>
       </dependency>
 
       <dependency>
@@ -162,7 +162,7 @@
         <groupId>org.jlab.coda</groupId>
         <artifactId>jevio</artifactId>
         <classifier>jar-with-dependencies</classifier>
-        <version>5.99.0</version>
+        <version>5.99.1</version>
         <!--
           exclude all of `jevio`'s dependencies, since we're consuming the uber jar and we don't want Maven to attempt to
           pull these dependencies itself; these exclusions do not exclude these dependencies from the shaded JAR (`coat-libs`),
@@ -197,7 +197,7 @@
       <dependency>
         <groupId>org.jlab.jnp</groupId>
         <artifactId>jnp-hipo4</artifactId>
-        <version>4.5</version> <!-- WARNING: if changed, check the `net.objecthunter:exp4j` version; see `docs/dependency_conflicts.md` -->
+        <version>4.6-SNAPSHOT</version>
       </dependency>
 
       <dependency>
