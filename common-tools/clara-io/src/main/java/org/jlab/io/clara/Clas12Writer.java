@@ -9,7 +9,7 @@ import org.jlab.jnp.hipo4.data.Bank;
 import org.jlab.jnp.hipo4.data.Event;
 import org.jlab.jnp.hipo4.data.SchemaFactory;
 import org.jlab.jnp.hipo4.io.HipoWriterSorted;
-import org.jlab.jnp.utils.file.FileUtils;
+import org.jlab.utils.CLASResources;
 import org.json.JSONObject;
 
 /**
@@ -28,7 +28,7 @@ public class Clas12Writer extends HipoToHipoWriter {
     SerialHoncho serial;
     Bank runConfig;
     ConstantsManager conman;
-    SchemaFactory fullSchema;
+    SchemaFactory fullSchema = CLASResources.getFullSchema();
     HipoWriterSorted paraWriter;
     long paraCount;
     long paraTriggerMask;
@@ -36,9 +36,7 @@ public class Clas12Writer extends HipoToHipoWriter {
 
     private void init(JSONObject opts) {
         occupancer = new Occupancer(opts.optLong("occTriggerMask",(long)1<<39),opts.optInt("occEvents",100));
-        fullSchema = new SchemaFactory();
-        fullSchema.initFromDirectory(FileUtils.getEnvironmentPath("CLAS12DIR","etc/bankdefs/hipo4"));
-        serial = new SerialHoncho(fullSchema);
+        serial = new SerialHoncho();
         runConfig = new Bank(fullSchema.getSchema("RUN::config"));
         conman = new ConstantsManager();
         conman.init("/runcontrol/hwp","/runcontrol/helicity");
