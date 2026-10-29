@@ -7,10 +7,10 @@ public class ExtendedFADCFitter1 implements IFADCFitter {
     
     static final int PED_BIN1=1;
     static final int PED_BIN2=15;
-    public int     t0,adc,ped,pedsum;
-    public int     thresholdCrossing,pulsePeakValue, pulsePeakPosition, pulseWidth;
-    public double  baseline,rms;
-    private int    tcourse, tfine;
+
+    public int     t0, adc, ped, pedsum, tcourse, tfine;
+    public int     thresholdCrossing, pulsePeakValue, pulsePeakPosition, pulseWidth;
+    public double  baseline, rms;
     
     public ExtendedFADCFitter1(){}
     
@@ -18,8 +18,12 @@ public class ExtendedFADCFitter1 implements IFADCFitter {
 
         t0=0; adc=0; ped=0; pedsum=0; baseline=0; rms=0; tcourse=0; tfine=0;
         thresholdCrossing=0; pulsePeakValue=0; pulsePeakPosition=0; pulseWidth=0;
-        double noise  = 0;
-        if (pedr == 0) {
+
+        if (pedr != 0) {
+            // user-defined pedestal:
+            ped = pedr;
+        }
+        else {
             // not enough samples, just set pedestal and abort:
             if (pulse.length<PED_BIN2+1) {
                 for (int bin = 0; bin < pulse.length; bin++)
@@ -30,19 +34,17 @@ public class ExtendedFADCFitter1 implements IFADCFitter {
             // calculate pedestal:
             for (int bin = PED_BIN1+1; bin < PED_BIN2+1; bin++) {
                 pedsum += pulse[bin];
-                noise  += pulse[bin] * pulse[bin];
+                rms  += pulse[bin] * pulse[bin];
             }
             baseline = ((double) pedsum)/ (PED_BIN2 - PED_BIN1);
             ped = pedsum=pedsum/(PED_BIN2-PED_BIN1);	//(int) baseline;
-            rms = Math.sqrt(noise / (PED_BIN2 - PED_BIN1) - baseline * baseline);
+            rms = Math.sqrt(rms / (PED_BIN2 - PED_BIN1) - baseline * baseline);
         }
-        // user-defined pedestal:
-        else ped = pedr;
         
         List<ExtendedFADCFitter1> hits = null;
-
         boolean belowThreshold = false;
-        for (int crossBin = 0; crossBin<pulse.length; crossBin++) {
+
+        for (int crossBin = PED_BIN2+1; crossBin<pulse.length; crossBin++) {
             
             // mark that we went below theshold:
             if (pulse[crossBin] <= ped+tet) belowThreshold = true;
