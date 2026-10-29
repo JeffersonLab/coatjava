@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.jlab.clas.swimtools.Swim;
+import org.jlab.clas.swimtools.Swimmer;
 import org.jlab.detector.geant4.v2.DCGeant4Factory;
 import org.jlab.geom.prim.Line3D;
 import org.jlab.geom.prim.Point3D;
@@ -254,6 +255,9 @@ public class TrackCandListFinder {
                 initSV.tx = estSV[2];
                 initSV.ty = estSV[3];
                 initSV.Q = estSV[4];
+                
+                double absTorScale = Math.abs(Swimmer.getTorScale());
+                initSV.Q = absTorScale>0.001 ? estSV[4]/absTorScale : estSV[4]; // Momentum magnitude is scaled by the scale factor of magnetic field
                                  
                 RungeKuttaDoca rk = new RungeKuttaDoca();
                 rk.SwimToZ(sector, initSV, dcSwim, measSurfaces.get(0).wireLine[0].end().z(), new float[3]); 
