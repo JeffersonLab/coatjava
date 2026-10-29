@@ -28,15 +28,15 @@ public class Writer {
             bank.setFloat("x1", i, (float) vtx.get(i).getP1().getVx());
             bank.setFloat("y1", i, (float) vtx.get(i).getP1().getVy());
             bank.setFloat("z1", i, (float) vtx.get(i).getP1().getVz());
-            bank.setFloat("cx1", i, (float) vtx.get(i).getP1().getPx());
-            bank.setFloat("cy1", i, (float) vtx.get(i).getP1().getPy());
-            bank.setFloat("cz1", i, (float) vtx.get(i).getP1().getPz());
+            bank.setFloat("px1", i, (float) vtx.get(i).getP1().getPx());
+            bank.setFloat("py1", i, (float) vtx.get(i).getP1().getPy());
+            bank.setFloat("pz1", i, (float) vtx.get(i).getP1().getPz());
             bank.setFloat("x2", i, (float) vtx.get(i).getP2().getVx());
             bank.setFloat("y2", i, (float) vtx.get(i).getP2().getVy());
             bank.setFloat("z2", i, (float) vtx.get(i).getP2().getVz());
-            bank.setFloat("cx2", i, (float) vtx.get(i).getP2().getPx());
-            bank.setFloat("cy2", i, (float) vtx.get(i).getP2().getPy());
-            bank.setFloat("cz2", i, (float) vtx.get(i).getP2().getPz());
+            bank.setFloat("px2", i, (float) vtx.get(i).getP2().getPx());
+            bank.setFloat("py2", i, (float) vtx.get(i).getP2().getPy());
+            bank.setFloat("pz2", i, (float) vtx.get(i).getP2().getPz());
             bank.setFloat("r", i, (float) vtx.get(i).getR()); 
         }
         
