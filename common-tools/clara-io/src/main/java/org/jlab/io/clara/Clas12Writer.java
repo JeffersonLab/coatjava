@@ -71,8 +71,10 @@ public class Clas12Writer extends HipoToHipoWriter {
         if (!t.isEmpty()) writer.addEvent(t, 1);
         occupancer.process(((Event)event));
         super.writeEvent(event);
-        paraWriter.addEvent((Event)event);
-        if (!t.isEmpty()) paraWriter.addEvent(t,1);
+        if (paraTriggerMask > 0 {
+            paraWriter.addEvent((Event)event);
+            if (!t.isEmpty()) paraWriter.addEvent(t,1);
+        }
     }
 
     @Override
