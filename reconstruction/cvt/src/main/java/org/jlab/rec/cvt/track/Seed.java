@@ -260,23 +260,12 @@ public class Seed implements Comparable<Seed>{
 
     public boolean fit(int fitIter, double xb, double yb, double bfield) {
         
-        List<Double> X = new ArrayList<>();
-        List<Double> Y = new ArrayList<>();
-        List<Double> Z = new ArrayList<>();
-        List<Double> Rho = new ArrayList<>();
-        List<Double> ErrZ = new ArrayList<>();
-        List<Double> ErrRho = new ArrayList<>();
-        List<Double> ErrRt = new ArrayList<>();
         List<Cross> BMTCrossesC = new ArrayList<>();
         List<Cross> BMTCrossesZ = new ArrayList<>();
         List<Cross> SVTCrosses = new ArrayList<>();
         
         double chisqMax = Double.POSITIVE_INFINITY;
 
-        int svtSz = 0;
-        int bmtZSz = 0;
-        int bmtCSz = 0;
-        
         for (Cross c : this.getCrosses()) {
             // reset cross to clear previous track settings on direction and Point
             c.reset();
@@ -290,25 +279,19 @@ public class Seed implements Comparable<Seed>{
                 BMTCrossesZ.add(c);
             }
         }
-        svtSz = SVTCrosses.size();
-        if (BMTCrossesZ != null) {
-            bmtZSz = BMTCrossesZ.size();
-        }
-        if (BMTCrossesC != null) {
-            bmtCSz = BMTCrossesC.size();
-        }
 
-        int useSVTdipAngEst = 1;
-        if (bmtCSz >= 2) {
-            useSVTdipAngEst = 0;
-        }
-        ((ArrayList<Double>) X).ensureCapacity(svtSz + bmtZSz);
-        ((ArrayList<Double>) Y).ensureCapacity(svtSz + bmtZSz);
-        ((ArrayList<Double>) Z).ensureCapacity(svtSz * useSVTdipAngEst + bmtCSz);
-        ((ArrayList<Double>) Rho).ensureCapacity(svtSz * useSVTdipAngEst + bmtCSz);
-        ((ArrayList<Double>) ErrZ).ensureCapacity(svtSz * useSVTdipAngEst + bmtCSz);
-        ((ArrayList<Double>) ErrRho).ensureCapacity(svtSz * useSVTdipAngEst + bmtCSz); // Try: don't use svt in dipdangle fit determination
-        ((ArrayList<Double>) ErrRt).ensureCapacity(svtSz + bmtZSz);
+        int svtSz = SVTCrosses.size();
+        int bmtZSz = BMTCrossesZ.size();
+        int bmtCSz = BMTCrossesC.size();
+        int useSVTdipAngEst = bmtCSz >= 2 ? 0 : 1;
+        
+        List<Double> X = new ArrayList<>(svtSz + bmtZSz);
+        List<Double> Y = new ArrayList<>(svtSz + bmtZSz);
+        List<Double> Z = new ArrayList<>(svtSz * useSVTdipAngEst + bmtCSz);
+        List<Double> Rho = new ArrayList<>(svtSz * useSVTdipAngEst + bmtCSz);
+        List<Double> ErrZ = new ArrayList<>(svtSz * useSVTdipAngEst + bmtCSz);
+        List<Double> ErrRho = new ArrayList<>(svtSz * useSVTdipAngEst + bmtCSz);
+        List<Double> ErrRt = new ArrayList<>(svtSz + bmtZSz);
          
         HelicalTrackFitter fitTrk = new HelicalTrackFitter();
         for (int i = 0; i < fitIter; i++) {

@@ -34,6 +34,11 @@
       <id>code.jlab.org-clara-java</id>
       <url>https://code.jlab.org/api/v4/projects/243/packages/maven</url>
     </repository>
+    <!-- jevio ::: https://code.jlab.org/hallb/evio -->
+    <repository>
+      <id>code.jlab.org-evio</id>
+      <url>https://code.jlab.org/api/v4/projects/1038/packages/maven</url>
+    </repository>
     <!-- freehep-jminuit ::: https://code.jlab.org/hallb/clas12/jminuit-maven-mirror -->
     <repository>
       <id>code.jlab.org-freehep-jminuit</id>
@@ -157,7 +162,12 @@
         <groupId>org.jlab.coda</groupId>
         <artifactId>jevio</artifactId>
         <classifier>jar-with-dependencies</classifier>
-        <version>6.2-SNAPSHOT</version>
+        <version>5.99.0</version>
+        <!--
+          exclude all of `jevio`'s dependencies, since we're consuming the uber jar and we don't want Maven to attempt to
+          pull these dependencies itself; these exclusions do not exclude these dependencies from the shaded JAR (`coat-libs`),
+          so they'll be available downstream and at runtime, since we shade this `jevio` uber jar
+        -->
         <exclusions>
           <exclusion>
             <groupId>net.jpountz.lz4</groupId>
@@ -165,7 +175,7 @@
           </exclusion>
           <exclusion>
             <groupId>com.aha.compression</groupId>
-            <artifactId> AHACompressionAPI </artifactId>
+            <artifactId>AHACompressionAPI</artifactId>
           </exclusion>
           <exclusion>
             <groupId>com.lmax</groupId>
@@ -182,12 +192,6 @@
         <groupId>org.jlab.coda</groupId>
         <artifactId>et</artifactId>
         <version>14.0</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.jlab.jnp</groupId>
-        <artifactId>jnp-hipo</artifactId>
-        <version>2.0-SNAPSHOT</version> <!-- WARNING: if changed, check the `net.objecthunter:exp4j` version; see `docs/dependency_conflicts.md` -->
       </dependency>
 
       <dependency>
@@ -253,19 +257,6 @@
         <version>0.38.0</version>
         <type>pom</type>
         <scope>import</scope>
-      </dependency>
-
-      <!--
-        resolve convergence conflict of `net.objecthunter:exp4j` by choosing the latest used by
-        - `org.jlab:groot:6.0.0`                 uses version 0.4.8
-        - `org.jlab.jnp:jnp-hipo4:4.5`           uses version 0.4.8
-        - `org.jlab.jnp:jnp-hipo:2.0-SNAPSHOT`   uses version 0.4.4
-        - see `docs/dependency_conflicts.md` for more info
-      -->
-      <dependency>
-        <groupId>net.objecthunter</groupId>
-        <artifactId>exp4j</artifactId>
-        <version>0.4.8</version> <!-- WARNING: if changed, see `docs/dependency_conflicts.md` -->
       </dependency>
 
       <!--
