@@ -1,7 +1,14 @@
 #!/usr/bin/env ruby
+
+##################################################################################
+# map each dependency to the repository from which it was obtained
+# ----------------------------------------------------------------
+# PROCEDURE:
+# - start from a clean local Maven repository (~/.m2/repository, by default)
+# - clean build coatjava
+# - run this script
 #
-# map dependency to the repository from which it was obtained
-#
+##################################################################################
 
 require 'yaml'
 require 'fileutils'
