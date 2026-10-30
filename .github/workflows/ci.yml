@@ -182,6 +182,7 @@ jobs:
     # dependencies really come from, so it always hits the remote repos.
     #   - run after `warm_maven_cache`, so it doesn't add to the parallel burst
     #   - retry the build step
+    if: ${{ github.ref == 'refs/heads/development' }}
     needs: [ warm_maven_cache ]
     runs-on: ubuntu-latest
     env:
