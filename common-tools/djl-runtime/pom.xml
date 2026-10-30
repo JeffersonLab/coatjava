@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <!--
+    this POM installs `ai.djl` runtime dependencies to our prefix classpath;
+    this includes its transitive dependencies, e.g. `gson` and `slf4j`
+  -->
+
+  <artifactId>djl-runtime</artifactId>
+  <packaging>pom</packaging>
+
+  <parent>
+    <groupId>org.jlab.clas</groupId>
+    <artifactId>common-tools</artifactId>
+    <version>14.2.3-SNAPSHOT</version>
+  </parent>
+
+  <properties>
+    <!-- Native PyTorch classifier; overridden per-OS by the profiles below -->
+    <djl.pytorch.classifier>linux-x86_64</djl.pytorch.classifier>
+  </properties>
+
+  <profiles>
+    <!-- Linux x86_64 is the default via the property above; this profile exists only to make the choice explicit/overridable -->
+    <profile>
+      <id>djl-linux-x86_64</id>
+      <activation>
+        <os>
+          <family>unix</family>
+          <name>Linux</name>
+          <arch>amd64</arch>
+        </os>
+      </activation>
+      <properties>
+        <djl.pytorch.classifier>linux-x86_64</djl.pytorch.classifier>
+      </properties>
+    </profile>
+    <profile>
+      <id>djl-osx-aarch64</id>
+      <activation>
+        <os>
+          <family>mac</family>
+          <arch>aarch64</arch>
+        </os>
+      </activation>
+      <properties>
+        <djl.pytorch.classifier>osx-aarch64</djl.pytorch.classifier>
+      </properties>
+    </profile>
+    <profile>
+      <id>djl-win-x86_64</id>
+      <activation>
+        <os>
+          <family>windows</family>
+          <arch>amd64</arch>
+        </os>
+      </activation>
+      <properties>
+        <djl.pytorch.classifier>win-x86_64</djl.pytorch.classifier>
+      </properties>
+    </profile>
+  </profiles>
+
+  <dependencies>
+    <dependency>
+      <groupId>ai.djl</groupId>
+      <artifactId>api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>ai.djl</groupId>
+      <artifactId>model-zoo</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>ai.djl.pytorch</groupId>
+      <artifactId>pytorch-model-zoo</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>ai.djl.pytorch</groupId>
+      <artifactId>pytorch-engine</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>ai.djl.pytorch</groupId>
+      <artifactId>pytorch-native-cpu</artifactId>
+      <classifier>${djl.pytorch.classifier}</classifier>
+    </dependency>
+    <dependency>
+      <groupId>ai.djl.pytorch</groupId>
+      <artifactId>pytorch-jni</artifactId>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <version>3.11.0</version>
+        <executions>
+          <execution>
+            <id>copy-djl-runtime</id>
+            <phase>package</phase>
+            <goals>
+              <goal>copy-dependencies</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${project.build.directory}/lib/services</outputDirectory>
+              <includeScope>runtime</includeScope>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
+</project>
