@@ -131,13 +131,13 @@
       <dependency>
         <groupId>org.apache.commons</groupId>
         <artifactId>commons-text</artifactId>
-        <version>1.15.0</version> <!-- WARNING: if changed, check the `org.apache.commons:commons-lang3` version; see `docs/dependency_conflicts.md` -->
+        <version>1.15.0</version>
       </dependency>
 
       <dependency>
         <groupId>org.jlab</groupId>
         <artifactId>groot</artifactId>
-        <version>6.0.0</version> <!-- WARNING: if changed, check the `net.objecthunter:exp4j` version; see `docs/dependency_conflicts.md` -->
+        <version>6.0.0</version>
       </dependency>
 
       <dependency>
@@ -197,7 +197,7 @@
       <dependency>
         <groupId>org.jlab.jnp</groupId>
         <artifactId>jnp-hipo4</artifactId>
-        <version>4.5</version> <!-- WARNING: if changed, check the `net.objecthunter:exp4j` version; see `docs/dependency_conflicts.md` -->
+        <version>4.5</version>
       </dependency>
 
       <dependency>
@@ -237,40 +237,10 @@
         <scope>import</scope>
       </dependency>
 
-      <!--
-        resolve convergence conflict between `j4ml:j4ml-clas12` and `clas-tracking`
-        by using the version of `org.ejml:ejml-simple` used by `j4ml:j4ml-clas12:jar:0.9-SNAPSHOT`
-        - see `docs/dependency_conflicts.md` for more info
-      -->
       <dependency>
         <groupId>org.ejml</groupId>
         <artifactId>ejml-simple</artifactId>
-        <version>0.40</version> <!-- WARNING: if changed, see `docs/dependency_conflicts.md` -->
-      </dependency>
-
-      <!--
-        resolve convergence conflict of `org.apache.commons:commons-lang3` by choosing the latest used by
-        - j4ml:j4ml-neuroph:0.9-SNAPSHOT consumes com.github.neuroph:neuroph-core:2.98 which uses version 3.3.2
-        - org.apache.commons:commons-text:1.15.0 uses version 3.20.0
-        - see `docs/dependency_conflicts.md` for more info
-      -->
-      <dependency>
-        <groupId>org.apache.commons</groupId>
-        <artifactId>commons-lang3</artifactId>
-        <version>3.20.0</version> <!-- WARNING: if changed, see `docs/dependency_conflicts.md` -->
-      </dependency>
-
-      <!--
-        resolve convergence conflict of `org.slf4j:slf4j-api` inherent in dependencies consumed by
-        `j4ml:j4ml-neuroph:jar:0.9-SNAPSHOT` by choosing the latest version:
-        - com.github.neuroph:neuroph-core:2.98 uses version 1.7.5
-        - com.github.neuroph:neuroph-core:2.98 also consumes ch.qos.logback:logback-classic:1.1.2, which uses version 1.7.6
-        - see `docs/dependency_conflicts.md` for more info
-      -->
-      <dependency>
-        <groupId>org.slf4j</groupId>
-        <artifactId>slf4j-api</artifactId>
-        <version>1.7.6</version> <!-- WARNING: if changed, see `docs/dependency_conflicts.md` -->
+        <version>0.40</version> <!-- WARNING: if changed, see https://github.com/JeffersonLab/coatjava/pull/636 -->
       </dependency>
 
     </dependencies>
