@@ -11,12 +11,8 @@ COAT=$CLARA_HOME/plugins/clas12/
 source $COAT/libexec/env.sh
 classPath="${COATJAVA_CLASSPATH}:../lib/*:src/"
 
-# download test files
-#wget --no-check-certificate http://clasweb.jlab.org/clas12offline/distribution/coatjava/validation_files/twoTrackEvents_809_raw.evio.tar.gz
-#[ $? -ne 0 ] && echo "wget validation files failure" && exit 2
-#tar -zxvf twoTrackEvents_809_raw.evio.tar.gz
-
 # run decoder
+rm -f twoTrackEvents_809.hipo
 $COAT/bin/decoder -t -0.5 -s 0.0 -i ./data/twoTrackEvents_809_raw.evio -o ./twoTrackEvents_809.hipo -c 2
 [ $? -ne 0 ] && echo "decoder failure" && exit 3
 
@@ -24,6 +20,7 @@ $COAT/bin/decoder -t -0.5 -s 0.0 -i ./data/twoTrackEvents_809_raw.evio -o ./twoT
 $COAT/bin/hipo-utils -stats ./twoTrackEvents_809.hipo
 
 # run clara
+rm -f rec_twoTrackEvents_809.hipo
 $COAT/bin/run-clara -y $COAT/etc/services/kpp.yaml ./twoTrackEvents_809.hipo
 [ $? -ne 0 ] && echo "reconstruction with clara failure" && exit 4
 

@@ -26,7 +26,6 @@ import org.jlab.service.ftof.FTOFHBEngine;
 import org.jlab.service.ftof.FTOFTBEngine;
 import org.jlab.service.htcc.HTCCReconstructionService;
 import org.jlab.service.ltcc.LTCCEngine;
-import org.jlab.service.mltn.MLTDEngine;
 import org.jlab.service.rtpc.RTPCEngine;
 import org.jlab.calibration.service.CalibBanksEngine;
 import org.jlab.service.ai.DCClsComboEngine;
@@ -85,21 +84,6 @@ public class Uber {
         }
     }
 
-    public static class HitBasedAIClassic extends UberEngine {
-        public HitBasedAIClassic() {
-            super("HB","uber","1.0");
-            add(new DCHBClustering(),
-                new MLTDEngine(),
-                new DCHBPostClusterAI("HB"),
-                new BANDEngine(),
-                new HTCCReconstructionService(),
-                new LTCCEngine(),
-                new FTOFHBEngine(),
-                new ECEngine(),
-                new EBHBEngine());
-        }
-    }
-
     public static class HitBasedAI extends UberEngine {
         public HitBasedAI() {
             super("HB","uber","1.0");
@@ -113,23 +97,6 @@ public class Uber {
                 new FTOFHBEngine(),
                 new ECEngine(),
                 new EBHBEngine());
-        }
-    }
-
-    public static class HitBasedAIClassicCV extends UberEngine {
-        public HitBasedAIClassicCV() {
-            super("HB","uber","1.0");
-            add(new DCHBClustering(),
-                new MLTDEngine(),
-                new DCHBPostClusterConv(),
-                new DCHBPostClusterAI("AI"),
-                new BANDEngine(),
-                new HTCCReconstructionService(),
-                new LTCCEngine(),
-                new FTOFHBEngine(),
-                new ECEngine(),
-                new EBHBEngine(),
-                new EBHBAIEngine());
         }
     }
 

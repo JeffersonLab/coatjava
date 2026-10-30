@@ -23,7 +23,7 @@ env:
   RCDB_CONNECTION: 'sqlite:///${{ github.workspace }}/coatjava/etc/data/sqlite/rcdb.sqlite'
   nthreads: 1
   # Maven 3.9+ reads MAVEN_ARGS automatically, including inside build-coatjava.sh:
-  #   --no-snapshot-updates : don't re-check remote repos (j4ml) for newer SNAPSHOTs;
+  #   --no-snapshot-updates : don't re-check remote repos for newer SNAPSHOTs;
   #                           use whatever `warm_maven_cache` resolved
   #   retryHandler.count    : built-in HTTP retries for transient 403/429/5xx
   MAVEN_ARGS: --no-snapshot-updates -Daether.connector.http.retryHandler.count=5
