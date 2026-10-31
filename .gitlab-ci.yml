@@ -175,13 +175,24 @@ clara:
     - run-clara -v -c $CLARA_HOME -t 4 -y ./etc/services/data-ai.yaml -n 30 -o out $EVIOFILE
     - mv out/rec_$EVIOFILE.hipo claroded.hipo
 
+reco-mutil:
+  stage: test
+  needs: [build,download]
+  dependencies: [build,download]
+  script:
+    - tar -xzf coatjava.tar.gz
+    - reco-mutil -t 4 -y ./etc/services/data-ai.yaml -n 30 -o rec_$EVIOFILE.hipo $EVIOFILE
+
 profile:
   extends: .clon
   allow_failure: true
   script:
-    - ./clara/plugins/clas12/libexec/profile -e cpu   -o _clara -- run-clara -c ./clara -y ./etc/services/data-ai.yaml -o tmp1 -t 16 -l $EVIOFILE
-    - ./clara/plugins/clas12/libexec/profile -e alloc -o _clara -- run-clara -c ./clara -y ./etc/services/data-ai.yaml -o tmp2 -t 16 -l $EVIOFILE
-    - ./clara/plugins/clas12/libexec/profile -e lock  -o _clara -- run-clara -c ./clara -y ./etc/services/data-ai.yaml -o tmp3 -t 16 -l $EVIOFILE
+    - ./clara/plugins/clas12/libexec/profile -e cpu   -o _clara -- run-clara -c ./clara -y ./etc/services/data-ai.yaml -o tmp1 -t 16 $EVIOFILE
+    - ./clara/plugins/clas12/libexec/profile -e alloc -o _clara -- run-clara -c ./clara -y ./etc/services/data-ai.yaml -o tmp2 -t 16 $EVIOFILE
+    - ./clara/plugins/clas12/libexec/profile -e lock  -o _clara -- run-clara -c ./clara -y ./etc/services/data-ai.yaml -o tmp3 -t 16 $EVIOFILE
+    - ./clara/plugins/clas12/libexec/profile -e cpu   -o _mutil -- reco-mutil -y ./etc/services/data-ai.yaml -o mutil1.hipo -t 16 $EVIOFILE
+    - ./clara/plugins/clas12/libexec/profile -e alloc -o _mutil -- reco-mutil -y ./etc/services/data-ai.yaml -o mutil2.hipo -t 16 $EVIOFILE
+    - ./clara/plugins/clas12/libexec/profile -e lock  -o _mutil -- reco-mutil -y ./etc/services/data-ai.yaml -o mutil3.hipo -t 16 $EVIOFILE
   artifacts:
     when: always
     expire_in: 1 week
