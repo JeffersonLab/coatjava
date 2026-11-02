@@ -227,7 +227,7 @@ public class DetectorEventDecoder {
                         adc.setTimeWord(hits[0].t0);
                         adc.setPedestal((short) hits[0].ped);
                         adc.setADC(nsa, nsb);
-                        // and extra hits get a new object here:
+                        // extra hits get a new object here:
                         for (int j = 1; j < hits.length; j++) {
                             ADCData a = new ADCData();
                             a.setTimeStamp(adc.getTimeStamp());
@@ -246,10 +246,6 @@ public class DetectorEventDecoder {
                     System.err.println(">>>> error : fitting pulse "+dd.getCrate()+
                         " / "+dd.getSlot()+" / "+dd.getChannel());
                 }
-                //adc.setIntegral(extendedFitter.adc + extendedFitter.ped*(nsa+nsb));
-                //adc.setHeight((short) this.extendedFitter.pulsePeakValue);
-                //adc.setTimeWord(this.extendedFitter.t0);
-                //adc.setPedestal((short) this.extendedFitter.ped);
             }
         }
     }
