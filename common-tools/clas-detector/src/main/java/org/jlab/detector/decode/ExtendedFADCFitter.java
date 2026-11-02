@@ -1,10 +1,12 @@
 package org.jlab.detector.decode;
 
+import org.jlab.detector.decode.IFADCFitter.Peak;
+
 /**
  *
  * @author gavalian
  */
-public class ExtendedFADCFitter extends IFADCFitter.Peak implements IFADCFitter {
+public class ExtendedFADCFitter extends Peak implements IFADCFitter {
 
     private final int pedistalMaxBin = 5;
     private final int p1 = 1;
@@ -13,10 +15,10 @@ public class ExtendedFADCFitter extends IFADCFitter.Peak implements IFADCFitter 
     public ExtendedFADCFitter(){}
 
     @Override
-    public Peak fit(int nsa, int nsb, int tet, int pedr, short[] pulse) {
+    public Peak[] fit(int nsa, int nsb, int tet, int pedr, short[] pulse) {
         t0=0; adc=0; ped=0; baseline=0; rms=0; 
         thresholdCrossing=0; pulsePeakValue=0; pulsePeakPosition=0; pulseWidth=0;
-        tcourse=0; tfine=0;
+        tcoarse=0; tfine=0;
         double noise  = 0;
         int    tstart = pedistalMaxBin+1;
         int    tcross = 0;
@@ -30,7 +32,7 @@ public class ExtendedFADCFitter extends IFADCFitter.Peak implements IFADCFitter 
                 pedsum += pulse[bin];
             }
             ped=pedsum/pulse.length;
-            return this;
+            return new Peak[]{this};
         }
         if (pedr==0) {
             tstart = p2+1;
@@ -81,21 +83,16 @@ public class ExtendedFADCFitter extends IFADCFitter.Peak implements IFADCFitter 
                 int a0 = pulse[s0];
                 int a1 = pulse[s0+1];
                 // set course time to be the sample before the 50% crossing
-                tcourse = s0;
+                tcoarse = s0;
                 // set the fine time from interpolation between the two samples before and after the 50% crossing (6 bits resolution)
                 tfine   = ((int) ((halfMax - a0)/(a1-a0) * 64));
-                t0      = (tcourse << 6) + tfine;
+                t0      = (tcoarse << 6) + tfine;
             }
             if(s1>-1 && s0>-1) {
                 pulseWidth  = s1 - s0;
             }
         }
-        return this;
-    }
-
-    @Override
-    public Peak[] multiFit(int nsa, int nsb, int tet, int pedr, short[] pulse) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return new Peak[]{this};
     }
 
 }

@@ -2,8 +2,9 @@ package org.jlab.detector.decode;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.jlab.detector.decode.IFADCFitter.Peak;
 
-public class SuperExtendedFADCFitter extends IFADCFitter.Peak implements IFADCFitter {
+public class SuperExtendedFADCFitter extends Peak implements IFADCFitter {
     
     static final int PED_BIN1=1;
     static final int PED_BIN2=15;
@@ -11,11 +12,11 @@ public class SuperExtendedFADCFitter extends IFADCFitter.Peak implements IFADCFi
     public SuperExtendedFADCFitter(){}
     
     @Override
-    public Peak[] multiFit(int nsa, int nsb, int tet, int pedr, short[] pulse) {
+    public Peak[] fit(int nsa, int nsb, int tet, int pedr, short[] pulse) {
 
-        List<Peak> hits = new ArrayList<>();
+        List<Peak> hits = new ArrayList<>(3);
 
-        t0=0; adc=0; ped=0; baseline=0; rms=0; tcourse=0; tfine=0;
+        t0=0; adc=0; ped=0; baseline=0; rms=0; tcoarse=0; tfine=0;
         thresholdCrossing=0; pulsePeakValue=0; pulsePeakPosition=0; pulseWidth=0;
 
         if (pedr != 0) {
@@ -77,9 +78,9 @@ public class SuperExtendedFADCFitter extends IFADCFitter.Peak implements IFADCFi
                                 // define timing:
                                 int a0 = pulse[halfBinUp];
                                 int a1 = pulse[halfBinUp+1];
-                                f.tcourse = halfBinUp;
+                                f.tcoarse = halfBinUp;
                                 f.tfine   = ((int) ((halfMax - a0)/(a1-a0) * 64));
-                                f.t0      = (tcourse << 6) + tfine;
+                                f.t0      = (tcoarse << 6) + tfine;
                                 
                                 // find the half-max crossing downwards:
                                 for (int halfBinDown = halfBinUp; halfBinDown<pulse.length; halfBinDown++) {
@@ -103,11 +104,6 @@ public class SuperExtendedFADCFitter extends IFADCFitter.Peak implements IFADCFi
             }
         }
         return hits.stream().toArray(Peak[]::new);
-    }
-
-    @Override
-    public Peak fit(int nsa, int nsb, int tet, int pedr, short[] pulse) {
-        throw new UnsupportedOperationException("Not supported yet.");
     }
 
 }
