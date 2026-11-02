@@ -2,14 +2,14 @@ package org.jlab.detector.decode;
 
 import java.util.ArrayList;
 import java.util.List;
-import org.jlab.detector.decode.IFADCFitter.Peak;
+import org.jlab.detector.decode.FADCData.Peak;
 
-public class SuperExtendedFADCFitter extends Peak implements IFADCFitter {
+public class ExtendedFADCMultiFitter extends Peak implements IFADCFitter {
     
     static final int PED_BIN1=1;
     static final int PED_BIN2=15;
 
-    public SuperExtendedFADCFitter(){}
+    public ExtendedFADCMultiFitter(){}
     
     @Override
     public Peak[] fit(int nsa, int nsb, int tet, int pedr, short[] pulse) {

@@ -12,7 +12,7 @@ import org.jlab.detector.base.DetectorDescriptor;
 import org.jlab.detector.base.DetectorType;
 import org.jlab.detector.calib.utils.ConstantsManager;
 import org.jlab.detector.decode.DetectorDataDgtz.ADCData;
-import org.jlab.detector.decode.IFADCFitter.Peak;
+import org.jlab.detector.decode.FADCData.Peak;
 import org.jlab.utils.groups.IndexedTable;
 
 /**
@@ -31,7 +31,7 @@ public class DetectorEventDecoder {
     private final HashMap<DetectorType,String> transTableNames = new HashMap<>();
     private final HashMap<DetectorType,String> fitterTableNames = new HashMap<>();
 
-    private final SuperExtendedFADCFitter extendedFitter = new SuperExtendedFADCFitter();
+    private final ExtendedFADCMultiFitter extendedFitter = new ExtendedFADCMultiFitter();
     private final MVTFitter mvtFitter = new MVTFitter();
     
     private HashMap<DetectorType,IndexedTable> fitterTables = new HashMap<>();

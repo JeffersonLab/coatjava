@@ -12,6 +12,12 @@ import org.jlab.detector.base.DetectorDescriptor;
  */
 public class FADCData {
 
+    public static class Peak { 
+        public int     t0, adc, ped, tcoarse, tfine;
+        public int     thresholdCrossing, pulsePeakValue, pulsePeakPosition, pulseWidth;
+        public double  baseline, rms;
+    }
+
     private final DetectorDescriptor desc = new DetectorDescriptor();
     private short[] adcBuffer  = null;
 

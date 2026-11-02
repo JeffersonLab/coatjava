@@ -1,6 +1,6 @@
 package org.jlab.detector.decode;
 
-import org.jlab.detector.decode.IFADCFitter.Peak;
+import org.jlab.detector.decode.FADCData.Peak;
 
 /**
  *

@@ -1,12 +1,8 @@
 package org.jlab.detector.decode;
 
-public interface IFADCFitter {
+import org.jlab.detector.decode.FADCData.Peak;
 
-    public static class Peak { 
-        public int     t0, adc, ped, tcoarse, tfine;
-        public int     thresholdCrossing, pulsePeakValue, pulsePeakPosition, pulseWidth;
-        public double  baseline, rms;
-    }
+public interface IFADCFitter {
 
     public Peak[] fit(int nsa, int nsb, int tet, int pedr, short[] pulse);
 
