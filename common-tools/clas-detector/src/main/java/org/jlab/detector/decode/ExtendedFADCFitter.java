@@ -17,9 +17,7 @@ public class ExtendedFADCFitter implements IFADCFitter {
     public double  baseline, rms;
     private int    tcourse, tfine;
 
-    public ExtendedFADCFitter(){
-        
-    }
+    public ExtendedFADCFitter(){}
 
     public void fitCourseTime(int nsa, int nsb, int tet, int pedr, short[] pulse) {
         pedsum=0;adc=0;mmsum=0;summing_in_progress=0;
@@ -121,45 +119,10 @@ public class ExtendedFADCFitter implements IFADCFitter {
             }
         }
     }
-    
-    private double findPedestal(DetectorDataDgtz.ADCData data){
-        int ped = 0;
-        for(int i = this.pedistalMinBin; i < this.pedistalMaxBin; i++){
-            ped += data.getPulseValue(i);
-        }
-        double ped_norm =   ((double) ped) / (Math.abs(this.pedistalMaxBin-this.pedistalMinBin));
-        return ped_norm;
-    }
-    
-    private int findMaximumADC(DetectorDataDgtz.ADCData data){
-        int bin = this.pedistalMaxBin ;
-        int max = data.getPulseValue(pedistalMaxBin);
-        
-        for(int i = this.pedistalMaxBin; i < data.getPulseSize(); i++){
-            if(data.getPulseValue(i)>max){
-                max = data.getPulseValue(i);
-                bin = i;
-            }
-        }
-        return bin;
-    }
-    
-    private int findPulseIntegral(DetectorDataDgtz.ADCData data, int maxValueBin, int nsa, int nsb){
-        int min_bin = maxValueBin - nsb;
-        int max_bin = maxValueBin + nsa;
-        if(min_bin>=0&&max_bin<data.getPulseSize()){
-            
-        } else {
-            System.out.println("MIN _ MAX out of range....");            
-        }
-        return 0;
-    }
 
     @Override
     public void fit(DetectorDataDgtz.ADCData data) {
-        if(data.getPulseSize()>this.pedistalMaxBin){
-            double ped = this.findPedestal(data);
-        }
+        throw new UnsupportedOperationException("Not supported yet.");
     }
-
+    
 }
