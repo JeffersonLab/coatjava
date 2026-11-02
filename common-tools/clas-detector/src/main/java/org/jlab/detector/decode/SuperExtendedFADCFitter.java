@@ -66,14 +66,13 @@ public class SuperExtendedFADCFitter extends Peak implements IFADCFitter {
                         f.pulsePeakValue = pulse[maxBin-1];
                         
                         // define its energy:
-                        final int eLimit = Math.min(pulse.length, crossBin + nsa);
-                        for (int eBin = Math.max(crossBin-nsb,0); eBin < eLimit; eBin++)
+                        for (int eBin = Math.max(crossBin-nsb,0); eBin<pulse.length && eBin<crossBin+nsa; eBin++)
                             f.adc += pulse[eBin] - f.ped;
                         
                         final double halfMax = (pulse[maxBin-1] + baseline)/2;
                         
                         // find the half-max crossing upwards:
-                        for (int halfBinUp = crossBin+1; halfBinUp < maxBin; halfBinUp++) {
+                        for (int halfBinUp = crossBin; halfBinUp < maxBin; halfBinUp++) {
                             if (pulse[halfBinUp] <= halfMax && pulse[halfBinUp+1] > halfMax) {
                                 
                                 // found half-height, now define timing:
