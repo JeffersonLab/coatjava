@@ -4,21 +4,17 @@ package org.jlab.detector.decode;
  *
  * @author gavalian
  */
-public class ExtendedFADCFitter implements IFADCFitter {
+public class ExtendedFADCFitter extends IFADCFitter.Peak implements IFADCFitter {
 
     private final int pedistalMaxBin = 5;
-
-    int p1=1,p2=15;
-
-    public int     t0,adc,ped,pedsum;
-    public int     thresholdCrossing,pulsePeakValue, pulsePeakPosition, pulseWidth;
-    public double  baseline, rms;
-    private int    tcourse, tfine;
+    private final int p1 = 1;
+    private final int p2 = 15;
 
     public ExtendedFADCFitter(){}
 
-    public void fit(int nsa, int nsb, int tet, int pedr, short[] pulse) {
-        t0=0; adc=0; ped=0; pedsum=0; baseline=0; rms=0; 
+    @Override
+    public Peak fit(int nsa, int nsb, int tet, int pedr, short[] pulse) {
+        t0=0; adc=0; ped=0; baseline=0; rms=0; 
         thresholdCrossing=0; pulsePeakValue=0; pulsePeakPosition=0; pulseWidth=0;
         tcourse=0; tfine=0;
         double noise  = 0;
@@ -28,12 +24,13 @@ public class ExtendedFADCFitter implements IFADCFitter {
         int    ppos   = 0;
         // calculate pedestal means and noise
         if (pedr!=0) ped=pedr;        // use default mode 7 pedestal range (1-4)
+        int pedsum = 0;
         if(pulse.length<p2+1 && pedr==0) {
             for (int bin = 0; bin < pulse.length; bin++) {
                 pedsum += pulse[bin];
             }
             ped=pedsum/pulse.length;
-            return;
+            return this;
         }
         if (pedr==0) {
             tstart = p2+1;
@@ -93,11 +90,12 @@ public class ExtendedFADCFitter implements IFADCFitter {
                 pulseWidth  = s1 - s0;
             }
         }
+        return this;
     }
 
     @Override
-    public void fit(DetectorDataDgtz.ADCData data) {
+    public Peak[] multiFit(int nsa, int nsb, int tet, int pedr, short[] pulse) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
-    
+
 }
