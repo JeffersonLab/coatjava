@@ -83,7 +83,7 @@ public class SuperExtendedFADCFitter extends Peak implements IFADCFitter {
                                 f.t0      = (tcoarse << 6) + tfine;
                                 
                                 // find the half-max crossing downwards:
-                                for (int halfBinDown = halfBinUp; halfBinDown<pulse.length; halfBinDown++) {
+                                for (int halfBinDown = halfBinUp; halfBinDown<pulse.length-1; halfBinDown++) {
                                     if (pulse[halfBinDown] > halfMax && pulse[halfBinDown+1] <= halfMax) {
                                         f.pulseWidth = halfBinDown - halfBinUp;
                                         break;
