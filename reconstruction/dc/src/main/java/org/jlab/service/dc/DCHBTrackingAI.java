@@ -41,13 +41,20 @@ public class DCHBTrackingAI extends DCEngine {
     public DCHBTrackingAI() {
         super("DCHTAI");
         this.getBanks().init("HitBasedTrkg", "", "AI");
-        hbTSEstimator = new HBTrackStateEstimator(hbTSEModelFile, hitStatsHBTSEModel, stateStatsHBTSEModel);      
     }
     
     public DCHBTrackingAI(String outputBankPrefix) {
         super("DCHTAI");
         this.getBanks().init("HitBasedTrkg", "", outputBankPrefix);
-        hbTSEstimator = new HBTrackStateEstimator(hbTSEModelFile, hitStatsHBTSEModel, stateStatsHBTSEModel);  
+         
+    }
+    
+    @Override
+    public boolean init() {
+        super.init();
+        hbTSEstimator = new HBTrackStateEstimator(hbTSEModelFile, hitStatsHBTSEModel, stateStatsHBTSEModel); 
+        
+        return true;
     }
  
     @Override
@@ -71,7 +78,7 @@ public class DCHBTrackingAI extends DCEngine {
             LOGGER.log(Level.INFO, "RUN=0: Skipping event");
             return true;
         }
-
+        
         if(hbTSEstimator == null){
             Logger.getLogger(getClass().getName()).log(Level.SEVERE, "Model is not found!"); 
             return true;
