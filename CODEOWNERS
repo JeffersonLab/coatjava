@@ -79,7 +79,6 @@ reconstruction/ft/ @raffaelladevita
 reconstruction/htcc/ @raffaelladevita @baltzell @zieglerv
 reconstruction/ltcc/ @raffaelladevita @baltzell @zieglerv @sly2j
 reconstruction/mc/ @baltzell @rafopar
-reconstruction/mltn/ @gavalian
 reconstruction/postproc/ @baltzell
 reconstruction/raster/ @raffaelladevita @N-Plx
 reconstruction/recoil/ @silvianic

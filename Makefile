@@ -21,4 +21,7 @@ clean:
 clara:
 	$(BUILD) --clara $(THREADS)
 
+test:
+	$(BUILD) --unittests $(THREADS)
+
 all: clara

@@ -403,14 +403,8 @@ install_jars() {
 for pom in $(find reconstruction -name pom.xml); do
   install_jars $pom $prefix_dir/lib/services
 done
-for pom in $(find common-tools -name pom.xml); do
-  if [[ "$pom" =~ coat-libs ]]; then
-    install_jars $pom $prefix_dir/lib/clas 'coat-libs-*.jar'
-  # else # FIXME, consumers may be need these after https://github.com/JeffersonLab/coatjava/pull/632 ; alternatively add needed deps to `coat-libs`
-  #   install_jars $pom $prefix_dir/lib/services
-  fi
-done
-
+install_jars common-tools/djl-runtime/pom.xml $prefix_dir/lib/services
+install_jars common-tools/coat-libs/pom.xml   $prefix_dir/lib/clas 'coat-libs-*.jar'
 echo "installed coatjava to: $prefix_dir"
 
 # install clara
