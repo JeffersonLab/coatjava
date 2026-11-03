@@ -14,24 +14,15 @@ public class ExtendedFADCMultiFitter extends Peak implements IFADCFitter {
     @Override
     public Peak[] fit(int nsa, int nsb, int tet, int pedr, short[] pulse) {
 
-        List<Peak> hits = new ArrayList<>(3);
+        zero();
 
-        t0=0; adc=0; ped=0; baseline=0; rms=0; tcoarse=0; tfine=0;
-        thresholdCrossing=0; pulsePeakValue=0; pulsePeakPosition=0; pulseWidth=0;
+        if (pulse.length < PED_BIN2+1) return new Peak[]{this};
 
         if (pedr != 0) {
             // user-defined pedestal:
             baseline = ped = pedr;
         }
         else {
-            // not enough samples, just set pedestal and abort:
-            int pedsum = 0;
-            if (pulse.length<PED_BIN2+1) {
-                for (int bin = 0; bin < pulse.length; bin++)
-                    pedsum += pulse[bin];
-                ped = pedsum/pulse.length;
-                return hits.stream().toArray(Peak[]::new);
-            }
             // calculate pedestal:
             for (int bin = PED_BIN1+1; bin < PED_BIN2+1; bin++) {
                 pedsum += pulse[bin];
@@ -43,6 +34,7 @@ public class ExtendedFADCMultiFitter extends Peak implements IFADCFitter {
         }
         
         boolean belowThreshold = false;
+        List<Peak> hits = new ArrayList<>(3);
 
         for (int crossBin = PED_BIN2+1; crossBin<pulse.length; crossBin++) {
             
@@ -80,7 +72,7 @@ public class ExtendedFADCMultiFitter extends Peak implements IFADCFitter {
                                 int a1 = pulse[halfBinUp+1];
                                 f.tcoarse = halfBinUp;
                                 f.tfine   = ((int) ((halfMax - a0)/(a1-a0) * 64));
-                                f.t0      = (tcoarse << 6) + tfine;
+                                f.t0      = (f.tcoarse << 6) + f.tfine;
                                 
                                 // find the half-max crossing downwards:
                                 for (int halfBinDown = halfBinUp; halfBinDown<pulse.length-1; halfBinDown++) {

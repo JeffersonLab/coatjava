@@ -16,9 +16,7 @@ public class ExtendedFADCFitter extends Peak implements IFADCFitter {
 
     @Override
     public Peak[] fit(int nsa, int nsb, int tet, int pedr, short[] pulse) {
-        t0=0; adc=0; ped=0; baseline=0; rms=0; 
-        thresholdCrossing=0; pulsePeakValue=0; pulsePeakPosition=0; pulseWidth=0;
-        tcoarse=0; tfine=0;
+        zero();
         double noise  = 0;
         int    tstart = pedistalMaxBin+1;
         int    tcross = 0;
@@ -26,7 +24,6 @@ public class ExtendedFADCFitter extends Peak implements IFADCFitter {
         int    ppos   = 0;
         // calculate pedestal means and noise
         if (pedr!=0) ped=pedr;        // use default mode 7 pedestal range (1-4)
-        int pedsum = 0;
         if(pulse.length<p2+1 && pedr==0) {
             for (int bin = 0; bin < pulse.length; bin++) {
                 pedsum += pulse[bin];
