@@ -19,10 +19,10 @@
   </modules>
 
   <repositories>
-    <!-- https://code.jlab.org/hallb package registries -->
+    <!-- https://code.jlab.org/hallb/clas12/maven package registries -->
     <repository>
-      <id>code.jlab.org-hallb</id>
-      <url>https://code.jlab.org/api/v4/groups/1122/-/packages/maven</url>
+      <id>code.jlab.org-hallb-clas12-maven</id>
+      <url>https://code.jlab.org/api/v4/groups/3425/-/packages/maven</url>
     </repository>
     <!-- clasweb repositories -->
     <repository>
