@@ -14,6 +14,8 @@ import java.nio.file.Paths;
 import java.util.concurrent.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.jlab.clas.reco.ReconstructionEngine;
 import org.jlab.io.base.*;
@@ -38,31 +40,22 @@ public class HBTrackStateEstimator{
     private float[] STATE_MEAN;
     private float[] STATE_STD;
     
-    public HBTrackStateEstimator(String modelFile){
+    public HBTrackStateEstimator(String modelFile, String hitStatsFile, String stateStatsFile){
         this.modelFile = modelFile;
-        
-        if(modelFile.contains("inbending")){
-            HIT_MEAN = new float[]{0.52949071f, -45.771999f,  -45.744694f,  57.336819f, 373.046356f};
-            HIT_STD = new float[]{0.40272677f, 47.928203f, 48.379021f, 32.645191f, 111.54994f};
-            STATE_MEAN = new float[]{-33.564308f, 0.010787425f, -0.15567796f, 0.0017755219f, 0.317530721f};
-            STATE_STD = new float[]{28.667490f, 17.761129f, 0.11940812f, 0.074460238f, 0.74185127f};        
-        }
-        else if(modelFile.contains("outbending")){
-            HIT_MEAN = new float[]{0.53385729f, -59.236504f,  -59.200584f,  50.136387f, 372.057922f};
-            HIT_STD = new float[]{0.40085429f, 51.385536f, 51.840462f, 31.498201f, 111.50029f};
-            STATE_MEAN = new float[]{-39.446106f, 0.17583229f, -0.18047817f, 0.0014163271f, -0.082320645f};
-            STATE_STD = new float[]{33.733425f, 17.226780f, 0.14071095f, 0.072449364f, 0.72273886f};  
-        }
-        else{
-           Logger.getLogger(getClass().getName()).log(Level.SEVERE, "Name of model file does not include inbending or outbending"); 
-        }
-        
+                
         System.setProperty("ai.djl.pytorch.num_interop_threads", "1");
         System.setProperty("ai.djl.pytorch.num_threads", "1");
-        System.setProperty("ai.djl.pytorch.graph_optimizer", "false");                
-        try {
+        System.setProperty("ai.djl.pytorch.graph_optimizer", "false"); 
+        
+        try {            
+            String hitStatsFilePath = ClasUtilsFile.getResourceDir("CLAS12DIR", "etc/data/nnet/hbTSE/" + hitStatsFile);            
+            String stateStatsFilePath = ClasUtilsFile.getResourceDir("CLAS12DIR", "etc/data/nnet/hbTSE/" + stateStatsFile);
+            
+            loadHitStats(hitStatsFilePath);
+            loadStateStats(stateStatsFilePath);
+            
             String modelPath = ClasUtilsFile.getResourceDir("CLAS12DIR", "etc/data/nnet/hbTSE/" + modelFile);
-
+            
             Criteria<float[][], float[]> criteria = Criteria.builder()
                 .setTypes(float[][].class, float[].class)
                 .optModelPath(Paths.get(modelPath))
@@ -76,10 +69,87 @@ public class HBTrackStateEstimator{
             int threads = 64;
             predictors = new PredictorPool(threads, model);
 
-
         } catch (IOException | ModelException e) {
             Logger.getLogger(getClass().getName()).log(Level.SEVERE, null, e);
         }                
+    }
+
+    private void loadHitStats(String filePath) throws IOException {
+        String json = java.nio.file.Files.readString(Paths.get(filePath));
+
+        String[] keys = {"doca", "xm", "xr", "yr", "z"};
+
+        HIT_MEAN = new float[5];
+        HIT_STD = new float[5];
+
+        for (int i = 0; i < keys.length; i++) {
+            HIT_MEAN[i] = getJsonValue(json, keys[i] + "_mean");
+            HIT_STD[i]  = getJsonValue(json, keys[i] + "_std");
+
+            if (!Float.isFinite(HIT_MEAN[i]) || !Float.isFinite(HIT_STD[i]) || HIT_STD[i] <= 0) {
+                throw new IOException("Invalid hit statistics: " + keys[i]);
+            }
+        }
+    }
+    
+    private float getJsonValue(String json, String key) throws IOException {
+        Pattern pattern = Pattern.compile("\"" + Pattern.quote(key) + "\"\\s*:\\s*(-?\\d+(?:\\.\\d+)?(?:[eE][+-]?\\d+)?)");
+
+        Matcher matcher = pattern.matcher(json);
+
+        if (!matcher.find()) {
+            throw new IOException("Missing JSON key: " + key);
+        }
+
+        try {
+            return Float.parseFloat(matcher.group(1));
+        } catch (NumberFormatException e) {
+            throw new IOException("Invalid JSON value: " + key, e);
+        }
+    }    
+    
+    private void loadStateStats(String filePath) throws IOException {
+        String json = java.nio.file.Files.readString(Paths.get(filePath));
+
+        String[] keys = {"x", "y", "tx", "ty", "Q"};
+
+        STATE_MEAN = new float[5];
+        STATE_STD = new float[5];
+
+        for (int i = 0; i < keys.length; i++) {
+            float[] values = getJsonArray(json, keys[i]);
+
+            if (values.length != 2 || !Float.isFinite(values[0]) || !Float.isFinite(values[1]) || values[1] <= 0) {
+                throw new IOException("Invalid state statistics: " + keys[i]);
+            }
+
+            STATE_MEAN[i] = values[0];
+            STATE_STD[i] = values[1];
+        }
+    }    
+
+    private float[] getJsonArray(String json, String key) throws IOException{
+        Pattern pattern = Pattern.compile("\"" + Pattern.quote(key) + "\"\\s*:\\s*\\[([^\\]]+)\\]");
+
+        Matcher matcher = pattern.matcher(json);
+
+        if (!matcher.find()) {
+            throw new IOException("Missing JSON key: " + key);
+        }
+
+        String[] values = matcher.group(1).split(",");
+
+        float[] result = new float[values.length];
+
+        try {
+            for (int i = 0; i < values.length; i++) {
+                result[i] = Float.parseFloat(values[i].trim());
+            }
+        } catch (NumberFormatException e) {
+            throw new IOException("Invalid JSON values for key: " + key, e);
+        }
+
+        return result;
     }    
     
     // ---------------- Translator ----------------
@@ -145,6 +215,6 @@ public class HBTrackStateEstimator{
         } catch (TranslateException | InterruptedException e) {
             throw new RuntimeException(e);
         }
-    }
+    }   
 }
 

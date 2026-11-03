@@ -207,7 +207,7 @@ public class TrackCandListFinder {
         return q;
     }
     
-    public List<Track> getTrackCandsAI(CrossList crossList, DCGeant4Factory DcDetector, Swim dcSwim, HBTrackStateEstimator hbTSEstimator){
+    public List<Track> getTrackCandsAI(CrossList crossList, DCGeant4Factory DcDetector, Swim dcSwim, HBTrackStateEstimator hbTSEstimator, boolean isInbendingHBTSEModel){
         List<Track> cands = new ArrayList<>();
         
         for (List<Cross> aCrossList : crossList) {
@@ -254,10 +254,10 @@ public class TrackCandListFinder {
                 initSV.z = 229.; // State vector at z = 229 for AI training samples
                 initSV.tx = estSV[2];
                 initSV.ty = estSV[3];
-                initSV.Q = estSV[4];
+                initSV.Q = estSV[4] * Math.signum(Swimmer.getTorScale()) * (isInbendingHBTSEModel ? -1 : 1); 
                 
                 double absTorScale = Math.abs(Swimmer.getTorScale());
-                initSV.Q = absTorScale>0.001 ? estSV[4]/absTorScale : estSV[4]; // Momentum magnitude is scaled by the scale factor of magnetic field
+                initSV.Q = absTorScale>0.001 ? initSV.Q/absTorScale : initSV.Q; // Momentum magnitude is scaled by the scale factor of magnetic field
                                  
                 RungeKuttaDoca rk = new RungeKuttaDoca();
                 rk.SwimToZ(sector, initSV, dcSwim, measSurfaces.get(0).wireLine[0].end().z(), new float[3]); 
