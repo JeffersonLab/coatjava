@@ -52,6 +52,7 @@ public class ExtendedFADCMultiFitter extends Peak implements IFADCFitter {
                         
                         // found maximum, now make a new hit:
                         Peak f = new Peak();
+                        hits.add(f);
                         f.ped = ped;
                         f.t0 = f.thresholdCrossing = f.tcoarse = crossBin;
                         f.pulsePeakPosition = maxBin-1;
@@ -86,7 +87,6 @@ public class ExtendedFADCMultiFitter extends Peak implements IFADCFitter {
                         }
                         
                         // add the new hit we just made:
-                        hits.add(f);
                         
                         // move search bin forward:
                         crossBin = f.pulsePeakPosition + 1;
