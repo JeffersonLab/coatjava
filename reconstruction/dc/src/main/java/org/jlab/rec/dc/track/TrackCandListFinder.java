@@ -602,6 +602,11 @@ public class TrackCandListFinder {
 
         Point3D trkR1X = C.getCoordsInLab(xOr, yOr, zOr);
         Point3D trkR1P = C.getCoordsInLab(pxOr, pyOr, pzOr);
+        
+        //set the pseudocross at z = 229 cm in the tilted sector frame
+        cand.set_PreRegion1CrossPoint(new Point3D(xOr, yOr, zOr));
+        cand.set_PreRegion1CrossDir(new Point3D(pxOr / cand.get_P(), pyOr / cand.get_P(), pzOr / cand.get_P()));
+        
         cand.set_Region1TrackX(new Point3D(trkR1X.x(), trkR1X.y(), trkR1X.z()));
         cand.set_Region1TrackP(new Point3D(trkR1P.x(), trkR1P.y(), trkR1P.z()));
 
@@ -659,16 +664,7 @@ public class TrackCandListFinder {
             cand.fit_Successful = false;
             return;
         }
-        double xInner = VecAtHtccSurf[0];
-        double yInner = VecAtHtccSurf[1];
-        double zInner = VecAtHtccSurf[2];
-        double uxInner = VecAtHtccSurf[3] / cand.get_P();
-        double uyInner = VecAtHtccSurf[4] / cand.get_P();
-        double uzInner = VecAtHtccSurf[5] / cand.get_P();
 
-        //set the pseudocross at extrapolated position
-        cand.set_PreRegion1CrossPoint(new Point3D(xOr, yOr, zOr));
-        cand.set_PreRegion1CrossDir(new Point3D(pxOr / cand.get_P(), pyOr / cand.get_P(), pzOr / cand.get_P()));
     }
 
     private Integer getKey(Track trk) {
