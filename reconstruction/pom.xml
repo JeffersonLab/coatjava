@@ -4,13 +4,13 @@
 
   <groupId>org.jlab.clas12</groupId>
   <artifactId>reconstruction</artifactId>
-  <version>14.2.1-SNAPSHOT</version>
+  <version>14.2.3-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <parent>
     <groupId>org.jlab.clas</groupId>
     <artifactId>coatjava</artifactId>
-    <version>14.2.1-SNAPSHOT</version>
+    <version>14.2.3-SNAPSHOT</version>
   </parent>
 
   <modules>
@@ -29,7 +29,6 @@
     <module>band</module>
     <module>mc</module>
     <module>rtpc</module>
-    <module>mltn</module>
     <module>swaps</module>
     <module>raster</module>
     <module>vtx</module>

@@ -152,7 +152,7 @@ public class HelicalTrackFitter {
         _circlefitpars = _circlefit.getFit();
 
         // get the parameters of the helix representation of the track
-        double fit_dca = _circlefitpars.doca(); //check sign convention
+        double fit_dca = -_circlefitpars.doca(); //sign of d0 in the Helix class is oppsite to here
         double fit_phi_at_dca = _circlefitpars.phi();
         double fit_curvature = _circlefitpars.rho();
         double fit_tandip = _linefitpars.slope();
@@ -184,8 +184,8 @@ public class HelicalTrackFitter {
         //covr[5] =  delta_dca.delta_dca;
         
         fit_covmatrix[0][0] = _circlefitpars.cov()[5];
-        fit_covmatrix[1][0] = _circlefitpars.cov()[4];
-        fit_covmatrix[2][0] = _circlefitpars.cov()[2];
+        fit_covmatrix[1][0] = -_circlefitpars.cov()[4];
+        fit_covmatrix[2][0] = -_circlefitpars.cov()[2];
         fit_covmatrix[0][1] = _circlefitpars.cov()[4];
         fit_covmatrix[1][1] = _circlefitpars.cov()[3];
         fit_covmatrix[2][1] = _circlefitpars.cov()[1];

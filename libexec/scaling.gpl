@@ -43,7 +43,7 @@ set style line 37 pt 6 lt 1 lc rgb '#FDBF6F' # light orange
 set style line 38 pt 6 lt 1 lc rgb '#FF7F00' # dark orange
 
 # parse command line arguments:
-datafile = 'scaling.txt'
+datafile = 'scaling-clara.txt'
 if (ARGC > 0) {
     if (ARGV[1] eq "-u") {
         uberMode = 1

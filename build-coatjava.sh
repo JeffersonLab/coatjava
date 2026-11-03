@@ -223,7 +223,12 @@ notify_retrieval() {
 # update an LFS submodule
 download_lfs() {
   cd $src_dir > /dev/null
-  git submodule update --init $1
+  if [ "$#" -gt 1 ]; then
+    GIT_LFS_SKIP_SMUDGE=1 git submodule update --init $1
+    for x in "${@:2}"; do $(cd $1 && git lfs pull --include $x); done
+  else
+    git submodule update --init $1
+  fi
   cd - > /dev/null
 }
 
@@ -266,7 +271,10 @@ if $auxDownloadMaps; then
   case $auxRetrieval in
     lfs)
       notify_retrieval 'field maps' 'lfs'
-      download_lfs etc/data/magfield
+      download_lfs etc/data/magfield \
+          Symm_solenoid_r601_phi1_z1201_13June2018.dat \
+          Symm_torus_r2501_phi16_z251_24Apr2018.dat \
+          Full_torus_r251_phi181_z251_25Jan2021.dat
       ;;
     cvmfs|https)
       webDir=https://clasweb.jlab.org/clas12offline/magfield
@@ -395,14 +403,8 @@ install_jars() {
 for pom in $(find reconstruction -name pom.xml); do
   install_jars $pom $prefix_dir/lib/services
 done
-for pom in $(find common-tools -name pom.xml); do
-  if [[ "$pom" =~ coat-libs ]]; then
-    install_jars $pom $prefix_dir/lib/clas 'coat-libs-*.jar'
-  # else # FIXME, consumers may be need these after https://github.com/JeffersonLab/coatjava/pull/632 ; alternatively add needed deps to `coat-libs`
-  #   install_jars $pom $prefix_dir/lib/services
-  fi
-done
-
+install_jars common-tools/djl-runtime/pom.xml $prefix_dir/lib/services
+install_jars common-tools/coat-libs/pom.xml   $prefix_dir/lib/clas 'coat-libs-*.jar'
 echo "installed coatjava to: $prefix_dir"
 
 # install clara

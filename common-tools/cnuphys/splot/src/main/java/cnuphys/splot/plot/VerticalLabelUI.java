@@ -35,7 +35,6 @@ public class VerticalLabelUI extends BasicLabelUI {
 	Rectangle verticalIconR = new Rectangle();
 	Rectangle verticalTextR = new Rectangle();
 	protected static VerticalLabelUI verticalLabelUI = new VerticalLabelUI();
-	private final static VerticalLabelUI SAFE_VERTICAL_LABEL_UI = new VerticalLabelUI();
 
 	/**
 	 * Constructs a <code>VerticalLabelUI</code> with the default anticlockwise
@@ -58,12 +57,7 @@ public class VerticalLabelUI extends BasicLabelUI {
 	 * @see ComponentUI#createUI(javax.swing.JComponent)
 	 */
 	public static ComponentUI createUI(JComponent c) {
-		if (System.getSecurityManager() != null) {
-			return SAFE_VERTICAL_LABEL_UI;
-		}
-		else {
-			return verticalLabelUI;
-		}
+        return verticalLabelUI;
 	}
 
 	/**

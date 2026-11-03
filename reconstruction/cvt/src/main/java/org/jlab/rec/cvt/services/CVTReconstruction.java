@@ -85,12 +85,11 @@ public class CVTReconstruction {
         
         List<Cluster> clusters = new ArrayList<>();
         //2) find the clusters from these hits
-        ClusterFinder clusFinder = new ClusterFinder();
         if(this.getSVThits().size()>0) {
-            clusters.addAll(clusFinder.findClusters(this.getSVThits()));
+            clusters.addAll(ClusterFinder.findClusters(this.getSVThits()));
         }     
         if(this.getBMThits().size() > 0) {
-            clusters.addAll(clusFinder.findClusters(this.getBMThits())); 
+            clusters.addAll(ClusterFinder.findClusters(this.getBMThits())); 
         }
         
         CVTclusters.add(new ArrayList<>());

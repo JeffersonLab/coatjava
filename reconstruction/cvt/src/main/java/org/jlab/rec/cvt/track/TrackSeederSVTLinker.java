@@ -250,7 +250,7 @@ public class TrackSeederSVTLinker {
     private List<Integer> getSector(int bstSec, int bstRg) {
         List<Integer> sec = new ArrayList<>();
         if(bstRg==1) {
-            if(bstSec>0 && bstSec<5)
+            if(bstSec>0 && bstSec<6)
                 sec.add(1);
             if(bstSec>3 && bstSec<9)
                 sec.add(2);
@@ -262,7 +262,7 @@ public class TrackSeederSVTLinker {
         if(bstRg==2) {
             if(bstSec>0 && bstSec<7)
                 sec.add(1);
-            if(bstSec>5 && bstSec<11)
+            if(bstSec>5 && bstSec<12)
                 sec.add(2);
             if(bstSec>9 && bstSec<15)
                 sec.add(3);
@@ -274,7 +274,7 @@ public class TrackSeederSVTLinker {
                 sec.add(1);
             if(bstSec>6 && bstSec<14)
                 sec.add(2);
-            if(bstSec>13 && bstSec<19)
+            if(bstSec>12 && bstSec<19)
                 sec.add(3);
             if(bstSec==1)
                 sec.add(3);
