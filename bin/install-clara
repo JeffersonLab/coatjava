@@ -62,7 +62,7 @@ function build_clara {
 }
 
 function build_grapes {
-    git clone --depth 1 --branch $grapes https://github.com/jeffersonlab/grapes
+    git clone --depth 1 --branch $grapes https://code.jlab.org/hallb/clas12/coatjava/grapes.git
     cd grapes && mvn package && cd -
 }
 
