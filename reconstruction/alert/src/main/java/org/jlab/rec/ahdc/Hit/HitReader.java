@@ -156,12 +156,20 @@ public class HitReader {
 				double ped_min = rawHitCutsTable.getDoubleValueByHash("ped_min", hash);
 				double ped_max = rawHitCutsTable.getDoubleValueByHash("ped_max", hash);
 
-				boolean passCuts =
-					(wfType <= 2) &&
-					(adcRaw >= adc_min) && (adcRaw <= adc_max) &&
-					(time   >= t_min)   && (time   <= t_max) &&
-					(timeOverThreshold >= tot_min) && (timeOverThreshold <= tot_max) &&
-					(adcOffset >= ped_min) && (adcOffset <= ped_max);
+				boolean passCuts = false;
+				if (wfType == 0) {
+					passCuts = 
+						(adcRaw >= adc_min) && (adcRaw <= adc_max) &&
+						(time   >= t_min)   && (time   <= t_max) &&
+						(timeOverThreshold >= tot_min) && (timeOverThreshold <= tot_max) &&
+						(adcOffset >= ped_min) && (adcOffset <= ped_max);
+				} 
+				else if (wfType == 1 || wfType == 2) {
+					passCuts = 
+						(adcRaw >= adc_min) && (adcRaw <= adc_max) &&
+						(time   >= t_min)   && (time   <= t_max) &&
+						(adcOffset >= ped_min) && (adcOffset <= ped_max);
+				}
 
 				if (!passCuts) continue;
 			}

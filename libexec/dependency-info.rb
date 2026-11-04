@@ -1,7 +1,14 @@
 #!/usr/bin/env ruby
+
+##################################################################################
+# map each dependency to the repository from which it was obtained
+# ----------------------------------------------------------------
+# PROCEDURE:
+# - start from a clean local Maven repository (~/.m2/repository, by default)
+# - clean build coatjava
+# - run this script
 #
-# map dependency to the repository from which it was obtained
-#
+##################################################################################
 
 require 'yaml'
 require 'fileutils'
@@ -61,7 +68,6 @@ jars.each do |jar_path|
     repo_id = repo_line.split('>')[1].split('=')[0]
     repo_id = repo_id.sub /-\h{32,}\z/, '' unless repo_id.nil? # drop the trailing digest (from GitHub `setup-java`'s `settings.xml`)
     repo = case repo_id
-           when /code.jlab.org-.*/ then 'code.jlab.org'
            when nil                then REPO_LOCAL
            when 'central'          then REPO_CENTRAL
            else repo_id

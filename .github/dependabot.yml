@@ -18,11 +18,8 @@ updates:
     commit-message:
       prefix: "build(deps)"
     ignore:
-      - dependency-name: "org.jlab:groot" # since version numbers are not in order
-      - dependency-name: "net.objecthunter:exp4j" # pinned for dependency convergence
-      - dependency-name: "org.ejml:ejml-simple" # pinned for dependency convergence
-      - dependency-name: "org.apache.commons:commons-lang3" # pinned for dependency convergence
-      - dependency-name: "org.slf4j:slf4j-api" # pinned for dependency convergence
+      - dependency-name: "org.jlab:groot" # since clasweb version numbers are not in order
+      - dependency-name: "org.ejml:ejml-simple" # see https://github.com/JeffersonLab/coatjava/pull/636
       - dependency-name: "org.openjfx:javafx-base"
         versions: [">= 24"] # version 24 requires JAVA_VERSION 22+
       - dependency-name: "org.openjfx:javafx-graphics"

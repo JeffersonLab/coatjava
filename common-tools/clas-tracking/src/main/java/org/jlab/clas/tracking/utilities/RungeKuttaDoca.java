@@ -1,5 +1,6 @@
 package org.jlab.clas.tracking.utilities;
 
+import java.util.concurrent.ConcurrentLinkedQueue;
 import org.jlab.clas.pdg.PhysicsConstants;
 import org.jlab.jnp.matrix.*;
 import org.jlab.clas.swimtools.Swim;
@@ -23,12 +24,11 @@ public class RungeKuttaDoca {
         swim.Bfield(sector, vec.x, vec.y, vec.z, bf);
 
         vec.B = Math.sqrt(bf[0]*bf[0] + bf[1]*bf[1] + bf[2]*bf[2]);
-        double s = vec.B;
         final double travelSign = Math.signum(z0 - vec.z);
         double BatMeas = 0;
 
         while(travelSign * vec.z < travelSign * z0) {
-            s = travelSign * stepSize;
+            double s = travelSign * stepSize;
             if (travelSign*(vec.z+s) > travelSign*z0) s = travelSign*Math.abs(z0-vec.z);
 
             this.RK4transport(sector, s, swim, vec);
@@ -82,8 +82,8 @@ public class RungeKuttaDoca {
     public void RK4transport(int sector, double h, Swim swim, Matrix cMat, StateVec vec) {
         // Set initial state and Jacobian.
         double qv = vec.Q*v;
-        RK4Vec s0 = new RK4Vec(vec);
-        RK4Vec sNull = new RK4Vec();
+        RK4Vec s0 = RK4VEC_POOL.poll(vec);
+        RK4Vec sNull = RK4VEC_POOL.poll();
 
         // Perform steps.
         RK4Vec s1 = RK4step(sector, vec.z, 0,     swim, s0, sNull, qv);
@@ -94,6 +94,11 @@ public class RungeKuttaDoca {
         // Compute and set final state and covariance matrix.
         RK4Vec sF = computeFinalState(h, s0, s1, s2, s3, s4);
 
+        RK4VEC_POOL.offer(s1);
+        RK4VEC_POOL.offer(s2);
+        RK4VEC_POOL.offer(s3);
+        RK4VEC_POOL.offer(s4);
+        
         vec.x   = sF.x;
         vec.y   = sF.y;
         vec.tx  = sF.tx;
@@ -102,12 +107,17 @@ public class RungeKuttaDoca {
         vec.B   = Math.sqrt(_b[0]*_b[0]+_b[1]*_b[1]+_b[2]*_b[2]);
         vec.deltaPath += Math.sqrt((s0.x-vec.x)*(s0.x-vec.x) + (s0.y-vec.y)*(s0.y-vec.y) + h*h);
         vec.CM.set(computeCovMat(cMat, sF));
+
+        RK4VEC_POOL.offer(sF);
+
+        RK4VEC_POOL.offer(s0);
+        RK4VEC_POOL.offer(sNull);
     }
 
     /** Perform one RK4 step, updating the covariance matrix. */
     private RK4Vec RK4step(int sector, double z0, double h, Swim swim,
                                RK4Vec sInit, RK4Vec sPrev, double qv) {
-        RK4Vec sNext = new RK4Vec();
+        RK4Vec sNext = RK4VEC_POOL.poll();
         swim.Bfield(sector, sInit.x + h*sPrev.x, sInit.y + h*sPrev.y, z0 + h, _b);
 
         // State.
@@ -148,7 +158,7 @@ public class RungeKuttaDoca {
     /** Compute the final state for each entry in the internal state matrix. */
     private RK4Vec computeFinalState(double h, RK4Vec s0, RK4Vec s1, RK4Vec s2, RK4Vec s3,
             RK4Vec s4) {
-        RK4Vec sF = new RK4Vec();
+        RK4Vec sF = RK4VEC_POOL.poll();
 
         sF.x      = s0.x  + this.RK4(s1.x,      s2.x,      s3.x,      s4.x,      h);
         sF.dxdtx0 =         this.RK4(s1.dxdtx0, s2.dxdtx0, s3.dxdtx0, s4.dxdtx0, h);
@@ -329,8 +339,34 @@ public class RungeKuttaDoca {
         return v*Ay + qv * (dAy_dtx*dtx_dq0 + dAy_dty*dty_dq0);
     }
 
+    static class RK4VecPool extends ConcurrentLinkedQueue<RK4Vec> {
+        public RK4VecPool(int size) {
+            super();
+            for (int i=0; i<size; i++) add(new RK4Vec());
+        }
+        @Override
+        public RK4Vec poll() {
+            RK4Vec v = super.poll();
+            v.reset();
+            return v;
+        }
+        public RK4Vec poll(StateVec vec) {
+            RK4Vec v = poll();
+            v.x  = vec.x;
+            v.y  = vec.y;
+            v.tx = vec.tx;
+            v.ty = vec.ty;
+            v.dtxdtx0 = 1;
+            v.dtydty0 = 1;
+            return v;
+        }
+    }
+
+    // At 16 doubles each, 10k is about 10 MB:
+    static final RK4VecPool RK4VEC_POOL =new RK4VecPool(10000);
+    
     /** State vector and its derivatives used internally. */
-    private class RK4Vec {
+    static class RK4Vec {
         public double x      = 0;
         public double dxdtx0 = 0;
         public double dxdty0 = 0;
@@ -351,15 +387,26 @@ public class RungeKuttaDoca {
         public double dtydty0 = 0;
         public double dtydq0  = 0;
 
-        RK4Vec() {}
-        RK4Vec(StateVec vec) {
-            this.x  = vec.x;
-            this.y  = vec.y;
-            this.tx = vec.tx;
-            this.ty = vec.ty;
+        void reset() {
+            x      = 0;
+            dxdtx0 = 0;
+            dxdty0 = 0;
+            dxdq0  = 0;
 
-            this.dtxdtx0 = 1;
-            this.dtydty0 = 1;
+            y      = 0;
+            dydtx0 = 0;
+            dydty0 = 0;
+            dydq0  = 0;
+
+            tx      = 0;
+            dtxdtx0 = 0;
+            dtxdty0 = 0;
+            dtxdq0  = 0;
+
+            ty      = 0;
+            dtydtx0 = 0;
+            dtydty0 = 0;
+            dtydq0  = 0;
         }
     }
 }

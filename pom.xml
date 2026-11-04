@@ -4,7 +4,7 @@
 
   <groupId>org.jlab.clas</groupId>
   <artifactId>coatjava</artifactId>
-  <version>14.2.2-SNAPSHOT</version>
+  <version>14.2.3-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <properties>
@@ -19,44 +19,15 @@
   </modules>
 
   <repositories>
-    <!-- jnp-hipo4 ::: https://code.jlab.org/hallb/clas12/hipo-java -->
+    <!-- https://code.jlab.org/hallb/clas12/maven package registries -->
     <repository>
-      <id>code.jlab.org-hipo-java</id>
-      <url>https://code.jlab.org/api/v4/projects/919/packages/maven</url>
-    </repository>
-    <!-- xmsg ::: https://code.jlab.org/hallb/clas12/coatjava/xmsg-java -->
-    <repository>
-      <id>code.jlab.org-xmsg-java</id>
-      <url>https://code.jlab.org/api/v4/projects/959/packages/maven</url>
-    </repository>
-    <!-- jclara ::: https://code.jlab.org/hallb/clas12/coatjava/clara-java -->
-    <repository>
-      <id>code.jlab.org-clara-java</id>
-      <url>https://code.jlab.org/api/v4/projects/243/packages/maven</url>
-    </repository>
-    <!-- freehep-jminuit ::: https://code.jlab.org/hallb/clas12/jminuit-maven-mirror -->
-    <repository>
-      <id>code.jlab.org-freehep-jminuit</id>
-      <url>https://code.jlab.org/api/v4/projects/1079/packages/maven</url>
-    </repository>
-    <!-- ccdbrcdb ::: https://code.jlab.org/hallb/clas12/coatjava/ccdbrcdb-java -->
-    <repository>
-      <id>code.jlab.org-ccdbrcdb-java</id>
-      <url>https://code.jlab.org/api/v4/projects/245/packages/maven</url>
-    </repository>
-    <!-- groot ::: https://code.jlab.org/hallb/clas12/groot -->
-    <repository>
-      <id>code.jlab.org-groot</id>
-      <url>https://code.jlab.org/api/v4/projects/388/packages/maven</url>
+      <id>code.jlab.org-hallb-clas12-maven</id>
+      <url>https://code.jlab.org/api/v4/groups/3425/-/packages/maven</url>
     </repository>
     <!-- clasweb repositories -->
     <repository>
       <id>clasweb-clas12maven</id>
       <url>https://clasweb.jlab.org/.clas12maven</url>
-    </repository>
-    <repository>
-      <id>clasweb-jhep</id>
-      <url>https://clasweb.jlab.org/.jhep/maven</url>
     </repository>
   </repositories>
 
@@ -126,13 +97,13 @@
       <dependency>
         <groupId>org.apache.commons</groupId>
         <artifactId>commons-text</artifactId>
-        <version>1.15.0</version> <!-- WARNING: if changed, check the `org.apache.commons:commons-lang3` version; see `docs/dependency_conflicts.md` -->
+        <version>1.15.0</version>
       </dependency>
 
       <dependency>
         <groupId>org.jlab</groupId>
         <artifactId>groot</artifactId>
-        <version>6.0.0</version> <!-- WARNING: if changed, check the `net.objecthunter:exp4j` version; see `docs/dependency_conflicts.md` -->
+        <version>6.0.0</version>
       </dependency>
 
       <dependency>
@@ -157,7 +128,12 @@
         <groupId>org.jlab.coda</groupId>
         <artifactId>jevio</artifactId>
         <classifier>jar-with-dependencies</classifier>
-        <version>6.2-SNAPSHOT</version>
+        <version>5.99.0</version>
+        <!--
+          exclude all of `jevio`'s dependencies, since we're consuming the uber jar and we don't want Maven to attempt to
+          pull these dependencies itself; these exclusions do not exclude these dependencies from the shaded JAR (`coat-libs`),
+          so they'll be available downstream and at runtime, since we shade this `jevio` uber jar
+        -->
         <exclusions>
           <exclusion>
             <groupId>net.jpountz.lz4</groupId>
@@ -165,7 +141,7 @@
           </exclusion>
           <exclusion>
             <groupId>com.aha.compression</groupId>
-            <artifactId> AHACompressionAPI </artifactId>
+            <artifactId>AHACompressionAPI</artifactId>
           </exclusion>
           <exclusion>
             <groupId>com.lmax</groupId>
@@ -186,36 +162,8 @@
 
       <dependency>
         <groupId>org.jlab.jnp</groupId>
-        <artifactId>jnp-hipo</artifactId>
-        <version>2.0-SNAPSHOT</version> <!-- WARNING: if changed, check the `net.objecthunter:exp4j` version; see `docs/dependency_conflicts.md` -->
-      </dependency>
-
-      <dependency>
-        <groupId>org.jlab.jnp</groupId>
         <artifactId>jnp-hipo4</artifactId>
-        <version>4.5</version> <!-- WARNING: if changed, check the `net.objecthunter:exp4j` version; see `docs/dependency_conflicts.md` -->
-      </dependency>
-
-      <dependency>
-        <groupId>j4ml</groupId>
-        <artifactId>j4ml-neuroph</artifactId>
-        <version>0.9-SNAPSHOT</version> <!-- WARNING: if changed:
-          - check the `org.slf4j:slf4j-api` version
-          - check the `org.apache.commons:commons-lang3` version
-          - see `docs/dependency_conflicts.md` for more info
-        -->
-      </dependency>
-
-      <dependency>
-        <groupId>j4ml</groupId>
-        <artifactId>j4ml-data</artifactId>
-        <version>0.9-SNAPSHOT</version>
-      </dependency>
-
-      <dependency>
-        <groupId>j4ml</groupId>
-        <artifactId>j4ml-clas12</artifactId>
-        <version>0.9-SNAPSHOT</version> <!-- WARNING: if changed, check the `org.ejml:ejml-simple` version; see `docs/dependency_conflicts.md` -->
+        <version>4.5</version>
       </dependency>
 
       <dependency>
@@ -255,53 +203,10 @@
         <scope>import</scope>
       </dependency>
 
-      <!--
-        resolve convergence conflict of `net.objecthunter:exp4j` by choosing the latest used by
-        - `org.jlab:groot:6.0.0`                 uses version 0.4.8
-        - `org.jlab.jnp:jnp-hipo4:4.5`           uses version 0.4.8
-        - `org.jlab.jnp:jnp-hipo:2.0-SNAPSHOT`   uses version 0.4.4
-        - see `docs/dependency_conflicts.md` for more info
-      -->
-      <dependency>
-        <groupId>net.objecthunter</groupId>
-        <artifactId>exp4j</artifactId>
-        <version>0.4.8</version> <!-- WARNING: if changed, see `docs/dependency_conflicts.md` -->
-      </dependency>
-
-      <!--
-        resolve convergence conflict between `j4ml:j4ml-clas12` and `clas-tracking`
-        by using the version of `org.ejml:ejml-simple` used by `j4ml:j4ml-clas12:jar:0.9-SNAPSHOT`
-        - see `docs/dependency_conflicts.md` for more info
-      -->
       <dependency>
         <groupId>org.ejml</groupId>
         <artifactId>ejml-simple</artifactId>
-        <version>0.40</version> <!-- WARNING: if changed, see `docs/dependency_conflicts.md` -->
-      </dependency>
-
-      <!--
-        resolve convergence conflict of `org.apache.commons:commons-lang3` by choosing the latest used by
-        - j4ml:j4ml-neuroph:0.9-SNAPSHOT consumes com.github.neuroph:neuroph-core:2.98 which uses version 3.3.2
-        - org.apache.commons:commons-text:1.15.0 uses version 3.20.0
-        - see `docs/dependency_conflicts.md` for more info
-      -->
-      <dependency>
-        <groupId>org.apache.commons</groupId>
-        <artifactId>commons-lang3</artifactId>
-        <version>3.20.0</version> <!-- WARNING: if changed, see `docs/dependency_conflicts.md` -->
-      </dependency>
-
-      <!--
-        resolve convergence conflict of `org.slf4j:slf4j-api` inherent in dependencies consumed by
-        `j4ml:j4ml-neuroph:jar:0.9-SNAPSHOT` by choosing the latest version:
-        - com.github.neuroph:neuroph-core:2.98 uses version 1.7.5
-        - com.github.neuroph:neuroph-core:2.98 also consumes ch.qos.logback:logback-classic:1.1.2, which uses version 1.7.6
-        - see `docs/dependency_conflicts.md` for more info
-      -->
-      <dependency>
-        <groupId>org.slf4j</groupId>
-        <artifactId>slf4j-api</artifactId>
-        <version>1.7.6</version> <!-- WARNING: if changed, see `docs/dependency_conflicts.md` -->
+        <version>0.40</version> <!-- WARNING: if changed, see https://github.com/JeffersonLab/coatjava/pull/636 -->
       </dependency>
 
     </dependencies>
@@ -327,7 +232,7 @@
       <plugin>
         <groupId>com.github.spotbugs</groupId>
         <artifactId>spotbugs-maven-plugin</artifactId>
-        <version>4.10.4.1</version>
+        <version>4.10.5.0</version>
         <configuration>
           <excludeFilterFile>spotbugs-exclude.xml</excludeFilterFile>
         </configuration>
@@ -414,14 +319,6 @@
             <configuration>
               <outputFile>${project.build.directory}/dependency-tree.txt</outputFile>
               <failOnWarning>true</failOnWarning>
-              <!-- ignore certain "unused but declared" warnings -->
-              <ignoredUnusedDeclaredDependencies>
-                <ignoredUnusedDeclaredDependency>ai.djl:model-zoo</ignoredUnusedDeclaredDependency>
-                <ignoredUnusedDeclaredDependency>ai.djl.pytorch:pytorch-model-zoo</ignoredUnusedDeclaredDependency>
-                <ignoredUnusedDeclaredDependency>ai.djl.pytorch:pytorch-engine</ignoredUnusedDeclaredDependency>
-                <ignoredUnusedDeclaredDependency>ai.djl.pytorch:pytorch-native-cpu</ignoredUnusedDeclaredDependency>
-                <ignoredUnusedDeclaredDependency>ai.djl.pytorch:pytorch-jni</ignoredUnusedDeclaredDependency>
-              </ignoredUnusedDeclaredDependencies>
             </configuration>
           </execution>
         </executions>
