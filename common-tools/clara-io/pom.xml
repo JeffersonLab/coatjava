@@ -55,4 +55,29 @@
 
   </dependencies>
 
+  <!-- copy the CLARA jar for runtime usage -->
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>copy-jclara</id>
+            <phase>package</phase>
+            <goals>
+              <goal>copy-dependencies</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${project.build.directory}/lib/utils</outputDirectory>
+              <includeGroupIds>org.jlab.coda</includeGroupIds>
+              <includeArtifactIds>jclara</includeArtifactIds>
+              <includeTypes>jar</includeTypes>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
 </project>
