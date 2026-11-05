@@ -23,6 +23,11 @@ public abstract class AKFitter {
     private double resiCut = 50;//residual cut for the measurements
 
     // return variables
+    /** Temporary A/B switch for the former behaviour, where a null intermediate
+     *  smoothed state made the whole chi2 NaN and failed the track. */
+    protected static final boolean LEGACY_NULL_SMOOTH_FAIL =
+            Boolean.getBoolean("kf.legacyNullSmoothFail");
+
     public boolean setFitFailed = false;
     public double  chi2;
     public int     NDF;
@@ -180,12 +185,16 @@ public abstract class AKFitter {
             int index   = mv.measurements.get(k).layer;
             int layer   = mv.measurements.get(k).surface.getLayer();
             int sector  = mv.measurements.get(k).surface.getSector();
+            // A null smoothed state means the swim from the smoothed helix could not reach
+            // this surface, so there is no smoothed residual to report. Use -999, the same
+            // convention as a passive surface below, rather than the NaN dh() returns.
+            boolean nullSmooth = sv.smoothed().get(k)==null && !LEGACY_NULL_SMOOTH_FAIL;
             double tRes = mv.dh(k, sv.transported().get(k));
             double fRes = mv.dh(k, sv.filtered(false).get(k));
-            double sRes = mv.dh(k, sv.smoothed().get(k));
+            double sRes = nullSmooth ? -999 : mv.dh(k, sv.smoothed().get(k));
             if(!mv.measurements.get(k).surface.passive) {
                 trajPoints.put(index, new HitOnTrack(layer, sector, sv.transported().get(k), tRes, fRes, sRes));
-                if(mv.measurements.get(k).skip)
+                if(mv.measurements.get(k).skip || nullSmooth)
                     trajPoints.get(index).isUsed = false;
             } else {
                 trajPoints.put(index, new HitOnTrack(layer, sector, sv.transported().get(k), -999, -999, -999));
@@ -211,7 +220,14 @@ public abstract class AKFitter {
             sv.transported().put(0, sv.smoothed().get(0).clone());
 
             for(int k = 0; k< mv.measurements.size(); k++) {
-                if(!mv.measurements.get(k).skip) {
+                if(!mv.measurements.get(k).skip && sv.smoothed().get(k)==null
+                   && !LEGACY_NULL_SMOOTH_FAIL) {
+                    // smooth() returns null when the swim from the smoothed helix cannot reach
+                    // this surface. dh() returns NaN by contract for a null state, which would
+                    // make the whole chi2 NaN and fail a track whose other measurements are
+                    // fine. Treat it like a skipped measurement: excluded from chi2 and NDF.
+                }
+                else if(!mv.measurements.get(k).skip) {
                     double dh    = mv.dh(k, sv.smoothed().get(k));
                     double error = mv.measurements.get(k).error;
                     chisq += dh*dh / error/error;

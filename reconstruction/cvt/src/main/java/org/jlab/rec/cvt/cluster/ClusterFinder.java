@@ -26,6 +26,9 @@ public class ClusterFinder {
         @Override
         public Hit[][][] poll() {
             Hit[][][] x = super.poll();
+            if (x == null) {
+                return new Hit[NSTRIP][NLAYR][NSEC];
+            }
             for (int i=0; i<NSTRIP; i++) {
                 for (int j=0; j<NLAYR; j++) {
                     for (int k=0; k<NSEC; k++) {
@@ -60,9 +63,12 @@ public class ClusterFinder {
             int l = hit.getLayer();
             int s = hit.getSector();
             
-            if (w > 0 && w < NSTRIP) {
-                HitArray[w - 1][l - 1][s - 1] = hit; 
+            if (w < 1 || w > NSTRIP || l < 1 || l > NLAYR || s < 1 || s > NSEC) {
+                throw new IllegalArgumentException(String.format(
+                        "Hit outside ClusterFinder bounds: strip=%d layer=%d sector=%d",
+                        w, l, s));
             }
+            HitArray[w - 1][l - 1][s - 1] = hit;
         }
 
         int cid = 1;  // cluster id, will increment with each new good cluster
@@ -84,7 +90,8 @@ public class ClusterFinder {
                         
                         // adding all hits in this and all the subsequent
                         // strip until there's a strip with no hit
-                        while ((si < NSTRIP - 1 && HitArray[si + 1][l][s] != null) || (HitArray[si][l][s] != null && si < NSTRIP)) {
+                        while ((si < NSTRIP - 1 && HitArray[si + 1][l][s] != null)
+                                || (si < NSTRIP && HitArray[si][l][s] != null)) {
                             if (HitArray[si][l][s] != null) { // continue clustering skipping over bad hit
                                 if (this_cluster == null) {
                                     Hit seed = HitArray[si][l][s];
