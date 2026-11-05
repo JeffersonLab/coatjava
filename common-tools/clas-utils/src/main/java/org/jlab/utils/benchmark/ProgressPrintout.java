@@ -11,7 +11,7 @@ import java.util.logging.Logger;
  */
 public class ProgressPrintout {
 
-    private final int WARMUP_CALLS = 100;
+    public int WARMUP_CALLS = 100;
     
     private TreeMap<String,Object> items   = new TreeMap<>();
     private Long     previousPrintoutTime = (long) 0;
@@ -19,8 +19,17 @@ public class ProgressPrintout {
     private double   printoutIntervalSeconds = 10.0;
     private String   printoutLeadingString   = ">>>>> progress : ";
     private Integer  numberOfCalls           = 0;
-    
+    private int warmupCalls = 100;
+   
+    public boolean warmedUp() { return numberOfCalls > warmupCalls; }
+
     public  ProgressPrintout(){
+        this.previousPrintoutTime = System.currentTimeMillis();
+        this.startPrintoutTime = System.currentTimeMillis();
+    }
+    
+    public  ProgressPrintout(int warmupCalls){
+        this.warmupCalls = warmupCalls;
         this.previousPrintoutTime = System.currentTimeMillis();
         this.startPrintoutTime = System.currentTimeMillis();
     }
@@ -58,8 +67,8 @@ public class ProgressPrintout {
         System.out.println("\n\n");        
     }
     
-    public void updateStatus(){        
-        if (++this.numberOfCalls < WARMUP_CALLS){
+    public synchronized void updateStatus(){        
+        if (++this.numberOfCalls < warmupCalls){
             this.previousPrintoutTime = System.currentTimeMillis();
             this.startPrintoutTime = this.previousPrintoutTime;
         }
