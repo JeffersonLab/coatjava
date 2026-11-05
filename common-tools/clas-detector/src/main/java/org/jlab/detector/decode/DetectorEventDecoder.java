@@ -12,6 +12,7 @@ import org.jlab.detector.base.DetectorDescriptor;
 import org.jlab.detector.base.DetectorType;
 import org.jlab.detector.calib.utils.ConstantsManager;
 import org.jlab.detector.decode.DetectorDataDgtz.ADCData;
+import org.jlab.detector.decode.FADCData.Peak;
 import org.jlab.utils.groups.IndexedTable;
 
 /**
@@ -30,7 +31,7 @@ public class DetectorEventDecoder {
     private final HashMap<DetectorType,String> transTableNames = new HashMap<>();
     private final HashMap<DetectorType,String> fitterTableNames = new HashMap<>();
 
-    private final ExtendedFADCFitter extendedFitter = new ExtendedFADCFitter();
+    private final ExtendedFADCMultiFitter extendedFitter = new ExtendedFADCMultiFitter();
     private final MVTFitter mvtFitter = new MVTFitter();
     
     private HashMap<DetectorType,IndexedTable> fitterTables = new HashMap<>();
@@ -219,17 +220,33 @@ public class DetectorEventDecoder {
             ADCData adc = data.getADCData(i);
             if(adc.getPulseSize()>0){
                 try {
-                    extendedFitter.fit(nsa, nsb, tet, ped, adc.getPulseArray());
+                    Peak[] hits = extendedFitter.fit(nsa, nsb, tet, ped, adc.getPulseArray());
+                    if (hits.length > 0) {
+                        adc.setIntegral(hits[0].adc + hits[0].ped*(nsa+nsb));
+                        adc.setHeight((short) hits[0].pulsePeakValue);
+                        adc.setTimeWord(hits[0].t0);
+                        adc.setPedestal((short) hits[0].ped);
+                        adc.setADC(nsa, nsb);
+                        // extra hits get a new object here:
+                        for (int j = 1; j < hits.length; j++) {
+                            ADCData a = new ADCData();
+                            a.setTimeStamp(adc.getTimeStamp());
+                            a.setOrder(adc.getOrder());
+                            a.setIntegral(hits[j].adc + hits[j].ped*(nsa+nsb));
+                            a.setHeight((short) hits[j].pulsePeakValue);
+                            a.setTimeWord(hits[j].t0);
+                            a.setPedestal((short) hits[j].ped);
+                            a.setADC(nsa, nsb);
+                            data.addADC(a);
+                        }
+                    }
+                    
                 } catch (Exception e) {
+                    e.printStackTrace();
                     System.err.println(">>>> error : fitting pulse "+dd.getCrate()+
                         " / "+dd.getSlot()+" / "+dd.getChannel());
                 }
-                adc.setIntegral(extendedFitter.adc + extendedFitter.ped*(nsa+nsb));
-                adc.setHeight((short) this.extendedFitter.pulsePeakValue);
-                adc.setTimeWord(this.extendedFitter.t0);
-                adc.setPedestal((short) this.extendedFitter.ped);
             }
-            data.getADCData(i).setADC(nsa, nsb);
         }
     }
 
