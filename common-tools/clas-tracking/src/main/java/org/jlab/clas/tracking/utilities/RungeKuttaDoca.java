@@ -1,5 +1,6 @@
 package org.jlab.clas.tracking.utilities;
 
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import org.jlab.clas.pdg.PhysicsConstants;
 import org.jlab.jnp.matrix.*;
@@ -339,9 +340,9 @@ public class RungeKuttaDoca {
         return v*Ay + qv * (dAy_dtx*dtx_dq0 + dAy_dty*dty_dq0);
     }
 
-    static class RK4VecPool extends ConcurrentLinkedQueue<RK4Vec[]> {
+    static class RK4VecPool extends ArrayBlockingQueue<RK4Vec[]> {
         public RK4VecPool(int size, int dimension) {
-            super();
+            super(size);
             for (int i=0; i<size; i++) {
                 RK4Vec[] v = new RK4Vec[dimension];
                 for (int j=0; j<v.length; j++) v[j] = new RK4Vec();
