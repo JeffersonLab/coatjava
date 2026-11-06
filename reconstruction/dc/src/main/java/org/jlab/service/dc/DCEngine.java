@@ -39,8 +39,10 @@ public class DCEngine extends ReconstructionEngine {
     private String   dafChi2Cut     = null;
     private String   dafAnnealingFactorsTB = null;
     
-    protected String hbTSEModelFileInbending = "transformer_32d_4h_3l_inbending.pt"; // AI model file for HB track state estimator for inbending runs  
-    protected String hbTSEModelFileOutbending = "transformer_32d_4h_3l_outbending.pt"; // AI model file for HB track state estimator for outbending runs  
+    protected String hbTSEModelFile = "transformer_32d_4h_3l_inbending.pt"; // AI model file for HB track state estimator
+    protected String hitStatsHBTSEModel = "hit_stats_inbending.json";
+    protected String stateStatsHBTSEModel = "state_stats_inbending.json";
+    protected boolean isInbendingHBTSEModel = true; // If the model was trained by inbending run
     
     public static final Logger LOGGER = Logger.getLogger(ReconstructionEngine.class.getName());
 
@@ -130,13 +132,21 @@ public class DCEngine extends ReconstructionEngine {
             KFitter.setDafAnnealingFactorsTB(dafAnnealingFactorsTB);
         }
                     
-        if (getEngineConfigString("hbTSEModelFileInbending") != null){
-            hbTSEModelFileInbending = getEngineConfigString("hbTSEModelFileInbending");
-        }
+        if (getEngineConfigString("hbTSEModelFile") != null){
+            hbTSEModelFile = getEngineConfigString("hbTSEModelFile");
+        }  
+                
+        if (getEngineConfigString("hitStatsHBTSEModel") != null){
+            hitStatsHBTSEModel = getEngineConfigString("hitStatsHBTSEModel");
+        }  
         
-        if (getEngineConfigString("hbTSEModelFileOutbending") != null){
-            hbTSEModelFileOutbending = getEngineConfigString("hbTSEModelFileOutbending");
-        }
+        if (getEngineConfigString("stateStatsHBTSEModel") != null){
+            stateStatsHBTSEModel = getEngineConfigString("stateStatsHBTSEModel");
+        }          
+        
+        if (getEngineConfigString("isInbendingHBTSEModel") != null){
+            isInbendingHBTSEModel = Boolean.valueOf(getEngineConfigString("isInbendingHBTSEModel"));
+        }         
                
         // Set geometry shifts for alignment code
         if(this.getEngineConfigString("alignmentShifts")!=null) {

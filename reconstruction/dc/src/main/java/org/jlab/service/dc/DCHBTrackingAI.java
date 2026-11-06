@@ -36,21 +36,25 @@ import org.jlab.rec.ai.dcHBTrackState.HBTrackStateEstimator;
  * @author tongtong
  */
 public class DCHBTrackingAI extends DCEngine {    
-    private HBTrackStateEstimator hbTSEstimatorInbending = null;
-    private HBTrackStateEstimator hbTSEstimatorOutbending = null;
+    private HBTrackStateEstimator hbTSEstimator = null;
 
     public DCHBTrackingAI() {
         super("DCHTAI");
         this.getBanks().init("HitBasedTrkg", "", "AI");
-        hbTSEstimatorInbending = new HBTrackStateEstimator(hbTSEModelFileInbending);
-        hbTSEstimatorOutbending = new HBTrackStateEstimator(hbTSEModelFileOutbending);        
     }
     
     public DCHBTrackingAI(String outputBankPrefix) {
         super("DCHTAI");
         this.getBanks().init("HitBasedTrkg", "", outputBankPrefix);
-        hbTSEstimatorInbending = new HBTrackStateEstimator(hbTSEModelFileInbending);
-        hbTSEstimatorOutbending = new HBTrackStateEstimator(hbTSEModelFileOutbending);         
+         
+    }
+    
+    @Override
+    public boolean init() {
+        super.init();
+        hbTSEstimator = new HBTrackStateEstimator(hbTSEModelFile, hitStatsHBTSEModel, stateStatsHBTSEModel); 
+        
+        return true;
     }
  
     @Override
@@ -75,13 +79,8 @@ public class DCHBTrackingAI extends DCEngine {
             return true;
         }
         
-        HBTrackStateEstimator hbTSEstimator = null;
-        if(Swimmer.getTorScale() < 0)
-            hbTSEstimator = hbTSEstimatorInbending;
-        else if(Swimmer.getTorScale() > 0)
-            hbTSEstimator = hbTSEstimatorOutbending;
-        else{
-            Logger.getLogger(getClass().getName()).log(Level.SEVERE, "Torus scale = 0"); 
+        if(hbTSEstimator == null){
+            Logger.getLogger(getClass().getName()).log(Level.SEVERE, "Model is not found!"); 
             return true;
         }
         
@@ -147,7 +146,7 @@ public class DCHBTrackingAI extends DCEngine {
         TrackCandListFinder trkcandFinder = new TrackCandListFinder(Constants.HITBASE);
         trkcands = trkcandFinder.getTrackCandsAI(crosslist,
             Constants.getInstance().dcDetector,
-            dcSwim, hbTSEstimator);
+            dcSwim, hbTSEstimator, isInbendingHBTSEModel);
 
         // track found
         int trkId = 1;
@@ -241,7 +240,7 @@ public class DCHBTrackingAI extends DCEngine {
         // track candidates with 6 clusters 
         trkcandsConv = trkcandFinder.getTrackCandsAI(crosslistConv,
                 Constants.getInstance().dcDetector,
-                dcSwim, hbTSEstimator); 
+                dcSwim, hbTSEstimator, isInbendingHBTSEModel); 
         
         // track candidates with 5 clusters
         RoadFinder rf = new RoadFinder();
@@ -299,7 +298,7 @@ public class DCHBTrackingAI extends DCEngine {
                 dcSwim, true);
         List<Track> mistrkcandsConv = trkcandFinder.getTrackCandsAI(pcrosslistConv,
                 Constants.getInstance().dcDetector,
-                dcSwim, hbTSEstimator);
+                dcSwim, hbTSEstimator, isInbendingHBTSEModel);
         
         //8) Select overlapping tracks from all track candidates with 5 or 6 clusters, and update hits in tracks 
         trkcandsConv.addAll(mistrkcandsConv);
