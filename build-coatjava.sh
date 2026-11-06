@@ -363,10 +363,6 @@ cp -r libexec $prefix_dir/
 which python3 >& /dev/null && python=python3 || python=python
 $python etc/bankdefs/util/bankSplit.py $prefix_dir/etc/bankdefs/hipo4 || exit 1
 
-# use maven to copy a CLARA jar to a separate directory:
-mvn org.apache.maven.plugins:maven-dependency-plugin:3.10.0:copy \
-     -Dartifact=org.jlab.coda:jclara:6.0-SNAPSHOT:jar -DoutputDirectory=$prefix_dir/lib/utils -DstripVersion=false
-
 # build (and test)
 unset CLAS12DIR
 if $runUnitTests; then
@@ -403,14 +399,9 @@ install_jars() {
 for pom in $(find reconstruction -name pom.xml); do
   install_jars $pom $prefix_dir/lib/services
 done
-for pom in $(find common-tools -name pom.xml); do
-  if [[ "$pom" =~ coat-libs ]]; then
-    install_jars $pom $prefix_dir/lib/clas 'coat-libs-*.jar'
-  # else # FIXME, consumers may be need these after https://github.com/JeffersonLab/coatjava/pull/632 ; alternatively add needed deps to `coat-libs`
-  #   install_jars $pom $prefix_dir/lib/services
-  fi
-done
-
+install_jars common-tools/djl-runtime/pom.xml $prefix_dir/lib/services
+install_jars common-tools/clara-io/pom.xml    $prefix_dir/lib/utils 'jclara-*.jar'
+install_jars common-tools/coat-libs/pom.xml   $prefix_dir/lib/clas  'coat-libs-*.jar'
 echo "installed coatjava to: $prefix_dir"
 
 # install clara

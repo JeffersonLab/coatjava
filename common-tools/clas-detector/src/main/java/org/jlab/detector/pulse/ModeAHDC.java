@@ -53,6 +53,8 @@ public class ModeAHDC extends HipoExtractor  {
     //wfType 2 ⇒ bad trailingEdgeTime
     //wfType 1 ⇒ saturing
     //wfType 0 ⇒ OK
+    // warnings: The ToT does not make sense for type 1 and 2
+    //           We shoudl not apply a ToT cut on them
     
     private static class AHDCPulse extends Pulse {
         private long time_ZS;
@@ -305,8 +307,8 @@ public class ModeAHDC extends HipoExtractor  {
             }
             
             p.timeOverThreshold = p.trailingEdgeTime - p.leadingEdgeTime;
-            //if ((this.pulse.timeOverThreshold < 300) || (this.pulse.timeOverThreshold > 750)) this.assignValidType(4); // bad tot
-            if (p.timeOverThreshold < 300) this.assignValidType(4, p); // tot too small
+            // if binFall == -99, the ToT does not make sense
+            if (p.timeOverThreshold < 300 && binFall > 0) this.assignValidType(4, p); // tot too small
         } 
         else { // there are necessary type 1, so we use the slope_max
             if (p.wftype == 1) {
