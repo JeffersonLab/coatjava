@@ -13,7 +13,7 @@
   <parent>
     <groupId>org.jlab.clas</groupId>
     <artifactId>common-tools</artifactId>
-    <version>14.2.3-SNAPSHOT</version>
+    <version>14.2.4-SNAPSHOT</version>
   </parent>
 
   <properties>
