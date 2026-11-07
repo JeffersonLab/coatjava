@@ -1,11 +1,9 @@
 package org.jlab.detector.decode;
 
-import org.jlab.detector.decode.DetectorDataDgtz.ADCData;
+import org.jlab.detector.decode.FADCData.Peak;
 
-/**
- *
- * @author gavalian
- */
 public interface IFADCFitter {
-    void fit(ADCData data);
+
+    public Peak[] fit(int nsa, int nsb, int tet, int pedr, short[] pulse);
+
 }
