@@ -91,10 +91,12 @@ public class CVTEngine extends ReconstructionEngine {
     // Model files and thresholds for the three models; They could be set in yaml files
     final static String USE_DENOISE = "useDenoise";
     final static String CONF_MODEL_FILES[] = {"modelFile1", "modelFile2", "modelFile3"};
-    final static String CONF_THRESHOLDS[] = {"threshold1", "threshold2", "threshold3"};  
+    final static String CONF_THRESHOLDS[] = {"threshold1", "threshold2", "threshold3"};
+    final static String MAX_HITS = "maxHits";
     boolean useDenoise = true;
     String[] modelFiles = {"classifier_torchscript_sector1_noCSWeight_weightInTraining.pt", "classifier_torchscript_sector2_noCSWeight_weightInTraining.pt", "classifier_torchscript_sector3_noCSWeight_weightInTraining.pt"};
     float[] thresholds = {0.1f, 0.1f, 0.1f}; // To be determined
+    int maxHits = 450;
     
     private CVTDenoise denoise = null;
     
@@ -111,7 +113,7 @@ public class CVTEngine extends ReconstructionEngine {
     @Override
     public boolean init() {        
         this.loadConfiguration();      
-        if(useDenoise) denoise = new CVTDenoise(modelFiles, thresholds);
+        if(useDenoise) denoise = new CVTDenoise(modelFiles, thresholds, maxHits);
         Constants.getInstance().initialize(this.getName(),
                                            isCosmics,
                                            svtOnly,
@@ -482,6 +484,9 @@ public class CVTEngine extends ReconstructionEngine {
             if (this.getEngineConfigString(CONF_MODEL_FILES[i]) != null)
                 modelFiles[i] = this.getEngineConfigString(CONF_MODEL_FILES[i]);
         }
+        
+        if (this.getEngineConfigString(MAX_HITS)!=null)
+            maxHits = Integer.valueOf(this.getEngineConfigString(MAX_HITS));        
         
     }
 

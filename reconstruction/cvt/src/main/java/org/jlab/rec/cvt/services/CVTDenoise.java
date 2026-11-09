@@ -37,8 +37,8 @@ import org.jlab.rec.cvt.bmt.BMTType;
    ----------------------------------------------- */
 class CVTInput {
 
-    float[][] data;  // [450][9]
-    float[] mask;    // [450]
+    float[][] data;  // [maxHits][9]
+    float[] mask;    // [maxHits]
 
     public CVTInput(float[][] data, float[] mask) {
         this.data = data;
@@ -50,14 +50,27 @@ class CVTInput {
    DJL Translator
    ----------------------------------------------- */
 class CVTTranslator implements Translator<CVTInput, float[][]> {
+    private final int maxHits;
+
+    public CVTTranslator(int maxHits) {
+        this.maxHits = maxHits;
+    }
+    
 
     @Override
     public NDList processInput(TranslatorContext ctx, CVTInput input) {
+        if (input.data.length != maxHits) {
+            throw new IllegalArgumentException("Invalid input data size");
+        }
 
+        if (input.mask.length != maxHits) {
+            throw new IllegalArgumentException("Invalid mask size");
+        }
+        
         NDManager manager = ctx.getNDManager();
 
-        NDArray x = manager.create(input.data).reshape(1, 450, 9);
-        NDArray mask = manager.create(input.mask).reshape(1, 450);
+        NDArray x = manager.create(input.data).reshape(1, maxHits, 9);
+        NDArray mask = manager.create(input.mask).reshape(1, maxHits);
 
         return new NDList(x, mask);
     }
@@ -65,8 +78,8 @@ class CVTTranslator implements Translator<CVTInput, float[][]> {
     @Override
     public float[][] processOutput(TranslatorContext ctx, NDList list) {
 
-        NDArray output = list.singletonOrThrow(); // shape: (1, 450, C) or (1, 450)
-        output = output.squeeze(0); // remove batch dim -> (450, C)
+        NDArray output = list.singletonOrThrow(); // shape: (1, maxHits, C) or (1, maxHits)
+        output = output.squeeze(0); // remove batch dim -> (maxHits, C)
 
         float[] flat = output.toFloatArray();
         long[] shape = output.getShape().getShape();
@@ -130,7 +143,7 @@ class LocalHit {
 public class CVTDenoise {
     private static final int NSECTIONS = 3; // Detectors are separted into 3 sections, and a seperate model for each section
     private static final int NLAYERS = 12; // Layers from 1 to 12
-    private static final int MAX_HITS = 450; // Maximum of hits for each section
+    private final int maxHits; // Maximum of hits for each section
     private static final int NFEATURES = 9; // Number of features for input of models
         
     // Model files and thresholds for the three models; They could be set in yaml files     
@@ -145,9 +158,14 @@ public class CVTDenoise {
     private ZooModel<CVTInput, float[][]>[] model;
     private PredictorPool[] predictors;       
     
-    public CVTDenoise(String[] modelFiles, float[] thresholds) {
+    public CVTDenoise(String[] modelFiles, float[] thresholds, int maxHits) {
         this.modelFiles = modelFiles;
         this.thresholds = thresholds;
+        
+        if (maxHits <= 0) {
+            throw new IllegalArgumentException("maxHits must be positive: " + maxHits);
+        }        
+        this.maxHits = maxHits;
         init();
     }
     
@@ -169,7 +187,7 @@ public class CVTDenoise {
             try {
                 String modelPath = ClasUtilsFile.getResourceDir("CLAS12DIR", "etc/data/nnet/cvtdn/" + modelFiles[i]);
                 
-                CVTTranslator translator = new CVTTranslator();                
+                CVTTranslator translator = new CVTTranslator(maxHits);                
                 criterias[i] = Criteria.builder()
                     .setTypes(CVTInput.class, float[][].class)
                     .optModelPath(Paths.get(modelPath))
@@ -195,8 +213,8 @@ public class CVTDenoise {
         
         if (bst_hits.isEmpty() && bmt_hits.isEmpty()) return;
         
-        float[][][] x = new float[NSECTIONS][MAX_HITS][NFEATURES];
-        float[][] mask = new float[NSECTIONS][MAX_HITS];        
+        float[][][] x = new float[NSECTIONS][maxHits][NFEATURES];
+        float[][] mask = new float[NSECTIONS][maxHits];        
 
         int[] nHits = {0, 0, 0};
         
@@ -237,7 +255,7 @@ public class CVTDenoise {
                 maps[section - 1].put(nHits[section - 1], localHit);
 
                 nHits[section - 1]++;
-                if(nHits[section - 1] == MAX_HITS) {
+                if(nHits[section - 1] == maxHits) {
                     Logger.getLogger(CVTEngine.class.getName()).log(Level.SEVERE, "Number of hits is over maximum limit!");
                     return;
                 }
@@ -288,7 +306,7 @@ public class CVTDenoise {
                 maps[section - 1].put(nHits[section - 1], localHit);
 
                 nHits[section - 1]++;
-                if(nHits[section - 1] == MAX_HITS) {
+                if(nHits[section - 1] == maxHits) {
                     Logger.getLogger(CVTEngine.class.getName()).log(Level.SEVERE, "Number of hits is over maximum limit!");
                     return;
                 }
