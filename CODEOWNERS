@@ -51,7 +51,6 @@ common-tools/clas-io/ @raffaelladevita @baltzell @gavalian @drewkenjo
 common-tools/clas-jcsg/ @drewkenjo @raffaelladevita @baltzell
 common-tools/clas-logging/ @baltzell
 common-tools/clas-math/ @zieglerv
-common-tools/clas-physics/ @raffaelladevita @baltzell @zieglerv @gavalian
 common-tools/clas-reco/ @raffaelladevita @baltzell
 common-tools/clas-tracking/ @zieglerv @raffaelladevita @tongtongcao
 common-tools/clas-utils/ @raffaelladevita @baltzell @zieglerv @gavalian

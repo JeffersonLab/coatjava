@@ -89,7 +89,6 @@
     <dependency>
       <groupId>org.jlab.clas</groupId>
       <artifactId>clas-physics</artifactId>
-      <version>14.2.3-SNAPSHOT</version>
     </dependency>
 
     <dependency>
