@@ -17,7 +17,7 @@ defaults:
 env:
   JAVA_VERSION: 21 # must be consistent with POM; see also dependabot config for any version limits
   JAVA_VERSION_LATEST: 25 # the latest `JAVA_VERSION` that we test with CI
-  java_distribution: zulu
+  java_distribution: temurin
   groovy_version: 4.x
   CCDB_CONNECTION: 'sqlite:///${{ github.workspace }}/coatjava/etc/data/sqlite/ccdb.sqlite'
   RCDB_CONNECTION: 'sqlite:///${{ github.workspace }}/coatjava/etc/data/sqlite/rcdb.sqlite'
