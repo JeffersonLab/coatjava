@@ -160,7 +160,7 @@ jobs:
       - name: test3
         run: openssl s_client -connect code.jlab.org:443 -servername code.jlab.org </dev/null 2>/dev/null | openssl x509 -noout -issuer
       - name: test4
-        run: keytool -list -cacerts -storepass changeit | wc -l
+        run: keytool -list -cacerts -storepass changeit
       - uses: actions/cache/restore@v6
         with:
           path: ~/.m2/repository
