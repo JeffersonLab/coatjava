@@ -5,6 +5,7 @@ import org.jlab.detector.base.DetectorType;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 import org.jlab.clas.pdg.PDGDatabase;
+import org.jlab.clas.pdg.PDGParticle;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -2018,7 +2019,12 @@ public class TruthMatch extends ReconstructionEngine {
         for (int j = 0; j < mcp.size(); j++) {
             MCRecMatch mcMatch = mcp.get(j);
             Integer pid = mcPartBank.getInt("pid", j);
-            Integer charge = PDGDatabase.getParticleById(pid).charge();
+            PDGParticle part = PDGDatabase.getParticleById(pid);
+            if (part == null) {          // unknown species get quality = 0
+                mcMatch.quality = 0.F;
+                continue;
+            }
+            Integer charge = part.charge();
             //System.out.println("pid = " + mcPartBank.getInt("pid", j) + "    Charge = " + charge);
             Float quality = 0.F;
 
