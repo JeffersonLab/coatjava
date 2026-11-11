@@ -44,31 +44,38 @@ public class TwoBodyDecay implements IDecay {
         this.setDecayProducts(child1, child2);
     }
 
+    @Override
     public void init() {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
+    @Override
     public void setDecayParticle(int id) {
         this.parentParticleID = id;
     }
 
+    @Override
     public void setDecayParticle(String name) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
+    @Override
     public void setDecayProducts(int pid1, int pid2) {
         this.decayParticleID1 = pid1;
         this.decayParticleID2 = pid2;
     }
 
+    @Override
     public void setDecayProducts(String name1, String name2) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
+    @Override
     public void setDecayProducts(int pid1, int pid2, int pid3) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
+    @Override
     public void setDecayProducts(String name1, String name2, String name3) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
@@ -81,6 +88,7 @@ public class TwoBodyDecay implements IDecay {
         return Math.random()*2.0*Math.PI-Math.PI;
     }
     
+    @Override
     public void decayParticles(PhysicsEvent event) {
         double cosTheta = this.getCosThetaRandom();
         double phi      = this.getPhiRandom();
