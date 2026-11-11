@@ -14,7 +14,11 @@ import eu.mihosoft.vrl.v3d.Vector3d;
 import eu.mihosoft.vrl.v3d.Vertex;
 import eu.mihosoft.vrl.v3d.Polygon;   
 import eu.mihosoft.vrl.v3d.CSG;   
+import java.util.HashMap;
+import java.util.Map;
+import org.jlab.detector.base.DetectorDescriptor;
 import org.jlab.detector.base.DetectorLayer;
+import org.jlab.detector.base.DetectorType;
 import org.jlab.detector.calib.utils.ConstantsManager;
 import org.jlab.geometry.prim.Line3d;   
 
@@ -41,6 +45,10 @@ public class RICHGeoFactory{
     private RICHGeoParameters    geopar  = new RICHGeoParameters();
     private RICHGeoCalibration   geocal  = new RICHGeoCalibration();
 
+    private Map<Integer,Integer> anode2Maroc = new HashMap<>();
+    private Map<Integer,Integer> pmt2Tile = new HashMap<>();
+    private Map<Integer,Integer> pmt2Asic = new HashMap<>();
+    
     private ArrayList<ArrayList<RICHLayer>> richlayers   = new ArrayList<ArrayList<RICHLayer>>();
     private ArrayList<RICHFrame>            richframes   = new ArrayList<RICHFrame>();
     private RICHFrame survey_frame                       = new RICHFrame();
@@ -96,6 +104,7 @@ public class RICHGeoFactory{
         // RICH geometry organized on layers of Shape3D area and RICH components 
         init_RICHLayers(FactoryMode);
 
+        this.fillPMTsMaps();
     } 
 
 
@@ -1595,6 +1604,33 @@ public class RICHGeoFactory{
         return RICHGeoConstants.tile2pmt[tile-1][(int) (channel-1)/64];
     }
 
+    private void fillPMTsMaps() {
+        for(int it=0; it<RICHGeoConstants.tile2pmt.length; it++) {
+            for(int ip=0; ip<RICHGeoConstants.tile2pmt[it].length; ip++) {
+                int pmt = RICHGeoConstants.tile2pmt[it][ip];
+                int tile = it+1;
+                int pos  = ip;
+                if(pmt>0) {
+                    this.pmt2Tile.put(pmt, tile);
+                    this.pmt2Asic.put(pmt, ip);
+                }
+            }
+        }
+        for(int im=0; im<RICHGeoConstants.anode_map.length; im++) {
+                int anode = RICHGeoConstants.anode_map[im];
+                this.anode2Maroc.put(anode, im);
+        }
+    }
+    
+    public int getTile(int pmt) {
+        return this.pmt2Tile.get(pmt);
+    }
+    
+    public int getChannel(int pmt, int anode) {
+        int asic = this.pmt2Asic.get(pmt);
+        int maroc = this.anode2Maroc.get(anode);
+        return maroc+asic*64;
+    }
 
     //------------------------------
     public int get_LayerNumber(int isec, String slay){

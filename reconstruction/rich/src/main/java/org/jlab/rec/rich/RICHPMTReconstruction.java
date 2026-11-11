@@ -11,6 +11,7 @@ import org.jlab.io.hipo.HipoDataEvent;
 
 import javax.swing.JFrame;
 import org.jlab.detector.banks.RawDataBank;
+import org.jlab.detector.base.DetectorDescriptor;
 import org.jlab.groot.graphics.EmbeddedCanvas;
 import org.jlab.groot.data.H1F;
 import org.jlab.groot.data.H2F;
@@ -176,7 +177,34 @@ public class RICHPMTReconstruction {
         int debugMode = 0;
         if(debugMode>=2) System.out.println("Getting raw edges from RICH:tdc bank");
 
-        ArrayList<RICHEdge>  edges = new ArrayList<RICHEdge>();
+        ArrayList<RICHEdge>  edges = new ArrayList<>();
+
+        if(!event.hasBank("RICH::tdc") && event.hasBank("RICH::calib")) {        
+            DataBank calib = event.getBank("RICH::calib");
+            int rows = calib.rows();
+
+            DataBank tdc = event.createBank("RICH::tdc", 2*rows);
+
+            for(int i=0; i<rows; i++) {
+
+                int sector = calib.getByte( "sector", i);
+                int pmt    = calib.getShort("pmt", i);
+                int anode  = calib.getShort("anode", i);
+                int layer  = richgeo.getTile(pmt);
+                int channel = richgeo.getChannel(pmt, anode);
+                int tdc1   = (int) calib.getFloat("rawtime", i);
+                int tdc0   = tdc1 + calib.getShort("duration", i);
+                for(int iedge=1; iedge>=0; iedge--) {
+                    tdc.setByte("sector", i*2+iedge, (byte) sector);
+                    tdc.setByte("layer",  i*2+iedge, (byte) layer);
+                    tdc.setShort("channel", i*2+iedge, (short) channel);
+                    tdc.setByte("order", i*2+iedge, (byte) iedge);
+                    tdc.setInt("TDC", i*2+iedge, iedge==0 ? tdc0 : tdc1);
+                }
+            }
+            event.appendBank(tdc);
+        }
+        
         if(event.hasBank("RICH::tdc")==true) {
             RawDataBank bankDGTZ = new RawDataBank("RICH::tdc");
             bankDGTZ.read(event);
