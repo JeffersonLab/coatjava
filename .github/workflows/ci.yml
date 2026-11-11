@@ -71,10 +71,6 @@ jobs:
       key: ${{ steps.key.outputs.key }}
     steps:
       - uses: actions/checkout@v7
-      - name: test1
-        run: openssl s_client -connect code.jlab.org:443 -servername code.jlab.org -showcerts </dev/null
-      - name: test2
-        run: curl -sSI https://code.jlab.org/api/v4/projects/959/packages/maven/org/jlab/coda/xmsg/2.5/xmsg-2.5.pom
       - name: compute cache key
         id: key
         run: echo "key=m2-$(date +%G-%V)-${{ hashFiles('**/pom.xml') }}" | tee -a $GITHUB_OUTPUT
@@ -157,6 +153,14 @@ jobs:
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.java_distribution }}
+      - name: test1
+        run: echo "JAVA_HOME=$JAVA_HOME"
+      - name: test2
+        run: java -version
+      - name: test3
+        run: openssl s_client -connect code.jlab.org:443 -servername code.jlab.org </dev/null 2>/dev/null | openssl x509 -noout -issuer
+      - name: test4
+        run: keytool -list -cacerts -storepass changeit | wc -l
       - uses: actions/cache/restore@v6
         with:
           path: ~/.m2/repository
