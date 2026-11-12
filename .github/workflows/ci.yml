@@ -355,7 +355,9 @@ jobs:
         with:
           name: build_ubuntu-latest
       - name: untar build
-        run: tar xzf coatjava.tar.gz
+        run: |
+          tar xzf clara.tar.gz
+          tar xzf coatjava.tar.gz
       - name: run test
         run: ./bin/run-clara -y ./etc/services/grapes.yaml -t 4 -n 500 -c ./clara -o ./tmp rec.hipo
       - name: hipo-utils -info
