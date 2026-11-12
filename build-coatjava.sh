@@ -399,10 +399,9 @@ install_jars() {
 for pom in $(find reconstruction -name pom.xml); do
   install_jars $(dirname $pom)/target $prefix_dir/lib/services
 done
-install_jars common-tools/copycat/target/lib/djl    $prefix_dir/lib/services
-install_jars common-tools/copycat/target/lib/grapes $prefix_dir/lib/utils
-install_jars common-tools/copycat/target/lib/clara  $prefix_dir/lib/utils 'jclara-*.jar'
-install_jars common-tools/coat-libs/target          $prefix_dir/lib/clas  'coat-libs-*.jar'
+install_jars common-tools/copycat/djl/target/lib  $prefix_dir/lib/services
+install_jars common-tools/copycat/jlab/target/lib $prefix_dir/lib/utils
+install_jars common-tools/coat-libs/target        $prefix_dir/lib/clas 'coat-libs-*.jar'
 echo "installed coatjava to: $prefix_dir"
 
 # install clara
