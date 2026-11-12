@@ -127,7 +127,7 @@
       <dependency>
         <groupId>org.jlab.jnp</groupId>
         <artifactId>grapes</artifactId>
-        <version>2.27-SNAPSHOT</version>
+        <version>2.27</version>
       </dependency>
 
       <dependency>
