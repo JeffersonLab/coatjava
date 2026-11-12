@@ -132,4 +132,4 @@ cp -Lr $coatjava/etc $coatjava/bin $coatjava/lib* clara-cre/plugins/clas12
 
 # GRAPES:
 mkdir -p clara-cre/plugins/grapes/lib/core
-cp $coatjava/lib/utils/grapes*.jar clara-cre/plugins/grapes/lib/core/
+cp $coatjava/libexec/grapes*.jar clara-cre/plugins/grapes/lib/core/
