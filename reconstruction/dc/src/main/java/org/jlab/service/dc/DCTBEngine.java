@@ -275,6 +275,8 @@ public class DCTBEngine extends DCEngine {
 
                     TrackArray1.set_FitChi2(kFZRef.chi2);
                     TrackArray1.set_FitNDF(kFZRef.NDF);
+                    // Non-DAF straight fit: publish ordinary NDF through the shared output field.
+                    TrackArray1.set_NDFDAF(kFZRef.NDF);
                     TrackArray1.set_FitConvergenceStatus(kFZRef.ConvStatus);
                     if (TrackArray1.get_Vtx0().toVector3D().mag() > 500) {
                         continue;
