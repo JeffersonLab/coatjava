@@ -386,22 +386,23 @@ fi
 # - seem to break thread safety of `mvn install`, i.e., we'd need to run `mvn package` first, then `mvn install`
 # - we just want copy the produced JAR files to a final installation directory, so the following bash code gets the job done without drama
 install_jars() {
-  src=$(dirname $1)
+  src=$1
   dest=$2
   [ $# -ge 3 ] && filter="$3" || filter='*.jar'
-  if [ -d $src/target ]; then
-    for f in $(find $src/target -name $filter); do
+  if [ -d $src ]; then
+    for f in $(find $src -name $filter); do
       mkdir -p $dest
       cp $f $dest/
     done
   fi
 }
 for pom in $(find reconstruction -name pom.xml); do
-  install_jars $pom $prefix_dir/lib/services
+  install_jars $(dirname $pom)/target $prefix_dir/lib/services
 done
-install_jars common-tools/djl-runtime/pom.xml $prefix_dir/lib/services
-install_jars common-tools/clara-io/pom.xml    $prefix_dir/lib/utils 'jclara-*.jar'
-install_jars common-tools/coat-libs/pom.xml   $prefix_dir/lib/clas  'coat-libs-*.jar'
+install_jars common-tools/copycat/target/lib/djl    $prefix_dir/lib/services
+install_jars common-tools/copycat/target/lib/grapes $prefix_dir/lib/utils
+install_jars common-tools/copycat/target/lib/clara  $prefix_dir/lib/utils 'jclara-*.jar'
+install_jars common-tools/coat-libs/target          $prefix_dir/lib/clas  'coat-libs-*.jar'
 echo "installed coatjava to: $prefix_dir"
 
 # install clara

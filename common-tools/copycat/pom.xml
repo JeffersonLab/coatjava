@@ -2,12 +2,9 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <!--
-    this POM installs `ai.djl` runtime dependencies to our prefix classpath;
-    this includes its transitive dependencies, e.g. `gson` and `slf4j`
-  -->
+  <!-- this POM installs runtime dependencies to our prefix classpath -->
 
-  <artifactId>djl-runtime</artifactId>
+  <artifactId>copycat</artifactId>
   <packaging>pom</packaging>
 
   <parent>
@@ -63,6 +60,17 @@
   </profiles>
 
   <dependencies>
+    <!-- clara -->
+    <dependency>
+      <groupId>org.jlab.coda</groupId>
+      <artifactId>jclara</artifactId>
+    </dependency>
+    <!-- grapes -->
+    <dependency>
+      <groupId>org.jlab.jnp</groupId>
+      <artifactId>grapes</artifactId>
+    </dependency>
+    <!-- djl runtime -->
     <dependency>
       <groupId>ai.djl</groupId>
       <artifactId>api</artifactId>
@@ -103,8 +111,35 @@
               <goal>copy-dependencies</goal>
             </goals>
             <configuration>
-              <outputDirectory>${project.build.directory}/lib/services</outputDirectory>
-              <includeScope>runtime</includeScope>
+              <outputDirectory>${project.build.directory}/lib/djl</outputDirectory>
+              <includeGroupIds>ai.djl,ai.djl.pytorch</includeGroupIds>
+              <includeScope>runtime</includeScope> <!-- include transitive dependencies, e.g. `gson` and `slf4j` -->
+            </configuration>
+          </execution>
+          <execution>
+            <id>copy-jclara</id>
+            <phase>package</phase>
+            <goals>
+              <goal>copy-dependencies</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${project.build.directory}/lib/clara</outputDirectory>
+              <includeGroupIds>org.jlab.coda</includeGroupIds>
+              <includeArtifactIds>jclara</includeArtifactIds>
+              <includeTypes>jar</includeTypes>
+            </configuration>
+          </execution>
+          <execution>
+            <id>copy-grapes</id>
+            <phase>package</phase>
+            <goals>
+              <goal>copy-dependencies</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${project.build.directory}/lib/grapes</outputDirectory>
+              <includeGroupIds>org.jlab.jnp</includeGroupIds>
+              <includeArtifactIds>grapes</includeArtifactIds>
+              <includeTypes>jar</includeTypes>
             </configuration>
           </execution>
         </executions>
