@@ -18,6 +18,7 @@
     <module>snr</module>
     <module>magfield</module>
     <module>swimmer</module>
+    <module>clas12-swimmer</module>
   </modules>
 
 </project>
