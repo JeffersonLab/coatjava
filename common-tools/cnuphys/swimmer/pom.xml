@@ -19,13 +19,6 @@
       <artifactId>magfield</artifactId>
       <version>14.2.4-SNAPSHOT</version>
     </dependency>
-
-    <dependency>
-      <groupId>cnuphys</groupId>
-      <artifactId>splot</artifactId>
-      <version>14.2.4-SNAPSHOT</version>
-    </dependency>
-
   </dependencies>
 
 </project>

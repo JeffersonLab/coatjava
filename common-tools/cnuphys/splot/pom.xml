@@ -19,13 +19,11 @@
       <artifactId>numRec</artifactId>
       <version>14.2.4-SNAPSHOT</version>
   </dependency>
-<!--
     <dependency>
       <groupId>cnuphys</groupId>
       <artifactId>f2jutil</artifactId>
       <version>1.0</version>
     </dependency>
--->
   </dependencies>
 
 </project>
