@@ -338,6 +338,34 @@ jobs:
           retention-days: 1
           path: rec.hipo
 
+  test_grapes:
+    needs: test_clara
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Set up JDK
+        uses: actions/setup-java@v6.1.0
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: ${{ env.java_distribution }}
+      - uses: actions/download-artifact@v8
+        with:
+          name: test_clara_result
+      - uses: actions/download-artifact@v8
+        with:
+          name: build_ubuntu-latest
+      - name: untar build
+        run: |
+          tar xzf clara.tar.gz
+          tar xzf coatjava.tar.gz
+      - name: run test
+        run: ./bin/run-clara -y ./etc/services/grapes.yaml -t 4 -n 500 -c ./clara -o ./tmp rec.hipo
+      - name: hipo-utils -info
+        run: |
+          for f in rec.hipo $(find tmp -type f -name '*.hipo'); do
+            coatjava/bin/hipo-utils -info $f
+          done
+
   test_coatjava:
     needs: [ build ]
     strategy:
@@ -556,6 +584,7 @@ jobs:
       - spotbugs
       - test_decoder
       - test_clara
+      - test_grapes
       - test_coatjava_macos
       - unit_tests
     runs-on: ubuntu-latest

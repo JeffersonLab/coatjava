@@ -3,8 +3,7 @@
 set -e
 
 # Default versions:
-grapes=2.26
-clara=5.0.2
+clara=main
 
 function error() {
     echo -e "\n$usage\n\n  Use option '-h' for more usage guidance.\n\nERROR:  $@"
@@ -56,14 +55,8 @@ function cleanup() {
 }
 
 function build_clara {
-    #git clone --branch $clara --depth 1 https://code.jlab.org/hallb/clas12/clara-java
-    git clone --depth 1 https://code.jlab.org/hallb/clas12/clara-java
+    git clone --branch $clara --depth 1 https://code.jlab.org/hallb/clas12/maven/clara-java.git
     cd clara-java && CLARA_HOME=$1 ./gradlew deploy && cd -
-}
-
-function build_grapes {
-    git clone --depth 1 --branch $grapes https://code.jlab.org/hallb/clas12/coatjava/grapes.git
-    cd grapes && mvn package && cd -
 }
 
 trap cleanup EXIT
@@ -71,9 +64,9 @@ trap cleanup EXIT
 # Configure:
 debug=0
 args=()
-usage="Usage:  install-clara [-v] [-c COATJAVA] [-f CLARA] [-g GRAPES] PATH"
+usage="Usage:  install-clara [-v] [-c COATJAVA] [-f CLARA] PATH"
 info="""
-- The default CLARA / GRAPES versions are $clara / $grapes
+- The default CLARA version is $clara
 - COATJAVA can also be specified as a local installation directory
 - If the COATJAVA version is not specified, it will try to auto-detect it.
 - [-v adds verbosity and disables cleanup]"""
@@ -84,7 +77,7 @@ do
         -h|--help) echo -e "\n$usage" && echo -e "$info" && exit 1 ;;
         -f) clara="$2" && shift && shift ;;
         -c) coatjava="$2" && shift && shift ;;
-        -g) grapes="$2" && shift && shift ;;
+        -g) echo "WARNING: option -g has been removed" >&2 && shift && shift ;;
         -v) let debug=$debug+1 && shift ;;
         -*|--*)  echo -e "$usage\n\nUnknown option:  $1" && exit 1 ;;
         *) args+=("$1") && shift ;;
@@ -138,7 +131,5 @@ mkdir -p clara-cre/plugins/clas12/config
 cp -Lr $coatjava/etc $coatjava/bin $coatjava/lib* clara-cre/plugins/clas12
 
 # GRAPES:
-echo -e "\nRetrieving GRAPES version $grapes ..."
-build_grapes $PWD/grapes
-mkdir -p clara-cre/plugins/grapes/lib/core/
-cp grapes/target/grapes-*core*.jar clara-cre/plugins/grapes/lib/core/
+mkdir -p clara-cre/plugins/grapes/lib/core
+cp $coatjava/libexec/grapes*.jar clara-cre/plugins/grapes/lib/core/

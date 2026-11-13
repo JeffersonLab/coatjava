@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>org.jlab.clas</groupId>
+  <artifactId>copycat-jlab</artifactId>
+  <packaging>pom</packaging>
+
+  <parent>
+    <groupId>org.jlab.clas</groupId>
+    <artifactId>copycat</artifactId>
+    <version>14.2.4-SNAPSHOT</version>
+  </parent>
+
+  <!-- grapes is in a seperate repo -->
+  <repositories>
+    <!-- https://code.jlab.org/hallb/clas12/coatjava/grapes package registry -->
+    <repository>
+      <id>code.jlab.org-hallb-grapes</id>
+      <url>https://code.jlab.org/api/v4/projects/776/packages/maven</url>
+    </repository>
+  </repositories>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.jlab.coda</groupId>
+      <artifactId>jclara</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jlab.jnp</groupId>
+      <artifactId>grapes</artifactId>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>copy-jclara</id>
+            <phase>package</phase>
+            <goals>
+              <goal>copy-dependencies</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${project.build.directory}/lib/clara</outputDirectory>
+              <includeGroupIds>org.jlab.coda</includeGroupIds>
+              <includeArtifactIds>jclara</includeArtifactIds>
+              <includeTypes>jar</includeTypes>
+            </configuration>
+          </execution>
+          <execution>
+            <id>copy-grapes</id>
+            <phase>package</phase>
+            <goals>
+              <goal>copy-dependencies</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${project.build.directory}/lib/grapes</outputDirectory>
+              <includeGroupIds>org.jlab.jnp</includeGroupIds>
+              <includeArtifactIds>grapes</includeArtifactIds>
+              <includeTypes>jar</includeTypes>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
+</project>

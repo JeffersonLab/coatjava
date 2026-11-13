@@ -2,17 +2,13 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <!--
-    this POM installs `ai.djl` runtime dependencies to our prefix classpath;
-    this includes its transitive dependencies, e.g. `gson` and `slf4j`
-  -->
-
-  <artifactId>djl-runtime</artifactId>
+  <groupId>org.jlab.clas</groupId>
+  <artifactId>copycat-djl</artifactId>
   <packaging>pom</packaging>
 
   <parent>
     <groupId>org.jlab.clas</groupId>
-    <artifactId>common-tools</artifactId>
+    <artifactId>copycat</artifactId>
     <version>14.2.4-SNAPSHOT</version>
   </parent>
 
@@ -103,8 +99,8 @@
               <goal>copy-dependencies</goal>
             </goals>
             <configuration>
-              <outputDirectory>${project.build.directory}/lib/services</outputDirectory>
-              <includeScope>runtime</includeScope>
+              <outputDirectory>${project.build.directory}/lib</outputDirectory>
+              <includeScope>runtime</includeScope> <!-- include transitive dependencies, e.g. `gson` and `slf4j` -->
             </configuration>
           </execution>
         </executions>
