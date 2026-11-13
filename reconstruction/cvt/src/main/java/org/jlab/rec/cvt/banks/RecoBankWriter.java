@@ -543,6 +543,9 @@ public class RecoBankWriter {
             // | 0                              0                             0                    d_Z0*d_Z0                     |
             // | 0                              0                             0                       0        d_tandip*d_tandip |X
             double[][] covmatrix = helix.getCovMatrix();
+            if (!trkcands.get(i).isCovFromFilteredFit()) {
+                covmatrix = null;
+            }
             if (covmatrix != null) {
                 bank.setFloat(CVTRec_Tracks.cov_d02, i,  (float) covmatrix[0][0]/10/10 );
                 bank.setFloat(CVTRec_Tracks.cov_d0phi0, i,  (float) covmatrix[0][1]/10 );
@@ -616,6 +619,9 @@ public class RecoBankWriter {
             // | 0                              0                             0                    d_Z0*d_Z0                     |
             // | 0                              0                             0                       0        d_tandip*d_tandip |X
             double[][] covmatrix = helix.getCovMatrix();
+            if (!trkcands.get(i).isCovFromFilteredFit()) {
+                covmatrix = null;
+            }
             if (covmatrix != null) {
                 bank.setFloat(CVTRec_UTracks.cov_d02, i,  (float) covmatrix[0][0]/10/10 );
                 bank.setFloat(CVTRec_UTracks.cov_d0phi0, i,  (float) covmatrix[0][1]/10 );
