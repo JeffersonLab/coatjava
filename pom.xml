@@ -24,11 +24,6 @@
       <id>code.jlab.org-hallb-clas12-maven</id>
       <url>https://code.jlab.org/api/v4/groups/3425/-/packages/maven</url>
     </repository>
-    <!-- clasweb repositories -->
-    <repository>
-      <id>clasweb-clas12maven</id>
-      <url>https://clasweb.jlab.org/.clas12maven</url>
-    </repository>
   </repositories>
 
   <profiles>
