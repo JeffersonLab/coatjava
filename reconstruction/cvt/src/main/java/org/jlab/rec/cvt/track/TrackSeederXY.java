@@ -18,8 +18,9 @@ public class TrackSeederXY {
     
     private final int NBINS = 36;
     private final double[] phiShift = new double[]{0,65,90}; // move the bin edge to handle bin boundaries
+    private final int NLAYERSMIN = 2;
     private List<ArrayList<Cross>> scan ;
-    private Map<Double, ArrayList<Cross>> seedMap ; // init seeds;
+    private Map<String, ArrayList<Cross>> seedMap ; // init seeds;
     private List<ArrayList<ArrayList<Cross>>> sortedCrosses;
     private List<Seed> seedScan ;
     private List<Double> Xs ;
@@ -35,7 +36,7 @@ public class TrackSeederXY {
         sortedCrosses = new ArrayList<>();
         for(int i =0; i<NBINS; i++) {
             sortedCrosses.add(i, new ArrayList<>() );
-            for(int l =0; l<3; l++) {
+            for(int l =0; l<6; l++) {
                 sortedCrosses.get(i).add(l,new ArrayList<>() );
             }
         }
@@ -100,72 +101,148 @@ public class TrackSeederXY {
         seedMap.forEach((key,value) -> this.fitSeed(value));
     }
    
-    
-    /*
-    Scans overphase space to find groups of BMT crosses 
+/*
+    Scans overphase space to find groups of SVT and BMT-Z crosses 
     */
     private void findSeedCrossesFixedBin(List<Cross> crosses, double phiShift) {
-        for(int b =0; b<NBINS; b++) {
-            for(int l =0; l<3; l++) {
+
+        // Clear previous contents
+        for (int b = 0; b < NBINS; b++) {
+            for (int l = 0; l < 6; l++) {
                 sortedCrosses.get(b).get(l).clear();
             }
         }
-        int[][] LPhi = new int[NBINS][3];
-        for (int i = 0; i < crosses.size(); i++) {
-            double phi = Math.toDegrees(crosses.get(i).getPoint().toVector3D().phi());
 
-            phi += phiShift;
-            if (phi < 0) {
-                phi += 360;
+        // Number of crosses in each bin/layer
+        int[][] LPhi = new int[NBINS][6];
+
+        // ------------------------------------------------------------
+        // 1. Sort crosses into phi bins and detector layers
+        // ------------------------------------------------------------
+        for (Cross cross : crosses) {
+
+            double phi = Math.toDegrees(
+                    cross.getPoint().toVector3D().phi()
+            );
+
+            // Shift phi and wrap into [0, 360)
+            phi = (phi + phiShift + 360.0) % 360.0;
+
+            int binIdx = (int) (phi / (360.0 / NBINS));
+
+            // Protect against numerical rounding
+            if (binIdx >= NBINS) {
+                binIdx = NBINS - 1;
             }
 
-            int binIdx = (int) (phi / (360./NBINS) );
-           
-            if(binIdx>NBINS-1)
-                binIdx = NBINS-1;
-            sortedCrosses.get(binIdx).get(crosses.get(i).getRegion() - 1).add(crosses.get(i));
-            LPhi[binIdx][crosses.get(i).getRegion() - 1]++; 
+            int layer = -1;
+
+            if (cross.getDetector() == DetectorType.BST) {
+
+                // BST region 1,2,3 -> layer 0,1,2
+                layer = cross.getRegion() - 1;
+
+            } else if (cross.getDetector() == DetectorType.BMT) {
+
+                // BMT region 1,2,3 -> layer 3,4,5
+                layer = cross.getRegion() + 2;
+            }
+
+            // Ignore unexpected detector/region
+            if (layer < 0 || layer >= 6) {
+                continue;
+            }
+
+            sortedCrosses.get(binIdx).get(layer).add(cross);
+            LPhi[binIdx][layer]++;
         }
-        
+
+        // ------------------------------------------------------------
+        // 2. For each phi bin, generate ALL combinations
+        // ------------------------------------------------------------
         for (int b = 0; b < NBINS; b++) {
-            int max_layers =0;
-            for (int la = 0; la < 3; la++) { 
-                if(LPhi[b][la]>0)
-                    max_layers++;
-            }
-            if (sortedCrosses.get(b) != null && max_layers >= 2) { 
-                double SumLyr=0;
-                while(LPhi[b][0]+LPhi[b][1]+ LPhi[b][2]>=max_layers) {
-                    if(SumLyr!=LPhi[b][0]+LPhi[b][1]+ LPhi[b][2]) {
-                        SumLyr = LPhi[b][0]+LPhi[b][1]+ LPhi[b][2];
-                    } 
-                    ArrayList<Cross> hits = new ArrayList<>(); 
-                    for (int la = 0; la < 3; la++) {
-                        if (sortedCrosses.get(b).get(la) != null && LPhi[b][la]>0) { 
-                            if (sortedCrosses.get(b).get(la).get(LPhi[b][la]-1) != null 
-                                    && sortedCrosses.get(b).get(la).size()>0) {
-                                hits.add(sortedCrosses.get(b).get(la).get(LPhi[b][la]-1)); 
-                                
-                                if(LPhi[b][la]>1)
-                                   LPhi[b][la]--; 
-                                if(SumLyr==max_layers)
-                                    LPhi[b][la]=0; 
-                            }
-                        }
-                    }
-                   
-                    if (hits.size() >= 2) {
-                        double seedIdx=0;
-                        int s = hits.size();
-                        int index = (int) Math.pow(2,s);
-                        for(Cross c : hits) {
-                            seedIdx +=c.getId()*Math.pow(10, index);
-                            index-=4;
-                        }
-                        seedMap.put(seedIdx, hits);
-                    }
+
+            // Find occupied layers
+            List<Integer> occupiedLayers = new ArrayList<>();
+
+            for (int la = 0; la < 6; la++) {
+                if (LPhi[b][la] > 0) {
+                    occupiedLayers.add(la);
                 }
             }
+
+            // Need at least three different layers
+            if (occupiedLayers.size() < NLAYERSMIN) {
+                continue;
+            }
+
+            // Cross combos for any NLAYERSMIN more layers
+            for (int nLayers = NLAYERSMIN; nLayers <= occupiedLayers.size(); nLayers++) {
+                generateLayerCombinations(b, occupiedLayers, 0, nLayers, new ArrayList<>());
+            }
+        }
+    }
+    
+    /*
+     * Generate combinations of occupied layers.
+     *
+     */
+    private void generateLayerCombinations(int binIdx, List<Integer> occupiedLayers, int start, int nLayers, ArrayList<Integer> selectedLayers) {
+
+        // ------------------------------------------------------------
+        // Select the required number of layers
+        // ------------------------------------------------------------
+        if (selectedLayers.size() == nLayers) {
+            ArrayList<Cross> currentCombination = new ArrayList<>();
+            generateCrossCombinations(binIdx, selectedLayers, 0, currentCombination);
+            return;
+        }
+
+        // ------------------------------------------------------------
+        // Select next layer
+        // ------------------------------------------------------------
+        for (int i = start; i < occupiedLayers.size(); i++) {
+            selectedLayers.add(occupiedLayers.get(i));
+            generateLayerCombinations(binIdx, occupiedLayers, i + 1, nLayers, selectedLayers);
+            selectedLayers.remove(selectedLayers.size() - 1);
+        }
+    }
+
+    /*
+     * Generate Cartesian products of Crosses from the selected layers.
+     *
+     */
+    private void generateCrossCombinations(int binIdx, List<Integer> selectedLayers, int layerIndex, ArrayList<Cross> currentCombination) {
+        // ------------------------------------------------------------
+        // All selected layers have been processed
+        // ------------------------------------------------------------
+        if (layerIndex == selectedLayers.size()) {
+            if (currentCombination.size() >= NLAYERSMIN) {
+                ArrayList<Cross> crosses = new ArrayList<>(currentCombination);
+                StringBuilder seedIdx = new StringBuilder();
+                for (Cross c : crosses) {
+                    if (seedIdx.length() > 0) {
+                        seedIdx.append("_");
+                    }
+                    seedIdx.append(c.getId());
+                }
+
+                seedMap.put(seedIdx.toString(), crosses);
+            }
+            return;
+        }
+
+        // Current detector layer
+        int layer = selectedLayers.get(layerIndex);
+        List<Cross> layerCrosses = sortedCrosses.get(binIdx).get(layer);
+
+        // ------------------------------------------------------------
+        // Try EVERY Cross in this layer
+        // ------------------------------------------------------------
+        for (Cross cross : layerCrosses) {
+            currentCombination.add(cross);
+            generateCrossCombinations(binIdx, selectedLayers, layerIndex + 1,currentCombination);
+            currentCombination.remove(currentCombination.size() - 1);
         }
     }
 
@@ -191,10 +268,9 @@ public class TrackSeederXY {
         for(Seed mseed : seedScan) { 
             CircleFitPars fpars = null;
             
-            if(mseed.getCrosses().size()>=2) {
-                fpars =
-                        this.CircleFit(mseed.getCrosses());
-               
+            if(mseed.getCrosses().size()>=NLAYERSMIN) {
+                fpars = this.CircleFit(mseed.getCrosses());
+
                 if (fpars!=null) { 
                     this.addMissingCrosses(mseed.getCrosses(),crosses, fpars);
                     fpars = this.CircleFit(mseed.getCrosses());
@@ -205,7 +281,8 @@ public class TrackSeederXY {
                     fpars = this.CircleFit(mseed.getCrosses());
                 }
             }
-            if (fpars!=null && this.countType(mseed.getCrosses(), DetectorType.BST)>0 && mseed.getCrosses().size()>2) {
+                
+            if (fpars!=null && this.countType(mseed.getCrosses(), DetectorType.BST)>0 && mseed.getCrosses().size()>NLAYERSMIN) {
                 seedlist.add(mseed);
             }
         }
