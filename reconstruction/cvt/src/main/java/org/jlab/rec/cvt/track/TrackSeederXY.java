@@ -17,7 +17,7 @@ public class TrackSeederXY {
     
     
     private final int NBINS = 36;
-    private final double[] phiShift = new double[]{0,65,90}; // move the bin edge to handle bin boundaries
+    private final double[] phiShift = new double[]{0,5}; // move the bin edge to handle bin boundaries
     private final int NLAYERSMIN = 2;
     private List<ArrayList<Cross>> scan ;
     private Map<String, ArrayList<Cross>> seedMap ; // init seeds;
