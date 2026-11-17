@@ -39,8 +39,8 @@ public class DVCSProcess implements IPhysicsProcess {
         double t   = kinematics.getDimension("t").getValue();
         double phi = kinematics.getDimension("phi").getValue();
         
-        double min_t = this.t_min(q2, xb);
-        double max_t = this.t_max(q2, xb);
+        double min_t = this.t_min(E, q2, xb);
+        double max_t = this.t_max(E, q2, xb);
         double xmin  = q2/(2.0*MP*E);
         /*System.out.println(" t = " + t + " t-min = " 
                 + this.t_min(q2, xb) + "  t-max = " + this.t_max(q2, xb) + 
@@ -148,15 +148,15 @@ public class DVCSProcess implements IPhysicsProcess {
         return 0.0;
     }
     
-    public double t_min(double q2, double xb){
-        double eps = KinematicsFactory.getEpsilon(q2, xb);
+    public double t_min(double e, double q2, double xb){
+        double eps = KinematicsFactory.getEpsilon(e, q2, xb);
         double nomin = 2.0*(1.0-xb)*(1.0-Math.sqrt(1+eps*eps)) + eps*eps;
         double denom = 4.0*xb*(1.0-xb) + eps*eps;
         return q2*(nomin/denom);
     }
     
-    public double t_max(double q2, double xb){
-        double eps = KinematicsFactory.getEpsilon(q2, xb);
+    public double t_max(double e, double q2, double xb){
+        double eps = KinematicsFactory.getEpsilon(e, q2, xb);
         double nomin = 2.0*(1.0-xb)*(1.0+Math.sqrt(1+eps*eps)) + eps*eps;
         double denom = 4.0*xb*(1.0-xb) + eps*eps;
         return q2*(nomin/denom);
@@ -167,9 +167,6 @@ public class DVCSProcess implements IPhysicsProcess {
         LorentzVector cm = new LorentzVector(q2p.vector());
         LorentzVector pr = new LorentzVector(0.0,0.0,0.0,0.938);
         cm.add(pr);
-        double min_t = this.t_min(q2, xb);
-        double max_t = this.t_max(q2, xb);
-        double scale = (max_t - min_t)/Math.PI;
         return new Particle(2212,0.0,0.0,0.0,0.0,0.0,0.0);
         //return 1.0;
     }

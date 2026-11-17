@@ -5,7 +5,6 @@
  */
 package org.jlab.physics.process;
 
-import org.jlab.clas.pdg.PDGDatabase;
 import org.jlab.clas.physics.Particle;
 import org.jlab.clas.physics.Vector3;
 
@@ -17,13 +16,12 @@ public class KinematicsFactory {
     
     public static double MP = 0.93827;
     /**
-     * returns mu for given kinematics variables
+     * returns nu for given kinematics variables
      * @param q2 transferred momentum
      * @param xb Bjorken x
      * @return 
      */
-    public static double getMu(double q2, double xb){
-        //double pmass = PDGDatabase.getParticleMass(2212);
+    public static double getNu(double q2, double xb){
         return q2/(2.0*0.93827*xb);
     }
     /**
@@ -34,7 +32,7 @@ public class KinematicsFactory {
      * @return 
      */
     public static double getEprime(double E, double q2, double xb){
-        return E - KinematicsFactory.getMu(q2, xb);
+        return E - KinematicsFactory.getNu(q2, xb);
     }
     /**
      * returns scattered electron angle for given kinematics
@@ -50,8 +48,17 @@ public class KinematicsFactory {
         return 2.0*Math.asin(value);
     }
     
-    public static double getEpsilon(double q2, double xb){
-        return 2.0*xb*0.93827/q2;
+    public static double getEpsilon(double e, double q2, double xb){
+        double nu = KinematicsFactory.getNu(q2, xb);
+        double gamma = KinematicsFactory.getGamma(q2, xb);
+        double y     = nu/e;
+        double epsilon_1 = 1 - y - 0.25*y*y*gamma*gamma;
+        double epsilon_2 = 1 - y + 0.5*y*y + 0.25*y*y*gamma*gamma;
+        return epsilon_1/epsilon_2;
+    }
+    
+    public static double getGamma(double q2, double xb){
+        return 2.0*xb*0.93827/Math.sqrt(q2);
     }
     
     public static double getQ2(double E, double x, double y){
@@ -68,9 +75,10 @@ public class KinematicsFactory {
     public static Particle getElectron(double E, double q2, double xb){        
         double eprime = KinematicsFactory.getEprime( E, q2, xb);
         double theta  = KinematicsFactory.getTheta(  E, q2, xb);
+        double pprime = Math.sqrt(eprime*eprime-0.0005*0.0005);
         //System.out.println("E-prime = " + eprime + "  theta = " + Math.toDegrees(theta));
         Vector3  vec = new Vector3();
-        vec.setMagThetaPhi(eprime, theta, 0.0);
+        vec.setMagThetaPhi(pprime, theta, 0.0);
         return new Particle(11,vec.x(),vec.y(),vec.z(),0.0,0.0,0.0);
     }
     /**

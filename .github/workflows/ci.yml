@@ -17,7 +17,7 @@ defaults:
 env:
   JAVA_VERSION: 21 # must be consistent with POM; see also dependabot config for any version limits
   JAVA_VERSION_LATEST: 25 # the latest `JAVA_VERSION` that we test with CI
-  java_distribution: zulu
+  java_distribution: temurin
   groovy_version: 4.x
   CCDB_CONNECTION: 'sqlite:///${{ github.workspace }}/coatjava/etc/data/sqlite/ccdb.sqlite'
   RCDB_CONNECTION: 'sqlite:///${{ github.workspace }}/coatjava/etc/data/sqlite/rcdb.sqlite'
@@ -81,7 +81,7 @@ jobs:
           key: ${{ steps.key.outputs.key }}
           restore-keys: |
             m2-
-      - uses: actions/setup-java@v6.0.1
+      - uses: actions/setup-java@v6.1.0
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.java_distribution }}
@@ -114,7 +114,7 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-java@v6.0.1
+      - uses: actions/setup-java@v6.1.0
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.java_distribution }}
@@ -149,7 +149,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-java@v6.0.1
+      - uses: actions/setup-java@v6.1.0
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.java_distribution }}
@@ -190,7 +190,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - name: Set up JDK
-        uses: actions/setup-java@v6.0.1
+        uses: actions/setup-java@v6.1.0
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.java_distribution }}
@@ -230,7 +230,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-java@v6.0.1
+      - uses: actions/setup-java@v6.1.0
         with:
           java-version: ${{ matrix.JAVA_VERSION }}
           distribution: ${{ env.java_distribution }}
@@ -258,7 +258,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - name: Set up JDK
-        uses: actions/setup-java@v6.0.1
+        uses: actions/setup-java@v6.1.0
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.java_distribution }}
@@ -281,7 +281,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - name: Set up JDK
-        uses: actions/setup-java@v6.0.1
+        uses: actions/setup-java@v6.1.0
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.java_distribution }}
@@ -309,7 +309,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - name: Set up JDK
-        uses: actions/setup-java@v6.0.1
+        uses: actions/setup-java@v6.1.0
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.java_distribution }}
@@ -337,6 +337,34 @@ jobs:
           name: test_clara_result
           retention-days: 1
           path: rec.hipo
+
+  test_grapes:
+    needs: test_clara
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Set up JDK
+        uses: actions/setup-java@v6.1.0
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: ${{ env.java_distribution }}
+      - uses: actions/download-artifact@v8
+        with:
+          name: test_clara_result
+      - uses: actions/download-artifact@v8
+        with:
+          name: build_ubuntu-latest
+      - name: untar build
+        run: |
+          tar xzf clara.tar.gz
+          tar xzf coatjava.tar.gz
+      - name: run test
+        run: ./bin/run-clara -y ./etc/services/grapes.yaml -t 4 -n 500 -c ./clara -o ./tmp rec.hipo
+      - name: hipo-utils -info
+        run: |
+          for f in rec.hipo $(find tmp -type f -name '*.hipo'); do
+            coatjava/bin/hipo-utils -info $f
+          done
 
   test_coatjava:
     needs: [ build ]
@@ -366,7 +394,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - name: Set up JDK
-        uses: actions/setup-java@v6.0.1
+        uses: actions/setup-java@v6.1.0
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.java_distribution }}
@@ -393,7 +421,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - name: Set up JDK
-        uses: actions/setup-java@v6.0.1
+        uses: actions/setup-java@v6.1.0
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.java_distribution }}
@@ -417,7 +445,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - name: Set up JDK
-        uses: actions/setup-java@v6.0.1
+        uses: actions/setup-java@v6.1.0
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.java_distribution }}
@@ -439,7 +467,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - name: Set up JDK
-        uses: actions/setup-java@v6.0.1
+        uses: actions/setup-java@v6.1.0
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.java_distribution }}
@@ -479,7 +507,7 @@ jobs:
           path: pages/jacoco
       ### javadoc
       - name: set up JDK
-        uses: actions/setup-java@v6.0.1
+        uses: actions/setup-java@v6.1.0
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.java_distribution }}
@@ -556,6 +584,7 @@ jobs:
       - spotbugs
       - test_decoder
       - test_clara
+      - test_grapes
       - test_coatjava_macos
       - unit_tests
     runs-on: ubuntu-latest

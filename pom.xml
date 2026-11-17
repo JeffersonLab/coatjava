@@ -4,7 +4,7 @@
 
   <groupId>org.jlab.clas</groupId>
   <artifactId>coatjava</artifactId>
-  <version>14.2.3-SNAPSHOT</version>
+  <version>14.2.4-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <properties>
@@ -23,11 +23,6 @@
     <repository>
       <id>code.jlab.org-hallb-clas12-maven</id>
       <url>https://code.jlab.org/api/v4/groups/3425/-/packages/maven</url>
-    </repository>
-    <!-- clasweb repositories -->
-    <repository>
-      <id>clasweb-clas12maven</id>
-      <url>https://clasweb.jlab.org/.clas12maven</url>
     </repository>
   </repositories>
 
@@ -125,6 +120,12 @@
       </dependency>
 
       <dependency>
+        <groupId>org.jlab.jnp</groupId>
+        <artifactId>grapes</artifactId>
+        <version>2.27</version>
+      </dependency>
+
+      <dependency>
         <groupId>org.jlab.coda</groupId>
         <artifactId>jevio</artifactId>
         <classifier>jar-with-dependencies</classifier>
@@ -157,7 +158,7 @@
       <dependency>
         <groupId>org.jlab.coda</groupId>
         <artifactId>et</artifactId>
-        <version>14.0</version>
+        <version>14.99</version>
       </dependency>
 
       <dependency>
@@ -328,7 +329,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-enforcer-plugin</artifactId>
-        <version>3.6.3</version>
+        <version>3.7.0</version>
         <executions>
           <!-- dependency convergence -->
           <execution>
@@ -363,7 +364,7 @@
       <plugin>
         <groupId>org.jacoco</groupId>
         <artifactId>jacoco-maven-plugin</artifactId>
-        <version>0.8.15</version>
+        <version>0.8.16</version>
         <executions>
           <execution>
             <goals>

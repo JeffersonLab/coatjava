@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>org.jlab.clas</groupId>
+  <artifactId>copycat</artifactId>
+  <version>14.2.4-SNAPSHOT</version>
+  <packaging>pom</packaging>
+
+  <parent>
+    <groupId>org.jlab.clas</groupId>
+    <artifactId>common-tools</artifactId>
+    <version>14.2.4-SNAPSHOT</version>
+  </parent>
+
+  <modules>
+    <!-- NOTE: separate modules for finer control over what gets copied, e.g., `djl` needs transitives but `jlab` doesn't -->
+    <module>djl</module>
+    <module>jlab</module>
+  </modules>
+
+</project>
