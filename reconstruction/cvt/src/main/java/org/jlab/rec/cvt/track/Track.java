@@ -60,6 +60,9 @@ public class Track extends Trajectory implements Comparable<Track> {
     private double secondaryChi2;                  // for track with no beamSpot information
     private int    secondaryNDF;                   // for track with no beamSpot information
     private int _status = 0;
+    // Only a filtered Kalman fit has a posterior covariance. The no-filter fail-safe retains
+    // the seed prior and must not publish it as a fitted uncertainty.
+    private boolean covFromFilteredFit = false;
 
 
     public Track(Helix helix) {
@@ -90,7 +93,9 @@ public class Track extends Trajectory implements Comparable<Track> {
         this.setSeed(seed);
         this.addAll(seed.getCrosses());
         this.setKFTrajectories(kf.trajPoints);
-        if (kf.filterOn && kf.setFitFailed == false && kf.NDF>0 && kf.getHelix()!=null) { 
+        this.covFromFilteredFit = kf.filterOn && kf.setFitFailed == false
+                && kf.NDF > 0 && kf.getHelix() != null;
+        if (this.covFromFilteredFit) {
             this.setStatus(1);
         } else {
             this.setStatus(-1);
@@ -444,6 +449,15 @@ public class Track extends Trajectory implements Comparable<Track> {
     public int getStatus() {
         return _status;
     }
+
+    /**
+     * Returns true only when this track covariance is the posterior of a successful filtered
+     * Kalman fit. A false value includes seed tracks and the unfiltered fail-safe path.
+     */
+    public boolean isCovFromFilteredFit() {
+        return covFromFilteredFit;
+    }
+
     public void setStatus(int passKFFlag) {
         //for status word:
         int nSVT  = 0;

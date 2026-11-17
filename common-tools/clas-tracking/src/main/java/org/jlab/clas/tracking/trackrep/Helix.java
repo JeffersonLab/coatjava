@@ -241,6 +241,161 @@ public class Helix {
         return this.getPz(this.getB());
     }
 
+    /** Intersect the helix with the complete plane n.(r-p)=0, including nz. */
+    public double getLAtPlane3D(double px, double py, double pz,
+                                double nx, double ny, double nz,
+                                double xNear, double yNear) {
+        // Start at the point on the helix circle nearest the module. The projected trace of a
+        // nearly tangential plane can miss the circle even when the full 3-D plane intersects it.
+        double phi0 = Math.atan2(_yd - getYc(), _xd - getXc());
+        double phiNear = Math.atan2(yNear - getYc(), xNear - getXc());
+        double dphi = phiNear - phi0;
+        if (dphi >  Math.PI) dphi -= 2.0 * Math.PI;
+        if (dphi < -Math.PI) dphi += 2.0 * Math.PI;
+        double l = dphi / getOmega();
+        if (!Double.isFinite(l)) return Double.NaN;
+
+        final double dl = 1.0e-3;
+        for (int i = 0; i < 12; i++) {
+            double f = nx * (getX(l) - px) + ny * (getY(l) - py)
+                     + nz * (getZ(l) - pz);
+            if (Math.abs(f) < 1.0e-7) return l;
+            double derivative = nx * (getX(l + dl) - getX(l - dl)) / (2 * dl)
+                              + ny * (getY(l + dl) - getY(l - dl)) / (2 * dl)
+                              + nz * (getZ(l + dl) - getZ(l - dl)) / (2 * dl);
+            if (!Double.isFinite(derivative) || Math.abs(derivative) < 1.0e-10)
+                return Double.NaN;
+            double step = f / derivative;
+            if (Math.abs(step) > 100) step = Math.copySign(100, step);
+            l -= step;
+            if (!Double.isFinite(l)) return Double.NaN;
+        }
+        double residual = nx * (getX(l) - px) + ny * (getY(l) - py)
+                        + nz * (getZ(l) - pz);
+        return Math.abs(residual) < 1.0e-5 ? l : Double.NaN;
+    }
+
+    /**
+     * Intersect this helix with a cylinder of radius {@code radius} about an arbitrary axis.
+     * The supplied starting value normally comes from the closed-form beam-axis solution.
+     *
+     * @return the local root nearest {@code lStart}, or NaN when no root can be established
+     */
+    public double getLAtCylinder3D(double ax, double ay, double az,
+                                   double ux, double uy, double uz,
+                                   double radius, double lStart) {
+        double un = Math.sqrt(ux * ux + uy * uy + uz * uz);
+        if (!(un > 0) || !Double.isFinite(lStart)) return Double.NaN;
+        ux /= un;
+        uy /= un;
+        uz /= un;
+
+        double l = lStart;
+        for (int i = 0; i < 12; i++) {
+            double f = radialMiss(l, ax, ay, az, ux, uy, uz, radius);
+            if (!Double.isFinite(f)) break;
+            if (Math.abs(f) < 1.0e-7) return l;
+
+            double derivative = radialMissDerivative(l, ax, ay, az, ux, uy, uz);
+            if (!Double.isFinite(derivative) || Math.abs(derivative) < 1.0e-10) break;
+            double step = f / derivative;
+            if (Math.abs(step) > 100.0) step = Math.copySign(100.0, step);
+            l -= step;
+            if (!Double.isFinite(l)) break;
+        }
+        double residual = radialMiss(l, ax, ay, az, ux, uy, uz, radius);
+        if (Double.isFinite(residual) && Math.abs(residual) < 1.0e-5) return l;
+
+        // Safeguard Newton near tangencies by bracketing the first local root on each side.
+        // The quarter-turn limit prevents a failure from selecting the opposite crossing.
+        double maxSpan = Math.min(200.0, Math.PI / (2.0 * Math.abs(getOmega())));
+        double left = lStart;
+        double right = lStart;
+        double fLeft = radialMiss(left, ax, ay, az, ux, uy, uz, radius);
+        double fRight = fLeft;
+        double span = 0.5;
+        while (Double.isFinite(fLeft) && Double.isFinite(fRight)
+                && Math.abs(right - lStart) < maxSpan) {
+            double nextSpan = Math.min(span, maxSpan);
+            double nextLeft = lStart - nextSpan;
+            double nextRight = lStart + nextSpan;
+            double nextFLeft = radialMiss(nextLeft, ax, ay, az, ux, uy, uz, radius);
+            double nextFRight = radialMiss(nextRight, ax, ay, az, ux, uy, uz, radius);
+
+            double rootLeft = bracketedCylinderRoot(nextLeft, left, nextFLeft, fLeft,
+                    ax, ay, az, ux, uy, uz, radius);
+            double rootRight = bracketedCylinderRoot(right, nextRight, fRight, nextFRight,
+                    ax, ay, az, ux, uy, uz, radius);
+            if (Double.isFinite(rootLeft) || Double.isFinite(rootRight)) {
+                if (!Double.isFinite(rootLeft)) return rootRight;
+                if (!Double.isFinite(rootRight)) return rootLeft;
+                return Math.abs(rootLeft - lStart) <= Math.abs(rootRight - lStart)
+                        ? rootLeft : rootRight;
+            }
+            left = nextLeft;
+            right = nextRight;
+            fLeft = nextFLeft;
+            fRight = nextFRight;
+            span *= 2.0;
+        }
+        return Double.NaN;
+    }
+
+    private double radialMissDerivative(double l, double ax, double ay, double az,
+                                        double ux, double uy, double uz) {
+        double wx = getX(l) - ax;
+        double wy = getY(l) - ay;
+        double wz = getZ(l) - az;
+        double along = wx * ux + wy * uy + wz * uz;
+        double qx = wx - along * ux;
+        double qy = wy - along * uy;
+        double qz = wz - along * uz;
+        double distance = Math.sqrt(qx * qx + qy * qy + qz * qz);
+        if (!(distance > 0)) return Double.NaN;
+
+        double s = -KFitter.polarity;
+        double phi = getPhi(l);
+        double vx = s * getTurningSign() * getR() * getOmega() * Math.cos(phi);
+        double vy = s * getTurningSign() * getR() * getOmega() * Math.sin(phi);
+        double vz = -getTanL();
+        return (qx * vx + qy * vy + qz * vz) / distance;
+    }
+
+    private double bracketedCylinderRoot(double lo, double hi, double flo, double fhi,
+                                         double ax, double ay, double az,
+                                         double ux, double uy, double uz, double radius) {
+        if (!Double.isFinite(flo) || !Double.isFinite(fhi) || flo * fhi > 0) {
+            return Double.NaN;
+        }
+        if (Math.abs(flo) < 1.0e-7) return lo;
+        if (Math.abs(fhi) < 1.0e-7) return hi;
+        for (int i = 0; i < 80; i++) {
+            double mid = 0.5 * (lo + hi);
+            double fm = radialMiss(mid, ax, ay, az, ux, uy, uz, radius);
+            if (!Double.isFinite(fm)) return Double.NaN;
+            if (Math.abs(fm) < 1.0e-7 || Math.abs(hi - lo) < 1.0e-9) return mid;
+            if (flo * fm <= 0) {
+                hi = mid;
+            } else {
+                lo = mid;
+                flo = fm;
+            }
+        }
+        return Double.NaN;
+    }
+
+    private double radialMiss(double l, double ax, double ay, double az,
+                              double ux, double uy, double uz, double radius) {
+        double wx = getX(l) - ax;
+        double wy = getY(l) - ay;
+        double wz = getZ(l) - az;
+        double along = wx * ux + wy * uy + wz * uz;
+        double dx = wx - along * ux;
+        double dy = wy - along * uy;
+        double dz = wz - along * uz;
+        return Math.sqrt(dx * dx + dy * dy + dz * dz) - radius;
+    }
+
     public double getLAtPlane(double X1, double Y1, double X2, double Y2, 
             double tolerance) {
         // Find the intersection of the helix circle with the module plane projection in XY which is a line
