@@ -11,13 +11,12 @@ import java.util.Map;
 public class PDGDatabase {
 
     static final HashMap<Integer, PDGParticle> particleDatabase = initDatabase();
+    static final HashMap<Integer, PDGParticle> particleDatabaseG3 = initDatabaseG3(particleDatabase);
 
-    public PDGDatabase() {
-    }
+    public PDGDatabase() {}
 
     public static boolean isValidId(int pid) {
         return particleDatabase.containsKey(pid);
-        // ArrayList<String> ff = null;
     }
 
     public static boolean isValidPid(int pid) {
@@ -27,6 +26,9 @@ public class PDGDatabase {
     static public PDGParticle getParticleById(int pid) {
         if (particleDatabase.containsKey(pid) == true) {
             return particleDatabase.get(pid);
+        }
+        else if (particleDatabaseG3.containsKey(pid) == true) {
+            return particleDatabaseG3.get(pid);
         }
         System.err.println("PDGDatabase::Error -> there is no particle with pid " + pid);
         return null;
@@ -49,6 +51,16 @@ public class PDGDatabase {
         particleDatabase.put(pid, new PDGParticle(name, pid, mass, charge));
     }
 
+    private static HashMap<Integer, PDGParticle> initDatabaseG3(HashMap<Integer, PDGParticle> pdg) {
+        HashMap<Integer, PDGParticle> g3 = new HashMap<>();
+        for (PDGParticle p : pdg.values()) {
+            if (p.particleIdGeant != 0) {
+                g3.put(p.particleIdGeant, p);
+            }
+        }
+        return g3;
+    }
+
     private static HashMap<Integer, PDGParticle> initDatabase() {
         HashMap<Integer, PDGParticle> particleMap = new HashMap<Integer, PDGParticle>();
         particleMap.put(11, new PDGParticle("e-", 11, 3, 0.0005, -1));
@@ -60,13 +72,6 @@ public class PDGDatabase {
         particleMap.put(14, new PDGParticle("numu-", 14, 4, 0.320e-6, 0));
         particleMap.put(-14, new PDGParticle("numu+", -14, 4, 0.320e-6, 0));
         particleMap.put(22, new PDGParticle("gamma", 22, 1, 0.000, 0));
-
-        // geant3 codes used by gemc in MC::Particle for light ions (not PDG codes; PDG entries below)
-        particleMap.put(46, new PDGParticle("TRITON", 46, 46, 2.80943, 1));
-        particleMap.put(47, new PDGParticle("ALPHA",  47, 47, 3.7284,  2));
-        particleMap.put(49, new PDGParticle("HE3",    49, 49, 2.80941, 2));
-                
-        particleMap.put(45, new PDGParticle("d", 45, 45, 1.875612, 1)); // This is not a PDG code.
 
         //Light mesons
         particleMap.put(211, new PDGParticle("pi+", 211, 8, 0.13957018, 1));
@@ -192,14 +197,9 @@ public class PDGDatabase {
         particleMap.put(1000010030, new PDGParticle("triton",   1000010030, 46, 2.80943, 1));
         particleMap.put(1000020030, new PDGParticle("He3",      1000020030, 49, 2.80941, 2));
         particleMap.put(1000020040, new PDGParticle("alpha",    1000020040, 47, 3.7284,  2));
-
-        //522 deuteron     1000010020    1 100 Baryon      3 1.87612 0.00000e+00 -100 -1 -100 -1   -1   0
-        //523 triton       1000010030    1 100 Baryon      3 2.80943 0.00000e+00 -100 -1 -100 -1   -1   0
-        //524 He3          1000020030    1 100 Baryon      6 2.80941 0.00000e+00 -100 -1 -100 -1   -1   0
-        //525 alpha        1000020040    1 100 Baryon      6 3.7284 0.00000e+00 -100 -1 -100 -1   -1   0
-        //526 He6          1000020060    1 100 Baryon      6 5.60656 0.00000e+00 -100 -1 -100 -1   -1   0
-        //527 Li6          1000030060    1 100 Baryon      9 5.60305 0.00000e+00 -100 -1 -100 -1   -1   0
-        //528 Li7          1000030070    1 100 Baryon      9 6.53537 0.00000e+00 -100 -1 -100 -1   -1   0
+        particleMap.put(1000020060, new PDGParticle("He6",      1000020060, 5.60656,  2));
+        particleMap.put(1000030060, new PDGParticle("Li6",      1000030060, 5.60305,  3));
+        particleMap.put(1000030070, new PDGParticle("Li7",      1000030070, 6.53537,  3));
 
         return particleMap;
     }
@@ -230,4 +230,13 @@ public class PDGDatabase {
         }
         return mass;
     }
+
+    public static void main(String[] args) {
+        System.out.println(particleDatabaseG3.size());
+        for (Integer i : particleDatabaseG3.keySet()) {
+            System.out.println(i);
+        }
+        System.out.println(getParticleById(46).mass());
+    }
+    
 }
