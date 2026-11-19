@@ -980,20 +980,23 @@ public class MagneticFields {
 		// dirs to try (they should have a magfield directory)
 
 		ArrayList<String> dirs = new ArrayList<>();
+		String fielddir = System.getenv("FIELD_DIR");
 		String coatdir = System.getenv("COATJAVA");
 		String c12dir = System.getenv("CLAS12DIR");
-		LOGGER.log(Level.INFO,"In initializeMagneticFields COATJAVA = [" + coatdir + "]");
-		LOGGER.log(Level.INFO,"In initializeMagneticFields CLAS12DIR = [" + c12dir + "]");
 
-		if (coatdir != null) {
-			String d = coatdir + "/etc/data";
-			d = d.replace("//", "/");
-			dirs.add(d);
+		if (fielddir != null) {
+			dirs.add(fielddir);
+			LOGGER.log(Level.INFO, "In initializeMagneticFields FIELD_DIR = [{0}]", fielddir);
 		}
-		if (c12dir != null) {
+		else if (coatdir != null) {
+			String d = coatdir + "/etc/data";
+			dirs.add(d.replace("//","/"));
+			LOGGER.log(Level.INFO, "In initializeMagneticFields COATJAVA = [{0}]", coatdir);
+		}
+		else if (c12dir != null) {
 			String d = c12dir + "/etc/data";
-			d = d.replace("//", "/");
-			dirs.add(d);
+			dirs.add(d.replace("//","/"));
+			LOGGER.log(Level.INFO, "In initializeMagneticFields CLAS12DIR = [{0}]", c12dir);
 		}
 
 		dirs.add(getProperty("user.dir"));
