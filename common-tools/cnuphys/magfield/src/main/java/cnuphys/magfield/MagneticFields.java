@@ -985,7 +985,7 @@ public class MagneticFields {
 		String c12dir = System.getenv("CLAS12DIR");
 
 		if (fielddir != null) {
-			dirs.add(fielddir);
+			dirs.add(fielddir.replace("//","/"));
 			LOGGER.log(Level.INFO, "In initializeMagneticFields FIELD_DIR = [{0}]", fielddir);
 		}
 		else if (coatdir != null) {
