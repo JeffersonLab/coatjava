@@ -54,7 +54,10 @@ public class MagFieldsEngine extends ReconstructionEngine {
        
         final String torusMap = this.chooseEnvOrYaml("COAT_MAGFIELD_TORUSMAP","magfieldTorusMap");
         final String solenoidMap = this.chooseEnvOrYaml("COAT_MAGFIELD_SOLENOIDMAP","magfieldSolenoidMap");
-        final String mapDir = CLASResources.getResourcePath("etc")+"/data/magfield";
+
+        String mapDir = System.getenv("FIELD_DIR");
+        if (mapDir == null) mapDir = CLASResources.getResourcePath("etc")+"/data/magfield";
+        else LOGGER.log(Level.INFO,"Using custom $FIELD_DIR={0} for magnetic fields.",mapDir);
 
         if (torusMap==null) {
             LOGGER.log(Level.SEVERE,"["+this.getName()+"] ERROR: torus field is undefined.");
