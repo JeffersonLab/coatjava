@@ -8,11 +8,6 @@ if [ "${1-}" = '--shell' ]; then
     return
 fi
 
-# Set field map directory:
-if [ -z "${FIELD_DIR-}" ]; then
-    export FIELD_DIR=$CLAS12DIR/etc/data/magfield
-fi
-
 # Set default field maps (but do not override user's env):
 if [ -z "${COAT_MAGFIELD_TORUSMAP-}" ]; then
     export COAT_MAGFIELD_TORUSMAP=Symm_torus_r2501_phi16_z251_24Apr2018.dat
