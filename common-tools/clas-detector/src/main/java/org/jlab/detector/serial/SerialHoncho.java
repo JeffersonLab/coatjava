@@ -19,6 +19,7 @@ import org.jlab.jnp.hipo4.data.Event;
 import org.jlab.jnp.hipo4.data.Schema;
 import org.jlab.jnp.hipo4.data.SchemaFactory;
 import org.jlab.jnp.hipo4.io.HipoWriterSorted;
+import org.jlab.utils.CLASResources;
 
 /**
  *
@@ -27,7 +28,7 @@ import org.jlab.jnp.hipo4.io.HipoWriterSorted;
 public class SerialHoncho {
     
     static final String[] TAG1BANKS = {"RUN::scaler","HEL::scaler","RAW::scaler","RAW::epics","HEL::flip","COAT::config"};
-    SchemaFactory schema;
+    static final SchemaFactory SCHEMA = CLASResources.getFullSchema();
     Schema[] tag1banks;
     Schema runConfig;
     Schema recEvent;
@@ -40,20 +41,19 @@ public class SerialHoncho {
     volatile DaqScalersSequence scalers;
     int run = 0;
 
-    public SerialHoncho(SchemaFactory schema) {
-        this.schema = schema;
+    public SerialHoncho() {
         conman = new ConstantsManager();
         conman.init("/runcontrol/hwp","/runcontrol/helicity");
-        runConfig = schema.getSchema("RUN::config");
-        recEvent = schema.getSchema("REC::Event");
-        helicityAdc = schema.getSchema("HEL::adc");
-        helScaler = schema.getSchema("HEL::scaler");
-        scalers = new DaqScalersSequence(schema);
+        runConfig = SCHEMA.getSchema("RUN::config");
+        recEvent = SCHEMA.getSchema("REC::Event");
+        helicityAdc = SCHEMA.getSchema("HEL::adc");
+        helScaler = SCHEMA.getSchema("HEL::scaler");
+        scalers = new DaqScalersSequence(SCHEMA);
         helicities = new TreeSet<>();
         eventUnix = new TreeMap<>();
         tag1banks = new Schema[TAG1BANKS.length];
         for (int i=0; i<tag1banks.length; ++i)
-            tag1banks[i] = schema.getSchema(TAG1BANKS[i]);
+            tag1banks[i] = SCHEMA.getSchema(TAG1BANKS[i]);
     }
 
     /**
@@ -125,7 +125,7 @@ public class SerialHoncho {
     }
 
     public SchemaFactory getSchemaFactory() {
-        return schema;
+        return SCHEMA;
     }
   
     /**
@@ -183,7 +183,7 @@ public class SerialHoncho {
      * @return 
      */
     Event getUnixEvent(Bank config) {
-        Bank unix = new Bank(schema.getSchema("RUN::unix"), eventUnix.size());
+        Bank unix = new Bank(SCHEMA.getSchema("RUN::unix"), eventUnix.size());
         int row = 0;
         for (int evno : eventUnix.keySet()) {
             unix.putInt("event", row, evno);
