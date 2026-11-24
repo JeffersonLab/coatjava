@@ -60,6 +60,12 @@ public class PDGDatabase {
         particleMap.put(14, new PDGParticle("numu-", 14, 4, 0.320e-6, 0));
         particleMap.put(-14, new PDGParticle("numu+", -14, 4, 0.320e-6, 0));
         particleMap.put(22, new PDGParticle("gamma", 22, 1, 0.000, 0));
+
+        // geant3 codes used by gemc in MC::Particle for light ions (not PDG codes; PDG entries below)
+        particleMap.put(46, new PDGParticle("TRITON", 46, 46, 2.80943, 1));
+        particleMap.put(47, new PDGParticle("ALPHA",  47, 47, 3.7284,  2));
+        particleMap.put(49, new PDGParticle("HE3",    49, 49, 2.80941, 2));
+                
         particleMap.put(45, new PDGParticle("d", 45, 45, 1.875612, 1)); // This is not a PDG code.
 
         //Light mesons
